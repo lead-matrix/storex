@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-gold: #D4AF37;
+  --color-border: var(--border);
+  
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
+
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --radius-sm: 0px;
+}
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  
+  --primary: #D4AF37;
+  --primary-foreground: #000000;
+  
+  --accent: #D4AF37;
+  --accent-foreground: #000000;
+  
+  --border: #333333;
+  --input: #1a1a1a;
+  --ring: #D4AF37;
+  
+  --card: #000000;
+  --card-foreground: #ffffff;
+  
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  
+  --muted: #1a1a1a;
+  --muted-foreground: #a1a1a1;
+  
+  --destructive: #7f1d1d;
+  --destructive-foreground: #ffffff;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
