@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  * Obsidian Palace Middleware
  * Unified security and routing layer at the Edge.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -112,3 +112,5 @@ export const config = {
         '/((?!_next/static|_next/image|favicon.ico|api/webhooks|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }
+
+export default proxy;
