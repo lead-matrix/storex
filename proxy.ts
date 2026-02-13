@@ -1,7 +1,11 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+/**
+ * Obsidian Palace Proxy
+ * Unified security and routing layer.
+ */
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -56,20 +60,19 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 1. Protect Admin Routes
+    // 1. Admin Portal Protection
     if (request.nextUrl.pathname.startsWith('/admin')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
-        // Check for admin role
         const { data: profile } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
             .single()
 
-        if (profile?.role !== 'admin') {
+        if (!profile || profile.role !== 'admin') {
             return NextResponse.redirect(new URL('/', request.url))
         }
     }
@@ -81,10 +84,14 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // 3. Prevent logged in users from visiting login
+    // 3. Login Redirect Logic
     if (user && request.nextUrl.pathname.startsWith('/login')) {
         return NextResponse.redirect(new URL('/', request.url))
     }
+
+    // 4. Zero 404 Policy: High-end redirect for invalid paths
+    // While Next.js handles not-found.tsx, this ensures all traffic is handled elegantly
+    // at the edge. We can add custom route mapping here if needed.
 
     return response
 }

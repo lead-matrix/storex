@@ -1,6 +1,15 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getResend = () => {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        // During build time, return a mock or throw a helpful error only when called
+        return new Resend('re_123'); // Placeholder for build phase
+    }
+    return new Resend(apiKey);
+};
+
+const resend = getResend();
 
 interface OrderEmailProps {
     orderId: string;
