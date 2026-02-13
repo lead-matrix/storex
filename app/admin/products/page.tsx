@@ -8,6 +8,22 @@ export const metadata = {
     title: "Inventory | The Obsidian Palace",
 };
 
+interface Variant {
+    id: string;
+    name: string;
+    stock_quantity: number;
+}
+
+interface Product {
+    id: string;
+    name: string;
+    description: string;
+    base_price: number;
+    is_featured: boolean;
+    images: string[];
+    variants: Variant[];
+}
+
 export default async function AdminProducts() {
     const supabase = await createClient();
     const { data: products } = await supabase
@@ -32,7 +48,7 @@ export default async function AdminProducts() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-                {products?.map((product) => (
+                {(products as unknown as Product[] | null)?.map((product: Product) => (
                     <div key={product.id} className="bg-zinc-950 border border-gold/10 p-6 flex flex-col md:flex-row gap-6 items-center group hover:border-gold/30 transition-all">
                         <div className="w-24 h-24 bg-zinc-900 border border-gold/5 flex-shrink-0 relative overflow-hidden">
                             {product.images?.[0] ? (
@@ -60,8 +76,8 @@ export default async function AdminProducts() {
                                 <span className="text-zinc-600">|</span>
                                 <span className="text-zinc-400">{product.variants?.length || 0} Variants</span>
                                 <span className="text-zinc-600">|</span>
-                                <span className={product.variants?.reduce((acc: number, v: any) => acc + (v.stock_quantity || 0), 0) > 0 ? "text-emerald-500" : "text-rose-500"}>
-                                    Stock: {product.variants?.reduce((acc: number, v: any) => acc + (v.stock_quantity || 0), 0) || 0}
+                                <span className={product.variants?.reduce((acc: number, v: Variant) => acc + (v.stock_quantity || 0), 0) > 0 ? "text-emerald-500" : "text-rose-500"}>
+                                    Stock: {product.variants?.reduce((acc: number, v: Variant) => acc + (v.stock_quantity || 0), 0) || 0}
                                 </span>
                             </div>
                         </div>

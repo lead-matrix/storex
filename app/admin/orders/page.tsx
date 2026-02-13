@@ -6,6 +6,18 @@ export const metadata = {
     title: "Order Fulfillment | The Obsidian Palace",
 };
 
+interface Order {
+    id: string;
+    status: string;
+    created_at: string;
+    total_amount: number;
+    profiles: {
+        email: string;
+    } | null;
+    shipping_address: any;
+    metadata: any;
+}
+
 export default async function AdminOrders() {
     const supabase = await createClient();
     const { data: orders } = await supabase
@@ -21,13 +33,13 @@ export default async function AdminOrders() {
             </div>
 
             <div className="space-y-4">
-                {orders?.map((order) => (
+                {(orders as Order[] | null)?.map((order: Order) => (
                     <div key={order.id} className="bg-zinc-950 border border-gold/10 p-6 flex flex-col md:flex-row gap-8 group hover:border-gold/30 transition-all">
                         {/* Status & ID */}
                         <div className="w-full md:w-48 space-y-2">
                             <div className="flex items-center gap-2">
                                 <span className={`w-2 h-2 rounded-full ${order.status === 'paid' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                        order.status === 'shipped' ? 'bg-blue-500' : 'bg-zinc-700'
+                                    order.status === 'shipped' ? 'bg-blue-500' : 'bg-zinc-700'
                                     }`} />
                                 <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">{order.status}</span>
                             </div>

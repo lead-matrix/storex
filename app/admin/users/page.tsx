@@ -5,6 +5,13 @@ export const metadata = {
     title: "Customers | The Obsidian Palace",
 };
 
+interface Profile {
+    id: string;
+    email: string;
+    role: string;
+    created_at: string;
+}
+
 export default async function AdminUsers() {
     const supabase = await createClient();
 
@@ -43,7 +50,7 @@ export default async function AdminUsers() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gold/5">
-                            {profiles?.map((profile) => (
+                            {(profiles as Profile[] | null)?.map((profile: Profile) => (
                                 <tr key={profile.id} className="text-sm group hover:bg-gold/5 transition-colors">
                                     <td className="p-6">
                                         <div className="flex items-center gap-3">
