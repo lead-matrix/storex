@@ -1,6 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProductCard } from "./ProductCard";
 
+interface Variant {
+    id: string;
+    name: string;
+    price_override?: number;
+}
+
+interface Product {
+    id: string;
+    name: string;
+    base_price: number;
+    images: string[];
+    variants: Variant[];
+}
+
 export async function ProductGrid() {
     const supabase = await createClient();
 
@@ -9,7 +23,9 @@ export async function ProductGrid() {
         .select("*, variants(*)")
         .order("created_at", { ascending: false });
 
-    if (!products || products.length === 0) {
+    const typedProducts = (products as unknown as Product[] | null);
+
+    if (!typedProducts || typedProducts.length === 0) {
         return (
             <div id="shop" className="py-24 text-center">
                 <p className="text-white/30 uppercase tracking-[0.5em] text-xs">The vault is currently sealed.</p>
@@ -30,7 +46,7 @@ export async function ProductGrid() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-20">
-                {products.map((product) => (
+                {typedProducts.map((product: Product) => (
                     <ProductCard
                         key={product.id}
                         product={product}
