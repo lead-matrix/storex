@@ -4,13 +4,21 @@ import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-01-27-acacia' as any,
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!stripeSecretKey || !webhookSecret) {
+        console.error("Missing Stripe Environment Variables");
+        return new NextResponse("Configuration Error", { status: 500 });
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
+        apiVersion: '2025-01-27-acacia' as any,
+    });
+
     const body = await req.text();
     const signature = (await headers()).get('stripe-signature') as string;
 
@@ -33,7 +41,7 @@ export async function POST(req: Request) {
                 const session = event.data.object as Stripe.Checkout.Session;
 
                 if (session.mode === 'subscription' && session.subscription) {
-                    await handleSubscriptionCreated(session);
+                    await handleSubscriptionCreated(session, stripe);
                 } else if (session.mode === 'payment') {
                     // Handle one-time product purchase fulfillment here
                     await handleOneTimePayment(session);
@@ -69,7 +77,7 @@ export async function POST(req: Request) {
 
 // --- Helper Functions ---
 
-async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
+async function handleSubscriptionCreated(session: Stripe.Checkout.Session, stripe: Stripe) {
     const subscriptionId = session.subscription as string;
     const userId = session.metadata?.userId;
 

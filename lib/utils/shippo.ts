@@ -1,11 +1,18 @@
 import Shippo from 'shippo';
 
 // Handle both constructor and function-style initialization
-const shippo = (Shippo as any).default
-    ? new (Shippo as any).default(process.env.SHIPPO_API_KEY!)
-    : typeof Shippo === 'function'
-        ? (Shippo as any)(process.env.SHIPPO_API_KEY!)
-        : new (Shippo as any)(process.env.SHIPPO_API_KEY!);
+const getShippo = () => {
+    const apiKey = process.env.SHIPPO_API_KEY;
+    if (!apiKey) return {} as any; // Fallback for build phase
+
+    return (Shippo as any).default
+        ? new (Shippo as any).default(apiKey)
+        : typeof Shippo === 'function'
+            ? (Shippo as any)(apiKey)
+            : new (Shippo as any)(apiKey);
+};
+
+const shippo = getShippo();
 
 export async function createShippingLabel(order: any) {
     try {

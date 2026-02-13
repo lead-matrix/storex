@@ -2,12 +2,19 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-01-27-acacia' as any,
-});
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
+        const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+        if (!stripeSecretKey) {
+            throw new Error("Missing STRIPE_SECRET_KEY");
+        }
+
+        const stripe = new Stripe(stripeSecretKey, {
+            apiVersion: '2025-01-27-acacia' as any,
+        });
+
         const formData = await req.formData();
         const priceId = formData.get('priceId') as string;
 
