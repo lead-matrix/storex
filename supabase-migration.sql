@@ -63,18 +63,6 @@ CREATE TABLE IF NOT EXISTS public.order_items (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. Subscriptions
-CREATE TABLE IF NOT EXISTS public.user_subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  stripe_subscription_id TEXT UNIQUE NOT NULL,
-  status TEXT NOT NULL,
-  current_period_start TIMESTAMPTZ NOT NULL,
-  current_period_end TIMESTAMPTZ NOT NULL,
-  cancel_at_period_end BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
 
 -- 7. Seed Products
 INSERT INTO public.products (id, name, description, base_price, images, media_3d_url, metadata, created_at, category, is_featured)
@@ -136,7 +124,6 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.variants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Product Policies
 CREATE POLICY "Public read access for products" ON public.products FOR SELECT USING (true);
@@ -152,9 +139,6 @@ CREATE POLICY "Admin full access for variants" ON public.variants FOR ALL
 CREATE POLICY "Users view own orders" ON public.orders FOR SELECT 
   USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- Subscription Policies
-CREATE POLICY "Users view own subscriptions" ON public.user_subscriptions FOR SELECT 
-  USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Profile Policies
 CREATE POLICY "Users view/edit own profile" ON public.profiles FOR ALL 
