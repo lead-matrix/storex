@@ -6,9 +6,15 @@ import {
     AlertCircle
 } from "lucide-react";
 
-export const metadata = {
-    title: "Admin Dashboard | The Obsidian Palace",
-};
+interface RecentOrder {
+    id: string;
+    total_amount: number;
+    status: string;
+    created_at: string;
+    profiles: {
+        email: string;
+    } | null;
+}
 
 export default async function AdminDashboard() {
     const supabase = await createClient();
@@ -27,7 +33,7 @@ export default async function AdminDashboard() {
         .select('total_amount')
         .eq('status', 'paid');
 
-    const totalRevenue = revenueData?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
+    const totalRevenue = (revenueData as { total_amount: number }[] | null)?.reduce((acc: number, curr: { total_amount: number }) => acc + (curr.total_amount || 0), 0) || 0;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -79,10 +85,10 @@ export default async function AdminDashboard() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gold/5">
-                            {recentOrders?.map((order) => (
+                            {(recentOrders as unknown as RecentOrder[] | null)?.map((order: RecentOrder) => (
                                 <tr key={order.id} className="text-sm">
                                     <td className="py-4 font-mono text-zinc-400">#{order.id.slice(0, 8)}</td>
-                                    <td className="py-4">{(order.profiles as any)?.email}</td>
+                                    <td className="py-4">{order.profiles?.email || 'Guest'}</td>
                                     <td className="py-4">
                                         <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider border ${order.status === 'paid' ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/5' :
                                             'border-gold/50 text-gold bg-gold/5'
