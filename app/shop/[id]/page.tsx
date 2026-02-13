@@ -10,6 +10,8 @@ import { createClient as createPublicClient } from "@/lib/supabase/public";
 
 export async function generateStaticParams() {
     const supabase = createPublicClient();
+    if (!supabase) return [];
+
     const { data: products } = await supabase
         .from("products")
         .select("id");
