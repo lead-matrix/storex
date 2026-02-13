@@ -16,7 +16,7 @@ export async function generateStaticParams() {
         .from("products")
         .select("id");
 
-    return products?.map((product) => ({
+    return products?.map((product: { id: string }) => ({
         id: product.id,
     })) || [];
 }
