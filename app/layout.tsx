@@ -42,6 +42,8 @@ export const metadata: Metadata = {
 
 import { Footer } from "@/components/Footer";
 
+import { Toaster } from 'sonner';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,6 +66,7 @@ export default function RootLayout({
             <ShoppingBagDrawer />
             <Footer />
           </div>
+          <Toaster position="bottom-right" theme="dark" expand={false} richColors />
           <Analytics />
         </CartProvider>
       </body>
