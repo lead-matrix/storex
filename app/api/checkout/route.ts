@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
-    apiVersion: "2025-01-27-acacia" as any,
-});
+let stripeInstance: Stripe | null = null;
+const getStripe = () => {
+    if (stripeInstance) return stripeInstance;
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
+        apiVersion: "2025-01-27-acacia" as any,
+    });
+    return stripeInstance;
+};
 
 export async function POST(req: Request) {
     try {
@@ -129,6 +134,7 @@ export async function POST(req: Request) {
 
         await supabase.from("order_items").insert(orderItems);
 
+        const stripe = getStripe();
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             line_items,

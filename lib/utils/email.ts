@@ -1,15 +1,19 @@
 import { Resend } from 'resend';
 
+let resendInstance: Resend | null = null;
+
 const getResend = () => {
+    if (resendInstance) return resendInstance;
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-        // During build time, return a mock or throw a helpful error only when called
-        return new Resend('re_123'); // Placeholder for build phase
+        // Mocking or returning a fake client during build phase
+        resendInstance = new Resend('re_123');
+        return resendInstance;
     }
-    return new Resend(apiKey);
+    resendInstance = new Resend(apiKey);
+    return resendInstance;
 };
-
-const resend = getResend();
 
 interface OrderEmailProps {
     orderId: string;
@@ -26,6 +30,7 @@ export async function sendOrderConfirmationEmail({
     customerName,
     totalAmount
 }: OrderEmailProps) {
+    const resend = getResend();
     try {
         await resend.emails.send({
             from: 'DINA COSMETIC <concierge@dinacosmetic.store>',
@@ -64,6 +69,7 @@ export async function sendShippingNotificationEmail({
     trackingNumber,
     labelUrl
 }: OrderEmailProps) {
+    const resend = getResend();
     try {
         await resend.emails.send({
             from: 'DINA COSMETIC <concierge@dinacosmetic.store>',

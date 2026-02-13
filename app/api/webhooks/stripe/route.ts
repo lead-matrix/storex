@@ -35,35 +35,13 @@ export async function POST(req: Request) {
     // 2. Handle Events
     try {
         switch (event.type) {
-
-            // Case A: Subscription Created (Checkout Session Completed)
             case 'checkout.session.completed': {
                 const session = event.data.object as Stripe.Checkout.Session;
-
-                if (session.mode === 'subscription' && session.subscription) {
-                    await handleSubscriptionCreated(session, stripe);
-                } else if (session.mode === 'payment') {
-                    // Handle one-time product purchase fulfillment here
+                if (session.mode === 'payment') {
                     await handleOneTimePayment(session);
                 }
                 break;
             }
-
-            // Case B: Subscription Updated (Renewals, Cancellations, Plan Changes)
-            case 'customer.subscription.updated':
-            case 'customer.subscription.deleted': {
-                const subscription = event.data.object as Stripe.Subscription;
-                await handleSubscriptionUpdated(subscription);
-                break;
-            }
-
-            // Case C: Payment Failed (Churn Prevention)
-            case 'invoice.payment_failed': {
-                // const invoice = event.data.object as Stripe.Invoice;
-                // Logic: Email user, mark subscription as 'past_due' in DB
-                break;
-            }
-
             default:
                 console.log(`Unhandled event type ${event.type}`);
         }
@@ -76,50 +54,6 @@ export async function POST(req: Request) {
 }
 
 // --- Helper Functions ---
-
-async function handleSubscriptionCreated(session: Stripe.Checkout.Session, stripe: Stripe) {
-    const subscriptionId = session.subscription as string;
-    const userId = session.metadata?.userId;
-
-    if (!userId) {
-        console.error('Missing userId in session metadata');
-        return;
-    }
-
-    // Retrieve full subscription details from Stripe to get dates
-    const subscription = (await stripe.subscriptions.retrieve(subscriptionId)) as any;
-
-    // Upsert into Supabase
-    const { error } = await supabaseAdmin
-        .from('user_subscriptions')
-        .insert({
-            user_id: userId,
-            stripe_subscription_id: subscriptionId,
-            status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-        });
-
-    if (error) throw error;
-    console.log(`✅ Subscription created for user ${userId}`);
-}
-
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-    const s = subscription as any;
-    const { error } = await supabaseAdmin
-        .from('user_subscriptions')
-        .update({
-            status: s.status,
-            current_period_start: new Date(s.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(s.current_period_end * 1000).toISOString(),
-            cancel_at_period_end: s.cancel_at_period_end,
-        })
-        .eq('stripe_subscription_id', s.id);
-
-    if (error) throw error;
-    console.log(`✅ Subscription updated: ${subscription.id} is now ${subscription.status}`);
-}
 
 async function handleOneTimePayment(session: Stripe.Checkout.Session) {
     if (!session.metadata?.orderId) return;
@@ -145,8 +79,7 @@ async function handleOneTimePayment(session: Stripe.Checkout.Session) {
         });
     }
 
-    // Also handle stock decrement here if not handled elsewhere
-    // Fetch order items using supabaseAdmin
+    // Handle stock decrement
     const { data: items } = await supabaseAdmin
         .from("order_items")
         .select("product_id, quantity, variant_id")

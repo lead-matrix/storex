@@ -24,7 +24,6 @@ export function Footer() {
                     <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                         <Link href="/shop" className="hover:text-white transition-colors">All Products</Link>
                         <Link href="/collections" className="hover:text-white transition-colors">Curated Sets</Link>
-                        <Link href="/membership" className="hover:text-white transition-colors">Inner Circle</Link>
                     </nav>
                 </div>
 

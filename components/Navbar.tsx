@@ -36,7 +36,6 @@ export function Navbar() {
         <>
             <Link href="/shop" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">Shop</Link>
             <Link href="/collections" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">Collections</Link>
-            <Link href="/membership" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">Inner Circle</Link>
             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">The Palace</Link>
         </>
     );

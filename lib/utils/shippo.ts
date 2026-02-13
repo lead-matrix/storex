@@ -1,20 +1,35 @@
-import Shippo from 'shippo';
+import * as Shippo from 'shippo';
 
-// Handle both constructor and function-style initialization
+let shippoInstance: any = null;
+
 const getShippo = () => {
-    const apiKey = process.env.SHIPPO_API_KEY;
-    if (!apiKey) return {} as any; // Fallback for build phase
+    if (shippoInstance) return shippoInstance;
 
-    return (Shippo as any).default
-        ? new (Shippo as any).default(apiKey)
-        : typeof Shippo === 'function'
-            ? (Shippo as any)(apiKey)
-            : new (Shippo as any)(apiKey);
+    const apiKey = process.env.SHIPPO_API_KEY;
+    if (!apiKey) {
+        return {
+            shipment: { create: async () => ({ rates: [] }) },
+            transaction: { create: async () => ({}) }
+        } as any;
+    }
+
+    try {
+        // Handle different export patterns (ESM vs CJS)
+        // @ts-ignore
+        const ShippoClass = (Shippo as any).default || Shippo;
+        shippoInstance = new ShippoClass(apiKey);
+        return shippoInstance;
+    } catch (e) {
+        console.error("Failed to initialize Shippo:", e);
+        return {
+            shipment: { create: async () => ({ rates: [] }) },
+            transaction: { create: async () => ({}) }
+        } as any;
+    }
 };
 
-const shippo = getShippo();
-
 export async function createShippingLabel(order: any) {
+    const shippo = getShippo();
     try {
         const shipment = await shippo.shipment.create({
             address_from: {
