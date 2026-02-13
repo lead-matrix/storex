@@ -1,13 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = {
-    title: "Forge New Item | Admin Palace",
-};
-
-export default async function NewProductPage() {
+export default function NewProductPage() {
     return (
         <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Link

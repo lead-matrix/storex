@@ -1,11 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
 import { Settings as SettingsIcon, Globe, CreditCard, Bell, ShieldCheck } from "lucide-react";
 
-export const metadata = {
-    title: "Palace Settings | Admin Palace",
-};
-
-export default async function AdminSettings() {
+export default function AdminSettings() {
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             <div>

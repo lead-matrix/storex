@@ -1,12 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
-import { Plus, Pencil, Trash2, ExternalLink, Package } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Plus, Pencil, Trash2, ExternalLink, Package, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { deleteProduct } from "@/lib/actions/admin";
 import Image from "next/image";
-
-export const metadata = {
-    title: "Inventory | The Obsidian Palace",
-};
+import { toast } from "sonner";
 
 interface Variant {
     id: string;
@@ -24,12 +24,49 @@ interface Product {
     variants: Variant[];
 }
 
-export default async function AdminProducts() {
-    const supabase = await createClient();
-    const { data: products } = await supabase
-        .from('products')
-        .select('*, variants(id, name, stock_quantity)')
-        .order('created_at', { ascending: false });
+export default function AdminProducts() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchProducts = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase
+            .from('products')
+            .select('*, variants(id, name, stock_quantity)')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching products:", error);
+        } else {
+            setProducts((data as any[]) || []);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to banish this artifact to the void?")) return;
+
+        try {
+            await deleteProduct(id);
+            toast.success("Artifact Banished");
+            fetchProducts();
+        } catch (error) {
+            toast.error("Banishment Failed");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-8 h-8 text-gold animate-spin" />
+                <p className="text-zinc-500 uppercase tracking-[0.3em] text-[10px]">Scanning The Vault...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -48,7 +85,7 @@ export default async function AdminProducts() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-                {(products as unknown as Product[] | null)?.map((product: Product) => (
+                {products.map((product) => (
                     <div key={product.id} className="bg-zinc-950 border border-gold/10 p-6 flex flex-col md:flex-row gap-6 items-center group hover:border-gold/30 transition-all">
                         <div className="w-24 h-24 bg-zinc-900 border border-gold/5 flex-shrink-0 relative overflow-hidden">
                             {product.images?.[0] ? (
@@ -96,20 +133,16 @@ export default async function AdminProducts() {
                             >
                                 <Pencil size={16} />
                             </Link>
-                            <form action={async () => {
-                                'use server'
-                                await deleteProduct(product.id)
-                            }}>
-                                <button
-                                    className="p-3 border border-zinc-800 text-zinc-500 hover:text-rose-500 hover:border-rose-500/30 transition-all"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </form>
+                            <button
+                                onClick={() => handleDelete(product.id)}
+                                className="p-3 border border-zinc-800 text-zinc-500 hover:text-rose-500 hover:border-rose-500/30 transition-all"
+                            >
+                                <Trash2 size={16} />
+                            </button>
                         </div>
                     </div>
                 ))}
-                {!products?.length && (
+                {!products.length && (
                     <div className="py-20 text-center border border-dashed border-gold/20 flex flex-col items-center justify-center">
                         <Package size={40} className="text-zinc-700 mb-4" />
                         <p className="text-zinc-500 uppercase tracking-widest text-[10px]">The vault is currently empty</p>

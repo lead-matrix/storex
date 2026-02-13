@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { User, Shield, Search } from "lucide-react";
+"use client";
 
-export const metadata = {
-    title: "Customers | The Obsidian Palace",
-};
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { User, Shield, Search, Loader2 } from "lucide-react";
 
 interface Profile {
     id: string;
@@ -12,14 +11,42 @@ interface Profile {
     created_at: string;
 }
 
-export default async function AdminUsers() {
-    const supabase = await createClient();
+export default function AdminUsers() {
+    const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
-    // Fetch profiles and link with auth data if possible
-    const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const fetchProfiles = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching profiles:", error);
+        } else {
+            setProfiles((data as Profile[]) || []);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchProfiles();
+    }, []);
+
+    const filteredProfiles = profiles.filter(p =>
+        p.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (loading) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-8 h-8 text-gold animate-spin" />
+                <p className="text-zinc-500 uppercase tracking-[0.3em] text-[10px]">Assembling Resident Directory...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -32,6 +59,8 @@ export default async function AdminUsers() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" />
                     <input
                         placeholder="SEARCH CLIENTS..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-zinc-950 border border-gold/10 px-10 py-3 text-[10px] uppercase tracking-widest text-white focus:border-gold/30 outline-none transition-colors"
                     />
                 </div>
@@ -50,7 +79,7 @@ export default async function AdminUsers() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gold/5">
-                            {(profiles as Profile[] | null)?.map((profile: Profile) => (
+                            {filteredProfiles.map((profile) => (
                                 <tr key={profile.id} className="text-sm group hover:bg-gold/5 transition-colors">
                                     <td className="p-6">
                                         <div className="flex items-center gap-3">
@@ -73,7 +102,7 @@ export default async function AdminUsers() {
                                     </td>
                                 </tr>
                             ))}
-                            {!profiles?.length && (
+                            {!filteredProfiles.length && (
                                 <tr>
                                     <td colSpan={5} className="p-20 text-center text-zinc-600 italic font-light tracking-widest uppercase text-[10px]">No residents found in the palace</td>
                                 </tr>
