@@ -74,8 +74,17 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // 2. Zero 404 Policy: Redirect non-existent routes if needed 
-    // (Next.js automatically handles not-found.tsx, but middleware can be used for custom logic)
+    // 2. Checkout Flow Protection
+    if (request.nextUrl.pathname.startsWith('/checkout')) {
+        if (!user) {
+            return NextResponse.redirect(new URL(`/login?next=${request.nextUrl.pathname}`, request.url))
+        }
+    }
+
+    // 3. Prevent logged in users from visiting login
+    if (user && request.nextUrl.pathname.startsWith('/login')) {
+        return NextResponse.redirect(new URL('/', request.url))
+    }
 
     return response
 }
