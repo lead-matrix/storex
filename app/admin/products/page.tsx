@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { Plus, Pencil, Trash2, ExternalLink, Package, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { deleteProduct } from "@/lib/actions/admin";
@@ -29,7 +29,6 @@ export default function AdminProducts() {
     const [loading, setLoading] = useState(true);
 
     const fetchProducts = async () => {
-        const supabase = createClient();
         const { data, error } = await supabase
             .from('products')
             .select('*, variants(id, name, stock_quantity)')

@@ -1,25 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { ProductActions } from "./ProductActions";
 import Link from "next/link";
 import { ArrowLeft, Share2 } from "lucide-react";
 import Image from "next/image";
+import { cookies } from "next/headers";
 
-import { createClient as createPublicClient } from "@/lib/supabase/public";
-
-export async function generateStaticParams() {
-    const supabase = createPublicClient();
-    if (!supabase) return [];
-
-    const { data: products } = await supabase
-        .from("products")
-        .select("id");
-
-    return products?.map((product: { id: string }) => ({
-        id: product.id,
-    })) || [];
-}
+export const dynamic = "force-dynamic";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -27,7 +15,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createServerClient();
     const { data: product } = await supabase
         .from("products")
         .select("name, description")
@@ -46,13 +34,10 @@ export default async function ProductPage({ params }: PageProps) {
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    let supabase;
-    try {
-        supabase = await createClient();
-    } catch (err) {
-        console.error('Failed to initialize Supabase client:', err);
-        return notFound();
-    }
+    // Access cookies to ensure request-time context
+    await cookies();
+
+    const supabase = await createServerClient();
 
     const { data: product, error } = await supabase
         .from('products')

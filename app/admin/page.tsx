@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import {
     TrendingUp,
     Users,
@@ -34,7 +34,6 @@ export default function AdminDashboard() {
     useEffect(() => {
         async function fetchStats() {
             setLoading(true);
-            const supabase = createClient();
 
             try {
                 // Fetch Stats in parallel

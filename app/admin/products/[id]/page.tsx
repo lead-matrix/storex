@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -15,7 +15,6 @@ export default function EditProductPage() {
 
     useEffect(() => {
         const fetchProduct = async () => {
-            const supabase = createClient();
             const { data, error } = await supabase
                 .from('products')
                 .select('*, variants(*)')

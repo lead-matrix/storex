@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { User, Shield, Search, Loader2 } from "lucide-react";
 
 interface Profile {
@@ -17,7 +17,6 @@ export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState("");
 
     const fetchProfiles = async () => {
-        const supabase = createClient();
         const { data, error } = await supabase
             .from('profiles')
             .select('*')

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { ProductCard } from "./ProductCard";
 import { Loader2 } from "lucide-react";
 
@@ -25,7 +25,6 @@ export function ProductGrid() {
 
     useEffect(() => {
         async function fetchProducts() {
-            const supabase = createClient();
             const { data, error } = await supabase
                 .from("products")
                 .select("*, variants(*)")

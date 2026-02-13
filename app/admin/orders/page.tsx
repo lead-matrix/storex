@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { Package, Truck, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
 import { fulfillOrder } from "@/lib/actions/admin";
 import { toast } from "sonner";
@@ -24,7 +24,6 @@ export default function AdminOrders() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     const fetchOrders = async () => {
-        const supabase = createClient();
         const { data, error } = await supabase
             .from('orders')
             .select('*, profiles(email)')
