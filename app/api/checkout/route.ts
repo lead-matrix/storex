@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
 import Stripe from "stripe";
 
 let stripeInstance: Stripe | null = null;
@@ -14,7 +14,7 @@ const getStripe = () => {
 export async function POST(req: Request) {
     try {
         const { items } = await req.json();
-        const supabase = await createClient();
+        const supabase = await createServerClient();
 
         let subtotal = 0;
         const line_items: any[] = [];

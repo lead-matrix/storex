@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@/lib/supabase/server";
 import { createClient as createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
@@ -25,7 +25,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createServerClient();
     const { data: product } = await supabase
         .from("products")
         .select("name, description")
@@ -47,7 +47,7 @@ export default async function ProductPage({ params }: PageProps) {
     // Access cookies to ensure request-time context
     await cookies();
 
-    const supabase = await createClient();
+    const supabase = await createServerClient();
 
     const { data: product, error } = await supabase
         .from('products')

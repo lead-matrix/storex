@@ -6,7 +6,7 @@ import { createMockSupabaseClient } from './mock'
  * FIXED: This client checks if it's being called during a "Static Generation" 
  * (Build) and skips the cookie requirement if so.
  */
-export async function createClient() {
+export async function createServerClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
