@@ -19,18 +19,41 @@ interface Product {
     base_price: number;
     images: string[];
     variants: Variant[];
+    category_id?: string;
 }
 
-export function ProductGrid() {
+interface ProductGridProps {
+    categoryId?: string;
+    filter?: string;
+}
+
+export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchProducts() {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("products")
                 .select("*, variants(*)")
-                .order("created_at", { ascending: false });
+                .eq("is_active", true);
+
+            // Filter by category if provided
+            if (categoryId) {
+                query = query.eq("category_id", categoryId);
+            }
+
+            // Apply additional filters
+            if (filter === "new") {
+                query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+            } else if (filter === "bestsellers") {
+                // You can add a bestseller flag or sort by sales
+                query = query.order("created_at", { ascending: false });
+            } else {
+                query = query.order("created_at", { ascending: false });
+            }
+
+            const { data, error } = await query;
 
             if (error) {
                 console.error("Error fetching products:", error);
@@ -40,7 +63,7 @@ export function ProductGrid() {
             setLoading(false);
         }
         fetchProducts();
-    }, []);
+    }, [categoryId, filter]);
 
     if (loading) {
         return (

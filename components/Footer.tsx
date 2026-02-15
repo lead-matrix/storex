@@ -1,70 +1,267 @@
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, MapPin, Phone, Mail } from "lucide-react";
+import { Instagram, Facebook, Twitter, MapPin, Phone, Mail, Youtube } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
+import { createClient } from "@/utils/supabase/server";
 
-export function Footer() {
+interface SocialLinks {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+}
+
+interface ContactInfo {
+    email?: string;
+    phone?: string;
+    address?: string;
+    hours?: string;
+}
+
+interface StoreInfo {
+    name?: string;
+    tagline?: string;
+    description?: string;
+}
+
+interface FooterLink {
+    text: string;
+    url: string;
+}
+
+interface FooterColumn {
+    title: string;
+    links: FooterLink[];
+}
+
+interface FooterLinks {
+    columns?: FooterColumn[];
+}
+
+export async function Footer() {
+    const supabase = await createClient();
+
+    // Fetch settings from database
+    const { data: settings } = await supabase
+        .from("site_settings")
+        .select("*");
+
+    let storeInfo: StoreInfo = {
+        name: "DINA COSMETIC",
+        tagline: "The Obsidian Palace",
+        description: "Ultra-minimalist luxury beauty and skincare curated at the Obsidian Palace.",
+    };
+
+    let contactInfo: ContactInfo = {
+        email: "concierge@dinacosmetic.store",
+        phone: "+1 (800) 123-4567",
+        address: "123 Obsidian Avenue",
+        hours: "Mon-Fri: 9AM-6PM",
+    };
+
+    let socialLinks: SocialLinks = {
+        facebook: "",
+        instagram: "",
+        twitter: "",
+        tiktok: "",
+        youtube: "",
+    };
+
+    let footerLinks: FooterLinks = {
+        columns: [
+            {
+                title: "THE COLLECTION",
+                links: [
+                    { text: "All Products", url: "/shop" },
+                    { text: "Curated Sets", url: "/collections" },
+                ],
+            },
+            {
+                title: "THE PALACE",
+                links: [
+                    { text: "Our Story", url: "/about" },
+                    { text: "Boutique", url: "/shop" },
+                    { text: "Contact", url: "/contact" },
+                ],
+            },
+        ],
+    };
+
+    // Parse settings if available
+    if (settings) {
+        settings.forEach((setting) => {
+            switch (setting.setting_key) {
+                case "store_info":
+                    storeInfo = { ...storeInfo, ...setting.setting_value };
+                    break;
+                case "contact_info":
+                    contactInfo = { ...contactInfo, ...setting.setting_value };
+                    break;
+                case "social_links":
+                    socialLinks = { ...socialLinks, ...setting.setting_value };
+                    break;
+                case "footer_links":
+                    footerLinks = { ...footerLinks, ...setting.setting_value };
+                    break;
+            }
+        });
+    }
+
     return (
         <footer className="bg-black border-t border-gold/10 pt-20 pb-10 px-6">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                 {/* Brand */}
                 <div className="space-y-6">
-                    <h2 className="text-xl font-serif tracking-[0.3em] text-white">DINA COSMETIC</h2>
+                    <h2 className="text-xl font-serif tracking-[0.3em] text-white">
+                        {storeInfo.name}
+                    </h2>
                     <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 leading-relaxed">
-                        Ultra-minimalist luxury beauty and skincare curated at the Obsidian Palace.
+                        {storeInfo.description}
                     </p>
                     <div className="flex gap-4">
-                        <Link href="#" className="text-zinc-500 hover:text-gold transition-colors"><Instagram size={18} /></Link>
-                        <Link href="#" className="text-zinc-500 hover:text-gold transition-colors"><Facebook size={18} /></Link>
-                        <Link href="#" className="text-zinc-500 hover:text-gold transition-colors"><Twitter size={18} /></Link>
+                        {socialLinks.instagram && (
+                            <Link
+                                href={socialLinks.instagram}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-500 hover:text-gold transition-colors"
+                                aria-label="Instagram"
+                            >
+                                <Instagram size={18} />
+                            </Link>
+                        )}
+                        {socialLinks.facebook && (
+                            <Link
+                                href={socialLinks.facebook}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-500 hover:text-gold transition-colors"
+                                aria-label="Facebook"
+                            >
+                                <Facebook size={18} />
+                            </Link>
+                        )}
+                        {socialLinks.twitter && (
+                            <Link
+                                href={socialLinks.twitter}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-500 hover:text-gold transition-colors"
+                                aria-label="Twitter"
+                            >
+                                <Twitter size={18} />
+                            </Link>
+                        )}
+                        {socialLinks.tiktok && (
+                            <Link
+                                href={socialLinks.tiktok}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-500 hover:text-gold transition-colors"
+                                aria-label="TikTok"
+                            >
+                                <FaTiktok size={18} />
+                            </Link>
+                        )}
+                        {socialLinks.youtube && (
+                            <Link
+                                href={socialLinks.youtube}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-zinc-500 hover:text-gold transition-colors"
+                                aria-label="YouTube"
+                            >
+                                <Youtube size={18} />
+                            </Link>
+                        )}
                     </div>
                 </div>
 
-                {/* Quick Links */}
-                <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">The Collection</h3>
-                    <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                        <Link href="/shop" className="hover:text-white transition-colors">All Products</Link>
-                        <Link href="/collections" className="hover:text-white transition-colors">Curated Sets</Link>
-                    </nav>
-                </div>
-
-                {/* Information */}
-                <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">The Palace</h3>
-                    <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                        <Link href="/about" className="hover:text-white transition-colors">Our Story</Link>
-                        <Link href="/shop" className="hover:text-white transition-colors">Boutique</Link>
-                        <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-                    </nav>
-                </div>
+                {/* Dynamic Footer Columns */}
+                {footerLinks.columns?.map((column, index) => (
+                    <div key={index} className="space-y-6">
+                        <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">
+                            {column.title}
+                        </h3>
+                        <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                            {column.links.map((link, linkIndex) => (
+                                <Link
+                                    key={linkIndex}
+                                    href={link.url}
+                                    className="hover:text-white transition-colors"
+                                >
+                                    {link.text}
+                                </Link>
+                            ))}
+                        </nav>
+                    </div>
+                ))}
 
                 {/* Contact */}
                 <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">Inquiries</h3>
+                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">
+                        Inquiries
+                    </h3>
                     <div className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                        <div className="flex items-center gap-3">
-                            <MapPin size={14} className="text-gold" />
-                            <span>123 Obsidian Tower, Virtual City</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Mail size={14} className="text-gold" />
-                            <span>concierge@dinacosmetic.store</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Phone size={14} className="text-gold" />
-                            <span>+1 (800) LUX-DINA</span>
-                        </div>
+                        {contactInfo.address && (
+                            <div className="flex items-start gap-3">
+                                <MapPin size={14} className="text-gold mt-0.5 flex-shrink-0" />
+                                <span>{contactInfo.address}</span>
+                            </div>
+                        )}
+                        {contactInfo.email && (
+                            <div className="flex items-center gap-3">
+                                <Mail size={14} className="text-gold flex-shrink-0" />
+                                <a
+                                    href={`mailto:${contactInfo.email}`}
+                                    className="hover:text-white transition-colors break-all"
+                                >
+                                    {contactInfo.email}
+                                </a>
+                            </div>
+                        )}
+                        {contactInfo.phone && (
+                            <div className="flex items-center gap-3">
+                                <Phone size={14} className="text-gold flex-shrink-0" />
+                                <a
+                                    href={`tel:${contactInfo.phone.replace(/\s/g, "")}`}
+                                    className="hover:text-white transition-colors"
+                                    suppressHydrationWarning
+                                >
+                                    {contactInfo.phone}
+                                </a>
+                            </div>
+                        )}
+                        {contactInfo.hours && (
+                            <div className="flex items-start gap-3 pt-2 border-t border-white/5">
+                                <span className="text-gold text-[9px]">HOURS:</span>
+                                <span className="text-[9px]">{contactInfo.hours}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-600">
-                    © {new Date().getFullYear()} DINA COSMETIC. All rights reserved.
+                <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-600" suppressHydrationWarning>
+                    © {new Date().getFullYear()} {storeInfo.name}. All rights reserved.
                 </p>
                 <div className="flex items-center gap-8 grayscale opacity-30">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4" />
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
+                        alt="PayPal"
+                        className="h-4"
+                    />
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
+                        alt="Visa"
+                        className="h-3"
+                    />
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                        alt="Mastercard"
+                        className="h-4"
+                    />
                 </div>
             </div>
         </footer>

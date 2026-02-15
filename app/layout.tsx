@@ -17,26 +17,69 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://dinacosmetic.store'),
   title: {
-    default: "DINA COSMETIC | The Obsidian Palace",
+    default: "DINA COSMETIC | The Obsidian Palace - Luxury Beauty & Cosmetics",
     template: "%s | DINA COSMETIC"
   },
-  description: "DINA COSMETIC - Ultra-minimalist, high-end luxury beauty and skincare at the Obsidian Palace.",
-  keywords: ["cosmetics", "luxury beauty", "DINA COSMETIC", "LMT", "skincare"],
-  authors: [{ name: "DINA COSMETIC" }],
+  description: "Discover premium beauty products and cosmetics at DINA COSMETIC - The Obsidian Palace. Shop luxury skincare, makeup, and beauty essentials with ultra-minimalist, high-end design.",
+  keywords: [
+    "DINA COSMETIC",
+    "luxury cosmetics",
+    "premium beauty products",
+    "high-end skincare",
+    "luxury makeup",
+    "beauty essentials",
+    "The Obsidian Palace",
+    "luxury beauty store",
+    "premium cosmetics online",
+    "designer beauty products"
+  ],
+  authors: [{ name: "DINA COSMETIC", url: "https://dinacosmetic.store" }],
+  creator: "DINA COSMETIC",
+  publisher: "DINA COSMETIC",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://dinacosmetic.store",
-    siteName: "DINA COSMETIC",
+    siteName: "DINA COSMETIC - The Obsidian Palace",
+    title: "DINA COSMETIC | Luxury Beauty & Cosmetics",
+    description: "Discover premium beauty products and cosmetics at The Obsidian Palace. Shop luxury skincare, makeup, and beauty essentials.",
     images: [
       {
         url: "/logo.jpg",
         width: 1200,
         height: 630,
-        alt: "DINA COSMETIC Logo",
+        alt: "DINA COSMETIC - The Obsidian Palace",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DINA COSMETIC | Luxury Beauty & Cosmetics",
+    description: "Discover premium beauty products at The Obsidian Palace",
+    images: ["/logo.jpg"],
+    creator: "@dinacosmetic",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: "your-google-verification-code",
+    // Add other verification codes as needed
   },
 };
 

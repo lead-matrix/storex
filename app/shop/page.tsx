@@ -1,9 +1,41 @@
-"use client";
-
 import { ProductGrid } from "@/components/ProductGrid";
 import { Sparkles, Filter } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
+import Link from "next/link";
+import { Metadata } from "next";
 
-export default function ShopPage() {
+export const metadata: Metadata = {
+    title: "Shop All Products",
+    description: "Discover our complete collection of luxury beauty and cosmetic products. Shop premium skincare, makeup, and beauty essentials.",
+    openGraph: {
+        title: "Shop All Products | DINA COSMETIC",
+        description: "Discover our complete collection of luxury beauty products",
+    },
+};
+
+interface ShopPageProps {
+    searchParams: Promise<{ category?: string; filter?: string }>;
+}
+
+export default async function ShopPage(props: ShopPageProps) {
+    const searchParams = await props.searchParams;
+    const categorySlug = searchParams?.category;
+    const filter = searchParams?.filter;
+
+    const supabase = await createClient();
+
+    // Fetch categories for filter buttons
+    const { data: categories } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+
+    // Find selected category
+    let selectedCategory = null;
+    if (categorySlug && categories) {
+        selectedCategory = categories.find((cat) => cat.slug === categorySlug);
+    }
+
     return (
         <div className="bg-black text-white min-h-screen pt-32">
             <div className="px-6 max-w-7xl mx-auto space-y-16">
@@ -11,12 +43,16 @@ export default function ShopPage() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-gold">
                             <Sparkles size={12} className="animate-pulse" />
-                            <span className="text-[10px] uppercase tracking-[0.5em] font-light">The Full Collection</span>
+                            <span className="text-[10px] uppercase tracking-[0.5em] font-light">
+                                {selectedCategory ? selectedCategory.name : "The Full Collection"}
+                            </span>
                         </div>
-                        <h1 className="text-5xl md:text-8xl font-serif italic tracking-tighter">Boutique</h1>
+                        <h1 className="text-5xl md:text-8xl font-serif italic tracking-tighter">
+                            {selectedCategory ? selectedCategory.name : "Boutique"}
+                        </h1>
                     </div>
                     <p className="text-zinc-500 text-[10px] uppercase tracking-[0.3em] max-w-xs text-right leading-loose">
-                        Synchronized perfection for those who demand absolute excellence in every application.
+                        {selectedCategory?.description || "Synchronized perfection for those who demand absolute excellence in every application."}
                     </p>
                 </div>
 
@@ -26,15 +62,29 @@ export default function ShopPage() {
                         <Filter size={12} />
                         <span>Filter:</span>
                     </div>
-                    <button className="text-white hover:text-gold transition-colors">All</button>
-                    <button className="text-white/40 hover:text-gold transition-colors">Face</button>
-                    <button className="text-white/40 hover:text-gold transition-colors">Eyes</button>
-                    <button className="text-white/40 hover:text-gold transition-colors">Lips</button>
-                    <button className="text-white/40 hover:text-gold transition-colors">Tools</button>
+                    <Link
+                        href="/shop"
+                        className={`transition-colors ${!categorySlug ? "text-gold" : "text-white/40 hover:text-gold"
+                            }`}
+                    >
+                        All
+                    </Link>
+                    {categories?.map((category) => (
+                        <Link
+                            key={category.id}
+                            href={`/shop?category=${category.slug}`}
+                            className={`transition-colors ${categorySlug === category.slug
+                                    ? "text-gold"
+                                    : "text-white/40 hover:text-gold"
+                                }`}
+                        >
+                            {category.name}
+                        </Link>
+                    ))}
                 </div>
 
                 <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    <ProductGrid />
+                    <ProductGrid categoryId={selectedCategory?.id} filter={filter} />
                 </div>
             </div>
         </div>

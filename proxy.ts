@@ -2,10 +2,10 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /**
- * Obsidian Palace Middleware
+ * Obsidian Palace Proxy (Next.js 16+)
  * Unified security and routing layer at the Edge.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -113,4 +113,4 @@ export const config = {
     ],
 }
 
-export default middleware;
+export default proxy;
