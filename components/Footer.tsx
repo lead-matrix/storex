@@ -41,15 +41,20 @@ interface FooterLinks {
 export async function Footer() {
     const supabase = await createClient();
 
-    // Fetch settings from database
-    const { data: settings } = await supabase
-        .from("site_settings")
-        .select("*");
+    // Fetch site settings and footer content
+    const [settingsResult, footerContentResult] = await Promise.all([
+        supabase.from("site_settings").select("*"),
+        supabase.from("frontend_content").select("content_data").eq("content_key", "footer_main").single()
+    ]);
+
+    const { data: settings } = settingsResult;
+    const { data: footerContentData } = footerContentResult;
+    const footerContent = footerContentData?.content_data;
 
     let storeInfo: StoreInfo = {
-        name: "DINA COSMETIC",
+        name: footerContent?.tagline || "DINA COSMETIC",
         tagline: "The Obsidian Palace",
-        description: "Ultra-minimalist luxury beauty and skincare curated at the Obsidian Palace.",
+        description: footerContent?.tagline || "Ultra-minimalist luxury beauty and skincare curated at the Obsidian Palace.",
     };
 
     let contactInfo: ContactInfo = {
@@ -60,15 +65,15 @@ export async function Footer() {
     };
 
     let socialLinks: SocialLinks = {
-        facebook: "",
-        instagram: "",
-        twitter: "",
-        tiktok: "",
-        youtube: "",
+        facebook: footerContent?.social_links?.facebook || "",
+        instagram: footerContent?.social_links?.instagram || "",
+        twitter: footerContent?.social_links?.twitter || "",
+        tiktok: footerContent?.social_links?.tiktok || "",
+        youtube: footerContent?.social_links?.youtube || "",
     };
 
     let footerLinks: FooterLinks = {
-        columns: [
+        columns: footerContent?.columns || [
             {
                 title: "THE COLLECTION",
                 links: [
@@ -87,7 +92,7 @@ export async function Footer() {
         ],
     };
 
-    // Parse settings if available
+    // Parse settings if available (settings take precedence for operational info)
     if (settings) {
         settings.forEach((setting) => {
             switch (setting.setting_key) {
@@ -98,6 +103,7 @@ export async function Footer() {
                     contactInfo = { ...contactInfo, ...setting.setting_value };
                     break;
                 case "social_links":
+                    // If social links are defined in site_settings, they override footer_content
                     socialLinks = { ...socialLinks, ...setting.setting_value };
                     break;
                 case "footer_links":
@@ -108,7 +114,7 @@ export async function Footer() {
     }
 
     return (
-        <footer className="bg-black border-t border-gold/10 pt-20 pb-10 px-6">
+        <footer className="bg-background border-t border-gold/10 pt-20 pb-10 px-6">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                 {/* Brand */}
                 <div className="space-y-6">

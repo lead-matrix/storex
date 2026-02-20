@@ -47,7 +47,6 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
             if (filter === "new") {
                 query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
             } else if (filter === "bestsellers") {
-                // You can add a bestseller flag or sort by sales
                 query = query.order("created_at", { ascending: false });
             } else {
                 query = query.order("created_at", { ascending: false });
@@ -62,7 +61,23 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
             }
             setLoading(false);
         }
+
         fetchProducts();
+
+        // Subscribe to real-time changes for instant synchronization
+        const productChannel = supabase
+            .channel('product-updates')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+                fetchProducts();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'variants' }, () => {
+                fetchProducts();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(productChannel);
+        };
     }, [categoryId, filter]);
 
     if (loading) {

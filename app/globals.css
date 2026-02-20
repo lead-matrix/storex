@@ -9,29 +9,31 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
+    --background: 240 10% 2%;
+    /* Very dark charcoal/obsidian instead of pure black */
     --foreground: 0 0% 100%;
-    --card: 0 0% 3%;
+    --card: 240 10% 4%;
+    /* Slightly lighter for cards */
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 3%;
+    --popover: 240 10% 4%;
     --popover-foreground: 0 0% 100%;
     --primary: 45 64% 52%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 9%;
+    --secondary: 240 10% 8%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 240 10% 8%;
+    --muted-foreground: 240 5% 65%;
     --accent: 45 64% 52%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
+    --border: 240 10% 12%;
+    --input: 240 10% 12%;
     --ring: 45 64% 52%;
   }
 
   * {
-    border-color: var(--color-zinc-800, #27272a);
+    border-color: hsl(240 10% 12%);
   }
 
   html {
@@ -40,7 +42,10 @@
   }
 
   body {
-    background-color: black;
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(circle at 50% -20%, hsl(45 64% 52% / 0.05), transparent 70%),
+      radial-gradient(circle at 0% 100%, hsl(240 10% 5%), transparent 50%);
     color: white;
     @apply antialiased overflow-x-hidden;
     font-family: var(--font-inter), sans-serif;

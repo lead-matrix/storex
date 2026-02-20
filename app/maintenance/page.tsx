@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function MaintenancePage() {
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center select-none overflow-hidden relative">
+        <div className="min-h-screen bg-background flex items-center justify-center p-6 text-center select-none overflow-hidden relative">
             {/* Aesthetic Background Accents */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-20">
                 <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] bg-[#D4AF37] rounded-full blur-[150px]" />

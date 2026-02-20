@@ -10,8 +10,22 @@ import { createClient } from "@/utils/supabase/client";
 export function Hero() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [heroData, setHeroData] = useState<any>(null);
     const supabase = createClient();
+
+    useEffect(() => {
+        const fetchHeroData = async () => {
+            const { data } = await supabase
+                .from('pages')
+                .select('content')
+                .eq('slug', 'home')
+                .single();
+            if (data?.content?.hero) {
+                setHeroData(data.content.hero);
+            }
+        };
+        fetchHeroData();
+    }, []);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -33,16 +47,18 @@ export function Hero() {
         <>
             <section className="relative h-[90vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden">
                 {/* Background Ambience */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black via-black to-gold/5 z-0" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-gold/5 z-0" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gold/5 blur-[120px] rounded-full z-0 animate-pulse" />
 
                 <div className="relative z-10 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         <p className="text-gold uppercase tracking-[0.5em] text-[10px] md:text-xs font-light">
-                            Luxury Skin & Color
+                            {heroData?.subtitle || "Luxury Skin & Color"}
                         </p>
-                        <h1 className="text-6xl md:text-9xl font-serif text-white tracking-tighter leading-none">
-                            DINA <br className="md:hidden" /> COSMETIC
+                        <h1 className="text-6xl md:text-9xl font-serif text-white tracking-tighter leading-tight">
+                            {heroData?.title?.split(' ').map((word: string, i: number) => (
+                                <span key={i} className="block md:inline mr-4 last:mr-0">{word}</span>
+                            )) || "DINA COSMETIC"}
                         </h1>
                     </div>
 
@@ -58,11 +74,11 @@ export function Hero() {
                             onClick={() => document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' })}
                             className="group relative flex items-center gap-4 border border-gold/40 px-12 py-5 text-gold hover:border-gold transition-all duration-700 uppercase text-xs tracking-[0.4em] overflow-hidden min-w-[280px]"
                         >
-                            <span className="relative z-10">Explore The Vault</span>
+                            <span className="relative z-10">{heroData?.cta_text || "Explore The Vault"}</span>
                             <ArrowRight className="relative z-10 w-4 h-4 group-hover:translate-x-2 transition-transform duration-500" />
                             <div className="absolute inset-0 bg-gold translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0" />
                             <span className="absolute inset-0 flex items-center justify-center text-black opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20">
-                                Check Products <ArrowRight className="w-4 h-4 ml-4" />
+                                View Collection <ArrowRight className="w-4 h-4 ml-4" />
                             </span>
                         </button>
 

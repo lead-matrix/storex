@@ -27,7 +27,7 @@ export default function AdminLayoutClient({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full font-sans bg-black border-r border-gold/10">
+        <div className="flex flex-col h-full font-sans bg-background border-r border-gold/10">
             <div className="px-6 py-8 border-b border-gold/10 bg-zinc-950/30">
                 <div className="flex items-center gap-3">
                     <div className="relative w-8 h-8 rounded-full border border-gold/20 overflow-hidden bg-black flex items-center justify-center">
@@ -87,7 +87,7 @@ export default function AdminLayoutClient({
     );
 
     return (
-        <div className="flex min-h-screen bg-black text-white font-sans overflow-x-hidden">
+        <div className="flex min-h-screen bg-background text-white font-sans overflow-x-hidden">
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex w-72 border-r border-gold/10 flex-col bg-zinc-950/20 sticky top-0 h-screen">
                 <SidebarContent />
@@ -104,7 +104,7 @@ export default function AdminLayoutClient({
                                     <Menu size={20} />
                                 </button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="bg-black border-r border-gold/20 w-[280px] p-0">
+                            <SheetContent side="left" className="bg-background border-r border-gold/20 w-[280px] p-0">
                                 <SheetHeader className="sr-only">
                                     <SheetTitle>Admin Navigation</SheetTitle>
                                 </SheetHeader>

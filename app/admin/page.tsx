@@ -179,7 +179,7 @@ export default function AdminDashboard() {
 
 function StatCard({ label, value, icon, sub }: { label: string; value: string; icon: React.ReactNode; sub?: string }) {
     return (
-        <div className="p-6 bg-zinc-950 border border-gold/10 hover:border-gold/30 transition-all">
+        <div className="p-6 bg-card/50 backdrop-blur-sm border border-gold/10 hover:border-gold/30 transition-all">
             <div className="flex justify-between items-start mb-4">
                 <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-medium">{label}</span>
                 {icon}

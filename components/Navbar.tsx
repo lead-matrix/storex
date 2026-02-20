@@ -16,6 +16,7 @@ export function Navbar() {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const supabase = createClient();
     const [user, setUser] = useState<any>(null);
+    const [headerData, setHeaderData] = useState<any>(null);
 
     useEffect(() => {
         const getUser = async () => {
@@ -23,6 +24,16 @@ export function Navbar() {
             setUser(user);
         };
         getUser();
+
+        const fetchHeaderData = async () => {
+            const { data } = await supabase
+                .from('frontend_content')
+                .select('content_data')
+                .eq('content_key', 'header_main')
+                .single();
+            if (data) setHeaderData(data.content_data);
+        };
+        fetchHeaderData();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
@@ -47,17 +58,32 @@ export function Navbar() {
         fetchResults();
     }, [searchQuery]);
 
-    const NavLinks = () => (
-        <>
-            <Link href="/shop" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">Shop</Link>
-            <Link href="/collections" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">Collections</Link>
-            <Link href="/about" onClick={() => setIsMenuOpen(false)} className="hover:text-gold transition-colors text-white/70 py-2">The Palace</Link>
-        </>
-    );
+    const NavLinks = () => {
+        const links = headerData?.navigation || [
+            { label: "Shop", href: "/shop" },
+            { label: "Collections", href: "/collections" },
+            { label: "The Palace", href: "/about" }
+        ];
+
+        return (
+            <>
+                {links.map((link: any, i: number) => (
+                    <Link
+                        key={i}
+                        href={link.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="hover:text-gold transition-colors text-white/70 py-2"
+                    >
+                        {link.label}
+                    </Link>
+                ))}
+            </>
+        );
+    };
 
     return (
         <>
-            <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between">
+            <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-gold/10 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-6">
                     {/* Mobile Menu Trigger */}
                     <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -66,12 +92,14 @@ export function Navbar() {
                                 <Menu className="w-5 h-5" />
                             </button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="bg-black border-r border-gold/10 w-full p-0 flex flex-col">
-                            <div className="p-8 border-b border-white/5 flex flex-col items-center gap-4">
+                        <SheetContent side="left" className="bg-background border-r border-gold/20 w-full p-0 flex flex-col">
+                            <div className="p-8 border-b border-gold/10 flex flex-col items-center gap-4">
                                 <div className="relative w-12 h-12">
-                                    <Image src="/logo.jpg" alt="Logo" fill className="object-contain" />
+                                    <Image src={headerData?.logo?.url || "/logo.jpg"} alt="Logo" fill className="object-contain" />
                                 </div>
-                                <SheetTitle className="font-serif text-2xl tracking-[0.2em] text-white">DINA COSMETIC</SheetTitle>
+                                <SheetTitle className="font-serif text-2xl tracking-[0.2em] text-white">
+                                    {headerData?.logo?.alt || "DINA COSMETIC"}
+                                </SheetTitle>
                                 <p className="text-[9px] uppercase tracking-[0.4em] text-gold/60 font-light">The Obsidian Palace</p>
                             </div>
 
@@ -88,7 +116,7 @@ export function Navbar() {
                                 </Link>
                             </div>
 
-                            <div className="p-8 border-t border-white/5 bg-zinc-950/50 space-y-8">
+                            <div className="p-8 border-t border-gold/10 bg-zinc-950/50 space-y-8">
                                 <div className="flex justify-center gap-8 text-white/30">
                                     <Instagram size={20} className="hover:text-gold transition-colors" />
                                     <span className="text-[10px] uppercase tracking-widest self-center">@dinacosmetic</span>
@@ -112,9 +140,11 @@ export function Navbar() {
 
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
                     <div className="relative w-8 h-8">
-                        <Image src="/logo.jpg" alt="Logo" fill className="object-contain" />
+                        <Image src={headerData?.logo?.url || "/logo.jpg"} alt="Logo" fill className="object-contain" />
                     </div>
-                    <span className="hidden lg:block font-serif text-lg tracking-widest text-white uppercase">DINA COSMETIC</span>
+                    <span className="hidden lg:block font-serif text-lg tracking-widest text-white uppercase">
+                        {headerData?.logo?.alt || "DINA COSMETIC"}
+                    </span>
                 </Link>
 
                 <div className="flex items-center gap-2 md:gap-4">

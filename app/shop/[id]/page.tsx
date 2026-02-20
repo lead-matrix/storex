@@ -60,7 +60,7 @@ export default async function ProductPage({ params }: PageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-[#000000] text-white pt-32 pb-16 px-6 animate-in fade-in duration-1000">
+        <div className="min-h-screen bg-background text-white pt-32 pb-16 px-6 animate-in fade-in duration-1000">
             <div className="max-w-7xl mx-auto">
                 <Link
                     href="/"
