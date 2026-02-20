@@ -48,18 +48,18 @@ export function ProductForm({ product }: ProductFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div className="space-y-6">
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Product Name</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">Product Name</Label>
                         <Input
                             name="name"
                             defaultValue={product?.name}
                             placeholder="e.g. Obsidian Foundation"
                             required
-                            className="bg-black border-gold/20 rounded-none focus-visible:ring-gold focus-visible:ring-offset-0 text-white placeholder:text-zinc-700 h-12"
+                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 h-12"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Base Price (USD)</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">Base Price (USD)</Label>
                         <Input
                             name="base_price"
                             type="number"
@@ -67,41 +67,41 @@ export function ProductForm({ product }: ProductFormProps) {
                             placeholder="0.00"
                             defaultValue={product?.base_price}
                             required
-                            className="bg-black border-gold/20 rounded-none focus-visible:ring-gold focus-visible:ring-offset-0 text-white placeholder:text-zinc-700 h-12"
+                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 h-12"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Category</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">Category</Label>
                         <Input
                             name="category"
                             defaultValue={product?.category}
                             placeholder="e.g. FACE, LIPS, EYES"
                             required
-                            className="bg-black border-gold/20 rounded-none focus-visible:ring-gold focus-visible:ring-offset-0 text-white placeholder:text-zinc-700 h-12"
+                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 h-12"
                         />
                     </div>
 
                     <div className="flex items-center space-x-3 py-4">
                         <Switch id="is_featured" name="is_featured" defaultChecked={product?.is_featured} />
-                        <Label htmlFor="is_featured" className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 cursor-pointer">Feature in Collection</Label>
+                        <Label htmlFor="is_featured" className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60 cursor-pointer">Feature in Collection</Label>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Essence (Description)</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">Essence (Description)</Label>
                         <Textarea
                             name="description"
                             defaultValue={product?.description}
                             placeholder="Describe the masterpiece..."
                             required
-                            className="bg-black border-gold/20 rounded-none focus-visible:ring-gold focus-visible:ring-offset-0 text-white placeholder:text-zinc-700 min-h-[180px] resize-none"
+                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 min-h-[180px] resize-none"
                         />
                     </div>
 
                     <div className="space-y-4">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Visual Gallery</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">Visual Gallery</Label>
                         <ImageUpload
                             images={images}
                             onImagesChange={setImages}
@@ -111,10 +111,10 @@ export function ProductForm({ product }: ProductFormProps) {
                 </div>
             </div>
 
-            <div className="pt-12 border-t border-gold/10">
+            <div className="pt-12 border-t border-gold-primary/10">
                 <div className="flex items-center gap-2 mb-8">
-                    <div className="w-1 h-1 bg-gold rounded-full" />
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">Variant Orchestrator</h3>
+                    <div className="w-1 h-1 bg-gold-primary rounded-full" />
+                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold-primary font-bold">Variant Orchestrator</h3>
                 </div>
                 <VariantsManager initialVariants={product?.variants || []} />
             </div>
@@ -123,7 +123,7 @@ export function ProductForm({ product }: ProductFormProps) {
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="bg-gold text-black rounded-none px-12 py-6 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-white transition-all disabled:opacity-50 min-w-[200px]"
+                    className="bg-gold-primary text-background-primary rounded-none px-12 py-6 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-gold-hover transition-all disabled:opacity-50 min-w-[200px]"
                 >
                     {loading ? <Loader2 className="animate-spin mr-2" /> : null}
                     {product ? 'Refine Masterpiece' : 'Forge Collection Item'}

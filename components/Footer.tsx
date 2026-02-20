@@ -114,14 +114,14 @@ export async function Footer() {
     }
 
     return (
-        <footer className="bg-background border-t border-gold/10 pt-20 pb-10 px-6">
+        <footer className="bg-background-primary border-t border-gold-primary/10 pt-20 pb-10 px-6">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                 {/* Brand */}
                 <div className="space-y-6">
-                    <h2 className="text-xl font-serif tracking-[0.3em] text-white">
+                    <h2 className="text-xl font-serif tracking-[0.3em] text-text-headingDark">
                         {storeInfo.name}
                     </h2>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 leading-relaxed">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark leading-relaxed">
                         {storeInfo.description}
                     </p>
                     <div className="flex gap-4">
@@ -130,7 +130,7 @@ export async function Footer() {
                                 href={socialLinks.instagram}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-zinc-500 hover:text-gold transition-colors"
+                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
                                 aria-label="Instagram"
                             >
                                 <Instagram size={18} />
@@ -141,7 +141,7 @@ export async function Footer() {
                                 href={socialLinks.facebook}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-zinc-500 hover:text-gold transition-colors"
+                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
                                 aria-label="Facebook"
                             >
                                 <Facebook size={18} />
@@ -152,7 +152,7 @@ export async function Footer() {
                                 href={socialLinks.twitter}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-zinc-500 hover:text-gold transition-colors"
+                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
                                 aria-label="Twitter"
                             >
                                 <Twitter size={18} />
@@ -163,7 +163,7 @@ export async function Footer() {
                                 href={socialLinks.tiktok}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-zinc-500 hover:text-gold transition-colors"
+                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
                                 aria-label="TikTok"
                             >
                                 <FaTiktok size={18} />
@@ -174,7 +174,7 @@ export async function Footer() {
                                 href={socialLinks.youtube}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-zinc-500 hover:text-gold transition-colors"
+                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
                                 aria-label="YouTube"
                             >
                                 <Youtube size={18} />
@@ -186,15 +186,15 @@ export async function Footer() {
                 {/* Dynamic Footer Columns */}
                 {footerLinks.columns?.map((column, index) => (
                     <div key={index} className="space-y-6">
-                        <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">
+                        <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold-primary font-bold">
                             {column.title}
                         </h3>
-                        <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-text-mutedDark">
                             {column.links.map((link, linkIndex) => (
                                 <Link
                                     key={linkIndex}
                                     href={link.url}
-                                    className="hover:text-white transition-colors"
+                                    className="hover:text-text-headingDark transition-colors"
                                 >
                                     {link.text}
                                 </Link>
@@ -205,22 +205,22 @@ export async function Footer() {
 
                 {/* Contact */}
                 <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold">
+                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold-primary font-bold">
                         Inquiries
                     </h3>
-                    <div className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                    <div className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-text-mutedDark">
                         {contactInfo.address && (
                             <div className="flex items-start gap-3">
-                                <MapPin size={14} className="text-gold mt-0.5 flex-shrink-0" />
+                                <MapPin size={14} className="text-gold-primary mt-0.5 flex-shrink-0" />
                                 <span>{contactInfo.address}</span>
                             </div>
                         )}
                         {contactInfo.email && (
                             <div className="flex items-center gap-3">
-                                <Mail size={14} className="text-gold flex-shrink-0" />
+                                <Mail size={14} className="text-gold-primary flex-shrink-0" />
                                 <a
                                     href={`mailto:${contactInfo.email}`}
-                                    className="hover:text-white transition-colors break-all"
+                                    className="hover:text-text-headingDark transition-colors break-all"
                                 >
                                     {contactInfo.email}
                                 </a>
@@ -228,10 +228,10 @@ export async function Footer() {
                         )}
                         {contactInfo.phone && (
                             <div className="flex items-center gap-3">
-                                <Phone size={14} className="text-gold flex-shrink-0" />
+                                <Phone size={14} className="text-gold-primary flex-shrink-0" />
                                 <a
                                     href={`tel:${contactInfo.phone.replace(/\s/g, "")}`}
-                                    className="hover:text-white transition-colors"
+                                    className="hover:text-text-headingDark transition-colors"
                                     suppressHydrationWarning
                                 >
                                     {contactInfo.phone}
@@ -239,8 +239,8 @@ export async function Footer() {
                             </div>
                         )}
                         {contactInfo.hours && (
-                            <div className="flex items-start gap-3 pt-2 border-t border-white/5">
-                                <span className="text-gold text-[9px]">HOURS:</span>
+                            <div className="flex items-start gap-3 pt-2 border-t border-text-headingDark/5">
+                                <span className="text-gold-primary text-[9px]">HOURS:</span>
                                 <span className="text-[9px]">{contactInfo.hours}</span>
                             </div>
                         )}

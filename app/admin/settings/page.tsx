@@ -175,8 +175,8 @@ export default function AdminSettingsPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="w-8 h-8 animate-spin text-gold" />
+            <div className="flex items-center justify-center min-h-screen bg-background-primary">
+                <Loader2 className="w-8 h-8 animate-spin text-gold-primary" />
             </div>
         );
     }
@@ -186,13 +186,13 @@ export default function AdminSettingsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-serif text-white">Store Settings</h1>
-                    <p className="text-sm text-white/40 mt-2">Manage your store information, contact details, and footer content</p>
+                    <h1 className="text-3xl font-serif text-text-headingDark">Store Settings</h1>
+                    <p className="text-sm text-text-mutedDark mt-2">Manage your store information, contact details, and footer content</p>
                 </div>
                 <Button
                     onClick={saveSettings}
                     disabled={saving}
-                    className="bg-gold text-black hover:bg-white"
+                    className="bg-gold-primary text-background-primary hover:bg-gold-hover"
                 >
                     {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -210,98 +210,98 @@ export default function AdminSettingsPage() {
             )}
 
             {/* Store Information */}
-            <section className="bg-white/[0.02] border border-white/10 p-8 space-y-6">
-                <h2 className="text-xl font-serif text-white border-b border-white/10 pb-4">Store Information</h2>
+            <section className="bg-background-secondary/50 border border-gold-primary/10 p-8 space-y-6">
+                <h2 className="text-xl font-serif text-text-headingDark border-b border-gold-primary/10 pb-4">Store Information</h2>
 
                 <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label className="text-white/60">Store Name</Label>
+                        <Label className="text-text-mutedDark">Store Name</Label>
                         <Input
                             value={storeInfo.name}
                             onChange={(e) => setStoreInfo({ ...storeInfo, name: e.target.value })}
-                            className="bg-black/50 border-white/10 text-white"
+                            className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white/60">Tagline</Label>
+                        <Label className="text-text-mutedDark">Tagline</Label>
                         <Input
                             value={storeInfo.tagline}
                             onChange={(e) => setStoreInfo({ ...storeInfo, tagline: e.target.value })}
-                            className="bg-black/50 border-white/10 text-white"
+                            className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         />
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-white/60">Description</Label>
+                    <Label className="text-text-mutedDark">Description</Label>
                     <Textarea
                         value={storeInfo.description}
                         onChange={(e) => setStoreInfo({ ...storeInfo, description: e.target.value })}
-                        className="bg-black/50 border-white/10 text-white"
+                        className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         rows={3}
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-white/60">Logo URL</Label>
+                    <Label className="text-text-mutedDark">Logo URL</Label>
                     <Input
                         value={storeInfo.logo_url}
                         onChange={(e) => setStoreInfo({ ...storeInfo, logo_url: e.target.value })}
-                        className="bg-black/50 border-white/10 text-white"
+                        className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         placeholder="/logo.jpg"
                     />
                 </div>
             </section>
 
             {/* Contact Information */}
-            <section className="bg-white/[0.02] border border-white/10 p-8 space-y-6">
-                <h2 className="text-xl font-serif text-white border-b border-white/10 pb-4">Contact Information</h2>
+            <section className="bg-background-secondary/50 border border-gold-primary/10 p-8 space-y-6">
+                <h2 className="text-xl font-serif text-text-headingDark border-b border-gold-primary/10 pb-4">Contact Information</h2>
 
                 <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label className="text-white/60">Email</Label>
+                        <Label className="text-text-mutedDark">Email</Label>
                         <Input
                             type="email"
                             value={contactInfo.email}
                             onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
-                            className="bg-black/50 border-white/10 text-white"
+                            className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white/60">Phone</Label>
+                        <Label className="text-text-mutedDark">Phone</Label>
                         <Input
                             value={contactInfo.phone}
                             onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
-                            className="bg-black/50 border-white/10 text-white"
+                            className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         />
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-white/60">Address</Label>
+                    <Label className="text-text-mutedDark">Address</Label>
                     <Input
                         value={contactInfo.address}
                         onChange={(e) => setContactInfo({ ...contactInfo, address: e.target.value })}
-                        className="bg-black/50 border-white/10 text-white"
+                        className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label className="text-white/60">Business Hours</Label>
+                    <Label className="text-text-mutedDark">Business Hours</Label>
                     <Input
                         value={contactInfo.hours}
                         onChange={(e) => setContactInfo({ ...contactInfo, hours: e.target.value })}
-                        className="bg-black/50 border-white/10 text-white"
+                        className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                         placeholder="Monday - Friday: 9:00 AM - 6:00 PM"
                     />
                 </div>
             </section>
 
             {/* Social Media Links */}
-            <section className="bg-white/[0.02] border border-white/10 p-8 space-y-6">
-                <h2 className="text-xl font-serif text-white border-b border-white/10 pb-4">Social Media Links</h2>
+            <section className="bg-background-secondary/50 border border-gold-primary/10 p-8 space-y-6">
+                <h2 className="text-xl font-serif text-text-headingDark border-b border-gold-primary/10 pb-4">Social Media Links</h2>
 
                 <div className="grid grid-cols-2 gap-6">
                     {Object.entries(socialLinks).map(([platform, url]) => (
@@ -311,7 +311,7 @@ export default function AdminSettingsPage() {
                                 <Input
                                     value={url}
                                     onChange={(e) => setSocialLinks({ ...socialLinks, [platform]: e.target.value })}
-                                    className="bg-black/50 border-white/10 text-white"
+                                    className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark"
                                     placeholder={`https://${platform}.com/yourpage`}
                                 />
                                 {url && (
@@ -319,7 +319,7 @@ export default function AdminSettingsPage() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() => window.open(url, "_blank")}
-                                        className="border-white/10"
+                                        className="border-gold-primary/10 text-gold-primary hover:bg-gold-primary/10"
                                     >
                                         <ExternalLink className="w-4 h-4" />
                                     </Button>
@@ -331,14 +331,14 @@ export default function AdminSettingsPage() {
             </section>
 
             {/* Footer Links */}
-            <section className="bg-white/[0.02] border border-white/10 p-8 space-y-6">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                    <h2 className="text-xl font-serif text-white">Footer Links</h2>
+            <section className="bg-background-secondary/50 border border-gold-primary/10 p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-gold-primary/10 pb-4">
+                    <h2 className="text-xl font-serif text-text-headingDark">Footer Links</h2>
                     <Button
                         onClick={addFooterColumn}
                         variant="outline"
                         size="sm"
-                        className="border-gold text-gold hover:bg-gold hover:text-black"
+                        className="border-gold-primary text-gold-primary hover:bg-gold-primary hover:text-background-primary"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Column
@@ -347,12 +347,12 @@ export default function AdminSettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {footerLinks.columns.map((column, columnIndex) => (
-                        <div key={columnIndex} className="bg-black/30 border border-white/5 p-6 space-y-4">
+                        <div key={columnIndex} className="bg-background-primary/30 border border-gold-primary/5 p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <Input
                                     value={column.title}
                                     onChange={(e) => updateColumnTitle(columnIndex, e.target.value)}
-                                    className="bg-black/50 border-white/10 text-white font-serif"
+                                    className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark font-serif"
                                     placeholder="Column Title"
                                 />
                                 <Button
@@ -367,9 +367,9 @@ export default function AdminSettingsPage() {
 
                             <div className="space-y-3">
                                 {column.links.map((link, linkIndex) => (
-                                    <div key={linkIndex} className="space-y-2 p-3 bg-black/30 border border-white/5">
+                                    <div key={linkIndex} className="space-y-2 p-3 bg-background-primary/30 border border-gold-primary/5">
                                         <div className="flex items-center justify-between">
-                                            <Label className="text-white/40 text-xs">Link {linkIndex + 1}</Label>
+                                            <Label className="text-text-mutedDark/40 text-xs">Link {linkIndex + 1}</Label>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -382,13 +382,13 @@ export default function AdminSettingsPage() {
                                         <Input
                                             value={link.text}
                                             onChange={(e) => updateLink(columnIndex, linkIndex, "text", e.target.value)}
-                                            className="bg-black/50 border-white/10 text-white text-sm"
+                                            className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark text-sm"
                                             placeholder="Link Text"
                                         />
                                         <Input
                                             value={link.url}
                                             onChange={(e) => updateLink(columnIndex, linkIndex, "url", e.target.value)}
-                                            className="bg-black/50 border-white/10 text-white text-sm"
+                                            className="bg-background-primary/50 border-gold-primary/10 text-text-bodyDark text-sm"
                                             placeholder="/page-url"
                                         />
                                     </div>
@@ -399,7 +399,7 @@ export default function AdminSettingsPage() {
                                 onClick={() => addLink(columnIndex)}
                                 variant="outline"
                                 size="sm"
-                                className="w-full border-white/10 text-white/60 hover:text-white"
+                                className="w-full border-gold-primary/10 text-text-mutedDark hover:text-text-bodyDark"
                             >
                                 <Plus className="w-3 h-3 mr-2" />
                                 Add Link
@@ -414,7 +414,7 @@ export default function AdminSettingsPage() {
                 <Button
                     onClick={saveSettings}
                     disabled={saving}
-                    className="bg-gold text-black hover:bg-white px-8"
+                    className="bg-gold-primary text-background-primary hover:bg-gold-hover px-8"
                     size="lg"
                 >
                     {saving ? (

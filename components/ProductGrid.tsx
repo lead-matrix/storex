@@ -83,8 +83,8 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
     if (loading) {
         return (
             <div className="py-24 flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-8 h-8 text-gold animate-spin" />
-                <p className="text-zinc-500 uppercase tracking-[0.4em] text-[10px] font-light italic">Opening The Vault...</p>
+                <Loader2 className="w-8 h-8 text-gold-primary animate-spin" />
+                <p className="text-text-mutedDark uppercase tracking-[0.4em] text-[10px] font-light italic">Opening The Vault...</p>
             </div>
         );
     }
@@ -92,7 +92,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
     if (!products || products.length === 0) {
         return (
             <div id="shop" className="py-24 text-center">
-                <p className="text-white/30 uppercase tracking-[0.5em] text-xs font-light">The vault is currently sealed.</p>
+                <p className="text-text-mutedDark/30 uppercase tracking-[0.5em] text-xs font-light">The vault is currently sealed.</p>
             </div>
         );
     }
@@ -101,10 +101,10 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
         <div id="shop" className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                 <div className="space-y-4">
-                    <p className="text-gold uppercase tracking-[0.4em] text-[10px] font-light">Curated Selection</p>
-                    <h2 className="text-4xl md:text-6xl font-serif text-white tracking-tight italic">The Essentials</h2>
+                    <p className="text-gold-primary uppercase tracking-[0.4em] text-[10px] font-light">Curated Selection</p>
+                    <h2 className="text-4xl md:text-6xl font-serif text-text-headingDark tracking-tight italic">The Essentials</h2>
                 </div>
-                <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-light max-w-xs text-right hidden md:block leading-loose">
+                <p className="text-text-mutedDark text-[10px] uppercase tracking-[0.3em] font-light max-w-xs text-right hidden md:block leading-loose">
                     Meticulously formulated beauty and skincare products for the discerning elite.
                 </p>
             </div>

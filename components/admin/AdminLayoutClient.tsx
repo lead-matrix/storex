@@ -27,17 +27,17 @@ export default function AdminLayoutClient({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full font-sans bg-background border-r border-gold/10">
-            <div className="px-6 py-8 border-b border-gold/10 bg-zinc-950/30">
+        <div className="flex flex-col h-full font-sans bg-background-primary border-r border-gold-primary/10">
+            <div className="px-6 py-8 border-b border-gold-primary/10 bg-background-secondary/30">
                 <div className="flex items-center gap-3">
-                    <div className="relative w-8 h-8 rounded-full border border-gold/20 overflow-hidden bg-black flex items-center justify-center">
-                        <span className="font-serif text-gold text-xs">OP</span>
+                    <div className="relative w-8 h-8 rounded-full border border-gold-primary/20 overflow-hidden bg-background-primary flex items-center justify-center">
+                        <span className="font-serif text-gold-primary text-xs">OP</span>
                     </div>
                     <div>
-                        <h1 className="text-sm font-serif tracking-widest text-gold uppercase">
+                        <h1 className="text-sm font-serif tracking-widest text-gold-primary uppercase">
                             Obsidian Palace
                         </h1>
-                        <p className="text-[8px] text-zinc-500 tracking-[0.3em] font-light mt-1">
+                        <p className="text-[8px] text-text-mutedDark tracking-[0.3em] font-light mt-1">
                             SUPREME MANAGEMENT
                         </p>
                     </div>
@@ -46,7 +46,7 @@ export default function AdminLayoutClient({
 
             <nav className="flex-grow py-6 space-y-1 overflow-y-auto">
                 <div className="px-6 mb-2">
-                    <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-700 font-bold">Main</span>
+                    <span className="text-[8px] uppercase tracking-[0.3em] text-text-mutedDark/60 font-bold">Main</span>
                 </div>
                 <AdminNavLink href="/admin" onClick={() => setIsMobileMenuOpen(false)} icon={<LayoutDashboard size={16} />} label="Overview" />
                 <AdminNavLink href="/admin/products" onClick={() => setIsMobileMenuOpen(false)} icon={<Package size={16} />} label="Products" />
@@ -55,7 +55,7 @@ export default function AdminLayoutClient({
 
                 <div className="pt-6 mt-2">
                     <div className="px-6 mb-2">
-                        <span className="text-[8px] uppercase tracking-[0.3em] text-zinc-700 font-bold">Master Controls</span>
+                        <span className="text-[8px] uppercase tracking-[0.3em] text-text-mutedDark/60 font-bold">Master Controls</span>
                     </div>
                     <AdminNavLink href="/admin/frontend" onClick={() => setIsMobileMenuOpen(false)} icon={<Palette size={16} />} label="Frontend" />
                     <AdminNavLink href="/admin/pages" onClick={() => setIsMobileMenuOpen(false)} icon={<FileText size={16} />} label="Pages" />
@@ -63,10 +63,10 @@ export default function AdminLayoutClient({
                 </div>
             </nav>
 
-            <div className="p-4 border-t border-gold/10 bg-zinc-950/50">
+            <div className="p-4 border-t border-gold-primary/10 bg-background-secondary/50">
                 <Link
                     href="/"
-                    className="flex items-center gap-3 mb-2 px-4 py-3 text-[9px] uppercase tracking-widest text-zinc-500 hover:text-white hover:bg-white/5 rounded-sm transition-all group"
+                    className="flex items-center gap-3 mb-2 px-4 py-3 text-[9px] uppercase tracking-widest text-text-mutedDark/60 hover:text-text-headingDark hover:bg-gold-primary/5 rounded-sm transition-all group"
                 >
                     <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
                     View Storefront
@@ -87,24 +87,24 @@ export default function AdminLayoutClient({
     );
 
     return (
-        <div className="flex min-h-screen bg-background text-white font-sans overflow-x-hidden">
+        <div className="flex min-h-screen bg-background-primary text-text-bodyDark font-sans overflow-x-hidden">
             {/* Desktop Sidebar */}
-            <aside className="hidden md:flex w-72 border-r border-gold/10 flex-col bg-zinc-950/20 sticky top-0 h-screen">
+            <aside className="hidden md:flex w-72 border-r border-gold-primary/10 flex-col bg-background-secondary/20 sticky top-0 h-screen">
                 <SidebarContent />
             </aside>
 
             {/* Main Content */}
             <main className="flex-grow flex flex-col min-w-0">
-                <header className="h-16 md:h-20 border-b border-gold/10 flex items-center justify-between px-4 md:px-10 bg-black/50 backdrop-blur-xl sticky top-0 z-[40]">
+                <header className="h-16 md:h-20 border-b border-gold-primary/10 flex items-center justify-between px-4 md:px-10 bg-background-primary/50 backdrop-blur-xl sticky top-0 z-[40]">
                     <div className="flex items-center gap-4">
                         {/* Mobile Hamburguer */}
                         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                             <SheetTrigger asChild>
-                                <button className="md:hidden p-2 -ml-2 text-zinc-400 hover:text-gold transition-colors">
+                                <button className="md:hidden p-2 -ml-2 text-text-mutedDark/40 hover:text-gold-primary transition-colors">
                                     <Menu size={20} />
                                 </button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="bg-background border-r border-gold/20 w-[280px] p-0">
+                            <SheetContent side="left" className="bg-background-primary border-r border-gold-primary/20 w-[280px] p-0">
                                 <SheetHeader className="sr-only">
                                     <SheetTitle>Admin Navigation</SheetTitle>
                                 </SheetHeader>
@@ -112,19 +112,19 @@ export default function AdminLayoutClient({
                             </SheetContent>
                         </Sheet>
 
-                        <nav className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-light">
-                            <span className="text-zinc-600">Operations</span>
-                            <ChevronRight size={10} className="text-zinc-800" />
-                            <span className="text-gold">Command Center</span>
+                        <nav className="flex items-center gap-2 text-[8px] md:text-[10px] text-text-mutedDark/40 uppercase tracking-[0.3em] font-light">
+                            <span className="text-text-mutedDark/20">Operations</span>
+                            <ChevronRight size={10} className="text-text-mutedDark/10" />
+                            <span className="text-gold-primary">Command Center</span>
                         </nav>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <div className="hidden sm:flex flex-col items-end mr-2">
-                            <span className="text-[9px] uppercase tracking-widest text-zinc-400">Arch-Admin</span>
-                            <span className="text-[8px] text-zinc-600">CONNECTED</span>
+                            <span className="text-[9px] uppercase tracking-widest text-text-mutedDark/60">Arch-Admin</span>
+                            <span className="text-[8px] text-text-mutedDark/30">CONNECTED</span>
                         </div>
-                        <div className="w-10 h-10 rounded-none bg-gold/10 border border-gold/30 flex items-center justify-center text-[11px] text-gold font-bold shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+                        <div className="w-10 h-10 rounded-none bg-gold-primary/10 border border-gold-primary/30 flex items-center justify-center text-[11px] text-gold-primary font-bold shadow-[0_0_15px_rgb(var(--gold-primary)/0.1)]">
                             AD
                         </div>
                     </div>
@@ -143,12 +143,12 @@ function AdminNavLink({ href, icon, label, onClick }: { href: string; icon: Reac
         <Link
             href={href}
             onClick={onClick}
-            className="flex items-center gap-4 px-6 py-4 text-[10px] uppercase tracking-[0.3em] rounded-none border-l-2 border-transparent hover:border-gold hover:bg-gold/5 transition-all group"
+            className="flex items-center gap-4 px-6 py-4 text-[10px] uppercase tracking-[0.3em] rounded-none border-l-2 border-transparent hover:border-gold-primary hover:bg-gold-primary/5 transition-all group"
         >
-            <span className="text-zinc-600 group-hover:text-gold transition-colors">
+            <span className="text-text-mutedDark/40 group-hover:text-gold-primary transition-colors">
                 {icon}
             </span>
-            <span className="font-light text-zinc-500 group-hover:text-white transition-colors">
+            <span className="font-light text-text-mutedDark group-hover:text-text-headingDark transition-colors">
                 {label}
             </span>
         </Link>

@@ -1,39 +1,76 @@
 @import "tailwindcss";
 
 @theme {
-  --color-gold: #D4AF37;
-
   --font-serif: var(--font-playfair), serif;
   --font-sans: var(--font-inter), sans-serif;
+
+  /* Dinacosmetic Color System */
+  --color-background-primary: rgb(var(--bg-primary));
+  --color-background-secondary: rgb(var(--bg-secondary));
+  --color-background-light: rgb(var(--bg-light));
+
+  --color-gold-primary: rgb(var(--gold-primary));
+  --color-gold-accent: rgb(var(--gold-accent));
+  --color-gold-hover: rgb(var(--gold-hover));
+
+  --color-accent: rgb(var(--accent));
+
+  --color-text-headingDark: rgb(var(--text-heading-dark));
+  --color-text-bodyDark: rgb(var(--text-body-dark));
+  --color-text-mutedDark: rgb(var(--text-muted-dark));
+
+  --color-text-headingLight: rgb(var(--text-heading-light));
+  --color-text-bodyLight: rgb(var(--text-body-light));
+  --color-text-mutedLight: rgb(var(--text-muted-light));
 }
 
 @layer base {
   :root {
-    --background: 240 10% 2%;
-    /* Very dark charcoal/obsidian instead of pure black */
-    --foreground: 0 0% 100%;
-    --card: 240 10% 4%;
-    /* Slightly lighter for cards */
-    --card-foreground: 0 0% 100%;
-    --popover: 240 10% 4%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 45 64% 52%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 240 10% 8%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 240 10% 8%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 45 64% 52%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 10% 12%;
-    --input: 240 10% 12%;
-    --ring: 45 64% 52%;
+    --bg-primary: 17 17 17;
+    /* #111111 */
+    --bg-secondary: 26 20 16;
+    /* #1A1410 */
+    --bg-light: 243 239 232;
+    /* #F3EFE8 */
+
+    --gold-primary: 212 175 55;
+    /* #D4AF37 */
+    --gold-accent: 184 150 46;
+    /* #B8962E */
+    --gold-hover: 138 111 42;
+    /* #8A6F2A */
+
+    --accent: 122 140 123;
+    /* #7A8C7B */
+
+    --text-heading-dark: 243 239 232;
+    --text-body-dark: 218 213 204;
+    --text-muted-dark: 169 163 154;
+
+    --text-heading-light: 17 17 17;
+    --text-body-light: 42 37 34;
+    --text-muted-light: 90 82 75;
+
+    /* Shadcn compatibility - pointing to our new system */
+    --background: var(--bg-primary);
+    --foreground: var(--text-body-dark);
+    --card: var(--bg-primary);
+    --card-foreground: var(--text-body-dark);
+    --popover: var(--bg-primary);
+    --popover-foreground: var(--text-body-dark);
+    --primary: var(--gold-primary);
+    --primary-foreground: var(--bg-primary);
+    --secondary: var(--bg-secondary);
+    --secondary-foreground: var(--text-body-dark);
+    --muted: var(--bg-secondary);
+    --muted-foreground: var(--text-muted-dark);
+    --border: 255 255 255 / 0.1;
+    --input: 255 255 255 / 0.1;
+    --ring: var(--gold-primary);
   }
 
   * {
-    border-color: hsl(240 10% 12%);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   html {
@@ -42,12 +79,11 @@
   }
 
   body {
-    background-color: hsl(var(--background));
+    background-color: rgb(var(--bg-primary));
     background-image:
-      radial-gradient(circle at 50% -20%, hsl(45 64% 52% / 0.05), transparent 70%),
-      radial-gradient(circle at 0% 100%, hsl(240 10% 5%), transparent 50%);
-    color: white;
-    @apply antialiased overflow-x-hidden;
+      radial-gradient(circle at 50% -20%, rgb(var(--gold-primary) / 0.05), transparent 70%),
+      radial-gradient(circle at 0% 100%, rgb(var(--bg-secondary) / 0.5), transparent 50%);
+    @apply text-text-bodyDark antialiased overflow-x-hidden;
     font-family: var(--font-inter), sans-serif;
   }
 }
@@ -67,22 +103,20 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: rgb(var(--bg-primary));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D4AF3733;
+  background: rgb(var(--gold-primary) / 0.2);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4AF37;
+  background: rgb(var(--gold-primary));
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 2px;
 }
-
-/* High-end decorative classes are now handled by @theme and standard Tailwind utilities */
 
 /* Animation utilities */
 .animate-luxury-fade {
