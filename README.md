@@ -64,12 +64,11 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 Run the SQL scripts in your Supabase SQL Editor:
 ```bash
-# 1. Main database setup
-supabase-complete-setup.sql
-
-# 2. Storage setup for product images
-admin-portal-setup.sql
+# Main database setup & initialization
+SUPABASE_MASTER_SETUP_2026.sql
 ```
+
+See [SETUP.md](./SETUP.md) for detailed configuration steps.
 
 5. **Create admin user**
 ```sql
@@ -117,10 +116,10 @@ Open [http://localhost:3000](http://localhost:3000)
 ## 🎨 Design System
 
 **The Obsidian Palace** - Ultra-minimalist luxury design:
-- **Background**: Deep Black (#000000)
+- **Background**: Deep Obsidian (#111111)
 - **Accents**: Liquid Gold (#D4AF37)
 - **Typography**: Playfair Display (headings), Inter (body)
-- **Style**: High-end luxury with plenty of whitespace
+- **Style**: High-end luxury with plenty of whitespace and refined tokens.
 
 ## 📸 Admin Features
 
