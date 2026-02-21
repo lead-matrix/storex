@@ -5,8 +5,9 @@ import { CartProvider } from "@/context/CartContext";
 import { Navbar } from "@/components/Navbar";
 import { ShoppingBagDrawer } from "@/components/ShoppingBagDrawer";
 import { Analytics } from "@vercel/analytics/next";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
+import { Footer } from "@/components/Footer";
+import { Toaster } from 'sonner';
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -85,34 +86,22 @@ export const metadata: Metadata = {
   },
 };
 
-import { Footer } from "@/components/Footer";
-
-import { Toaster } from 'sonner';
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch user server-side for SSR-safe session handling
-  const cookieStore = await cookies();
+  const supabase = await createClient();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-
-  // Fetch user server-side (optional - available for future use)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Fetch user server-side safely
+  let user = null;
+  try {
+    const { data: { user: foundUser } } = await supabase.auth.getUser();
+    user = foundUser;
+  } catch (err) {
+    console.error("Auth session sync failed:", err);
+  }
 
   return (
     <html lang="en" className="dark">

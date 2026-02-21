@@ -1,5 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/admin/Sidebar'
 
@@ -8,22 +7,15 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode
 }) {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-            },
-        }
-    )
+    const supabase = await createClient()
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    let user = null;
+    try {
+        const { data: { user: foundUser } } = await supabase.auth.getUser()
+        user = foundUser;
+    } catch {
+        // Fall through to redirect
+    }
 
     if (!user) {
         redirect('/login')
