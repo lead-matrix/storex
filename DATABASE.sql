@@ -33,6 +33,27 @@ BEGIN
 END;
 $$;
 
+-- Helper to handle new user signups
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, avatar_url, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', ''),
+    'user'
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
 -- ═══════════════════════════════════════════════
 -- CORE TABLES
 -- ═══════════════════════════════════════════════
@@ -215,6 +236,12 @@ CREATE POLICY "Admins manage all orders." ON public.orders ALL USING (is_admin()
 CREATE TRIGGER products_updated_at BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 CREATE TRIGGER site_settings_updated_at BEFORE UPDATE ON public.site_settings FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 CREATE TRIGGER frontend_content_updated_at BEFORE UPDATE ON public.frontend_content FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
+
+-- Sync Trigger for Auth -> Profile
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ─────────────────────────────────────────────
 -- SEED DATA (Minimal)
