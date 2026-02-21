@@ -27,7 +27,7 @@ export function ShoppingBagDrawer() {
     const handleCheckout = async () => {
         setIsCheckingOut(true);
         try {
-            const response = await fetch("/api/create-checkout", {
+            const response = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items: cart }),

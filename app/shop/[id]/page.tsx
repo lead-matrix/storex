@@ -100,7 +100,7 @@ export default async function ProductPage({ params }: PageProps) {
                             <h3 className="text-gold-primary text-[10px] uppercase tracking-[0.5em] font-bold">LMT Elite Collection</h3>
                             <h1 className="text-6xl md:text-8xl font-serif uppercase tracking-tighter leading-none italic text-text-headingDark">{product.name}</h1>
                             <p className="text-gold-primary text-4xl font-light tracking-widest font-serif">
-                                ${Number(product.base_price).toFixed(2)}
+                                ${Number(product.price).toFixed(2)}
                             </p>
                         </div>
 

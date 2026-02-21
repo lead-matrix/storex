@@ -13,7 +13,7 @@ interface Variant {
 interface Product {
     id: string;
     name: string;
-    base_price: number;
+    price: number;
     images: string[];
 }
 
@@ -22,7 +22,7 @@ export function ProductActions({ product, variants }: { product: Product; varian
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(variants[0] || null);
     const [quantity, setQuantity] = useState(1);
 
-    const price = selectedVariant?.price_override ?? product.base_price;
+    const price = selectedVariant?.price_override ?? product.price;
 
     const handleAddToCart = () => {
         addToCart({
