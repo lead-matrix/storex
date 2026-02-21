@@ -30,29 +30,29 @@ A luxury e-commerce platform built with Next.js 15, Supabase, and Stripe.
 1. **Clone the repository**
 ```bash
 git clone <your-repo-url>
-cd mainSmarket
+cd commerce
 ```
 
 2. **Install dependencies**
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
 3. **Set up environment variables**
 
-Create `.env.local` file:
+Create `.env.local` file (use `.env.example` as a template):
 ```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Stripe
+# Stripe Configuration
 STRIPE_SECRET_KEY=sk_test_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Email & Shipping
+# Outbound Communications
 RESEND_API_KEY=re_...
 SHIPPO_API_KEY=shippo_test_...
 
@@ -62,19 +62,16 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 4. **Set up Supabase**
 
-Run the SQL scripts in your Supabase SQL Editor:
-```bash
-# Main database setup & initialization
-SUPABASE_MASTER_SETUP_2026.sql
-```
-
-See [SETUP.md](./SETUP.md) for detailed configuration steps.
+Run the single initialization script in your Supabase SQL Editor:
+- **File**: `DATABASE.sql` (Contains all tables, functions, RLS, and seed data)
 
 5. **Create admin user**
+
+After signing up via the app, run this in the SQL Editor:
 ```sql
-UPDATE profiles 
+UPDATE public.profiles 
 SET role = 'admin' 
-WHERE email = 'your-email@example.com';
+WHERE email = 'your-email@email.com';
 ```
 
 6. **Run development server**
@@ -88,30 +85,27 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ```
 ├── app/                    # Next.js App Router
-│   ├── layout.tsx         # Root layout with SSR session
 │   ├── admin/             # Admin portal (protected)
 │   ├── shop/              # Product pages
 │   └── checkout/          # Checkout flow
-├── pages/                 # Next.js Pages Router
-│   └── api/               # API routes
-│       ├── stripe-webhook.ts
-│       └── create-checkout.ts
 ├── components/            # React components
 │   ├── admin/            # Admin components
 │   └── ui/               # Shadcn UI components
-├── lib/                   # Utilities
-│   ├── actions/          # Server actions
+├── lib/                   # Shared logic
+│   ├── actions/          # Server actions (Mutations)
 │   └── utils/            # Helper functions
-└── utils/                 # Supabase clients
-    └── supabase/
+├── utils/                 # Supabase clients
+│   └── supabase/          # Client & Server clients
+├── DATABASE.sql           # Unified database setup script
+└── proxy.ts               # Core middleware (Auth & Kill-switch)
 ```
 
 ## 🔐 Security
 
-- **RLS Policies**: All database tables protected with Row Level Security
-- **Server-Side Auth**: Admin routes protected with server-side guards
-- **Environment Variables**: Sensitive keys never exposed to client
-- **Stripe Webhooks**: Signature verification enforced
+- **Row Level Security (RLS)**: Enforced on all tables.
+- **Admin Guard**: Server-side role checks and middleware protection.
+- **Transactions**: Atomic order creation and inventory deduction.
+- **Webhook Verification**: Secure Stripe signature validation.
 
 ## 🎨 Design System
 
@@ -119,99 +113,24 @@ Open [http://localhost:3000](http://localhost:3000)
 - **Background**: Deep Obsidian (#111111)
 - **Accents**: Liquid Gold (#D4AF37)
 - **Typography**: Playfair Display (headings), Inter (body)
-- **Style**: High-end luxury with plenty of whitespace and refined tokens.
-
-## 📸 Admin Features
-
-- **Product Management**: Create, edit, delete products
-- **Image Upload**: Drag & drop or mobile camera/gallery
-- **Variant Management**: Multiple sizes, colors, etc.
-- **Order Management**: View and fulfill orders
-- **User Management**: Manage customer accounts
-- **Instant Updates**: Changes appear immediately on live store
-
-## 🛒 Customer Features
-
-- **Product Browsing**: Shop by category or collection
-- **Shopping Cart**: Persistent cart with real-time updates
-- **Secure Checkout**: Stripe integration
-- **Order Tracking**: Email notifications with tracking
-- **Responsive Design**: Mobile-first approach
+- **Experience**: Premium micro-animations and smooth transitions.
 
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
 
 1. **Push to GitHub**
-```bash
-git push origin main
-```
-
-2. **Deploy to Vercel**
-- Connect your GitHub repository
-- Add environment variables
-- Deploy
-
-3. **Configure Stripe Webhook**
-- Go to Stripe Dashboard → Webhooks
-- Add endpoint: `https://your-domain.com/api/stripe-webhook`
-- Select event: `checkout.session.completed`
-- Copy webhook secret to Vercel environment variables
-
-## 📚 Documentation
-
-- **Database Schema**: See `supabase-complete-setup.sql`
-- **Storage Setup**: See `admin-portal-setup.sql`
-- **Environment Variables**: See `.env.example`
-
-## 🧪 Testing
-
-```bash
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Test Stripe webhook locally
-stripe listen --forward-to localhost:3000/api/stripe-webhook
-```
-
-## 🔧 Troubleshooting
-
-### Image Upload Issues
-1. Verify `product-images` bucket exists in Supabase Storage
-2. Check bucket is set to **Public**
-3. Verify RLS policies are applied (see `admin-portal-setup.sql`)
-
-### Admin Access Issues
-1. Verify user has `role = 'admin'` in profiles table
-2. Check browser console for errors
-3. Try logging out and back in
-
-### Checkout Issues
-1. Verify Stripe keys are correct (test vs live)
-2. Check webhook secret matches Stripe Dashboard
-3. Monitor Vercel function logs
+2. **Connect to Vercel**
+3. **Environment Variables**: Add all keys from `.env.local`
+4. **Stripe Webhook**: Endpoint: `https://your-domain.com/api/stripe-webhook`
 
 ## 📞 Support
 
 For issues or questions:
-1. Check browser console for errors
-2. Review Supabase Dashboard logs
-3. Check Vercel function logs
-4. Verify environment variables
+1. Verify `product-images` bucket exists in Supabase Storage.
+2. Check `role = 'admin'` in the profiles table.
+3. Review Vercel and Supabase logs.
 
 ## 📄 License
 
 Private - All rights reserved
-
-## 🙏 Acknowledgments
-
-- Next.js team for the amazing framework
-- Supabase for the backend infrastructure
-- Stripe for payment processing
-- Vercel for hosting
