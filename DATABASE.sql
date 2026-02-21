@@ -214,21 +214,21 @@ ALTER TABLE public.frontend_content ENABLE ROW LEVEL SECURITY;
 -- Profiles
 CREATE POLICY "Public profiles are viewable by everyone." ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Admins manage all profiles." ON public.profiles ALL USING (is_admin());
+CREATE POLICY "Admins manage all profiles." ON public.profiles FOR ALL USING (is_admin());
 
 -- Products
 CREATE POLICY "Anyone can view active products." ON public.products FOR SELECT USING (is_active = true OR is_admin());
-CREATE POLICY "Admins manage products." ON public.products ALL USING (is_admin());
+CREATE POLICY "Admins manage products." ON public.products FOR ALL USING (is_admin());
 
 -- Content & Settings
 CREATE POLICY "Anyone can view site content." ON public.frontend_content FOR SELECT USING (true);
-CREATE POLICY "Admins manage site content." ON public.frontend_content ALL USING (is_admin());
+CREATE POLICY "Admins manage site content." ON public.frontend_content FOR ALL USING (is_admin());
 CREATE POLICY "Anyone can view site settings." ON public.site_settings FOR SELECT USING (true);
-CREATE POLICY "Admins manage site settings." ON public.site_settings ALL USING (is_admin());
+CREATE POLICY "Admins manage site settings." ON public.site_settings FOR ALL USING (is_admin());
 
 -- Orders
 CREATE POLICY "Users view own orders." ON public.orders FOR SELECT USING (auth.uid() = user_id OR is_admin());
-CREATE POLICY "Admins manage all orders." ON public.orders ALL USING (is_admin());
+CREATE POLICY "Admins manage all orders." ON public.orders FOR ALL USING (is_admin());
 
 -- ─────────────────────────────────────────────
 -- DB TRIGGERS
