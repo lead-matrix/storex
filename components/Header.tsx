@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-export function Navbar() {
+export default function Header() {
     const { totalItems, setIsCartOpen } = useCart();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);

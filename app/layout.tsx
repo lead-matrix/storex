@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
-import "./globals.css";
+import "@/styles/globals.css";
 import { CartProvider } from "@/context/CartContext";
-import { Navbar } from "@/components/Navbar";
+import Header from "@/components/Header";
 import { ShoppingBagDrawer } from "@/components/ShoppingBagDrawer";
 import { Analytics } from "@vercel/analytics/next";
 import { createClient } from "@/utils/supabase/server";
 import { Footer } from "@/components/Footer";
 import { Toaster } from 'sonner';
+import { validateEnv } from "@/lib/env";
+
+// Validate env vars at boot
+validateEnv();
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -113,7 +117,7 @@ export default async function RootLayout({
       >
         <CartProvider>
           <div className="min-h-screen flex flex-col pt-20">
-            <Navbar />
+            <Header />
             <main className="flex-grow">
               {children}
             </main>
