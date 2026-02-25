@@ -360,7 +360,15 @@ ON CONFLICT (content_key) DO NOTHING;
 -- 9. ADMIN SALES STATS VIEW
 -- ─────────────────────────────────────────────────────────────
 
-CREATE OR REPLACE VIEW public.admin_sales_stats AS
+-- Drop first — CREATE OR REPLACE VIEW cannot change security options
+DROP VIEW IF EXISTS public.admin_sales_stats;
+
+-- Recreate with security_invoker = true
+-- This makes the view run as the CALLING USER (not the view creator),
+-- so their RLS policies are fully enforced. No privilege escalation.
+CREATE VIEW public.admin_sales_stats
+  WITH (security_invoker = true)
+AS
 SELECT
   COUNT(DISTINCT o.id)                                                      AS total_orders,
   COALESCE(SUM(o.total_amount) FILTER (WHERE o.status = 'paid'), 0)         AS total_revenue,
@@ -374,6 +382,7 @@ FROM public.orders o
 FULL OUTER JOIN public.products p ON true
 FULL OUTER JOIN public.profiles pr ON true;
 
+-- Grant read access — admin check enforced by RLS on underlying tables
 GRANT SELECT ON public.admin_sales_stats TO authenticated;
 
 -- ─────────────────────────────────────────────────────────────
