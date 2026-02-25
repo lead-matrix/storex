@@ -18,7 +18,7 @@ const menuItems = [
     { icon: Package, label: "Products", href: "/admin/products" },
     { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
     { icon: Layers, label: "Categories", href: "/admin/categories" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
+    { icon: Settings, label: "Site Editor", href: "/admin/settings" },
 ];
 
 export function Sidebar() {

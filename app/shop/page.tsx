@@ -4,6 +4,8 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { Metadata } from "next";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
     title: "Shop All Products",
     description: "Discover our complete collection of luxury beauty and cosmetic products. Shop premium skincare, makeup, and beauty essentials.",

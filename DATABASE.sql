@@ -253,3 +253,13 @@ ON CONFLICT DO NOTHING;
 INSERT INTO public.frontend_content (content_key, content_type, content_data)
 VALUES ('hero_main', 'hero', '{"title": "The Essence of Luxury", "subtitle": "Discover the obsidian collection"}')
 ON CONFLICT DO NOTHING;
+
+-- ─────────────────────────────────────────────
+-- STORAGE POLICIES
+-- ─────────────────────────────────────────────
+CREATE POLICY "Public Read Access" ON storage.objects FOR SELECT TO public USING (bucket_id = 'product-images');
+CREATE POLICY "Admin Insert Access" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'product-images' AND is_admin());
+CREATE POLICY "Admin Update Access" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'product-images' AND is_admin());
+CREATE POLICY "Admin Delete Access" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'product-images' AND is_admin());
+
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;

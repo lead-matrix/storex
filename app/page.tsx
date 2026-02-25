@@ -3,7 +3,7 @@ import { ProductGrid } from "@/components/ProductGrid";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate every hour
 
 export default function Home() {
   return (
