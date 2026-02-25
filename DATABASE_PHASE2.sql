@@ -330,29 +330,70 @@ ON CONFLICT (content_key) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────
 -- 9. STORAGE BUCKET
+--    NOTE: storage.objects is owned by supabase_storage_admin.
+--    Create bucket only — configure storage policies via the
+--    Supabase Dashboard → Storage → Policies instead.
 -- ─────────────────────────────────────────────────────────────
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('product-images', 'product-images', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Storage object policies (safe — does NOT require table ownership)
+DO $$
+BEGIN
+  -- Public read
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname = 'Public Read product-images'
+  ) THEN
+    EXECUTE $policy$
+      CREATE POLICY "Public Read product-images" ON storage.objects
+        FOR SELECT TO public
+        USING (bucket_id = 'product-images')
+    $policy$;
+  END IF;
 
-DROP POLICY IF EXISTS "Public Read Access" ON storage.objects;
-CREATE POLICY "Public Read Access" ON storage.objects
-  FOR SELECT TO public USING (bucket_id = 'product-images');
+  -- Admin insert
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname = 'Admin Insert product-images'
+  ) THEN
+    EXECUTE $policy$
+      CREATE POLICY "Admin Insert product-images" ON storage.objects
+        FOR INSERT TO authenticated
+        WITH CHECK (bucket_id = 'product-images' AND public.is_admin())
+    $policy$;
+  END IF;
 
-DROP POLICY IF EXISTS "Admin Insert Access" ON storage.objects;
-CREATE POLICY "Admin Insert Access" ON storage.objects
-  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'product-images' AND is_admin());
+  -- Admin update
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname = 'Admin Update product-images'
+  ) THEN
+    EXECUTE $policy$
+      CREATE POLICY "Admin Update product-images" ON storage.objects
+        FOR UPDATE TO authenticated
+        USING (bucket_id = 'product-images' AND public.is_admin())
+    $policy$;
+  END IF;
 
-DROP POLICY IF EXISTS "Admin Update Access" ON storage.objects;
-CREATE POLICY "Admin Update Access" ON storage.objects
-  FOR UPDATE TO authenticated USING (bucket_id = 'product-images' AND is_admin());
-
-DROP POLICY IF EXISTS "Admin Delete Access" ON storage.objects;
-CREATE POLICY "Admin Delete Access" ON storage.objects
-  FOR DELETE TO authenticated USING (bucket_id = 'product-images' AND is_admin());
+  -- Admin delete
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND policyname = 'Admin Delete product-images'
+  ) THEN
+    EXECUTE $policy$
+      CREATE POLICY "Admin Delete product-images" ON storage.objects
+        FOR DELETE TO authenticated
+        USING (bucket_id = 'product-images' AND public.is_admin())
+    $policy$;
+  END IF;
+END$$;
 
 -- ─────────────────────────────────────────────────────────────
 -- 10. AUTH TRIGGER — new user → profile
