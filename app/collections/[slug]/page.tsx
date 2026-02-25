@@ -1,11 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
-import { ProductGrid } from '@/components/ProductGrid'
-import { ArrowLeft, Sparkles } from 'lucide-react'
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
+import { ProductCard } from '@/components/ProductCard'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 interface Props {
     params: Promise<{ slug: string }>
@@ -14,22 +15,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params
     const supabase = await createClient()
-
-    const { data: category } = await supabase
-        .from('categories')
-        .select('name, description')
-        .eq('slug', slug)
-        .single()
-
-    if (!category) return { title: 'Collection Not Found' }
-
+    const { data } = await supabase.from('categories').select('name, description').eq('slug', slug).single()
+    if (!data) return { title: 'Collection | DINA COSMETIC' }
     return {
-        title: `${category.name} Collection | DINA COSMETIC`,
-        description: category.description || `Shop our ${category.name} collection — luxury beauty at its finest.`,
-        openGraph: {
-            title: `${category.name} | DINA COSMETIC`,
-            description: category.description || `Shop the ${category.name} collection.`,
-        },
+        title: `${data.name} | DINA COSMETIC`,
+        description: data.description ?? `Shop the ${data.name} collection.`,
     }
 }
 
@@ -37,7 +27,6 @@ export default async function CollectionSlugPage({ params }: Props) {
     const { slug } = await params
     const supabase = await createClient()
 
-    // Fetch the category by slug
     const { data: category } = await supabase
         .from('categories')
         .select('id, name, slug, description, image_url')
@@ -46,87 +35,76 @@ export default async function CollectionSlugPage({ params }: Props) {
 
     if (!category) notFound()
 
-    // Count products in this category
-    const { count: productCount } = await supabase
+    const { data: products } = await supabase
         .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('category_id', category.id)
+        .select('id, name, price, images, description, is_featured, variants(id, name, price_override, stock_quantity)')
         .eq('is_active', true)
+        .eq('category_id', category.id)
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
 
-    // Fetch all categories for cross-navigation
-    const { data: allCategories } = await supabase
-        .from('categories')
-        .select('id, name, slug')
-        .order('name')
+    const items = products ?? []
 
     return (
-        <div className="bg-background-primary text-text-bodyDark min-h-screen">
+        <div className="bg-[#050505] text-white/80 min-h-screen">
 
-            {/* ── Hero Banner ── */}
-            <div className="relative pt-40 pb-24 px-6 overflow-hidden">
-                {/* Background glow */}
+            {/* Hero */}
+            <div className="relative pt-36 pb-20 px-6 overflow-hidden">
                 <div className="absolute inset-0 pointer-events-none">
-                    <div
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] opacity-[0.04]"
-                        style={{
-                            background: 'radial-gradient(ellipse, rgb(212 175 55), transparent 70%)',
-                        }}
-                    />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] opacity-[0.04]"
+                        style={{ background: 'radial-gradient(ellipse, rgb(212 175 55), transparent 70%)' }} />
                 </div>
-
-                <div className="max-w-7xl mx-auto relative z-10">
-                    {/* Breadcrumb */}
-                    <Link
-                        href="/collections"
-                        className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.4em] text-text-mutedDark/40 hover:text-gold-primary transition-colors mb-12"
-                    >
-                        <ArrowLeft size={10} />
-                        All Collections
-                    </Link>
-
-                    <div className="flex flex-col md:flex-row justify-between items-end gap-8 border-b border-gold-primary/10 pb-16">
-                        <div className="space-y-5">
-                            <div className="flex items-center gap-2 text-gold-primary">
-                                <Sparkles size={10} className="animate-pulse" />
-                                <span className="text-[9px] uppercase tracking-[0.6em] font-light">
-                                    Collection · {(productCount ?? 0)} pieces
-                                </span>
-                            </div>
-                            <h1 className="text-5xl md:text-8xl font-serif italic tracking-tighter text-text-headingDark">
-                                {category.name}
-                            </h1>
-                        </div>
-                        <p className="text-text-mutedDark text-[10px] uppercase tracking-[0.3em] max-w-xs text-right leading-loose md:pb-4">
-                            {category.description || 'Curated excellence for those who demand nothing but the finest.'}
-                        </p>
+                {category.image_url && (
+                    <div className="absolute inset-0">
+                        <Image src={category.image_url} alt={category.name} fill className="object-cover opacity-10" priority />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/60 via-[#050505]/70 to-[#050505]" />
                     </div>
-
-                    {/* Cross-category navigation */}
-                    {allCategories && allCategories.length > 1 && (
-                        <div className="flex flex-wrap gap-6 items-center pt-8 text-[10px] uppercase tracking-[0.3em] font-light">
-                            <span className="text-text-mutedDark/30">Browse:</span>
-                            {allCategories.map((cat) => (
-                                <Link
-                                    key={cat.id}
-                                    href={`/collections/${cat.slug}`}
-                                    className={`transition-colors ${cat.slug === slug
-                                        ? 'text-gold-primary'
-                                        : 'text-text-bodyDark/30 hover:text-gold-primary'
-                                        }`}
-                                >
-                                    {cat.name}
-                                </Link>
-                            ))}
+                )}
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <nav className="flex items-center gap-2 text-[9px] uppercase tracking-[0.35em] text-white/20 mb-10">
+                        <Link href="/" className="hover:text-[#D4AF37]/60 transition-colors">Home</Link>
+                        <ArrowRight size={8} />
+                        <Link href="/collections" className="hover:text-[#D4AF37]/60 transition-colors">Collections</Link>
+                        <ArrowRight size={8} />
+                        <span className="text-[#D4AF37]/50">{category.name}</span>
+                    </nav>
+                    <div className="space-y-4 max-w-2xl">
+                        <p className="text-[9px] uppercase tracking-[0.55em] text-[#D4AF37]/50 font-light">The Obsidian Palace</p>
+                        <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white/92">{category.name}</h1>
+                        {category.description && (
+                            <p className="text-[11px] uppercase tracking-widest text-white/30 leading-loose font-light max-w-md">{category.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 text-[9px] text-white/20 uppercase tracking-widest pt-2">
+                            <span>{items.length} {items.length === 1 ? 'piece' : 'pieces'}</span>
+                            <div className="w-8 h-px bg-[#D4AF37]/20" />
+                            <span>Curated Selection</span>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
 
-            {/* ── Products Grid ── */}
-            <div className="px-6 max-w-7xl mx-auto pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                <ProductGrid categoryId={category.id} />
+            {/* Grid */}
+            <div className="max-w-7xl mx-auto px-6 pb-32">
+                {items.length === 0 ? (
+                    <div className="text-center py-24 space-y-6">
+                        <p className="text-white/20 uppercase tracking-[0.5em] text-[10px]">This vault is sealed. No products yet.</p>
+                        <Link href="/shop" id="collection-empty-shop"
+                            className="inline-flex items-center gap-3 border border-[#D4AF37]/25 text-[#D4AF37]/70 px-8 py-4 text-[9px] uppercase tracking-[0.4em] hover:bg-[#D4AF37]/5 transition-all min-h-[44px]">
+                            Browse All Products <ArrowRight size={11} />
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
+                        {items.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={product as any}
+                                variants={product.variants as any[]}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
-
         </div>
     )
 }

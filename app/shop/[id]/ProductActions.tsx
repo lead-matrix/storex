@@ -7,7 +7,8 @@ import { Minus, Plus, ShoppingBag } from "lucide-react";
 interface Variant {
     id: string;
     name: string;
-    price_override?: number;
+    price_override?: number | null;
+    stock_quantity?: number;
 }
 
 interface Product {

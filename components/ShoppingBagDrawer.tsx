@@ -24,26 +24,11 @@ export function ShoppingBagDrawer() {
     const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
     const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
-    const handleCheckout = async () => {
+    const handleCheckout = () => {
         setIsCheckingOut(true);
-        try {
-            const response = await fetch("/api/checkout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items: cart }),
-            });
-            const data = await response.json();
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                // Fallback or error handling
-                console.error("No checkout URL returned");
-            }
-        } catch (error) {
-            console.error("Checkout error:", error);
-        } finally {
-            setIsCheckingOut(false);
-        }
+        router.push("/checkout");
+        setIsCartOpen(false);
+        setIsCheckingOut(false);
     };
 
     return (

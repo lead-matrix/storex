@@ -26,7 +26,8 @@ interface Product {
 interface Variant {
     id: string;
     name: string;
-    price_override?: number;
+    price_override?: number | null;
+    stock_quantity?: number;
 }
 
 export function ProductCard({

@@ -2,25 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-
-const supabase = createClient();
 import { ProductCard } from "./ProductCard";
 import { Loader2 } from "lucide-react";
 
 interface Variant {
     id: string;
     name: string;
-    price_override?: number;
+    price_override?: number | null;
+    stock_quantity?: number;
 }
 
 interface Product {
     id: string;
     name: string;
-    price: number;       // correct DB column name
-    base_price?: number; // kept for backward compat
+    price: number;
     images: string[];
+    description?: string;
     variants: Variant[];
     category_id?: string;
+    is_featured?: boolean;
 }
 
 interface ProductGridProps {
@@ -33,87 +33,78 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const supabase = createClient();
+
         async function fetchProducts() {
+            // Include variants in the select
             let query = supabase
                 .from("products")
-                .select("id, name, price, images, category_id, is_active")
+                .select("id, name, price, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock_quantity)")
                 .eq("is_active", true);
 
-            // Filter by category if provided
             if (categoryId) {
                 query = query.eq("category_id", categoryId);
             }
 
-            // Apply additional filters
             if (filter === "new") {
                 query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
             }
 
-            query = query.order("created_at", { ascending: false });
+            query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
 
             const { data, error } = await query;
 
             if (error) {
                 console.error("Error fetching products:", error);
             } else {
-                setProducts((data as any[]) || []);
+                setProducts((data ?? []) as unknown as Product[]);
             }
             setLoading(false);
         }
 
         fetchProducts();
 
-        // Subscribe to real-time changes for instant synchronization
-        const productChannel = supabase
-            .channel('product-updates')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        const supabaseClient = createClient();
+        const productChannel = supabaseClient
+            .channel("product-updates")
+            .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
                 fetchProducts();
             })
             .subscribe();
 
         return () => {
-            supabase.removeChannel(productChannel);
+            supabaseClient.removeChannel(productChannel);
         };
     }, [categoryId, filter]);
 
     if (loading) {
         return (
             <div className="py-24 flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-8 h-8 text-gold-primary animate-spin" />
-                <p className="text-text-mutedDark uppercase tracking-[0.4em] text-[10px] font-light italic">Opening The Vault...</p>
+                <Loader2 className="w-7 h-7 text-[#D4AF37] animate-spin" />
+                <p className="text-white/25 uppercase tracking-[0.45em] text-[9px] font-light">Opening The Vault...</p>
             </div>
         );
     }
 
     if (!products || products.length === 0) {
         return (
-            <div id="shop" className="py-24 text-center">
-                <p className="text-text-mutedDark/30 uppercase tracking-[0.5em] text-xs font-light">The vault is currently sealed.</p>
+            <div className="py-24 text-center">
+                <p className="text-white/20 uppercase tracking-[0.5em] text-[10px] font-light">
+                    The vault is currently sealed.
+                </p>
             </div>
         );
     }
 
     return (
-        <div id="shop" className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-                <div className="space-y-4">
-                    <p className="text-gold-primary uppercase tracking-[0.4em] text-[10px] font-light">Curated Selection</p>
-                    <h2 className="text-4xl md:text-6xl font-serif text-text-headingDark tracking-tight italic">The Essentials</h2>
-                </div>
-                <p className="text-text-mutedDark text-[10px] uppercase tracking-[0.3em] font-light max-w-xs text-right hidden md:block leading-loose">
-                    Meticulously formulated beauty and skincare products for the discerning elite.
-                </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-20">
-                {products.map((product: Product) => (
-                    <ProductCard
-                        key={product.id}
-                        product={product}
-                        variants={[]}
-                    />
-                ))}
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
+            {products.map((product) => (
+                <ProductCard
+                    key={product.id}
+                    product={product}
+                    variants={product.variants ?? []}
+                />
+            ))}
         </div>
     );
 }

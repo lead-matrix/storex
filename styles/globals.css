@@ -28,15 +28,15 @@
 
 @layer base {
   :root {
-    --bg-primary: 17 17 17;
-    /* #111111 */
-    --bg-secondary: 26 20 16;
-    /* #1A1410 */
+    --bg-primary: 5 5 5;
+    /* #050505 — true obsidian */
+    --bg-secondary: 12 10 8;
+    /* #0C0A08 */
     --bg-light: 243 239 232;
     /* #F3EFE8 */
 
     --gold-primary: 212 175 55;
-    /* #D4AF37 */
+    /* #D4AF37 Gold Dust */
     --gold-accent: 184 150 46;
     /* #B8962E */
     --gold-hover: 138 111 42;
@@ -53,7 +53,10 @@
     --text-body-light: 42 37 34;
     --text-muted-light: 90 82 75;
 
-    /* Shadcn compatibility - pointing to our new system */
+    /* Glass panel border color: rgba(212, 175, 55, 0.2) */
+    --glass-border: rgba(212, 175, 55, 0.2);
+
+    /* Shadcn compatibility */
     --background: var(--bg-primary);
     --foreground: var(--text-body-dark);
     --card: var(--bg-primary);
@@ -66,13 +69,13 @@
     --secondary-foreground: var(--text-body-dark);
     --muted: var(--bg-secondary);
     --muted-foreground: var(--text-muted-dark);
-    --border: 255 255 255 / 0.1;
-    --input: 255 255 255 / 0.1;
+    --border: 255 255 255 / 0.08;
+    --input: 255 255 255 / 0.08;
     --ring: var(--gold-primary);
   }
 
   * {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   html {
@@ -83,14 +86,75 @@
   body {
     background-color: rgb(var(--bg-primary));
     background-image:
-      radial-gradient(circle at 50% -20%, rgb(var(--gold-primary) / 0.05), transparent 70%),
-      radial-gradient(circle at 0% 100%, rgb(var(--bg-secondary) / 0.5), transparent 50%);
+      radial-gradient(circle at 50% -20%, rgba(212, 175, 55, 0.06), transparent 60%),
+      radial-gradient(circle at 0% 100%, rgba(12, 10, 8, 0.8), transparent 50%);
     @apply text-text-bodyDark antialiased overflow-x-hidden;
     font-family: var(--font-inter), sans-serif;
   }
+
+  /* Grain overlay — applied via pseudo on body */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.028;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 128px 128px;
+  }
+
+  body>* {
+    position: relative;
+    z-index: 1;
+  }
 }
 
-/* Luxury Touch Improvements */
+/* ─── SVG Gold Glow Filter (custom filter) ─── */
+.filter-gold-glow {
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5)) drop-shadow(0 0 32px rgba(212, 175, 55, 0.25));
+}
+
+/* ─── Core Glassmorphism — Premium spec ─── */
+/* Every container: backdrop-blur-xl, bg-black/40, 1px border rgba(212,175,55,0.2) */
+.glass {
+  background: rgba(0, 0, 0, 0.40);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(212, 175, 55, 0.20);
+}
+
+.glass-sm {
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.glass-dark {
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(212, 175, 55, 0.20);
+}
+
+/* Legacy class — maps to new glass-dark */
+.glass-panel {
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.glass-panel-light {
+  background: rgba(12, 10, 8, 0.60);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(212, 175, 55, 0.08);
+}
+
+/* ─── Touch targets ─── */
 @media (max-width: 768px) {
 
   button,
@@ -99,28 +163,29 @@
   }
 }
 
-/* Custom Scrollbar for Luxury Aesthetics */
+/* ─── Custom Scrollbar ─── */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(var(--bg-primary));
+  background: rgb(5, 5, 5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--gold-primary) / 0.2);
+  background: rgba(212, 175, 55, 0.18);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--gold-primary));
+  background: rgba(212, 175, 55, 0.45);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 2px;
 }
 
-/* ─── Animation utilities ─── */
+/* ─── Luxury Fade Animation ─── */
 .animate-luxury-fade {
   animation: luxury-fade 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -128,7 +193,7 @@
 @keyframes luxury-fade {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
 
   to {
@@ -137,7 +202,24 @@
   }
 }
 
-/* ─── Stagger children animations ─── */
+/* ─── Float animation for hero elements ─── */
+@keyframes float-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+/* ─── Stagger children ─── */
 .stagger-children>* {
   opacity: 0;
   animation: luxury-fade 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -148,41 +230,34 @@
 }
 
 .stagger-children>*:nth-child(2) {
-  animation-delay: 0.10s;
+  animation-delay: 0.12s;
 }
 
 .stagger-children>*:nth-child(3) {
-  animation-delay: 0.15s;
+  animation-delay: 0.19s;
 }
 
 .stagger-children>*:nth-child(4) {
-  animation-delay: 0.20s;
+  animation-delay: 0.26s;
 }
 
 .stagger-children>*:nth-child(5) {
-  animation-delay: 0.25s;
+  animation-delay: 0.33s;
 }
 
 .stagger-children>*:nth-child(6) {
-  animation-delay: 0.30s;
+  animation-delay: 0.40s;
 }
 
-/* ─── Obsidian Glass Panel ─── */
-.glass-panel {
-  background: rgba(17, 17, 17, 0.72);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(212, 175, 55, 0.08);
+.stagger-children>*:nth-child(7) {
+  animation-delay: 0.47s;
 }
 
-.glass-panel-light {
-  background: rgba(26, 20, 16, 0.60);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border: 1px solid rgba(212, 175, 55, 0.06);
+.stagger-children>*:nth-child(8) {
+  animation-delay: 0.54s;
 }
 
-/* ─── Gold Shimmer Effect ─── */
+/* ─── Gold Shimmer ─── */
 .gold-shimmer {
   position: relative;
   overflow: hidden;
@@ -193,10 +268,10 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(105deg,
-      transparent 40%,
-      rgba(212, 175, 55, 0.06) 50%,
-      transparent 60%);
-  animation: shimmer 3s ease-in-out infinite;
+      transparent 35%,
+      rgba(212, 175, 55, 0.08) 50%,
+      transparent 65%);
+  animation: shimmer 3.5s ease-in-out infinite;
 }
 
 @keyframes shimmer {
@@ -205,20 +280,20 @@
   }
 
   100% {
-    transform: translateX(100%);
+    transform: translateX(200%);
   }
 }
 
-/* ─── Gold Glow on hover ─── */
+/* ─── Gold Glow on Hover ─── */
 .gold-glow-hover {
-  transition: box-shadow 0.4s ease;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
 .gold-glow-hover:hover {
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.12), 0 0 1px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 8px 40px rgba(212, 175, 55, 0.12);
 }
 
-/* ─── Subtle gold border pulse ─── */
+/* ─── Border Gold Pulse ─── */
 .border-gold-pulse {
   animation: border-pulse 2.5s ease-in-out infinite;
 }
@@ -227,47 +302,144 @@
 
   0%,
   100% {
-    border-color: rgba(212, 175, 55, 0.08);
+    border-color: rgba(212, 175, 55, 0.12);
   }
 
   50% {
-    border-color: rgba(212, 175, 55, 0.20);
+    border-color: rgba(212, 175, 55, 0.35);
   }
 }
 
-/* ─── Mobile Bottom Nav Dock ─── */
-@media (max-width: 768px) {
-  .mobile-dock {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    background: rgba(17, 17, 17, 0.88);
-    backdrop-filter: blur(24px) saturate(1.5);
-    -webkit-backdrop-filter: blur(24px) saturate(1.5);
-    border-top: 0.5px solid rgba(212, 175, 55, 0.15);
-    padding-bottom: env(safe-area-inset-bottom);
+/* ─── Mobile Glass Dock (Admin) ─── */
+.mobile-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+}
+
+/* ─── Global Command Bar (Admin) ─── */
+.command-bar {
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  background: rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* ─── Bento Grid ─── */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.bento-span-4 {
+  grid-column: span 4;
+}
+
+.bento-span-6 {
+  grid-column: span 6;
+}
+
+.bento-span-8 {
+  grid-column: span 8;
+}
+
+.bento-span-12 {
+  grid-column: span 12;
+}
+
+@media (max-width: 1024px) {
+
+  .bento-span-4,
+  .bento-span-6,
+  .bento-span-8 {
+    grid-column: span 12;
   }
 }
 
-/* ─── Focus accessible outline override ─── */
+/* ─── Stripe Night Mode Appearance ─── */
+.stripe-night-mode .StripeElement {
+  color: #fff;
+  background-color: transparent;
+}
+
+/* ─── Focus accessible outline ─── */
 :focus-visible {
   outline: 1.5px solid rgba(212, 175, 55, 0.6);
   outline-offset: 2px;
 }
 
-/* ─── Reduced motion respect ─── */
+/* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
 
   .animate-luxury-fade,
   .stagger-children>*,
   .gold-shimmer::after,
-  .border-gold-pulse {
+  .border-gold-pulse,
+  .animate-float {
     animation: none !important;
   }
 
   .gold-glow-hover:hover {
-    box-shadow: none;
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3);
   }
+}
+
+/* ─── Section separator ─── */
+.section-divider {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.5), transparent);
+}
+
+/* ─── Hero gradient overlays ─── */
+.hero-vignette-left {
+  background: linear-gradient(to right, #050505 0%, #050505 20%, transparent 60%);
+}
+
+.hero-vignette-bottom {
+  background: linear-gradient(to top, #050505 0%, transparent 50%);
+}
+
+/* ─── Typography overrides ─── */
+.font-serif-italic {
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+}
+
+/* ─── Table luxury styles ─── */
+.vault-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+  padding: 12px 16px;
+  font-weight: 500;
+}
+
+.vault-table td {
+  padding: 14px 16px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.vault-table tr:hover td {
+  background: rgba(212, 175, 55, 0.025);
+}
+
+/* ─── Gold text gradient ─── */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #F5E07C 50%, #B8962E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
