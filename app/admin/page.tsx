@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function AdminCommandCenter() {
     const supabase = await createClient()
 
-    // Fetch all stats in parallel — using correct DB column names
+    // Fetch all stats in parallel — using REAL DB column names (audited)
     const [
         { data: revenueData },
         { count: totalOrders },
@@ -21,24 +21,24 @@ export default async function AdminCommandCenter() {
         { data: recentOrders },
         { data: lowStockProducts },
     ] = await Promise.all([
-        supabase.from('orders').select('amount_total').eq('status', 'paid'),
+        supabase.from('orders').select('total_amount').eq('status', 'paid'),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }).lt('stock', 5).eq('is_active', true),
+        supabase.from('products').select('*', { count: 'exact', head: true }).lt('inventory', 5).eq('is_active', true),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('orders')
-            .select('id, customer_email, status, amount_total, created_at')
+            .select('id, email, status, total_amount, created_at')
             .order('created_at', { ascending: false })
             .limit(8),
         supabase.from('products')
-            .select('id, name, stock')
-            .lt('stock', 5)
+            .select('id, name, inventory')
+            .lt('inventory', 5)
             .eq('is_active', true)
-            .order('stock', { ascending: true })
+            .order('inventory', { ascending: true })
             .limit(5),
     ])
 
-    const totalRevenue = revenueData?.reduce((acc, curr) => acc + (curr.amount_total || 0), 0) || 0
+    const totalRevenue = revenueData?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0
 
     const statCards = [
         {
@@ -199,8 +199,8 @@ export default async function AdminCommandCenter() {
                                     <p className="text-[11px] text-text-bodyDark/70 group-hover:text-text-headingDark transition-colors truncate max-w-[140px]">
                                         {product.name}
                                     </p>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 border shrink-0 ${product.stock === 0 ? 'text-red-400 bg-red-400/10 border-red-400/20' : 'text-amber-400 bg-amber-400/10 border-amber-400/20'}`}>
-                                        {product.stock === 0 ? 'OUT' : `${product.stock} left`}
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 border shrink-0 ${product.inventory === 0 ? 'text-red-400 bg-red-400/10 border-red-400/20' : 'text-amber-400 bg-amber-400/10 border-amber-400/20'}`}>
+                                        {product.inventory === 0 ? 'OUT' : `${product.inventory} left`}
                                     </span>
                                 </Link>
                             ))
@@ -255,7 +255,7 @@ export default async function AdminCommandCenter() {
                                         </td>
                                         <td className="px-6 md:px-8 py-5 hidden sm:table-cell">
                                             <span className="text-[11px] text-text-bodyDark/60 lowercase truncate max-w-[180px] block">
-                                                {order.customer_email || '—'}
+                                                {order.email || '—'}
                                             </span>
                                         </td>
                                         <td className="px-6 md:px-8 py-5">
@@ -269,7 +269,7 @@ export default async function AdminCommandCenter() {
                                             })}
                                         </td>
                                         <td className="px-6 md:px-8 py-5 text-right text-[12px] font-serif text-text-headingDark/80 italic">
-                                            ${Number(order.amount_total || 0).toFixed(2)}
+                                            ${Number(order.total_amount || 0).toFixed(2)}
                                         </td>
                                     </tr>
                                 )

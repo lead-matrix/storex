@@ -35,7 +35,9 @@ export async function createProduct(formData: FormData) {
     // Support both 'price' and 'base_price' field names from the form
     const priceRaw = (formData.get('base_price') || formData.get('price')) as string;
     const price = parseFloat(priceRaw);
-    const stock = parseInt((formData.get('stock') as string) || '0');
+    // DB uses 'inventory' column (our SQL migration also adds 'stock' alias)
+    // Write to both so it works before and after migration
+    const inventoryQty = parseInt((formData.get('stock') as string) || '0');
     const category_id = (formData.get('category_id') as string) || null;
     const is_featured = formData.get('is_featured') === 'on';
     const imagesRaw = formData.get('images') as string;
@@ -53,7 +55,7 @@ export async function createProduct(formData: FormData) {
             name,
             description,
             price,
-            stock,
+            inventory: inventoryQty,  // real DB column name
             images,
             is_featured,
             is_active: true,
@@ -80,7 +82,7 @@ export async function updateProduct(formData: FormData) {
     // Support both 'price' and 'base_price' field names from the form
     const priceRaw = (formData.get('base_price') || formData.get('price')) as string;
     const price = parseFloat(priceRaw);
-    const stock = parseInt((formData.get('stock') as string) || '0');
+    const inventoryQty = parseInt((formData.get('stock') as string) || '0');
     const category_id = (formData.get('category_id') as string) || null;
     const is_featured = formData.get('is_featured') === 'on';
     const imagesRaw = formData.get('images') as string;
@@ -96,7 +98,7 @@ export async function updateProduct(formData: FormData) {
             name,
             description,
             price,
-            stock,
+            inventory: inventoryQty,  // real DB column
             images,
             is_featured,
             ...(category_id ? { category_id } : { category_id: null }),
