@@ -1,8 +1,40 @@
 -- ============================================================
 --  LMXEngine · DINA COSMETIC · PHASE 2 SCHEMA EXPANSION
 --  Run this in Supabase SQL Editor → New Query
+--  SELF-CONTAINED: Works even if DATABASE.sql was not run first.
 --  Safe to run multiple times (uses IF NOT EXISTS / ON CONFLICT)
 -- ============================================================
+
+-- ─────────────────────────────────────────────
+-- 0. PREREQUISITES — ensure core helpers exist
+-- ─────────────────────────────────────────────
+
+-- is_admin() helper (idempotent)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+-- updated_at trigger function (idempotent)
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
 
 -- ─────────────────────────────────────────────
 -- 1. FIX ORDERS TABLE (add missing user_id column)
