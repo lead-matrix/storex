@@ -249,24 +249,24 @@ export async function Footer() {
             </div>
 
             <div className="max-w-7xl mx-auto border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-600" suppressHydrationWarning>
+                <p className="text-[9px] uppercase tracking-[0.3em] text-text-mutedDark/40" suppressHydrationWarning>
                     © {new Date().getFullYear()} {storeInfo.name}. All rights reserved.
                 </p>
-                <div className="flex items-center gap-8 grayscale opacity-30">
+                <div className="flex items-center gap-5 grayscale opacity-20">
                     <img
                         src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
                         alt="PayPal"
-                        className="h-4"
+                        className="h-3"
                     />
                     <img
                         src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
                         alt="Visa"
-                        className="h-3"
+                        className="h-2.5"
                     />
                     <img
                         src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
                         alt="Mastercard"
-                        className="h-4"
+                        className="h-3"
                     />
                 </div>
             </div>

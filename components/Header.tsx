@@ -8,223 +8,241 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
+const NAV_LINKS = [
+    { label: "Shop", href: "/shop" },
+    { label: "Collections", href: "/collections" },
+    { label: "The Palace", href: "/about" },
+];
+
 export default function Header() {
     const { totalItems, setIsCartOpen } = useCart();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<{
+        id: string; name: string; images: string[]; price: number; slug: string;
+    }[]>([]);
     const supabase = createClient();
-    const [user, setUser] = useState<any>(null);
-    const [headerData, setHeaderData] = useState<any>(null);
+    const [user, setUser] = useState<{ email?: string } | null>(null);
+    const [scrolled, setScrolled] = useState(false);
 
+    // Auth listener
     useEffect(() => {
         const getUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
         };
         getUser();
-
-        const fetchHeaderData = async () => {
-            const { data } = await supabase
-                .from('frontend_content')
-                .select('content_data')
-                .eq('content_key', 'header_main')
-                .single();
-            if (data) setHeaderData(data.content_data);
-        };
-        fetchHeaderData();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
             setUser(session?.user ?? null);
         });
-
         return () => subscription.unsubscribe();
     }, []);
 
+    // Scroll shadow
     useEffect(() => {
-        const fetchResults = async () => {
-            if (searchQuery.length > 2) {
-                const { data } = await supabase
-                    .from('products')
-                    .select('*')
-                    .ilike('name', `%${searchQuery}%`)
-                    .limit(5);
-                setSearchResults(data || []);
-            } else {
-                setSearchResults([]);
-            }
-        };
-        fetchResults();
+        const onScroll = () => setScrolled(window.scrollY > 10);
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    // Live search
+    useEffect(() => {
+        if (searchQuery.length < 3) { setSearchResults([]); return; }
+        const timer = setTimeout(async () => {
+            const { data } = await supabase
+                .from("products")
+                .select("id, name, images, price, slug")
+                .ilike("name", `%${searchQuery}%`)
+                .eq("is_active", true)
+                .limit(6);
+            setSearchResults(data || []);
+        }, 300);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
-
-    const NavLinks = () => {
-        const links = headerData?.navigation || [
-            { label: "Shop", href: "/shop" },
-            { label: "Collections", href: "/collections" },
-            { label: "The Palace", href: "/about" }
-        ];
-
-        return (
-            <>
-                {links.map((link: any, i: number) => (
-                    <Link
-                        key={i}
-                        href={link.href}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="hover:text-gold-primary transition-colors text-text-bodyDark/70 py-2"
-                    >
-                        {link.label}
-                    </Link>
-                ))}
-            </>
-        );
-    };
 
     return (
         <>
-            <nav className="fixed top-0 w-full z-50 bg-background-primary/80 backdrop-blur-xl border-b border-gold-primary/10 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                    {/* Mobile Menu Trigger */}
-                    <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                        <SheetTrigger asChild>
-                            <button className="md:hidden text-text-headingDark hover:text-gold-primary transition-colors p-2 -ml-2">
-                                <Menu className="w-5 h-5" />
-                            </button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="bg-background-primary border-r border-gold-primary/20 w-full p-0 flex flex-col">
-                            <div className="p-8 border-b border-gold-primary/10 flex flex-col items-center gap-4">
-                                <div className="relative w-12 h-12">
-                                    <Image src={headerData?.logo?.url || "/logo.jpg"} alt="Logo" fill className="object-contain" />
+            {/* ── Main Navbar ─────────────────────────────────────────── */}
+            <nav className={`fixed top-0 w-full z-50 transition-all duration-300
+                bg-background-primary/90 backdrop-blur-xl border-b border-gold-primary/10
+                ${scrolled ? "shadow-[0_2px_24px_rgba(0,0,0,0.4)]" : ""}`}
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+
+                    {/* LEFT — Mobile hamburger + Desktop nav links */}
+                    <div className="flex items-center gap-6">
+                        {/* Mobile hamburger */}
+                        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                            <SheetTrigger asChild>
+                                <button className="md:hidden text-text-headingDark hover:text-gold-primary transition-colors p-1 -ml-1" aria-label="Menu">
+                                    <Menu className="w-5 h-5" />
+                                </button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="bg-background-primary border-r border-gold-primary/20 w-72 p-0 flex flex-col">
+                                {/* Mobile menu header */}
+                                <div className="p-8 border-b border-gold-primary/10 flex flex-col items-center gap-3">
+                                    <div className="relative w-12 h-12">
+                                        <Image src="/logo.jpg" alt="DINA COSMETIC" fill className="object-contain" />
+                                    </div>
+                                    <SheetTitle className="font-serif text-xl tracking-[0.2em] text-text-headingDark">
+                                        DINA COSMETIC
+                                    </SheetTitle>
+                                    <p className="text-[9px] uppercase tracking-[0.4em] text-gold-primary/60 font-light">The Obsidian Palace</p>
                                 </div>
-                                <SheetTitle className="font-serif text-2xl tracking-[0.2em] text-text-headingDark">
-                                    {headerData?.logo?.alt || "DINA COSMETIC"}
-                                </SheetTitle>
-                                <p className="text-[9px] uppercase tracking-[0.4em] text-gold-primary/60 font-light">The Obsidian Palace</p>
-                            </div>
-
-                            <div className="flex-grow flex flex-col justify-center gap-8 py-12 text-sm uppercase tracking-[0.5em] font-light text-center px-8">
-                                <NavLinks />
-                                <div className="h-px bg-gold/10 w-12 mx-auto my-4" />
-                                <Link
-                                    href="/admin"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="text-gold-accent/40 hover:text-gold-primary transition-colors py-2 flex items-center justify-center gap-3"
-                                >
-                                    <User size={14} />
-                                    Admin Vault
-                                </Link>
-                            </div>
-
-                            <div className="p-8 border-t border-gold-primary/10 bg-background-secondary/50 space-y-8">
-                                <div className="flex justify-center gap-8 text-white/30">
-                                    <Instagram size={20} className="hover:text-gold-primary transition-colors" />
-                                    <span className="text-[10px] uppercase tracking-widest self-center">@dinacosmetic</span>
+                                {/* Mobile nav links */}
+                                <nav className="flex-grow flex flex-col justify-center py-12 px-8 space-y-6">
+                                    {NAV_LINKS.map((link) => (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="text-sm uppercase tracking-[0.4em] font-light text-text-bodyDark/80 hover:text-gold-primary transition-colors py-1"
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+                                    <div className="h-px bg-gold-primary/10 my-2" />
+                                    <Link
+                                        href="/account"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="text-sm uppercase tracking-[0.4em] font-light text-text-bodyDark/40 hover:text-gold-primary transition-colors py-1 flex items-center gap-3"
+                                    >
+                                        <User size={14} />
+                                        {user ? "My Account" : "Sign In"}
+                                    </Link>
+                                </nav>
+                                {/* Mobile CTA */}
+                                <div className="p-6 border-t border-gold-primary/10">
+                                    <Link
+                                        href="/shop"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center justify-center gap-3 border border-gold-primary/40 py-3 text-gold-primary uppercase text-[10px] tracking-[0.3em] hover:bg-gold-primary/5 transition-colors"
+                                    >
+                                        Shop All <ArrowRight size={12} />
+                                    </Link>
                                 </div>
+                            </SheetContent>
+                        </Sheet>
+
+                        {/* Desktop nav links */}
+                        <div className="hidden md:flex items-center gap-8">
+                            {NAV_LINKS.map((link) => (
                                 <Link
-                                    href="/shop"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="w-full border border-gold-accent/40 py-4 flex items-center justify-center gap-4 text-gold-primary uppercase text-[10px] tracking-[0.3em]"
+                                    key={link.href}
+                                    href={link.href}
+                                    className="text-[10px] uppercase tracking-[0.25em] font-light text-text-bodyDark/70 hover:text-gold-primary transition-colors relative group"
                                 >
-                                    Quick Shop <ArrowRight size={14} />
+                                    {link.label}
+                                    <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold-primary group-hover:w-full transition-all duration-300" />
                                 </Link>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-
-                    {/* Desktop Links */}
-                    <div className="hidden md:flex items-center gap-8 text-[10px] uppercase tracking-[0.3em] font-light">
-                        <NavLinks />
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
-                    <div className="relative w-8 h-8">
-                        <Image src={headerData?.logo?.url || "/logo.jpg"} alt="Logo" fill className="object-contain" />
-                    </div>
-                    <span className="hidden lg:block font-serif text-lg tracking-widest text-text-headingDark uppercase">
-                        {headerData?.logo?.alt || "DINA COSMETIC"}
-                    </span>
-                </Link>
-
-                <div className="flex items-center gap-2 md:gap-4">
-                    <button
-                        onClick={() => setIsSearchOpen(true)}
-                        className="text-text-bodyDark/70 hover:text-gold-primary transition-colors p-2"
-                        aria-label="Search"
-                    >
-                        <Search className="w-5 h-5" />
-                    </button>
-
-                    <Link href={user ? "/account" : "/login"} className="hidden sm:block text-text-bodyDark/70 hover:text-gold-primary transition-colors p-2" title={user ? "My Account" : "Sign In"}>
-                        <User className="w-5 h-5" />
+                    {/* CENTER — Logo */}
+                    <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2.5 group">
+                        <div className="relative w-8 h-8 flex-shrink-0">
+                            <Image
+                                src="/logo.jpg"
+                                alt="DINA COSMETIC Logo"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </div>
+                        <span className="hidden lg:block font-serif text-base tracking-[0.3em] text-text-headingDark uppercase group-hover:text-gold-primary transition-colors">
+                            DINA COSMETIC
+                        </span>
                     </Link>
 
-                    <button
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative text-text-bodyDark/70 hover:text-gold-primary transition-colors p-2"
-                        aria-label="Shopping Bag"
-                    >
-                        <ShoppingBag className="w-5 h-5" />
-                        {totalItems > 0 && (
-                            <span className="absolute top-1 right-1 bg-gold-primary text-background-primary text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                                {totalItems}
-                            </span>
-                        )}
-                    </button>
+                    {/* RIGHT — Search, Login, Cart */}
+                    <div className="flex items-center gap-1 sm:gap-2">
+                        {/* Search */}
+                        <button
+                            onClick={() => setIsSearchOpen(true)}
+                            className="text-text-bodyDark/60 hover:text-gold-primary transition-colors p-2 rounded-sm"
+                            aria-label="Search"
+                        >
+                            <Search className="w-[18px] h-[18px]" />
+                        </button>
+
+                        {/* Account */}
+                        <Link
+                            href={user ? "/account" : "/login"}
+                            className="hidden sm:flex text-text-bodyDark/60 hover:text-gold-primary transition-colors p-2 rounded-sm"
+                            title={user ? "My Account" : "Sign In"}
+                            aria-label={user ? "My Account" : "Sign In"}
+                        >
+                            <User className="w-[18px] h-[18px]" />
+                        </Link>
+
+                        {/* Shopping Bag */}
+                        <button
+                            onClick={() => setIsCartOpen(true)}
+                            className="relative text-text-bodyDark/60 hover:text-gold-primary transition-colors p-2 rounded-sm"
+                            aria-label="Shopping Bag"
+                        >
+                            <ShoppingBag className="w-[18px] h-[18px]" />
+                            {totalItems > 0 && (
+                                <span className="absolute top-1 right-1 bg-gold-primary text-background-primary text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+                                    {totalItems > 9 ? "9+" : totalItems}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </nav>
 
-            {/* Global Search Overlay */}
+            {/* ── Search Overlay ──────────────────────────────────────── */}
             {isSearchOpen && (
-                <div className="fixed inset-0 z-[100] bg-background-primary/95 backdrop-blur-xl animate-in fade-in duration-500 overflow-y-auto">
+                <div className="fixed inset-0 z-[100] bg-background-primary/97 backdrop-blur-xl animate-in fade-in duration-200">
                     <button
-                        onClick={() => {
-                            setIsSearchOpen(false);
-                            setSearchQuery("");
-                        }}
-                        className="fixed top-6 right-6 md:top-10 md:right-10 text-text-mutedDark hover:text-gold-primary transition-colors z-[110]"
+                        onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                        className="absolute top-6 right-6 text-text-mutedDark hover:text-gold-primary transition-colors"
+                        aria-label="Close search"
                     >
-                        <X size={32} />
+                        <X size={24} />
                     </button>
 
-                    <div className="max-w-3xl mx-auto mt-24 md:mt-40 px-6 space-y-12 pb-20">
-                        <div className="space-y-4">
-                            <p className="text-gold-primary uppercase tracking-[0.5em] text-[10px]">What do you seek?</p>
+                    <div className="max-w-2xl mx-auto pt-32 px-6 space-y-8">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.5em] text-gold-primary mb-4">Search</p>
                             <input
                                 autoFocus
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="SEARCH ARCHIVES..."
-                                className="w-full bg-transparent border-b border-gold-primary/20 py-4 md:py-6 text-xl md:text-5xl font-serif text-text-headingDark outline-none focus:border-gold-primary transition-colors placeholder:text-text-mutedDark/20"
+                                placeholder="Search products..."
+                                className="w-full bg-transparent border-b-2 border-gold-primary/20 focus:border-gold-primary pb-4 text-3xl font-serif text-text-headingDark outline-none placeholder:text-text-mutedDark/20 transition-colors"
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4">
-                            {searchResults.map((product) => (
-                                <Link
-                                    key={product.id}
-                                    href={`/shop/${product.id}`}
-                                    onClick={() => {
-                                        setIsSearchOpen(false);
-                                        setSearchQuery("");
-                                    }}
-                                    className="flex items-center gap-4 md:gap-6 p-3 md:p-4 border border-white/5 hover:border-gold-primary/20 bg-background-secondary/50 transition-all group"
-                                >
-                                    <div className="w-12 h-12 md:w-16 md:h-16 bg-zinc-900 relative flex-shrink-0">
-                                        <Image src={product.images?.[0] || "/logo.jpg"} alt={product.name} fill className="object-cover" />
-                                    </div>
-                                    <div className="flex-grow">
-                                        <h3 className="text-xs md:text-sm font-serif text-text-headingDark group-hover:text-gold-primary transition-colors line-clamp-1">{product.name}</h3>
-                                        <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-zinc-500">{product.category}</p>
-                                    </div>
-                                    <span className="text-[10px] md:text-xs text-zinc-400 font-serif whitespace-nowrap">${Number(product.base_price).toFixed(2)}</span>
-                                </Link>
-                            ))}
-                            {searchQuery.length > 2 && searchResults.length === 0 && (
-                                <p className="text-zinc-600 text-[10px] uppercase tracking-[0.3em] py-12 text-center italic">No artifacts found in the archives</p>
-                            )}
-                        </div>
+                        {searchResults.length > 0 && (
+                            <div className="space-y-2">
+                                {searchResults.map((product) => (
+                                    <Link
+                                        key={product.id}
+                                        href={`/product/${product.slug}`}
+                                        onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                                        className="flex items-center gap-4 p-3 border border-gold-primary/5 hover:border-gold-primary/20 bg-background-secondary/30 hover:bg-background-secondary/60 transition-all group"
+                                    >
+                                        <div className="w-12 h-12 bg-background-secondary relative flex-shrink-0 overflow-hidden">
+                                            <Image src={product.images?.[0] || "/logo.jpg"} alt={product.name} fill className="object-cover" />
+                                        </div>
+                                        <div className="flex-grow min-w-0">
+                                            <p className="text-sm font-serif text-text-headingDark group-hover:text-gold-primary transition-colors truncate">{product.name}</p>
+                                        </div>
+                                        <span className="text-xs text-gold-primary font-light flex-shrink-0">${Number(product.price).toFixed(2)}</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+
+                        {searchQuery.length > 2 && searchResults.length === 0 && (
+                            <p className="text-[10px] uppercase tracking-widest text-text-mutedDark/30 text-center py-8">
+                                No products found for &ldquo;{searchQuery}&rdquo;
+                            </p>
+                        )}
                     </div>
                 </div>
             )}
