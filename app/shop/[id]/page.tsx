@@ -8,7 +8,7 @@ import { ArrowLeft, Share2 } from "lucide-react";
 import Image from "next/image";
 import { cookies } from "next/headers";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 interface PageProps {
     params: Promise<{ id: string }>;

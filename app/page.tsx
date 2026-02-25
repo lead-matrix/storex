@@ -3,7 +3,7 @@ import { ProductGrid } from "@/components/ProductGrid";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 60; // Revalidate every minute
 
 export default function Home() {
   return (
