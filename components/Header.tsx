@@ -65,8 +65,8 @@ export default function Header() {
         <>
             {/* ── Main Navbar ─────────────────────────────────────────── */}
             <nav className={`fixed top-0 w-full z-50 transition-all duration-300
-                bg-background-primary/90 backdrop-blur-xl border-b border-gold-primary/10
-                ${scrolled ? "shadow-[0_2px_24px_rgba(0,0,0,0.4)]" : ""}`}
+                bg-pearl/90 backdrop-blur-xl border-b border-charcoal/10
+                ${scrolled ? "shadow-soft" : ""}`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
@@ -131,10 +131,10 @@ export default function Header() {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className="text-[10px] uppercase tracking-[0.25em] font-light text-text-bodyDark/70 hover:text-gold-primary transition-colors relative group"
+                                    className="text-xs uppercase tracking-luxury font-medium text-charcoal/70 hover:text-gold transition-colors relative group"
                                 >
                                     {link.label}
-                                    <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold-primary group-hover:w-full transition-all duration-300" />
+                                    <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold group-hover:w-full transition-all duration-300" />
                                 </Link>
                             ))}
                         </div>
@@ -151,7 +151,7 @@ export default function Header() {
                                 priority
                             />
                         </div>
-                        <span className="hidden lg:block font-serif text-base tracking-[0.3em] text-text-headingDark uppercase group-hover:text-gold-primary transition-colors">
+                        <span className="hidden lg:block font-heading text-lg tracking-luxury text-charcoal font-medium uppercase group-hover:text-gold transition-colors">
                             DINA COSMETIC
                         </span>
                     </Link>
@@ -185,7 +185,7 @@ export default function Header() {
                         >
                             <ShoppingBag className="w-[18px] h-[18px]" />
                             {totalItems > 0 && (
-                                <span className="absolute top-1 right-1 bg-gold-primary text-background-primary text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+                                <span className="absolute top-1 right-1 bg-gold text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
                                     {totalItems > 9 ? "9+" : totalItems}
                                 </span>
                             )}

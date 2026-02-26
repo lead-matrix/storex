@@ -39,34 +39,34 @@ export default async function ShopPage(props: ShopPageProps) {
     }
 
     return (
-        <div className="bg-background-primary text-text-bodyDark min-h-screen pt-32">
+        <div className="bg-pearl text-charcoal min-h-screen pt-32">
             <div className="px-6 max-w-7xl mx-auto space-y-16">
-                <div className="flex flex-col md:flex-row justify-between items-end gap-8 border-b border-gold-primary/10 pb-16">
+                <div className="flex flex-col md:flex-row justify-between items-end gap-8 border-b border-charcoal/10 pb-16">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-gold-primary">
+                        <div className="flex items-center gap-2 text-gold">
                             <Sparkles size={12} className="animate-pulse" />
-                            <span className="text-[10px] uppercase tracking-[0.5em] font-light">
+                            <span className="text-xs uppercase tracking-luxury font-medium">
                                 {selectedCategory ? selectedCategory.name : "The Full Collection"}
                             </span>
                         </div>
-                        <h1 className="text-5xl md:text-8xl font-serif italic tracking-tighter text-text-headingDark">
+                        <h1 className="text-5xl md:text-8xl font-heading tracking-luxury text-charcoal">
                             {selectedCategory ? selectedCategory.name : "Boutique"}
                         </h1>
                     </div>
-                    <p className="text-text-mutedDark text-[10px] uppercase tracking-[0.3em] max-w-xs text-right leading-loose">
+                    <p className="text-textsoft text-xs uppercase tracking-luxury max-w-xs text-right leading-loose">
                         {selectedCategory?.description || "Synchronized perfection for those who demand absolute excellence in every application."}
                     </p>
                 </div>
 
                 {/* Categories / Filter Bar */}
-                <div className="flex flex-wrap gap-8 items-center text-[10px] uppercase tracking-[0.3em] font-light border-b border-text-mutedDark/5 pb-8">
-                    <div className="flex items-center gap-2 text-gold-primary mr-8">
-                        <Filter size={12} />
+                <div className="flex flex-wrap gap-8 items-center text-xs uppercase tracking-luxury font-medium border-b border-charcoal/5 pb-8">
+                    <div className="flex items-center gap-2 text-gold mr-8">
+                        <Filter size={14} />
                         <span>Filter:</span>
                     </div>
                     <Link
                         href="/shop"
-                        className={`transition-colors ${!categorySlug ? "text-gold-primary" : "text-text-bodyDark/40 hover:text-gold-primary"
+                        className={`transition-colors border-b-2 pb-1 ${!categorySlug ? "text-charcoal border-gold" : "text-textsoft border-transparent hover:text-charcoal"
                             }`}
                     >
                         All
@@ -75,9 +75,9 @@ export default async function ShopPage(props: ShopPageProps) {
                         <Link
                             key={category.id}
                             href={`/shop?category=${category.slug}`}
-                            className={`transition-colors ${categorySlug === category.slug
-                                ? "text-gold-primary"
-                                : "text-text-bodyDark/40 hover:text-gold-primary"
+                            className={`transition-colors border-b-2 pb-1 ${categorySlug === category.slug
+                                ? "text-charcoal border-gold"
+                                : "text-textsoft border-transparent hover:text-charcoal"
                                 }`}
                         >
                             {category.name}

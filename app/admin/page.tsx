@@ -135,15 +135,15 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
 // ── Status Badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
     const cfg: Record<string, string> = {
-        paid: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-        shipped: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        cancelled: 'bg-red-500/10 text-red-400 border-red-500/20',
-        refunded: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+        paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        shipped: 'bg-blue-50 text-blue-700 border-blue-200',
+        pending: 'bg-amber-50 text-amber-700 border-amber-200',
+        cancelled: 'bg-red-50 text-red-700 border-red-200',
+        refunded: 'bg-zinc-100 text-zinc-700 border-zinc-200',
     }
     return (
         <span
-            className={`text-[9px] uppercase tracking-widest px-2 py-0.5 border rounded-sm ${cfg[status] ?? 'bg-white/5 text-[#A9A39A] border-white/10'
+            className={`text-[9px] uppercase tracking-luxury font-medium px-2 py-0.5 border rounded-full ${cfg[status] ?? 'bg-charcoal/5 text-textsoft border-charcoal/10'
                 }`}
         >
             {status}
@@ -164,29 +164,27 @@ interface StatsCardProps {
 function StatsCard({ label, value, subtext, icon, gold, mini }: StatsCardProps) {
     return (
         <div
-            className={`bg-[#111] border p-5 transition-all duration-300 card-hover gold-glow-hover ${gold
-                ? 'border-[rgba(212,175,55,0.18)]'
-                : 'border-[rgba(255,255,255,0.06)] hover:border-[rgba(212,175,55,0.15)]'
+            className={`bg-white rounded-luxury border p-5 transition-all duration-300 shadow-soft hover:shadow-luxury ${gold
+                ? 'border-gold/30'
+                : 'border-charcoal/10 hover:border-gold/30'
                 }`}
         >
             <div className="flex items-start justify-between mb-4">
-                {/* label: #8C8680 on #111 = 4.5:1 ✓ */}
-                <p className="text-[9px] uppercase tracking-[0.3em] text-[#8C8680]">{label}</p>
-                <div className="w-7 h-7 bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37]" aria-hidden="true">
+                <p className="text-[9px] font-medium uppercase tracking-luxury text-textsoft">{label}</p>
+                <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center text-gold" aria-hidden="true">
                     {icon}
                 </div>
             </div>
             <div className="flex items-end justify-between">
-                {/* value: gold (#D4AF37) or primary (#F3EFE8) — both 11.7:1+ ✓ */}
-                <p className={`text-3xl font-serif ${gold ? 'text-[#D4AF37]' : 'text-[#F3EFE8]'}`}>
+                <p className={`text-3xl font-heading ${gold ? 'text-gold' : 'text-charcoal'}`}>
                     {value}
                 </p>
                 {mini && (
-                    <div className="flex items-end gap-0.5 h-8 opacity-50" aria-hidden="true">
+                    <div className="flex items-end gap-1 h-8 opacity-60" aria-hidden="true">
                         {mini.map((v, i) => (
                             <div
                                 key={i}
-                                className="w-1.5 bg-[#D4AF37]/60 rounded-sm"
+                                className="w-1.5 bg-gold/60 rounded-t-sm"
                                 style={{ height: `${(v / Math.max(...mini)) * 100}%` }}
                             />
                         ))}
@@ -194,7 +192,7 @@ function StatsCard({ label, value, subtext, icon, gold, mini }: StatsCardProps) 
                 )}
             </div>
             {subtext && (
-                <p className="text-[9px] text-[#7A746F] mt-2 tracking-wide">{subtext}</p>
+                <p className="text-[10px] text-textsoft mt-2 tracking-wide">{subtext}</p>
             )}
         </div>
     )
@@ -279,19 +277,17 @@ export default async function AdminCommandCenter() {
             {/* ── Page Heading ── */}
             <div className="flex items-center justify-between">
                 <div>
-                    {/* #F3EFE8 on #050505 = 18.8:1 ✓ */}
-                    <h1 className="text-lg font-serif tracking-widest text-[#F3EFE8] uppercase">
+                    <h1 className="text-xl font-heading tracking-luxury text-charcoal uppercase">
                         Command Center
                     </h1>
-                    {/* #8C8680 on #050505 = 4.5:1 ✓ */}
-                    <p className="text-[10px] text-[#8C8680] uppercase tracking-widest mt-0.5">
+                    <p className="text-[10px] text-textsoft uppercase tracking-luxury mt-1 font-medium">
                         Obsidian Palace Operations
                     </p>
                 </div>
                 <Link
                     href="/admin/products/new"
                     id="admin-new-product"
-                    className="flex items-center gap-2 bg-[#D4AF37] hover:bg-[#B8962E] text-[#050505] px-5 py-2.5 text-[10px] uppercase tracking-widest font-semibold transition-all duration-300 min-h-[44px] shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.35)]"
+                    className="flex items-center gap-2 bg-charcoal hover:bg-gold text-pearl hover:text-white px-5 py-2.5 text-[10px] uppercase tracking-luxury font-medium transition-all duration-300 min-h-[44px] rounded-full shadow-soft hover:shadow-luxury"
                     aria-label="Create new product"
                 >
                     + New Product
@@ -332,13 +328,12 @@ export default async function AdminCommandCenter() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                 {/* Sales Overview */}
-                <div className="lg:col-span-2 bg-[#111] border border-[rgba(255,255,255,0.06)] p-5 card-hover">
+                <div className="lg:col-span-2 bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
                     <div className="flex items-center justify-between mb-5">
-                        {/* #DAD5CC on #111 = 11.6:1 ✓ */}
-                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
                             Sales Overview
                         </h2>
-                        <span className="text-[9px] text-[#8C8680] uppercase tracking-widest">
+                        <span className="text-[9px] text-textsoft uppercase tracking-luxury">
                             Last 7 Days
                         </span>
                     </div>
@@ -346,14 +341,14 @@ export default async function AdminCommandCenter() {
                 </div>
 
                 {/* Top Products Donut */}
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.06)] p-5 card-hover">
+                <div className="bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
                             Top Products
                         </h2>
                         <Link
                             href="/admin/products"
-                            className="text-[9px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-widest transition-colors min-h-[44px] flex items-center"
+                            className="text-[9px] text-textsoft hover:text-gold uppercase tracking-luxury transition-colors min-h-[44px] flex items-center font-medium"
                             aria-label="View all products"
                         >
                             View All
@@ -367,47 +362,45 @@ export default async function AdminCommandCenter() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                 {/* Recent Orders */}
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.06)] p-5">
+                <div className="bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
                             Recent Orders
                         </h2>
                         <Link
                             href="/admin/orders"
-                            className="flex items-center gap-1.5 text-[9px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-widest transition-colors min-h-[44px]"
+                            className="flex items-center gap-1.5 text-[9px] text-textsoft hover:text-gold uppercase tracking-luxury transition-colors font-medium min-h-[44px]"
                             aria-label="View all orders"
                         >
-                            <Eye size={10} aria-hidden="true" />
+                            <Eye size={12} aria-hidden="true" />
                             View All
                         </Link>
                     </div>
                     {!recentOrders || recentOrders.length === 0 ? (
-                        <p className="text-[10px] text-[#8C8680] uppercase tracking-widest py-8 text-center">
+                        <p className="text-[10px] text-textsoft uppercase tracking-luxury py-8 text-center">
                             No orders yet
                         </p>
                     ) : (
-                        <div className="space-y-0 divide-y divide-[rgba(255,255,255,0.04)]">
+                        <div className="space-y-0 divide-y divide-charcoal/5">
                             {recentOrders.map(order => (
                                 <Link
                                     key={order.id as string}
                                     href="/admin/orders"
                                     aria-label={`Order by ${(order.email as string)?.split('@')[0] || 'Guest'}`}
-                                    className="flex items-center justify-between py-3 hover:bg-[rgba(212,175,55,0.03)] transition-colors -mx-2 px-2 rounded-sm min-h-[44px]"
+                                    className="flex items-center justify-between py-3 hover:bg-gold/5 transition-colors -mx-2 px-2 rounded-sm min-h-[44px]"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
                                         <div
-                                            className="w-7 h-7 bg-[rgba(212,175,55,0.1)] rounded-full flex items-center justify-center text-[10px] text-[#D4AF37] flex-shrink-0"
+                                            className="w-7 h-7 bg-gold/10 rounded-full flex items-center justify-center text-[10px] text-gold flex-shrink-0 font-medium"
                                             aria-hidden="true"
                                         >
                                             {((order.email as string) || '?')[0].toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            {/* #DAD5CC on #111 = 11.6:1 ✓ */}
-                                            <p className="text-[11px] text-[#DAD5CC] truncate">
+                                            <p className="text-[11px] text-charcoal font-medium truncate">
                                                 {(order.email as string)?.split('@')[0] || 'Guest'}
                                             </p>
-                                            {/* #8C8680 on #111 = 4.5:1 ✓ */}
-                                            <p className="text-[9px] text-[#8C8680] mt-0.5">
+                                            <p className="text-[9px] text-textsoft mt-0.5">
                                                 {order.created_at
                                                     ? new Date(order.created_at as string).toLocaleDateString()
                                                     : ''}
@@ -416,7 +409,7 @@ export default async function AdminCommandCenter() {
                                     </div>
                                     <div className="flex items-center gap-3 flex-shrink-0">
                                         <StatusBadge status={order.status as string} />
-                                        <span className="text-[11px] font-mono text-[#A9A39A]">
+                                        <span className="text-[11px] font-heading text-charcoal font-medium">
                                             ${Number(order.total_amount || 0).toFixed(2)}
                                         </span>
                                     </div>
@@ -427,21 +420,21 @@ export default async function AdminCommandCenter() {
                 </div>
 
                 {/* Stock Alerts */}
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.06)] p-5">
+                <div className="bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
                             Stock Alerts
                         </h2>
                         <Link
                             href="/admin/products"
-                            className="text-[9px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-widest transition-colors min-h-[44px] flex items-center"
+                            className="text-[9px] text-textsoft hover:text-gold uppercase tracking-luxury transition-colors min-h-[44px] flex items-center font-medium"
                             aria-label="Manage product inventory"
                         >
                             Manage Inventory ↗
                         </Link>
                     </div>
                     {!lowStockProducts || lowStockProducts.length === 0 ? (
-                        <p className="text-[10px] text-[#8C8680] uppercase tracking-widest py-8 text-center">
+                        <p className="text-[10px] text-textsoft uppercase tracking-luxury py-8 text-center">
                             All stock levels healthy ✓
                         </p>
                     ) : (
@@ -451,25 +444,25 @@ export default async function AdminCommandCenter() {
                                     key={product.id as string}
                                     href={`/admin/products/${product.id}`}
                                     aria-label={`${product.name}: ${Number(product.inventory) === 0 ? 'out of stock' : `low stock, ${product.inventory} remaining`}`}
-                                    className="flex items-center justify-between p-3 border border-[rgba(255,255,255,0.05)] hover:border-[rgba(212,175,55,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(212,175,55,0.03)] transition-all group min-h-[44px]"
+                                    className="flex items-center justify-between p-3 border border-charcoal/5 hover:border-gold/30 bg-pearl hover:bg-gold/5 transition-all group min-h-[44px] rounded-md"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
                                         <AlertTriangle
-                                            size={13}
+                                            size={14}
                                             aria-hidden="true"
                                             className={`flex-shrink-0 ${Number(product.inventory) === 0
-                                                ? 'text-red-400'
-                                                : 'text-[#D4AF37]'
+                                                ? 'text-red-500'
+                                                : 'text-gold'
                                                 }`}
                                         />
-                                        <p className="text-[11px] text-[#DAD5CC] truncate group-hover:text-[#F3EFE8] transition-colors">
+                                        <p className="text-[11px] text-charcoal font-medium truncate group-hover:text-gold transition-colors">
                                             {product.name as string}
                                         </p>
                                     </div>
                                     <span
-                                        className={`text-[10px] uppercase tracking-widest font-medium flex-shrink-0 ml-3 ${Number(product.inventory) === 0
-                                            ? 'text-red-400'
-                                            : 'text-[#D4AF37]'
+                                        className={`text-[10px] uppercase tracking-luxury font-medium flex-shrink-0 ml-3 ${Number(product.inventory) === 0
+                                            ? 'text-red-500'
+                                            : 'text-gold'
                                             }`}
                                     >
                                         {Number(product.inventory) === 0

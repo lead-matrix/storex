@@ -114,14 +114,14 @@ export async function Footer() {
     }
 
     return (
-        <footer className="bg-background-primary border-t border-gold-primary/10 pt-20 pb-10 px-6">
+        <footer className="bg-pearl border-t border-charcoal/10 pt-20 pb-10 px-6">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                 {/* Brand */}
                 <div className="space-y-6">
-                    <h2 className="text-xl font-serif tracking-[0.3em] text-text-headingDark">
+                    <h2 className="text-2xl font-heading tracking-luxury text-charcoal">
                         {storeInfo.name}
                     </h2>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark leading-relaxed">
+                    <p className="text-xs uppercase tracking-luxury text-textsoft leading-relaxed">
                         {storeInfo.description}
                     </p>
                     <div className="flex gap-4">
@@ -186,10 +186,10 @@ export async function Footer() {
                 {/* Dynamic Footer Columns */}
                 {footerLinks.columns?.map((column, index) => (
                     <div key={index} className="space-y-6">
-                        <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold-primary font-bold">
+                        <h3 className="text-xs uppercase tracking-luxury text-gold font-bold">
                             {column.title}
                         </h3>
-                        <nav className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-text-mutedDark">
+                        <nav className="flex flex-col gap-4 text-xs uppercase tracking-luxury text-textsoft">
                             {column.links.map((link, linkIndex) => (
                                 <Link
                                     key={linkIndex}
@@ -205,10 +205,10 @@ export async function Footer() {
 
                 {/* Contact */}
                 <div className="space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold-primary font-bold">
+                    <h3 className="text-xs uppercase tracking-luxury text-gold font-bold">
                         Inquiries
                     </h3>
-                    <div className="flex flex-col gap-4 text-[10px] uppercase tracking-[0.2em] text-text-mutedDark">
+                    <div className="flex flex-col gap-4 text-xs uppercase tracking-luxury text-textsoft">
                         {contactInfo.address && (
                             <div className="flex items-start gap-3">
                                 <MapPin size={14} className="text-gold-primary mt-0.5 flex-shrink-0" />

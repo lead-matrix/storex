@@ -108,12 +108,12 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <link rel="icon" href="/favicon.jpg" />
       </head>
       <body
-        className={`${playfair.variable} ${inter.variable} font-sans antialiased`}
+        className={`${playfair.variable} ${inter.variable} antialiased`}
       >
         <CartProvider>
           <div className="min-h-screen flex flex-col pt-20">
@@ -124,7 +124,7 @@ export default async function RootLayout({
             <ShoppingBagDrawer />
             <Footer />
           </div>
-          <Toaster position="bottom-right" theme="dark" expand={false} richColors />
+          <Toaster position="bottom-right" theme="light" expand={false} richColors />
         </CartProvider>
         <Analytics />
       </body>

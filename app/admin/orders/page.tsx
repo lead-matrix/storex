@@ -64,42 +64,42 @@ export default function AdminOrdersPage() {
     }
 
     return (
-        <div className="space-y-12 pb-24">
+        <div className="space-y-12 pb-24 animate-luxury-fade">
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-4xl font-serif text-white mb-2 italic tracking-tight">Consignments</h1>
-                    <p className="text-zinc-500 text-xs uppercase tracking-[0.4em] font-medium">Global Logistics Ledger</p>
+                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Consignments</h1>
+                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Global Logistics Ledger</p>
                 </div>
             </div>
 
-            <div className="bg-zinc-950 border border-white/5 overflow-hidden">
+            <div className="bg-white rounded-luxury shadow-soft border border-charcoal/10 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-white/5 text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-bold">
+                            <tr className="border-b border-charcoal/5 bg-pearl/30 text-[10px] uppercase tracking-luxury text-textsoft font-bold">
                                 <th className="px-8 py-5">Reference</th>
                                 <th className="px-8 py-5 text-center">Status</th>
                                 <th className="px-8 py-5">Destination</th>
-                                <th className="px-8 py-5 text-center font-serif">Valuation</th>
+                                <th className="px-8 py-5 text-center font-heading">Valuation</th>
                                 <th className="px-8 py-5 text-right">Operations</th>
                             </tr>
                         </thead>
-                        <tbody className="text-[11px] text-zinc-400 font-light">
+                        <tbody className="text-[11px] text-textsoft font-medium">
                             {orders.map((o) => (
-                                <tr key={o.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors group">
+                                <tr key={o.id} className="border-b border-charcoal/5 hover:bg-gold/5 transition-colors group">
                                     <td className="px-8 py-6">
-                                        <div className="font-mono text-zinc-600 group-hover:text-gold transition-colors italic">
+                                        <div className="font-mono text-charcoal group-hover:text-gold transition-colors font-medium">
                                             #{o.id.slice(0, 8)}
                                         </div>
-                                        <p className="text-[10px] text-zinc-800 mt-1 uppercase tracking-tighter">
+                                        <p className="text-[10px] text-textsoft/70 mt-1 uppercase tracking-luxury">
                                             {new Date(o.created_at).toLocaleDateString()}
                                         </p>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex justify-center">
-                                            <span className={`px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-bold border ${o.status === 'paid' ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' :
-                                                    o.status === 'shipped' ? 'border-blue-500/20 text-blue-400 bg-blue-500/5' :
-                                                        'border-zinc-800 text-zinc-600'
+                                            <span className={`px-3 py-1 rounded-full text-[9px] uppercase tracking-luxury font-medium border ${o.status === 'paid' ? 'border-emerald-200 text-emerald-700 bg-emerald-50' :
+                                                o.status === 'shipped' ? 'border-blue-200 text-blue-700 bg-blue-50' :
+                                                    'border-charcoal/10 text-charcoal bg-pearl/50'
                                                 }`}>
                                                 {o.status}
                                             </span>
@@ -107,11 +107,11 @@ export default function AdminOrdersPage() {
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="space-y-1 max-w-[200px]">
-                                            <p className="text-white text-xs truncate lowercase">{o.customer_email}</p>
-                                            <p className="text-[9px] text-zinc-600 truncate uppercase">Verified Identity</p>
+                                            <p className="text-charcoal font-medium text-xs truncate lowercase">{o.customer_email}</p>
+                                            <p className="text-[9px] text-textsoft/70 truncate uppercase">Verified Identity</p>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 text-center font-serif italic text-sm text-zinc-200">
+                                    <td className="px-8 py-6 text-center font-heading text-sm text-charcoal">
                                         ${Number(o.amount_total).toFixed(2)}
                                     </td>
                                     <td className="px-8 py-6 text-right">
@@ -119,29 +119,29 @@ export default function AdminOrdersPage() {
                                             {o.status === 'paid' && (
                                                 <button
                                                     onClick={() => handleStatusUpdate(o.id, "shipped")}
-                                                    className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-3 py-1.5 hover:bg-emerald-500/20 transition-all flex items-center gap-2 group/btn"
+                                                    className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 hover:bg-emerald-100 transition-all flex items-center gap-2 group/btn rounded-md shadow-sm"
                                                 >
                                                     <CheckCircle2 className="w-3 h-3" />
-                                                    <span className="text-[9px] uppercase tracking-widest font-bold">Manifest</span>
+                                                    <span className="text-[9px] uppercase tracking-luxury font-medium">Manifest</span>
                                                 </button>
                                             )}
 
                                             {!o.shipping_label_url ? (
                                                 <button
                                                     onClick={() => handleGenerateLabel(o.id)}
-                                                    className="bg-gold text-black px-4 py-1.5 font-bold flex items-center gap-2 hover:bg-gold/90 transition-all active:scale-95 shadow-[0_4px_20px_rgba(212,175,55,0.1)]"
+                                                    className="bg-charcoal text-pearl px-4 py-1.5 font-medium flex items-center gap-2 hover:bg-gold hover:text-white transition-all active:scale-95 shadow-soft rounded-md"
                                                 >
                                                     <Truck className="w-3 h-3" />
-                                                    <span className="text-[9px] uppercase tracking-widest">Fulfill</span>
+                                                    <span className="text-[9px] uppercase tracking-luxury">Fulfill</span>
                                                 </button>
                                             ) : (
                                                 <a
                                                     href={o.shipping_label_url}
                                                     target="_blank"
-                                                    className="bg-zinc-900 border border-white/10 text-zinc-400 px-4 py-1.5 flex items-center gap-2 hover:text-white hover:border-white/30 transition-all"
+                                                    className="bg-pearl border border-charcoal/10 text-textsoft px-4 py-1.5 flex items-center gap-2 hover:text-charcoal hover:border-charcoal/30 transition-all rounded-md shadow-sm"
                                                 >
                                                     <ExternalLink className="w-3 h-3" />
-                                                    <span className="text-[9px] uppercase tracking-widest">View Label</span>
+                                                    <span className="text-[9px] uppercase tracking-luxury font-medium">View Label</span>
                                                 </a>
                                             )}
                                         </div>
@@ -152,8 +152,8 @@ export default function AdminOrdersPage() {
                                 <tr>
                                     <td colSpan={5} className="px-8 py-24 text-center">
                                         <div className="flex flex-col items-center gap-4">
-                                            <ShoppingBag className="w-8 h-8 text-zinc-900" />
-                                            <p className="text-[10px] uppercase tracking-[0.5em] text-zinc-800">No active consignments found</p>
+                                            <ShoppingBag className="w-8 h-8 text-charcoal/30" />
+                                            <p className="text-[10px] uppercase tracking-luxury text-textsoft">No active consignments found</p>
                                         </div>
                                     </td>
                                 </tr>

@@ -142,22 +142,22 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 <div
                     {...getRootProps()}
                     className={`
-            border-2 border-dashed rounded-none p-8 text-center cursor-pointer transition-all
+            border-2 border-dashed rounded-luxury p-8 text-center cursor-pointer transition-all
             ${isDragActive
-                            ? 'border-gold-primary bg-gold-primary/5'
-                            : 'border-gold-primary/20 hover:border-gold-primary/40 bg-background-primary'
+                            ? 'border-gold bg-gold/5'
+                            : 'border-charcoal/20 hover:border-gold/40 bg-white shadow-sm'
                         }
             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
           `}
                 >
                     <input {...getInputProps()} />
                     <div className="flex flex-col items-center gap-3">
-                        <Upload className={`w-8 h-8 ${isDragActive ? 'text-gold-primary' : 'text-text-mutedDark/40'}`} />
+                        <Upload className={`w-8 h-8 ${isDragActive ? 'text-gold' : 'text-textsoft/40'}`} />
                         <div>
-                            <p className="text-sm text-text-bodyDark mb-1">
+                            <p className="text-sm text-charcoal font-medium mb-1">
                                 {isDragActive ? 'Drop images here' : 'Drag & drop images here'}
                             </p>
-                            <p className="text-[10px] text-text-mutedDark/40 uppercase tracking-widest">
+                            <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
                                 or click to browse • Max {maxImages} images • 5MB each
                             </p>
                         </div>
@@ -165,7 +165,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="border-gold-primary/30 text-gold-primary hover:bg-gold-primary hover:text-background-primary rounded-none text-[10px] uppercase tracking-widest mt-2"
+                            className="border-charcoal/30 text-charcoal hover:bg-charcoal hover:text-pearl rounded-full text-[10px] uppercase font-medium tracking-luxury mt-2 shadow-sm"
                             disabled={uploading}
                         >
                             {uploading ? (
@@ -185,16 +185,16 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
             {Object.keys(uploadProgress).length > 0 && (
                 <div className="space-y-2">
                     {Object.entries(uploadProgress).map(([fileName, progress]) => (
-                        <div key={fileName} className="bg-background-secondary border border-gold-primary/10 p-3">
+                        <div key={fileName} className="bg-pearl border border-charcoal/10 p-3 rounded-md shadow-sm">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] text-text-mutedDark uppercase tracking-wider truncate">
+                                <span className="text-[10px] text-textsoft uppercase tracking-luxury truncate">
                                     {fileName}
                                 </span>
-                                <span className="text-[10px] text-gold-primary font-mono">{progress}%</span>
+                                <span className="text-[10px] text-gold font-mono">{progress}%</span>
                             </div>
-                            <div className="h-1 bg-background-primary overflow-hidden">
+                            <div className="h-1 bg-white overflow-hidden rounded-full">
                                 <div
-                                    className="h-full bg-gold-primary transition-all duration-300"
+                                    className="h-full bg-gold transition-all duration-300 rounded-full"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
@@ -209,7 +209,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                     {images.map((url, index) => (
                         <div
                             key={url}
-                            className="relative group aspect-square bg-background-secondary border border-gold-primary/10 overflow-hidden"
+                            className="relative group aspect-square bg-pearl border border-charcoal/10 overflow-hidden rounded-luxury shadow-sm"
                         >
                             <Image
                                 src={url}
@@ -221,7 +221,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
                             {/* Primary Image Badge */}
                             {index === 0 && (
-                                <div className="absolute top-2 left-2 bg-gold-primary text-background-primary px-2 py-1 text-[8px] uppercase tracking-widest font-bold">
+                                <div className="absolute top-2 left-2 bg-gold text-white px-2 py-1 text-[8px] uppercase tracking-luxury font-medium rounded-full shadow-sm">
                                     Primary
                                 </div>
                             )}
@@ -237,7 +237,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                             </button>
 
                             {/* Image Index */}
-                            <div className="absolute bottom-2 left-2 bg-background-primary/80 text-text-bodyDark px-2 py-1 text-[8px] uppercase tracking-widest">
+                            <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm text-charcoal px-2 py-1 text-[8px] uppercase tracking-luxury font-medium rounded-full shadow-sm">
                                 {index + 1} of {images.length}
                             </div>
                         </div>
@@ -247,19 +247,19 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
             {/* Empty State */}
             {images.length === 0 && (
-                <div className="border border-dashed border-gold-primary/10 py-12 flex flex-col items-center justify-center text-text-mutedDark/20">
+                <div className="border border-dashed border-charcoal/10 rounded-luxury py-12 flex flex-col items-center justify-center text-textsoft">
                     <ImageIcon size={32} className="mb-3 opacity-20" />
-                    <span className="text-[10px] uppercase tracking-widest">No images uploaded yet</span>
+                    <span className="text-[10px] uppercase tracking-luxury font-medium">No images uploaded yet</span>
                 </div>
             )}
 
             {/* Image Count */}
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-text-mutedDark/40">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-luxury text-textsoft font-medium">
                 <span>
                     {images.length} / {maxImages} images
                 </span>
                 {images.length > 0 && (
-                    <span className="text-gold-primary">
+                    <span className="text-gold">
                         <Check size={12} className="inline mr-1" />
                         First image is primary
                     </span>

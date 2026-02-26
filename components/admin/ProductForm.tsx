@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProduct, updateProduct } from '@/lib/actions/admin'
 import { ImageUpload } from './ImageUpload'
@@ -9,52 +9,107 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 
 interface Category {
     id: string
     name: string
+    slug: string
+}
+
+interface Variant {
+    id?: string
+    name: string
+    variant_type: 'shade' | 'size' | 'bundle' | 'type'
+    price_override: number | null
+    stock_quantity: number
+    is_active: boolean
+    _isNew?: boolean
+    _deleted?: boolean
 }
 
 interface ProductFormProps {
     product?: {
         id?: string
         name?: string
+        slug?: string
         description?: string
         price?: number
         stock?: number
         images?: string[]
         is_featured?: boolean
+        is_bestseller?: boolean
         category_id?: string
+        is_active?: boolean
     }
+    variants?: Variant[]
 }
 
-export function ProductForm({ product }: ProductFormProps) {
+const VARIANT_TYPE_OPTIONS: { value: Variant['variant_type']; label: string }[] = [
+    { value: 'shade', label: 'Shade' },
+    { value: 'size', label: 'Size' },
+    { value: 'type', label: 'Type' },
+    { value: 'bundle', label: 'Bundle' },
+]
+
+export function ProductForm({ product, variants: initialVariants = [] }: ProductFormProps) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [images, setImages] = useState<string[]>(product?.images || [])
     const [categories, setCategories] = useState<Category[]>([])
+    const [variants, setVariants] = useState<Variant[]>(initialVariants)
+    const [showVariants, setShowVariants] = useState(initialVariants.length > 0)
 
-    // Fetch categories for the dropdown
+    // Auto-generate slug from name
+    const [slugValue, setSlugValue] = useState(product?.slug ?? '')
+    const [slugManual, setSlugManual] = useState(!!product?.slug)
+
+    const generateSlug = useCallback((name: string) =>
+        name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        []
+    )
+
     useEffect(() => {
         const supabase = createClient()
         supabase
             .from('categories')
-            .select('id, name')
+            .select('id, name, slug')
+            .eq('is_active', true)
             .order('name')
             .then(({ data }) => {
-                if (data) setCategories(data)
+                if (data) setCategories(data as Category[])
             })
     }, [])
+
+    function addVariant() {
+        setVariants(prev => [...prev, {
+            name: '',
+            variant_type: 'shade',
+            price_override: null,
+            stock_quantity: 0,
+            is_active: true,
+            _isNew: true,
+        }])
+    }
+
+    function updateVariant(index: number, field: keyof Variant, value: Variant[keyof Variant]) {
+        setVariants(prev => prev.map((v, i) => i === index ? { ...v, [field]: value } : v))
+    }
+
+    function removeVariant(index: number) {
+        setVariants(prev => prev.map((v, i) =>
+            i === index ? { ...v, _deleted: true } : v
+        ))
+    }
 
     async function handleSubmit(formData: FormData) {
         setLoading(true)
         setError(null)
         try {
-            // Attach images list to formData
             formData.set('images', images.join(','))
+            formData.set('variants', JSON.stringify(variants.filter(v => !v._deleted)))
 
             if (product?.id) {
                 formData.set('id', product.id)
@@ -66,19 +121,20 @@ export function ProductForm({ product }: ProductFormProps) {
             router.refresh()
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'An unexpected error occurred while saving.'
-            console.error('Product save error:', message)
             setError(message)
         } finally {
             setLoading(false)
         }
     }
 
+    const visibleVariants = variants.filter(v => !v._deleted)
+
     return (
         <form action={handleSubmit} className="space-y-10">
 
             {/* Error Banner */}
             {error && (
-                <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 px-5 py-4 text-sm">
+                <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm rounded-md">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <span>{error}</span>
                 </div>
@@ -87,9 +143,10 @@ export function ProductForm({ product }: ProductFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {/* LEFT COLUMN */}
                 <div className="space-y-6">
+
                     {/* Product Name */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
                             Product Name *
                         </Label>
                         <Input
@@ -97,14 +154,36 @@ export function ProductForm({ product }: ProductFormProps) {
                             defaultValue={product?.name}
                             placeholder="e.g. Obsidian Foundation"
                             required
-                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 h-12"
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
+                            onChange={e => {
+                                if (!slugManual) setSlugValue(generateSlug(e.target.value))
+                            }}
                         />
+                    </div>
+
+                    {/* Slug */}
+                    <div className="space-y-2">
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            URL Slug *
+                        </Label>
+                        <Input
+                            name="slug"
+                            value={slugValue}
+                            placeholder="e.g. obsidian-foundation"
+                            required
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12 font-mono text-xs"
+                            onChange={e => {
+                                setSlugManual(true)
+                                setSlugValue(generateSlug(e.target.value))
+                            }}
+                        />
+                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Used in /product/[slug] — auto-generated from name</p>
                     </div>
 
                     {/* Price */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">
-                            Price (USD) *
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            Base Price (USD) *
                         </Label>
                         <Input
                             name="base_price"
@@ -114,14 +193,15 @@ export function ProductForm({ product }: ProductFormProps) {
                             placeholder="0.00"
                             defaultValue={product?.price}
                             required
-                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 h-12"
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
                         />
+                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Variants may override this price</p>
                     </div>
 
                     {/* Stock */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">
-                            Stock Quantity *
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            Base Stock Quantity *
                         </Label>
                         <Input
                             name="stock"
@@ -130,47 +210,69 @@ export function ProductForm({ product }: ProductFormProps) {
                             placeholder="50"
                             defaultValue={product?.stock ?? 0}
                             required
-                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 h-12"
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
                         />
                     </div>
 
                     {/* Category */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">
-                            Category
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            Category *
                         </Label>
-                        <select
-                            name="category_id"
-                            defaultValue={product?.category_id ?? ''}
-                            className="w-full h-12 bg-background-primary border border-gold-primary/20 px-4 text-sm text-text-bodyDark focus:outline-none focus:border-gold-primary/50 transition-colors"
-                        >
-                            <option value="">— No Category —</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select
+                                name="category_id"
+                                defaultValue={product?.category_id ?? ''}
+                                className="w-full h-12 bg-pearl rounded-md border border-charcoal/10 px-4 pr-10 text-sm text-charcoal focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-colors appearance-none"
+                            >
+                                <option value="">— Select Category —</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>
+                                        {cat.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textsoft pointer-events-none" />
+                        </div>
                         {categories.length === 0 && (
-                            <p className="text-[10px] text-text-mutedDark/40 uppercase tracking-widest">
-                                No categories yet — create them in /admin/categories
+                            <p className="text-[10px] text-textsoft/60 tracking-luxury">
+                                No active categories — create them in /admin/categories
                             </p>
                         )}
                     </div>
 
-                    {/* Featured Toggle */}
-                    <div className="flex items-center space-x-3 py-2">
-                        <Switch
-                            id="is_featured"
-                            name="is_featured"
-                            defaultChecked={product?.is_featured}
-                        />
-                        <Label
-                            htmlFor="is_featured"
-                            className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60 cursor-pointer"
-                        >
-                            Feature in Collection
-                        </Label>
+                    {/* Toggles */}
+                    <div className="space-y-3 pt-2">
+                        <div className="flex items-center space-x-3">
+                            <Switch
+                                id="is_featured"
+                                name="is_featured"
+                                defaultChecked={product?.is_featured}
+                            />
+                            <Label htmlFor="is_featured" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                                Featured in Collection
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <Switch
+                                id="is_bestseller"
+                                name="is_bestseller"
+                                defaultChecked={product?.is_bestseller}
+                            />
+                            <Label htmlFor="is_bestseller" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                                Mark as Bestseller
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <Switch
+                                id="is_active"
+                                name="is_active"
+                                defaultChecked={product?.is_active !== false}
+                            />
+                            <Label htmlFor="is_active" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                                Active (visible in store)
+                            </Label>
+                        </div>
                     </div>
                 </div>
 
@@ -178,7 +280,7 @@ export function ProductForm({ product }: ProductFormProps) {
                 <div className="space-y-6">
                     {/* Description */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
                             Description *
                         </Label>
                         <Textarea
@@ -186,13 +288,13 @@ export function ProductForm({ product }: ProductFormProps) {
                             defaultValue={product?.description}
                             placeholder="Describe the masterpiece..."
                             required
-                            className="bg-background-primary border-gold-primary/20 rounded-none focus-visible:ring-gold-primary focus-visible:ring-offset-0 text-text-bodyDark placeholder:text-text-mutedDark/20 min-h-[180px] resize-none"
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 min-h-[180px] resize-none"
                         />
                     </div>
 
                     {/* Image Upload */}
                     <div className="space-y-4">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark/60">
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
                             Visual Gallery
                         </Label>
                         <ImageUpload
@@ -204,12 +306,136 @@ export function ProductForm({ product }: ProductFormProps) {
                 </div>
             </div>
 
+            {/* VARIANTS SECTION */}
+            <div className="border border-charcoal/10 rounded-luxury overflow-hidden">
+                <button
+                    type="button"
+                    onClick={() => setShowVariants(v => !v)}
+                    className="w-full flex items-center justify-between px-6 py-4 bg-pearl hover:bg-champagne/50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] uppercase tracking-luxury text-charcoal font-medium">
+                            Product Variants
+                        </span>
+                        {visibleVariants.length > 0 && (
+                            <span className="bg-gold text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                {visibleVariants.length}
+                            </span>
+                        )}
+                    </div>
+                    <ChevronDown
+                        className={`w-4 h-4 text-textsoft transition-transform ${showVariants ? 'rotate-180' : ''}`}
+                    />
+                </button>
+
+                {showVariants && (
+                    <div className="p-6 space-y-4 bg-white">
+                        <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
+                            Add shade, size, type, or bundle variants. Variant price overrides the base price when selected.
+                        </p>
+
+                        {/* Variant Rows */}
+                        {variants.map((variant, index) => {
+                            if (variant._deleted) return null
+                            return (
+                                <div
+                                    key={index}
+                                    className="grid grid-cols-12 gap-3 items-end p-4 bg-pearl rounded-md border border-charcoal/5"
+                                >
+                                    {/* Name */}
+                                    <div className="col-span-3 space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Name</label>
+                                        <Input
+                                            value={variant.name}
+                                            onChange={e => updateVariant(index, 'name', e.target.value)}
+                                            placeholder="e.g. Ruby Red"
+                                            className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
+                                        />
+                                    </div>
+
+                                    {/* Type */}
+                                    <div className="col-span-2 space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Type</label>
+                                        <select
+                                            value={variant.variant_type}
+                                            onChange={e => updateVariant(index, 'variant_type', e.target.value as Variant['variant_type'])}
+                                            className="w-full h-9 bg-white border border-charcoal/10 rounded-md px-2 text-xs text-charcoal focus:outline-none focus:ring-1 focus:ring-gold/50"
+                                        >
+                                            {VARIANT_TYPE_OPTIONS.map(o => (
+                                                <option key={o.value} value={o.value}>{o.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Price Override */}
+                                    <div className="col-span-2 space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Price ($)</label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={variant.price_override ?? ''}
+                                            onChange={e => updateVariant(index, 'price_override', e.target.value ? parseFloat(e.target.value) : null)}
+                                            placeholder="Base"
+                                            className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
+                                        />
+                                    </div>
+
+                                    {/* Stock */}
+                                    <div className="col-span-2 space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Stock</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            value={variant.stock_quantity}
+                                            onChange={e => updateVariant(index, 'stock_quantity', parseInt(e.target.value) || 0)}
+                                            className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
+                                        />
+                                    </div>
+
+                                    {/* Active */}
+                                    <div className="col-span-2 space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Active</label>
+                                        <div className="flex items-center h-9">
+                                            <Switch
+                                                checked={variant.is_active}
+                                                onCheckedChange={v => updateVariant(index, 'is_active', v)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Delete */}
+                                    <div className="col-span-1 flex items-end justify-end pb-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeVariant(index)}
+                                            className="p-2 text-textsoft hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        })}
+
+                        <button
+                            type="button"
+                            onClick={addVariant}
+                            className="flex items-center gap-2 text-[10px] uppercase tracking-luxury text-charcoal font-medium border border-dashed border-charcoal/20 rounded-md px-4 py-3 w-full hover:border-gold/50 hover:text-gold hover:bg-gold/5 transition-colors"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            Add Variant
+                        </button>
+                    </div>
+                )}
+            </div>
+
             {/* Submit Button */}
-            <div className="flex justify-end pt-8 border-t border-gold-primary/10">
+            <div className="flex justify-end pt-8 border-t border-charcoal/10">
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="bg-gold-primary text-background-primary rounded-none px-12 py-6 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-gold-hover transition-all disabled:opacity-50 min-w-[200px]"
+                    className="bg-charcoal text-pearl rounded-full px-12 py-6 text-[11px] font-medium uppercase tracking-luxury hover:bg-gold transition-all shadow-soft hover:shadow-luxury disabled:opacity-50 min-w-[200px]"
                 >
                     {loading ? <Loader2 className="animate-spin mr-2 w-4 h-4 inline" /> : null}
                     {product?.id ? 'Refine Masterpiece' : 'Forge Collection Item'}
