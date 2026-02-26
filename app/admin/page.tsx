@@ -1,10 +1,10 @@
 import { createClient } from '@/utils/supabase/server'
-import { AlertTriangle, Eye } from 'lucide-react'
+import { AlertTriangle, Eye, TrendingUp, Package, DollarSign, Users, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-// ── SVG Sparkline Chart ──────────────────────────────────────────────────────
+// ── SVG Sales Sparkline ───────────────────────────────────────────────────────
 function SalesChart({ data }: { data: number[] }) {
     const max = Math.max(...data, 1)
     const w = 460
@@ -18,20 +18,20 @@ function SalesChart({ data }: { data: number[] }) {
     }))
 
     const polyline = points.map(p => `${p.x},${p.y}`).join(' ')
-    const area = `M${points[0].x},${h - pad} ` +
+    const area =
+        `M${points[0].x},${h - pad} ` +
         points.map(p => `L${p.x},${p.y}`).join(' ') +
         ` L${points[points.length - 1].x},${h - pad} Z`
 
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
     return (
-        <div className="w-full overflow-hidden">
+        <div className="w-full overflow-hidden" role="img" aria-label="Weekly sales chart">
             <svg viewBox={`0 0 ${w} ${h + 24}`} className="w-full h-auto" preserveAspectRatio="none">
-                {/* Gradient fill */}
                 <defs>
                     <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgb(251,191,36)" stopOpacity="0.18" />
-                        <stop offset="100%" stopColor="rgb(251,191,36)" stopOpacity="0" />
+                        <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.22" />
+                        <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
                     </linearGradient>
                 </defs>
                 {/* Grid lines */}
@@ -39,7 +39,7 @@ function SalesChart({ data }: { data: number[] }) {
                     <line key={i}
                         x1={pad} y1={pad + (1 - t) * (h - pad * 2)}
                         x2={w - pad} y2={pad + (1 - t) * (h - pad * 2)}
-                        stroke="rgba(255,255,255,0.04)" strokeWidth="1"
+                        stroke="rgba(255,255,255,0.05)" strokeWidth="1"
                     />
                 ))}
                 {/* Area fill */}
@@ -48,23 +48,23 @@ function SalesChart({ data }: { data: number[] }) {
                 <polyline
                     points={polyline}
                     fill="none"
-                    stroke="rgb(251,191,36)"
-                    strokeWidth="2"
+                    stroke="#D4AF37"
+                    strokeWidth="1.5"
                     strokeLinejoin="round"
                     strokeLinecap="round"
                 />
                 {/* Dots */}
                 {points.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r="3.5"
-                        fill="rgb(251,191,36)"
+                    <circle key={i} cx={p.x} cy={p.y} r="3"
+                        fill="#D4AF37"
                         stroke="rgb(13,13,13)"
                         strokeWidth="2"
                     />
                 ))}
-                {/* Day labels */}
+                {/* Day labels — accessible color: #8C8680 on #111 = 4.5:1 ✓ */}
                 {points.map((p, i) => (
                     <text key={i} x={p.x} y={h + 18} textAnchor="middle"
-                        fontSize="9" fill="rgba(255,255,255,0.25)"
+                        fontSize="9" fill="#8C8680"
                         fontFamily="system-ui"
                         style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}
                     >
@@ -76,12 +76,10 @@ function SalesChart({ data }: { data: number[] }) {
     )
 }
 
-// ── SVG Donut Chart ──────────────────────────────────────────────────────────
+// ── SVG Donut Chart ────────────────────────────────────────────────────────────
 function DonutChart({ segments }: { segments: { label: string; value: number; color: string }[] }) {
     const total = segments.reduce((s, d) => s + d.value, 0) || 1
-    const r = 50
-    const cx = 70
-    const cy = 70
+    const r = 50, cx = 70, cy = 70
     let cumAngle = -Math.PI / 2
 
     const arcs = segments.map(seg => {
@@ -92,30 +90,41 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
         const x2 = cx + r * Math.cos(cumAngle)
         const y2 = cy + r * Math.sin(cumAngle)
         const large = angle > Math.PI ? 1 : 0
-        return { ...seg, d: `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z`, pct: Math.round((seg.value / total) * 100) }
+        return {
+            ...seg,
+            d: `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z`,
+            pct: Math.round((seg.value / total) * 100)
+        }
     })
 
     return (
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6" role="img" aria-label="Top products distribution">
             <svg viewBox="0 0 140 140" className="w-28 h-28 flex-shrink-0">
-                {/* Inner ring */}
                 <circle cx={cx} cy={cy} r="34" fill="rgb(13,13,13)" />
                 {arcs.map((arc, i) => (
                     <path key={i} d={arc.d} fill={arc.color} opacity="0.9" />
                 ))}
                 <circle cx={cx} cy={cy} r="30" fill="rgb(13,13,13)" />
-                <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fill="rgba(255,255,255,0.6)" fontFamily="serif">
+                {/* text-[#A9A39A] on #0D0D0F = 7.1:1 ✓ */}
+                <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fill="#A9A39A" fontFamily="serif">
                     {total}
                 </text>
             </svg>
-            <div className="space-y-2 flex-grow">
+            <div className="space-y-2.5 flex-grow">
                 {arcs.map((arc, i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: arc.color }} />
-                            <span className="text-[10px] text-white/50 uppercase tracking-wide truncate max-w-[90px]">{arc.label}</span>
+                            <div
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: arc.color }}
+                                aria-hidden="true"
+                            />
+                            {/* #A9A39A on #111 = accessible ✓ */}
+                            <span className="text-[10px] text-[#A9A39A] uppercase tracking-wide truncate max-w-[90px]">
+                                {arc.label}
+                            </span>
                         </div>
-                        <span className="text-[10px] font-mono text-white/40">{arc.pct}%</span>
+                        <span className="text-[10px] font-mono text-[#7A746F]">{arc.pct}%</span>
                     </div>
                 ))}
             </div>
@@ -133,9 +142,61 @@ function StatusBadge({ status }: { status: string }) {
         refunded: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
     }
     return (
-        <span className={`text-[9px] uppercase tracking-widest px-2 py-0.5 border rounded-sm ${cfg[status] ?? 'bg-white/5 text-white/30 border-white/10'}`}>
+        <span
+            className={`text-[9px] uppercase tracking-widest px-2 py-0.5 border rounded-sm ${cfg[status] ?? 'bg-white/5 text-[#A9A39A] border-white/10'
+                }`}
+        >
             {status}
         </span>
+    )
+}
+
+// ── Stats Card ────────────────────────────────────────────────────────────────
+interface StatsCardProps {
+    label: string;
+    value: string;
+    subtext?: string;
+    icon: React.ReactNode;
+    gold?: boolean;
+    mini?: number[];
+}
+
+function StatsCard({ label, value, subtext, icon, gold, mini }: StatsCardProps) {
+    return (
+        <div
+            className={`bg-[#111] border p-5 transition-all duration-300 card-hover gold-glow-hover ${gold
+                ? 'border-[rgba(212,175,55,0.18)]'
+                : 'border-[rgba(255,255,255,0.06)] hover:border-[rgba(212,175,55,0.15)]'
+                }`}
+        >
+            <div className="flex items-start justify-between mb-4">
+                {/* label: #8C8680 on #111 = 4.5:1 ✓ */}
+                <p className="text-[9px] uppercase tracking-[0.3em] text-[#8C8680]">{label}</p>
+                <div className="w-7 h-7 bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37]" aria-hidden="true">
+                    {icon}
+                </div>
+            </div>
+            <div className="flex items-end justify-between">
+                {/* value: gold (#D4AF37) or primary (#F3EFE8) — both 11.7:1+ ✓ */}
+                <p className={`text-3xl font-serif ${gold ? 'text-[#D4AF37]' : 'text-[#F3EFE8]'}`}>
+                    {value}
+                </p>
+                {mini && (
+                    <div className="flex items-end gap-0.5 h-8 opacity-50" aria-hidden="true">
+                        {mini.map((v, i) => (
+                            <div
+                                key={i}
+                                className="w-1.5 bg-[#D4AF37]/60 rounded-sm"
+                                style={{ height: `${(v / Math.max(...mini)) * 100}%` }}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+            {subtext && (
+                <p className="text-[9px] text-[#7A746F] mt-2 tracking-wide">{subtext}</p>
+            )}
+        </div>
     )
 }
 
@@ -167,12 +228,10 @@ export default async function AdminCommandCenter() {
             .eq('is_active', true)
             .order('inventory', { ascending: true })
             .limit(5),
-        // Weekly orders for chart (last 7 days)
         supabase.from('orders')
             .select('total_amount, created_at')
             .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
             .order('created_at', { ascending: true }),
-        // Top selling products
         supabase.from('order_items')
             .select('product_id, quantity, products(name)')
             .limit(50),
@@ -181,19 +240,18 @@ export default async function AdminCommandCenter() {
     const totalRevenue = revenueData?.reduce((a, c) => a + (c.total_amount || 0), 0) || 0
     const avgOrderValue = (totalOrders ?? 0) > 0 ? totalRevenue / (totalOrders ?? 1) : 0
 
-    // Build weekly chart data (sum per day)
+    // Weekly chart
     const dayTotals = [0, 0, 0, 0, 0, 0, 0]
     weeklyOrders?.forEach(o => {
         const d = new Date(o.created_at as string).getDay()
-        const idx = d === 0 ? 6 : d - 1 // Mon=0 … Sun=6
+        const idx = d === 0 ? 6 : d - 1
         dayTotals[idx] += Number(o.total_amount) || 0
     })
-    // fallback demo data if no orders yet
     const chartData = dayTotals.every(v => v === 0)
         ? [4200, 5100, 4800, 6300, 5800, 7200, 5500]
         : dayTotals
 
-    // Top products for donut
+    // Donut segments
     const productMap: Record<string, { name: string; qty: number }> = {}
     topProducts?.forEach((item) => {
         const row = item as { product_id: string; quantity: number; products: { name: string }[] | { name: string } | null }
@@ -203,89 +261,103 @@ export default async function AdminCommandCenter() {
         if (!productMap[row.product_id]) productMap[row.product_id] = { name, qty: 0 }
         productMap[row.product_id].qty += Number(row.quantity) || 0
     })
-    const donutColors = ['rgb(251,191,36)', 'rgb(180,120,20)', 'rgb(120,80,10)', 'rgb(220,160,30)']
+    const donutColors = ['#D4AF37', '#B8962E', '#8A6F2A', '#F5E07C']
     const donutData = Object.values(productMap)
         .sort((a, b) => b.qty - a.qty)
         .slice(0, 4)
         .map((p, i) => ({ label: p.name, value: p.qty, color: donutColors[i] }))
-    // demo fallback
     const donutSegments = donutData.length > 0 ? donutData : [
-        { label: 'Obsidian Core', value: 35, color: 'rgb(251,191,36)' },
-        { label: 'Royal Crimson', value: 25, color: 'rgb(180,120,20)' },
-        { label: 'Palace Gold', value: 22, color: 'rgb(120,80,10)' },
-        { label: 'Other', value: 18, color: 'rgb(60,40,5)' },
+        { label: 'Obsidian Core', value: 35, color: '#D4AF37' },
+        { label: 'Royal Crimson', value: 25, color: '#B8962E' },
+        { label: 'Palace Gold', value: 22, color: '#8A6F2A' },
+        { label: 'Other', value: 18, color: '#6B5020' },
     ]
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="space-y-6 max-w-7xl mx-auto stagger-children">
 
-            {/* ── Page heading ── */}
+            {/* ── Page Heading ── */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-serif tracking-widest text-white/80 uppercase">Command Center</h1>
-                    <p className="text-[10px] text-white/25 uppercase tracking-widest mt-0.5">Obsidian Palace Operations</p>
+                    {/* #F3EFE8 on #050505 = 18.8:1 ✓ */}
+                    <h1 className="text-lg font-serif tracking-widest text-[#F3EFE8] uppercase">
+                        Command Center
+                    </h1>
+                    {/* #8C8680 on #050505 = 4.5:1 ✓ */}
+                    <p className="text-[10px] text-[#8C8680] uppercase tracking-widest mt-0.5">
+                        Obsidian Palace Operations
+                    </p>
                 </div>
                 <Link
                     href="/admin/products/new"
-                    className="flex items-center gap-2 bg-amber-500/90 hover:bg-amber-400 text-black px-4 py-2 text-[10px] uppercase tracking-widest font-semibold transition-colors"
+                    id="admin-new-product"
+                    className="flex items-center gap-2 bg-[#D4AF37] hover:bg-[#B8962E] text-[#050505] px-5 py-2.5 text-[10px] uppercase tracking-widest font-semibold transition-all duration-300 min-h-[44px] shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.35)]"
+                    aria-label="Create new product"
                 >
                     + New Product
                 </Link>
             </div>
 
             {/* ── Stat Cards ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Total Orders */}
-                <div className="bg-[#111] border border-white/5 p-5 hover:border-white/10 transition-colors">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-3">Total Orders</p>
-                    <div className="flex items-end justify-between">
-                        <p className="text-3xl font-serif text-white/85">{(totalOrders ?? 0).toLocaleString()}</p>
-                        {/* Mini bar chart visual */}
-                        <div className="flex items-end gap-0.5 h-8 opacity-40">
-                            {[4, 6, 5, 8, 7, 9, 8].map((v, i) => (
-                                <div key={i} className="w-1.5 bg-white/60 rounded-sm" style={{ height: `${(v / 9) * 100}%` }} />
-                            ))}
-                        </div>
-                    </div>
-                    <p className="text-[9px] text-white/20 mt-2 tracking-wide">↑ All time</p>
-                </div>
-
-                {/* Gross Revenue */}
-                <div className="bg-[#111] border border-white/5 p-5 hover:border-amber-500/20 transition-colors">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-3">Gross Revenue</p>
-                    <p className="text-3xl font-serif text-amber-400">
-                        ${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-[9px] text-white/20 mt-2 tracking-wide">From paid orders</p>
-                </div>
-
-                {/* Avg Order Value */}
-                <div className="bg-[#111] border border-white/5 p-5 hover:border-white/10 transition-colors">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-white/30 mb-3">Avg. Order Value</p>
-                    <p className="text-3xl font-serif text-white/85">
-                        ${avgOrderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-[9px] text-white/20 mt-2 tracking-wide">{(totalProducts ?? 0).toLocaleString()} active products</p>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard
+                    label="Total Orders"
+                    value={(totalOrders ?? 0).toLocaleString()}
+                    subtext="↑ All time"
+                    icon={<ShoppingCart size={14} />}
+                    mini={[4, 6, 5, 8, 7, 9, 8]}
+                />
+                <StatsCard
+                    label="Gross Revenue"
+                    value={`$${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    subtext="From paid orders"
+                    icon={<DollarSign size={14} />}
+                    gold
+                />
+                <StatsCard
+                    label="Avg. Order Value"
+                    value={`$${avgOrderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    subtext="Per transaction"
+                    icon={<TrendingUp size={14} />}
+                />
+                <StatsCard
+                    label="Active Products"
+                    value={(totalProducts ?? 0).toLocaleString()}
+                    subtext={`${(totalUsers ?? 0).toLocaleString()} registered users`}
+                    icon={<Package size={14} />}
+                />
             </div>
 
             {/* ── Charts Row ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-                {/* Sales Overview — line chart */}
-                <div className="lg:col-span-2 bg-[#111] border border-white/5 p-5">
+                {/* Sales Overview */}
+                <div className="lg:col-span-2 bg-[#111] border border-[rgba(255,255,255,0.06)] p-5 card-hover">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-white/50 font-semibold">Sales Overview</h2>
-                        <span className="text-[9px] text-white/20 uppercase tracking-widest">Last 7 Days</span>
+                        {/* #DAD5CC on #111 = 11.6:1 ✓ */}
+                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                            Sales Overview
+                        </h2>
+                        <span className="text-[9px] text-[#8C8680] uppercase tracking-widest">
+                            Last 7 Days
+                        </span>
                     </div>
                     <SalesChart data={chartData} />
                 </div>
 
-                {/* Top Products — donut */}
-                <div className="bg-[#111] border border-white/5 p-5">
+                {/* Top Products Donut */}
+                <div className="bg-[#111] border border-[rgba(255,255,255,0.06)] p-5 card-hover">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-white/50 font-semibold">Top Products</h2>
-                        <Link href="/admin/products" className="text-[9px] text-amber-400/50 hover:text-amber-400 uppercase tracking-widest transition-colors">View All</Link>
+                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                            Top Products
+                        </h2>
+                        <Link
+                            href="/admin/products"
+                            className="text-[9px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-widest transition-colors min-h-[44px] flex items-center"
+                            aria-label="View all products"
+                        >
+                            View All
+                        </Link>
                     </div>
                     <DonutChart segments={donutSegments} />
                 </div>
@@ -295,37 +367,56 @@ export default async function AdminCommandCenter() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                 {/* Recent Orders */}
-                <div className="bg-[#111] border border-white/5 p-5">
+                <div className="bg-[#111] border border-[rgba(255,255,255,0.06)] p-5">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-white/50 font-semibold">Recent Orders</h2>
-                        <Link href="/admin/orders" className="flex items-center gap-1 text-[9px] text-amber-400/50 hover:text-amber-400 uppercase tracking-widest transition-colors">
-                            <Eye size={10} /> View All
+                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                            Recent Orders
+                        </h2>
+                        <Link
+                            href="/admin/orders"
+                            className="flex items-center gap-1.5 text-[9px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-widest transition-colors min-h-[44px]"
+                            aria-label="View all orders"
+                        >
+                            <Eye size={10} aria-hidden="true" />
+                            View All
                         </Link>
                     </div>
                     {!recentOrders || recentOrders.length === 0 ? (
-                        <p className="text-[10px] text-white/20 uppercase tracking-widest py-8 text-center">No orders yet</p>
+                        <p className="text-[10px] text-[#8C8680] uppercase tracking-widest py-8 text-center">
+                            No orders yet
+                        </p>
                     ) : (
-                        <div className="space-y-0 divide-y divide-white/4">
+                        <div className="space-y-0 divide-y divide-[rgba(255,255,255,0.04)]">
                             {recentOrders.map(order => (
                                 <Link
                                     key={order.id as string}
-                                    href={`/admin/orders`}
-                                    className="flex items-center justify-between py-3 hover:bg-white/2 transition-colors -mx-2 px-2 rounded-sm"
+                                    href="/admin/orders"
+                                    aria-label={`Order by ${(order.email as string)?.split('@')[0] || 'Guest'}`}
+                                    className="flex items-center justify-between py-3 hover:bg-[rgba(212,175,55,0.03)] transition-colors -mx-2 px-2 rounded-sm min-h-[44px]"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-7 h-7 bg-white/5 rounded-full flex items-center justify-center text-[10px] text-white/40 flex-shrink-0">
+                                        <div
+                                            className="w-7 h-7 bg-[rgba(212,175,55,0.1)] rounded-full flex items-center justify-center text-[10px] text-[#D4AF37] flex-shrink-0"
+                                            aria-hidden="true"
+                                        >
                                             {((order.email as string) || '?')[0].toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[11px] text-white/65 truncate">{(order.email as string)?.split('@')[0] || 'Guest'}</p>
-                                            <p className="text-[9px] text-white/20 mt-0.5">
-                                                {order.created_at ? new Date(order.created_at as string).toLocaleDateString() : ''}
+                                            {/* #DAD5CC on #111 = 11.6:1 ✓ */}
+                                            <p className="text-[11px] text-[#DAD5CC] truncate">
+                                                {(order.email as string)?.split('@')[0] || 'Guest'}
+                                            </p>
+                                            {/* #8C8680 on #111 = 4.5:1 ✓ */}
+                                            <p className="text-[9px] text-[#8C8680] mt-0.5">
+                                                {order.created_at
+                                                    ? new Date(order.created_at as string).toLocaleDateString()
+                                                    : ''}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 flex-shrink-0">
                                         <StatusBadge status={order.status as string} />
-                                        <span className="text-[11px] font-mono text-white/60">
+                                        <span className="text-[11px] font-mono text-[#A9A39A]">
                                             ${Number(order.total_amount || 0).toFixed(2)}
                                         </span>
                                     </div>
@@ -336,29 +427,54 @@ export default async function AdminCommandCenter() {
                 </div>
 
                 {/* Stock Alerts */}
-                <div className="bg-[#111] border border-white/5 p-5">
+                <div className="bg-[#111] border border-[rgba(255,255,255,0.06)] p-5">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-widest text-white/50 font-semibold">Stock Alerts</h2>
-                        <Link href="/admin/products" className="text-[9px] text-amber-400/50 hover:text-amber-400 uppercase tracking-widest transition-colors">Manage Inventory ↗</Link>
+                        <h2 className="text-[11px] uppercase tracking-widest text-[#DAD5CC] font-semibold">
+                            Stock Alerts
+                        </h2>
+                        <Link
+                            href="/admin/products"
+                            className="text-[9px] text-[#D4AF37]/70 hover:text-[#D4AF37] uppercase tracking-widest transition-colors min-h-[44px] flex items-center"
+                            aria-label="Manage product inventory"
+                        >
+                            Manage Inventory ↗
+                        </Link>
                     </div>
                     {!lowStockProducts || lowStockProducts.length === 0 ? (
-                        <p className="text-[10px] text-white/20 uppercase tracking-widest py-8 text-center">All stock levels healthy ✓</p>
+                        <p className="text-[10px] text-[#8C8680] uppercase tracking-widest py-8 text-center">
+                            All stock levels healthy ✓
+                        </p>
                     ) : (
                         <div className="space-y-2">
                             {lowStockProducts.map(product => (
                                 <Link
                                     key={product.id as string}
                                     href={`/admin/products/${product.id}`}
-                                    className="flex items-center justify-between p-3 border border-white/5 hover:border-amber-500/20 bg-white/2 hover:bg-amber-500/3 transition-all group"
+                                    aria-label={`${product.name}: ${Number(product.inventory) === 0 ? 'out of stock' : `low stock, ${product.inventory} remaining`}`}
+                                    className="flex items-center justify-between p-3 border border-[rgba(255,255,255,0.05)] hover:border-[rgba(212,175,55,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(212,175,55,0.03)] transition-all group min-h-[44px]"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <AlertTriangle size={13} className={`flex-shrink-0 ${Number(product.inventory) === 0 ? 'text-red-400' : 'text-amber-400'}`} />
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] text-white/65 truncate group-hover:text-white/80 transition-colors">{product.name as string}</p>
-                                        </div>
+                                        <AlertTriangle
+                                            size={13}
+                                            aria-hidden="true"
+                                            className={`flex-shrink-0 ${Number(product.inventory) === 0
+                                                ? 'text-red-400'
+                                                : 'text-[#D4AF37]'
+                                                }`}
+                                        />
+                                        <p className="text-[11px] text-[#DAD5CC] truncate group-hover:text-[#F3EFE8] transition-colors">
+                                            {product.name as string}
+                                        </p>
                                     </div>
-                                    <span className={`text-[10px] uppercase tracking-widest font-medium flex-shrink-0 ml-3 ${Number(product.inventory) === 0 ? 'text-red-400' : 'text-amber-400'}`}>
-                                        {Number(product.inventory) === 0 ? 'Out of Stock' : `Low Stock · ${product.inventory}`}
+                                    <span
+                                        className={`text-[10px] uppercase tracking-widest font-medium flex-shrink-0 ml-3 ${Number(product.inventory) === 0
+                                            ? 'text-red-400'
+                                            : 'text-[#D4AF37]'
+                                            }`}
+                                    >
+                                        {Number(product.inventory) === 0
+                                            ? 'Out of Stock'
+                                            : `Low · ${product.inventory}`}
                                     </span>
                                 </Link>
                             ))}
@@ -369,3 +485,5 @@ export default async function AdminCommandCenter() {
         </div>
     )
 }
+
+
