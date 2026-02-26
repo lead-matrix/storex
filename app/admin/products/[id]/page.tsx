@@ -24,7 +24,7 @@ export default async function EditProductPage({ params }: Props) {
 
     const { data: product, error } = await supabase
         .from('products')
-        .select('id, name, slug, description, price, stock, inventory, images, is_featured, is_bestseller, is_active, category_id, variants(*)')
+        .select('id, name, slug, description, base_price, stock, inventory, images, is_featured, is_bestseller, is_active, category_id, variants(*)')
         .eq('id', id)
         .single()
 
@@ -36,7 +36,7 @@ export default async function EditProductPage({ params }: Props) {
         name: string
         variant_type: 'shade' | 'size' | 'bundle' | 'type'
         price_override: number | null
-        stock_quantity: number
+        stock: number
         is_active: boolean
     }>
 
@@ -62,7 +62,7 @@ export default async function EditProductPage({ params }: Props) {
                         name: product.name,
                         slug: product.slug,
                         description: product.description,
-                        price: product.price,
+                        base_price: product.base_price,
                         stock: product.stock ?? product.inventory ?? 0,
                         images: product.images ?? [],
                         is_featured: product.is_featured,

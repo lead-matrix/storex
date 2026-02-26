@@ -107,7 +107,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                                         }`}
                                 >
                                     {v.name}
-                                    {v.price_override && v.price_override !== product.price && (
+                                    {v.price_override && v.price_override !== product.base_price && (
                                         <span className="ml-2 opacity-60">
                                             (${Number(v.price_override).toFixed(2)})
                                         </span>

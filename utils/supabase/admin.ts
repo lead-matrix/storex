@@ -37,4 +37,4 @@ export const createClient = async () => {
 /**
  * Legacy export for backward compatibility
  */
-export const supabaseAdmin = createAdminClient;
+export const supabaseAdmin = createClient;

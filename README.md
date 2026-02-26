@@ -122,7 +122,7 @@ Open [http://localhost:3000](http://localhost:3000)
 1. **Push to GitHub**
 2. **Connect to Vercel**
 3. **Environment Variables**: Add all keys from `.env.local`
-4. **Stripe Webhook**: Endpoint: `https://your-domain.com/api/stripe-webhook`
+4. **Stripe Webhook**: Endpoint: `https://your-domain.com/api/stripe/webhook`
 
 ## 📞 Support
 
