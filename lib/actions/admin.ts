@@ -1,6 +1,6 @@
 'use server'
 
-import { createAdminClient } from "@/utils/supabase/admin";
+import { createClient as createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createShippingLabel } from "@/lib/utils/shippo";
 import { sendShippingNotificationEmail } from "@/lib/utils/email";
@@ -88,9 +88,9 @@ export async function updateProduct(formData: FormData) {
     const id = formData.get('id') as string;
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
-    const priceRaw = (formData.get('base_price') || formData.get('price')) as string;
-    const price = parseFloat(priceRaw);
-    const inventoryQty = parseInt((formData.get('stock') as string) || '0');
+    const basePriceRaw = (formData.get('base_price') || formData.get('price')) as string;
+    const base_price = parseFloat(basePriceRaw);
+    const stock = parseInt((formData.get('stock') as string) || '0');
     const category_id = (formData.get('category_id') as string) || null;
     const is_featured = formData.get('is_featured') === 'on';
     const is_bestseller = formData.get('is_bestseller') === 'on';
@@ -111,9 +111,8 @@ export async function updateProduct(formData: FormData) {
             name,
             slug,
             description,
-            price,
-            inventory: inventoryQty,
-            stock: inventoryQty,
+            base_price,
+            stock,
             images,
             is_featured,
             is_bestseller,
@@ -149,8 +148,9 @@ interface VariantInput {
     id?: string
     name: string
     variant_type: 'shade' | 'size' | 'bundle' | 'type'
+    color_code?: string
     price_override: number | null
-    stock_quantity: number
+    stock: number
     is_active: boolean
     _isNew?: boolean
 }
@@ -168,8 +168,9 @@ async function upsertVariants(
                 .update({
                     name: v.name,
                     variant_type: v.variant_type,
+                    color_code: v.color_code,
                     price_override: v.price_override,
-                    stock_quantity: v.stock_quantity,
+                    stock: v.stock,
                     is_active: v.is_active,
                 })
                 .eq('id', v.id);
@@ -181,8 +182,9 @@ async function upsertVariants(
                     product_id: productId,
                     name: v.name,
                     variant_type: v.variant_type,
+                    color_code: v.color_code,
                     price_override: v.price_override,
-                    stock_quantity: v.stock_quantity,
+                    stock: v.stock,
                     is_active: v.is_active,
                 });
         }

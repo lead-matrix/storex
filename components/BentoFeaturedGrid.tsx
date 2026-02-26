@@ -13,14 +13,14 @@ interface Variant {
     id: string;
     name: string;
     price_override?: number | null;
-    stock_quantity?: number;
+    stock?: number;
 }
 
 interface Product {
     id: string;
     name: string;
-    price: number;
-    base_price?: number;
+    slug: string;
+    base_price: number;
     images: string[];
     description?: string;
     is_featured?: boolean;
@@ -35,7 +35,8 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
     const [adding, setAdding] = useState(false);
     const mainImage = product.images?.[0] || "/logo.jpg";
     const firstVariant = product.variants?.[0];
-    const price = firstVariant?.price_override ?? product.price ?? 0;
+    // Locked Pricing Logic: firstVariant?.price_override ?? product.base_price
+    const price = firstVariant?.price_override ?? product.base_price ?? 0;
 
     const handleAdd = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -53,7 +54,7 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="h-full"
         >
-            <Link href={`/shop/${product.id}`} id={`bento-${product.id}`}
+            <Link href={`/product/${product.slug}`} id={`bento-${product.id}`}
                 className={`group relative overflow-hidden glass gold-glow-hover flex flex-col h-full transition-all duration-500 ${tall ? "min-h-[500px]" : "min-h-[340px]"}`}>
                 <div className={`relative overflow-hidden flex-shrink-0 ${tall ? "h-72" : "h-48"}`}>
                     <Image src={mainImage} alt={product.name} fill

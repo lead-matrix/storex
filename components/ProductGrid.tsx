@@ -9,13 +9,14 @@ interface Variant {
     id: string;
     name: string;
     price_override?: number | null;
-    stock_quantity?: number;
+    stock?: number;
 }
 
 interface Product {
     id: string;
     name: string;
-    price: number;
+    slug: string;
+    base_price: number;
     images: string[];
     description?: string;
     variants: Variant[];
@@ -39,7 +40,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
             // Include variants in the select
             let query = supabase
                 .from("products")
-                .select("id, name, price, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock_quantity)")
+                .select("id, name, slug, base_price, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock)")
                 .eq("is_active", true);
 
             if (categoryId) {

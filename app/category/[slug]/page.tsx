@@ -35,7 +35,7 @@ export default async function CategorySlugPage({ params }: Props) {
     // Fetch category
     const { data: category } = await supabase
         .from('categories')
-        .select('id, name, slug, description, image_url')
+        .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
         .single()
@@ -45,7 +45,7 @@ export default async function CategorySlugPage({ params }: Props) {
     // Fetch active products: featured first, then newest
     const { data: products } = await supabase
         .from('products')
-        .select('id, name, slug, price, images, description, is_featured, is_bestseller, variants(id, name, price_override, stock_quantity, is_active)')
+        .select('*, variants(*)')
         .eq('is_active', true)
         .eq('category_id', category.id)
         .order('is_featured', { ascending: false })
@@ -130,19 +130,19 @@ export default async function CategorySlugPage({ params }: Props) {
                         {items.map((product) => {
                             const activeVariants = (product.variants as Array<{
                                 id: string; name: string; price_override: number | null;
-                                stock_quantity: number; is_active: boolean
+                                stock: number; is_active: boolean
                             }>)?.filter(v => v.is_active) ?? []
 
                             const displayPrice = activeVariants.length > 0
-                                ? Math.min(...activeVariants.map(v => v.price_override ?? product.price))
-                                : product.price
+                                ? Math.min(...activeVariants.map(v => v.price_override ?? (product as any).base_price))
+                                : (product as any).base_price
 
                             const image = product.images?.[0]
 
                             return (
                                 <Link
                                     key={product.id}
-                                    href={`/shop/${product.id}`}
+                                    href={`/product/${product.slug}`}
                                     className="group bg-white rounded-luxury shadow-soft border border-charcoal/8 overflow-hidden hover:shadow-luxury hover:border-gold/20 transition-all duration-300"
                                 >
                                     {/* Image */}

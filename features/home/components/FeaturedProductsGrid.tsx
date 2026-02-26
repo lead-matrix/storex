@@ -1,7 +1,7 @@
-import { ProductCardProps, ProductCard } from "@/features/products/components/ProductCard"
+import { ProductCard } from "@/components/ProductCard"
 
 interface FeaturedProductsGridProps {
-    products: ProductCardProps["product"][]
+    products: any[]
     title?: string
     subtitle?: string
 }

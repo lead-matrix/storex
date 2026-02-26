@@ -12,7 +12,7 @@ async function getHomePageData() {
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, slug, price, images, description, is_featured")
+    .select("id, name, slug, base_price, images, description, is_featured")
     .eq("is_active", true)
     .order("is_featured", { ascending: false })
     .order("created_at", { ascending: false })

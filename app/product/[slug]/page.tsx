@@ -1,5 +1,4 @@
 import { createClient } from "@/utils/supabase/server";
-import { createClient as createPublicClient } from "@/utils/supabase/client";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -10,30 +9,19 @@ import { ProductAccordion } from "@/features/products/components/ProductAccordio
 import { RelatedProducts } from "@/features/products/components/RelatedProducts";
 import { cookies } from "next/headers";
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
-    params: Promise<{ id: string }>;
-}
-
-export async function generateStaticParams() {
-    const supabase = createPublicClient();
-    const { data: products } = await supabase
-        .from("products")
-        .select("id");
-
-    return products?.map((product: { id: string }) => ({
-        id: product.id,
-    })) || [];
+    params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { id } = await params;
+    const { slug } = await params;
     const supabase = await createClient();
     const { data: product } = await supabase
         .from("products")
         .select("name, description")
-        .eq("id", id)
+        .eq("slug", slug)
         .single();
 
     if (!product) return { title: "Product Not Found" };
@@ -44,30 +32,33 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
 }
 
-export default async function ProductPage({ params }: PageProps) {
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
+export default async function ProductSlugPage({ params }: PageProps) {
+    const { slug } = await params;
 
-    // Access cookies to ensure request-time context
+    // Ensure we are in a dynamic context
     await cookies();
 
     const supabase = await createClient();
 
+    // Fetch product by slug including variants
     const { data: product, error } = await supabase
         .from('products')
         .select('*, variants(*)')
-        .eq('id', id)
+        .eq('slug', slug)
+        .eq('is_active', true)
         .single();
 
     if (error || !product) {
         notFound();
     }
 
+    // Fetch related products (active, excluding current)
     const { data: relatedProducts } = await supabase
         .from('products')
-        .select('id, name, slug, price, images, description')
+        .select('id, name, slug, base_price, images, description')
         .eq('is_active', true)
-        .neq('id', id)
+        .eq('category_id', product.category_id)
+        .neq('id', product.id)
         .limit(4);
 
     const accordionItems = [
@@ -110,8 +101,8 @@ export default async function ProductPage({ params }: PageProps) {
                                 product={{
                                     id: product.id,
                                     name: product.name,
-                                    price: product.price,
-                                    description: product.description || "The quintessence of modern luxury. This formula is crafted to enhance your natural radiance.",
+                                    base_price: product.base_price,
+                                    description: product.description || "The quintessence of modern luxury.",
                                     image: product.images?.[0] || "/placeholder-product.jpg",
                                     variants: product.variants
                                 }}

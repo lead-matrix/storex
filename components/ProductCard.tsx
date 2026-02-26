@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 interface Product {
     id: string;
     name: string;
-    price: number;       // from DB (correct column name)
-    base_price?: number; // legacy alias if used elsewhere
+    slug: string;
+    base_price: number;
     images: string[];
     description?: string;
 }
@@ -27,7 +27,7 @@ interface Variant {
     id: string;
     name: string;
     price_override?: number | null;
-    stock_quantity?: number;
+    stock?: number;
 }
 
 export function ProductCard({
@@ -41,9 +41,8 @@ export function ProductCard({
     const [isQuickBuyOpen, setIsQuickBuyOpen] = useState(false);
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(variants[0] || null);
 
-    // Support both 'price' (DB column) and 'base_price' (legacy)
-    const basePrice = product.price ?? product.base_price ?? 0;
-    const price = selectedVariant?.price_override ?? basePrice;
+    // Locked Pricing Logic: selectedVariant?.price_override ?? product.base_price
+    const price = selectedVariant?.price_override ?? product.base_price ?? 0;
     const mainImage = product.images?.[0] || "/logo.jpg";
 
     const handleQuickAdd = () => {
@@ -62,7 +61,7 @@ export function ProductCard({
     return (
         <div className="group relative flex flex-col bg-background-primary overflow-hidden animate-in fade-in duration-700">
             {/* Product Image */}
-            <Link href={`/shop/${product.id}`} className="relative aspect-[4/5] overflow-hidden bg-background-secondary/30">
+            <Link href={`/product/${product.slug}`} className="relative aspect-[4/5] overflow-hidden bg-background-secondary/30">
                 <Image
                     src={mainImage}
                     alt={product.name}
@@ -80,7 +79,7 @@ export function ProductCard({
             {/* Product Info */}
             <div className="flex flex-col pt-6 pb-2 px-1">
                 <div className="flex justify-between items-start mb-2">
-                    <Link href={`/shop/${product.id}`}>
+                    <Link href={`/product/${product.slug}`}>
                         <h3 className="font-serif text-lg tracking-tight text-text-headingDark hover:text-gold-primary transition-colors">{product.name}</h3>
                     </Link>
                     <span className="text-sm font-light text-text-bodyDark/60">${price.toFixed(2)}</span>

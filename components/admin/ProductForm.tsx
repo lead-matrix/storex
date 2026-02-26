@@ -22,8 +22,9 @@ interface Variant {
     id?: string
     name: string
     variant_type: 'shade' | 'size' | 'bundle' | 'type'
+    color_code?: string
     price_override: number | null
-    stock_quantity: number
+    stock: number
     is_active: boolean
     _isNew?: boolean
     _deleted?: boolean
@@ -35,7 +36,7 @@ interface ProductFormProps {
         name?: string
         slug?: string
         description?: string
-        price?: number
+        base_price?: number
         stock?: number
         images?: string[]
         is_featured?: boolean
@@ -88,7 +89,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             name: '',
             variant_type: 'shade',
             price_override: null,
-            stock_quantity: 0,
+            stock: 0,
             is_active: true,
             _isNew: true,
         }])
@@ -191,7 +192,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             step="0.01"
                             min="0"
                             placeholder="0.00"
-                            defaultValue={product?.price}
+                            defaultValue={product?.base_price}
                             required
                             className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
                         />
@@ -367,8 +368,23 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                         </select>
                                     </div>
 
+                                    {/* Color Code (only for shades) */}
+                                    {variant.variant_type === 'shade' && (
+                                        <div className="col-span-1 space-y-1.5">
+                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Color</label>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    type="color"
+                                                    value={variant.color_code || '#000000'}
+                                                    onChange={e => updateVariant(index, 'color_code', e.target.value)}
+                                                    className="h-9 w-9 p-0.5 bg-white border-charcoal/10 cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Price Override */}
-                                    <div className="col-span-2 space-y-1.5">
+                                    <div className={variant.variant_type === 'shade' ? "col-span-2 space-y-1.5" : "col-span-3 space-y-1.5"}>
                                         <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Price ($)</label>
                                         <Input
                                             type="number"
@@ -387,8 +403,8 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                         <Input
                                             type="number"
                                             min="0"
-                                            value={variant.stock_quantity}
-                                            onChange={e => updateVariant(index, 'stock_quantity', parseInt(e.target.value) || 0)}
+                                            value={variant.stock}
+                                            onChange={e => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
                                             className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
                                         />
                                     </div>

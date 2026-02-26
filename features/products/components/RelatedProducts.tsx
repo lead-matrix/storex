@@ -1,7 +1,7 @@
-import { ProductCard, ProductCardProps } from "./ProductCard"
+import { ProductCard } from "@/components/ProductCard"
 
 interface RelatedProductsProps {
-    products: ProductCardProps["product"][]
+    products: any[]
 }
 
 export function RelatedProducts({ products }: RelatedProductsProps) {

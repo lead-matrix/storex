@@ -9,7 +9,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
  * WARNING: Only use this in server-side code and server actions
  * This bypasses RLS policies - use with extreme caution
  */
-export const createAdminClient = async () => {
+export const createClient = async () => {
     const cookieStore = await cookies();
 
     return createServerClient(
