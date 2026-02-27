@@ -63,7 +63,8 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 4. **Set up Supabase**
 
 Run the single initialization script in your Supabase SQL Editor:
-- **File**: `DATABASE.sql` (Contains all tables, functions, RLS, and seed data)
+- **File**: `DATABASE_FINAL.sql` (Single source of truth for full setup)
+- **Harden**: `MIGRATION_V5_HARDENING.sql` (Run for production security)
 
 5. **Create admin user**
 
@@ -96,16 +97,17 @@ Open [http://localhost:3000](http://localhost:3000)
 │   └── utils/            # Helper functions
 ├── utils/                 # Supabase clients
 │   └── supabase/          # Client & Server clients
-├── DATABASE.sql           # Unified database setup script
-└── proxy.ts               # Core middleware (Auth & Kill-switch)
+├── DATABASE_FINAL.sql     # Unified database setup script (Source of Truth)
+├── MIGRATION_V5_HARDENING.sql # Production security hardening script
+└── route-guard.ts         # Core server-side security logic (Auth & RBAC)
 ```
 
 ## 🔐 Security
 
-- **Row Level Security (RLS)**: Enforced on all tables.
-- **Admin Guard**: Server-side role checks and middleware protection.
-- **Transactions**: Atomic order creation and inventory deduction.
-- **Webhook Verification**: Secure Stripe signature validation.
+- **Row Level Security (RLS)**: Enforced on all tables with zero public access to logs.
+- **Admin Guard**: Server-side role checks and layout protection.
+- **Transactions**: Atomic order creation and inventory deduction via RPC.
+- **Webhook Verification**: Secure Stripe signature + Idempotency tracking.
 
 ## 🎨 Design System
 
@@ -122,7 +124,7 @@ Open [http://localhost:3000](http://localhost:3000)
 1. **Push to GitHub**
 2. **Connect to Vercel**
 3. **Environment Variables**: Add all keys from `.env.local`
-4. **Stripe Webhook**: Endpoint: `https://your-domain.com/api/stripe/webhook`
+4. **Stripe Webhook**: Endpoint: `https://your-domain.com/api/webhooks/stripe`
 
 ## 📞 Support
 

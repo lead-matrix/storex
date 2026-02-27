@@ -36,6 +36,16 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
 
+        // Idempotency check: prevent duplicate processing of the same Stripe event
+        const { error: eventError } = await supabase
+            .from('stripe_events')
+            .insert([{ id: event.id }]);
+
+        if (eventError) {
+            console.warn(`🔔 Event ${event.id} already processed or conflict occurred. Skipping.`);
+            return NextResponse.json({ received: true });
+        }
+
         console.log(`🔔 Processing order for session: ${session.id}`);
 
         try {
@@ -57,6 +67,8 @@ export async function POST(req: Request) {
             console.log(`✅ Order ${session.id} processed successfully.`);
         } catch (err: any) {
             console.error("❌ Order processing failed:", err);
+            // Delete the event record if processing fails so it can be retried
+            await supabase.from('stripe_events').delete().eq('id', event.id);
             return NextResponse.json({ error: "Order processing failed" }, { status: 500 });
         }
     }
