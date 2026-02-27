@@ -164,19 +164,16 @@ interface StatsCardProps {
 function StatsCard({ label, value, subtext, icon, gold, mini }: StatsCardProps) {
     return (
         <div
-            className={`bg-white rounded-luxury border p-5 transition-all duration-300 shadow-soft hover:shadow-luxury ${gold
-                ? 'border-gold/30'
-                : 'border-charcoal/10 hover:border-gold/30'
-                }`}
+            className="bg-[#0f0f0f] rounded-xl border border-white/10 p-6 transition-all duration-300 shadow-2xl hover:border-gold/30 group"
         >
-            <div className="flex items-start justify-between mb-4">
-                <p className="text-[9px] font-medium uppercase tracking-luxury text-textsoft">{label}</p>
-                <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center text-gold" aria-hidden="true">
+            <div className="flex items-start justify-between mb-6">
+                <p className="text-[10px] font-medium uppercase tracking-widest text-[#A9A39A]">{label}</p>
+                <div className="w-8 h-8 rounded-full bg-black border border-white/5 flex items-center justify-center text-gold group-hover:bg-gold/10 transition-colors" aria-hidden="true">
                     {icon}
                 </div>
             </div>
             <div className="flex items-end justify-between">
-                <p className={`text-3xl font-heading ${gold ? 'text-gold' : 'text-charcoal'}`}>
+                <p className={`text-4xl font-serif ${gold ? 'text-gold' : 'text-white'}`}>
                     {value}
                 </p>
                 {mini && (
@@ -192,7 +189,7 @@ function StatsCard({ label, value, subtext, icon, gold, mini }: StatsCardProps) 
                 )}
             </div>
             {subtext && (
-                <p className="text-[10px] text-textsoft mt-2 tracking-wide">{subtext}</p>
+                <p className="text-[9px] uppercase tracking-widest text-[#7A746F] mt-3">{subtext}</p>
             )}
         </div>
     )
@@ -277,20 +274,20 @@ export default async function AdminCommandCenter() {
             {/* ── Page Heading ── */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-heading tracking-luxury text-charcoal uppercase">
+                    <h1 className="text-2xl font-serif tracking-widest text-white uppercase">
                         Command Center
                     </h1>
-                    <p className="text-[10px] text-textsoft uppercase tracking-luxury mt-1 font-medium">
+                    <p className="text-[10px] text-luxury-subtext uppercase tracking-widest mt-2 font-medium">
                         Obsidian Palace Operations
                     </p>
                 </div>
                 <Link
                     href="/admin/products/new"
                     id="admin-new-product"
-                    className="flex items-center gap-2 bg-charcoal hover:bg-gold text-pearl hover:text-white px-5 py-2.5 text-[10px] uppercase tracking-luxury font-medium transition-all duration-300 min-h-[44px] rounded-full shadow-soft hover:shadow-luxury"
+                    className="flex items-center gap-3 bg-gold hover:bg-[#D4AF37] text-black px-6 py-3 text-[10px] uppercase tracking-widest font-bold transition-all duration-300 min-h-[44px] rounded-lg shadow-[0_0_20px_rgba(198,167,94,0.15)] hover:shadow-[0_0_20px_rgba(198,167,94,0.3)]"
                     aria-label="Create new product"
                 >
-                    + New Product
+                    + New Artifact
                 </Link>
             </div>
 
@@ -325,15 +322,15 @@ export default async function AdminCommandCenter() {
             </div>
 
             {/* ── Charts Row ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Sales Overview */}
-                <div className="lg:col-span-2 bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
-                    <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
-                            Sales Overview
+                <div className="lg:col-span-2 bg-[#0f0f0f] rounded-xl border border-white/10 shadow-2xl p-6 transition-all duration-300 hover:border-gold/30">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-[11px] uppercase tracking-widest text-white font-serif">
+                            Sales Timeline
                         </h2>
-                        <span className="text-[9px] text-textsoft uppercase tracking-luxury">
+                        <span className="text-[9px] text-gold uppercase tracking-widest bg-gold/5 px-3 py-1 rounded-full border border-gold/20">
                             Last 7 Days
                         </span>
                     </div>
@@ -341,15 +338,14 @@ export default async function AdminCommandCenter() {
                 </div>
 
                 {/* Top Products Donut */}
-                <div className="bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
-                    <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
-                            Top Products
+                <div className="bg-[#0f0f0f] rounded-xl border border-white/10 shadow-2xl p-6 transition-all duration-300 hover:border-gold/30">
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-[11px] uppercase tracking-widest text-white font-serif">
+                            Top Artifacts
                         </h2>
                         <Link
                             href="/admin/products"
-                            className="text-[9px] text-textsoft hover:text-gold uppercase tracking-luxury transition-colors min-h-[44px] flex items-center font-medium"
-                            aria-label="View all products"
+                            className="text-[9px] text-[#A9A39A] hover:text-gold uppercase tracking-widest transition-colors flex items-center"
                         >
                             View All
                         </Link>
@@ -359,57 +355,50 @@ export default async function AdminCommandCenter() {
             </div>
 
             {/* ── Lower Row ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Recent Orders */}
-                <div className="bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
-                    <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
-                            Recent Orders
+                <div className="bg-[#0f0f0f] rounded-xl border border-white/10 shadow-2xl p-6 transition-all duration-300 hover:border-gold/30">
+                    <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                        <h2 className="text-[11px] uppercase tracking-widest text-white font-serif">
+                            Recent Operations
                         </h2>
                         <Link
                             href="/admin/orders"
-                            className="flex items-center gap-1.5 text-[9px] text-textsoft hover:text-gold uppercase tracking-luxury transition-colors font-medium min-h-[44px]"
-                            aria-label="View all orders"
+                            className="flex items-center gap-2 text-[9px] text-[#A9A39A] hover:text-gold uppercase tracking-widest transition-colors"
                         >
-                            <Eye size={12} aria-hidden="true" />
-                            View All
+                            <Eye size={12} />
+                            View Flow
                         </Link>
                     </div>
                     {!recentOrders || recentOrders.length === 0 ? (
-                        <p className="text-[10px] text-textsoft uppercase tracking-luxury py-8 text-center">
-                            No orders yet
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest py-8 text-center">
+                            Awaiting operations
                         </p>
                     ) : (
-                        <div className="space-y-0 divide-y divide-charcoal/5">
+                        <div className="space-y-0 divide-y divide-white/5">
                             {recentOrders.map(order => (
                                 <Link
                                     key={order.id as string}
                                     href="/admin/orders"
-                                    aria-label={`Order by ${(order.email as string)?.split('@')[0] || 'Guest'}`}
-                                    className="flex items-center justify-between py-3 hover:bg-gold/5 transition-colors -mx-2 px-2 rounded-sm min-h-[44px]"
+                                    className="flex items-center justify-between py-4 hover:bg-white/5 transition-colors -mx-4 px-4 rounded-lg"
                                 >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div
-                                            className="w-7 h-7 bg-gold/10 rounded-full flex items-center justify-center text-[10px] text-gold flex-shrink-0 font-medium"
-                                            aria-hidden="true"
-                                        >
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="w-8 h-8 bg-black border border-white/10 rounded-full flex items-center justify-center text-[10px] text-gold font-medium">
                                             {((order.email as string) || '?')[0].toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[11px] text-charcoal font-medium truncate">
+                                            <p className="text-[11px] text-white font-medium truncate uppercase tracking-widest">
                                                 {(order.email as string)?.split('@')[0] || 'Guest'}
                                             </p>
-                                            <p className="text-[9px] text-textsoft mt-0.5">
-                                                {order.created_at
-                                                    ? new Date(order.created_at as string).toLocaleDateString()
-                                                    : ''}
+                                            <p className="text-[9px] text-[#A9A39A] mt-1 tracking-widest">
+                                                {order.created_at ? new Date(order.created_at as string).toLocaleDateString() : ''}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="flex items-center gap-4 flex-shrink-0">
                                         <StatusBadge status={order.status as string} />
-                                        <span className="text-[11px] font-heading text-charcoal font-medium">
+                                        <span className="text-[12px] font-serif text-white group-hover:text-gold transition-colors">
                                             ${Number(order.total_amount || 0).toFixed(2)}
                                         </span>
                                     </div>
@@ -420,54 +409,41 @@ export default async function AdminCommandCenter() {
                 </div>
 
                 {/* Stock Alerts */}
-                <div className="bg-white rounded-luxury border border-charcoal/10 shadow-soft p-5 transition-all duration-300 hover:shadow-luxury">
-                    <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-[11px] uppercase tracking-luxury text-charcoal font-semibold">
-                            Stock Alerts
+                <div className="bg-[#0f0f0f] rounded-xl border border-white/10 shadow-2xl p-6 transition-all duration-300 hover:border-gold/30">
+                    <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                        <h2 className="text-[11px] uppercase tracking-widest text-white font-serif">
+                            Inventory Threshold
                         </h2>
                         <Link
                             href="/admin/products"
-                            className="text-[9px] text-textsoft hover:text-gold uppercase tracking-luxury transition-colors min-h-[44px] flex items-center font-medium"
-                            aria-label="Manage product inventory"
+                            className="text-[9px] text-[#A9A39A] hover:text-gold uppercase tracking-widest transition-colors flex items-center"
                         >
-                            Manage Inventory ↗
+                            Manage Stock ↗
                         </Link>
                     </div>
                     {!lowStockProducts || lowStockProducts.length === 0 ? (
-                        <p className="text-[10px] text-textsoft uppercase tracking-luxury py-8 text-center">
-                            All stock levels healthy ✓
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest py-8 text-center font-serif italic">
+                            All artifacts adequately stocked.
                         </p>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {lowStockProducts.map(product => (
                                 <Link
                                     key={product.id as string}
                                     href={`/admin/products/${product.id}`}
-                                    aria-label={`${product.name}: ${Number(product.inventory) === 0 ? 'out of stock' : `low stock, ${product.inventory} remaining`}`}
-                                    className="flex items-center justify-between p-3 border border-charcoal/5 hover:border-gold/30 bg-pearl hover:bg-gold/5 transition-all group min-h-[44px] rounded-md"
+                                    className="flex items-center justify-between p-4 border border-white/5 hover:border-white/20 bg-black rounded-lg transition-all group"
                                 >
-                                    <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex items-center gap-4 min-w-0">
                                         <AlertTriangle
                                             size={14}
-                                            aria-hidden="true"
-                                            className={`flex-shrink-0 ${Number(product.inventory) === 0
-                                                ? 'text-red-500'
-                                                : 'text-gold'
-                                                }`}
+                                            className={`flex-shrink-0 ${Number(product.inventory) === 0 ? 'text-red-500' : 'text-gold'}`}
                                         />
-                                        <p className="text-[11px] text-charcoal font-medium truncate group-hover:text-gold transition-colors">
+                                        <p className="text-[11px] text-white font-medium truncate uppercase tracking-widest group-hover:text-gold transition-colors">
                                             {product.name as string}
                                         </p>
                                     </div>
-                                    <span
-                                        className={`text-[10px] uppercase tracking-luxury font-medium flex-shrink-0 ml-3 ${Number(product.inventory) === 0
-                                            ? 'text-red-500'
-                                            : 'text-gold'
-                                            }`}
-                                    >
-                                        {Number(product.inventory) === 0
-                                            ? 'Out of Stock'
-                                            : `Low · ${product.inventory}`}
+                                    <span className={`text-[9px] uppercase tracking-widest px-2 py-1 rounded-full border ${Number(product.inventory) === 0 ? 'text-red-500 border-red-500/20 bg-red-500/5' : 'text-gold border-gold/20 bg-gold/5'}`}>
+                                        {Number(product.inventory) === 0 ? 'Depleted' : `Low (${product.inventory})`}
                                     </span>
                                 </Link>
                             ))}

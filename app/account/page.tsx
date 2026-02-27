@@ -31,26 +31,40 @@ export default async function AccountPage() {
         redirect("/login");
     }
 
-    // Fetch Profile if needed (for full name)
+    // Fetch Profile if needed
     const { data: profile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
-    const userName = profile?.full_name || user.email?.split("@")[0] || "Guest";
-    const userRole = profile?.role || "customer";
+    // Fetch Orders
+    const { data: orders } = await supabase
+        .from("orders")
+        .select(`
+            id,
+            created_at,
+            amount_total,
+            status,
+            order_items (
+                quantity,
+                products (name)
+            )
+        `)
+        .eq("customer_email", user.email)
+        .order("created_at", { ascending: false });
 
     return (
-        <div className="min-h-screen bg-pearl text-charcoal pt-32 pb-24 px-6">
-            <div className="max-w-4xl mx-auto space-y-12">
+        <div className="min-h-screen bg-black text-white pt-32 pb-24 px-6">
+            <div className="max-w-6xl mx-auto space-y-16">
                 <AccountDashboard
                     user={{ email: user.email, created_at: user.created_at }}
                     profile={{ full_name: profile?.full_name, role: profile?.role }}
+                    orders={orders || []}
                 />
 
                 {/* Sign Out Action */}
-                <div className="md:col-span-2 flex justify-center pt-8 border-t border-charcoal/5">
+                <div className="flex justify-center pt-12 border-t border-white/5">
                     <SignOutButton />
                 </div>
             </div>

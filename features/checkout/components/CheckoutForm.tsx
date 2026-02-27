@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js"
-import { Button } from "@/components/ui/button"
 import { Lock } from "lucide-react"
 
 interface CheckoutFormProps {
@@ -25,6 +24,7 @@ export function CheckoutForm({ onSuccess }: CheckoutFormProps) {
         const { error } = await stripe.confirmPayment({
             elements,
             confirmParams: { return_url: `${window.location.origin}/checkout/success` },
+            redirect: "if_required"
         })
 
         if (error) {
@@ -36,41 +36,43 @@ export function CheckoutForm({ onSuccess }: CheckoutFormProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-luxury shadow-soft border border-charcoal/5">
-            <div className="mb-6">
-                <h2 className="text-sm font-heading uppercase tracking-luxury text-charcoal mb-4 font-medium">
-                    Payment Details
+        <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-700">
+            <div className="mb-8">
+                <h2 className="text-xl font-serif uppercase tracking-widest text-white mb-4">
+                    Secure Passage
                 </h2>
-                <div className="w-12 h-px bg-gold/50 mb-6" />
+                <div className="w-16 h-px bg-gold/50" />
             </div>
 
             <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"] }} />
 
             {err && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-md border border-red-100 text-xs tracking-luxury uppercase">
+                <div className="bg-red-950/50 text-red-400 p-4 rounded-lg border border-red-500/20 text-[10px] tracking-widest uppercase">
                     {err}
                 </div>
             )}
 
-            <Button
+            <button
                 type="submit"
                 disabled={!stripe || busy}
-                variant="luxury"
-                className="w-full h-14 bg-charcoal text-white hover:bg-gold hover:text-white mt-8"
+                className="w-full h-14 bg-[#C6A75E] text-black hover:bg-[#D4AF37] hover:shadow-[0_0_20px_rgba(198,167,94,0.3)] transition-all duration-300 font-medium uppercase tracking-[0.2em] text-xs flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-10"
             >
                 {busy ? (
-                    "Processing..."
+                    <span className="animate-pulse">Authorizing...</span>
                 ) : (
-                    <span className="flex items-center gap-2">
-                        <Lock className="w-4 h-4" />
-                        Complete Secure Purchase
+                    <span className="flex items-center gap-3">
+                        <Lock size={14} strokeWidth={2} />
+                        Confirm Acquisition
                     </span>
                 )}
-            </Button>
+            </button>
 
-            <p className="text-center text-[10px] uppercase tracking-luxury text-textsoft pt-4">
-                Secured by Stripe · 256-bit SSL Encryption
-            </p>
+            <div className="pt-6 border-t border-white/5 flex flex-col items-center">
+                <p className="text-[9px] uppercase tracking-[0.4em] text-white/30 text-center">
+                    Secured by Stripe <br className="md:hidden" />
+                    <span className="hidden md:inline">·</span> 256-bit SSL Encryption
+                </p>
+            </div>
         </form>
     )
 }

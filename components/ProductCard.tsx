@@ -45,39 +45,37 @@ export function ProductCard({
     };
 
     return (
-        <div className="card-premium group flex flex-col h-full animate-in fade-in duration-500">
+        <div className="bg-[#0f0f0f] rounded-xl border border-white/10 p-4 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full group">
             {/* IMAGE CONTAINER */}
             <Link
                 href={`/product/${product.slug}`}
-                className="relative aspect-square mb-6 overflow-hidden bg-black flex items-center justify-center p-8"
+                className="relative aspect-square mb-4 overflow-hidden bg-black rounded-lg flex items-center justify-center p-6"
             >
                 <Image
                     src={mainImage}
                     alt={product.name}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-contain transition-transform duration-700 group-hover:scale-110"
+                    className="object-contain transition-transform duration-700 group-hover:scale-105"
                 />
-                {/* HOVER OVERLAY */}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </Link>
 
             {/* CONTENT */}
-            <div className="flex flex-col flex-grow text-center space-y-3">
+            <div className="flex flex-col flex-grow text-center space-y-3 px-2">
                 <Link href={`/product/${product.slug}`}>
-                    <h3 className="font-serif text-sm tracking-[0.2em] uppercase text-white hover:text-gold transition-colors line-clamp-1 px-4">
+                    <h3 className="font-serif text-[11px] md:text-sm tracking-[0.15em] uppercase text-white transition-colors line-clamp-2">
                         {product.name}
                     </h3>
                 </Link>
 
-                <p className="text-gold font-medium tracking-wide">
+                <p className="text-[#C6A75E] font-medium tracking-wide text-sm md:text-base">
                     ${Number(price).toFixed(2)}
                 </p>
 
                 <div className="pt-2 mt-auto">
                     <button
                         onClick={handleQuickAdd}
-                        className="btn-outline-gold w-full py-2.5 text-[10px] sm:opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0"
+                        className="w-full py-2.5 md:py-3 text-[10px] md:text-xs uppercase tracking-widest font-medium border border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-black transition-all duration-300 rounded-lg"
                     >
                         Add to Cart
                     </button>
