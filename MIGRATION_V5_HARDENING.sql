@@ -26,10 +26,10 @@ CREATE POLICY "profiles_select"
 ON public.profiles
 FOR SELECT
 USING (
-  auth.uid() = id
+  (SELECT auth.uid()) = id
   OR EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -37,16 +37,16 @@ USING (
 CREATE POLICY "profiles_insert"
 ON public.profiles
 FOR INSERT
-WITH CHECK (auth.uid() = id);
+WITH CHECK ((SELECT auth.uid()) = id);
 
 CREATE POLICY "profiles_update"
 ON public.profiles
 FOR UPDATE
 USING (
-  auth.uid() = id
+  (SELECT auth.uid()) = id
   OR EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -57,7 +57,7 @@ FOR DELETE
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -72,10 +72,10 @@ CREATE POLICY "orders_select"
 ON public.orders
 FOR SELECT
 USING (
-  user_id = auth.uid()
+  user_id = (SELECT auth.uid())
   OR EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -86,7 +86,7 @@ FOR UPDATE
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -97,7 +97,7 @@ FOR DELETE
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -115,7 +115,7 @@ USING (
   is_active = true
   OR EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -126,7 +126,7 @@ FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -137,7 +137,7 @@ FOR UPDATE
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );
@@ -148,7 +148,7 @@ FOR DELETE
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles p
-    WHERE p.id = auth.uid()
+    WHERE p.id = (SELECT auth.uid())
     AND p.role = 'admin'
   )
 );

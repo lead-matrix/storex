@@ -7,12 +7,8 @@ import { Metadata } from "next";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-    title: "Shop All Products",
-    description: "Discover our complete collection of luxury beauty and cosmetic products. Shop premium skincare, makeup, and beauty essentials.",
-    openGraph: {
-        title: "Shop All Products | DINA COSMETIC",
-        description: "Discover our complete collection of luxury beauty products",
-    },
+    title: "The Boutique | DINA COSMETIC",
+    description: "Discover the full collection within the Obsidian Palace. Shop luxury beauty and cosmetic products.",
 };
 
 interface ShopPageProps {
@@ -26,68 +22,70 @@ export default async function ShopPage(props: ShopPageProps) {
 
     const supabase = await createClient();
 
-    // Fetch categories for filter buttons
     const { data: categories } = await supabase
         .from("categories")
         .select("*")
         .order("name");
 
-    // Find selected category
     let selectedCategory = null;
     if (categorySlug && categories) {
         selectedCategory = categories.find((cat) => cat.slug === categorySlug);
     }
 
     return (
-        <div className="bg-pearl text-charcoal min-h-screen pt-32">
-            <div className="px-6 max-w-7xl mx-auto space-y-16">
-                <div className="flex flex-col md:flex-row justify-between items-end gap-8 border-b border-charcoal/10 pb-16">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-gold">
-                            <Sparkles size={12} className="animate-pulse" />
-                            <span className="text-xs uppercase tracking-luxury font-medium">
+        <div className="bg-black text-white min-h-screen pt-40 pb-20">
+            <div className="container-luxury space-y-20">
+
+                {/* HEADER */}
+                <div className="flex flex-col md:flex-row justify-between items-end gap-10 border-b border-luxury-border pb-20">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 text-gold">
+                            <Sparkles size={14} className="animate-pulse" />
+                            <span className="text-xs uppercase tracking-[0.3em] font-medium">
                                 {selectedCategory ? selectedCategory.name : "The Full Collection"}
                             </span>
                         </div>
-                        <h1 className="text-5xl md:text-8xl font-heading tracking-luxury text-charcoal">
+                        <h1 className="text-6xl md:text-8xl font-serif tracking-tight text-white px-1">
                             {selectedCategory ? selectedCategory.name : "Boutique"}
                         </h1>
                     </div>
-                    <p className="text-textsoft text-xs uppercase tracking-luxury max-w-xs text-right leading-loose">
+                    <p className="text-luxury-subtext text-xs uppercase tracking-widest max-w-sm text-center md:text-right leading-loose border-l md:border-l-0 md:border-r border-gold/20 px-6">
                         {selectedCategory?.description || "Synchronized perfection for those who demand absolute excellence in every application."}
                     </p>
                 </div>
 
-                {/* Categories / Filter Bar */}
-                <div className="flex flex-wrap gap-8 items-center text-xs uppercase tracking-luxury font-medium border-b border-charcoal/5 pb-8">
-                    <div className="flex items-center gap-2 text-gold mr-8">
-                        <Filter size={14} />
-                        <span>Filter:</span>
+                {/* FILTERS */}
+                <div className="flex flex-wrap gap-10 items-center justify-center md:justify-start">
+                    <div className="flex items-center gap-3 text-gold border-r border-white/10 pr-10">
+                        <Filter size={16} strokeWidth={1.5} />
+                        <span className="text-[10px] uppercase tracking-widest font-bold">Refine</span>
                     </div>
+
                     <Link
                         href="/shop"
-                        className={`transition-colors border-b-2 pb-1 ${!categorySlug ? "text-charcoal border-gold" : "text-textsoft border-transparent hover:text-charcoal"
-                            }`}
+                        className={`text-[10px] uppercase tracking-widest transition-all duration-300 pb-1 border-b-2 
+                            ${!categorySlug ? "text-white border-gold" : "text-luxury-subtext border-transparent hover:text-white"}`}
                     >
-                        All
+                        All Editions
                     </Link>
+
                     {categories?.map((category) => (
                         <Link
                             key={category.id}
                             href={`/shop?category=${category.slug}`}
-                            className={`transition-colors border-b-2 pb-1 ${categorySlug === category.slug
-                                ? "text-charcoal border-gold"
-                                : "text-textsoft border-transparent hover:text-charcoal"
-                                }`}
+                            className={`text-[10px] uppercase tracking-widest transition-all duration-300 pb-1 border-b-2 
+                                ${categorySlug === category.slug ? "text-white border-gold" : "text-luxury-subtext border-transparent hover:text-white"}`}
                         >
                             {category.name}
                         </Link>
                     ))}
                 </div>
 
-                <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                {/* GRID */}
+                <div className="min-h-[400px]">
                     <ProductGrid categoryId={selectedCategory?.id} filter={filter} />
                 </div>
+
             </div>
         </div>
     );

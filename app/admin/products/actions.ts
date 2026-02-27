@@ -24,34 +24,35 @@ export async function uploadProductImage(file: File) {
     return data.path;
 }
 
-export async function getProductImage(path: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase.storage
-        .from("product-images")
-        .createSignedUrl(path, 60 * 60); // 1 hour
-
-    if (error) throw error;
-
-    return data.signedUrl;
-}
-
 export async function createProduct(formData: FormData) {
     const supabase = await createClient();
 
-    const name = formData.get("name");
-    const price = Number(formData.get("price"));
+    const name = formData.get("name") as string;
+    const base_price = Number(formData.get("base_price"));
     const stock = Number(formData.get("stock"));
-    const description = formData.get("description") || "";
+    const description = (formData.get("description") as string) || "";
+    const category_id = formData.get("category_id") as string;
+    const is_featured = formData.get("is_featured") === "true";
+
+    // Generate slug from name
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     const { error } = await supabase.from("products").insert({
         name,
-        price,
+        slug,
+        base_price,
         stock,
         description,
+        category_id: category_id || null,
+        is_featured,
+        is_active: true,
+        images: [] // Initially empty, can be updated later
     });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+        console.error("Create product failed:", error);
+        throw new Error(error.message);
+    }
     revalidatePath("/admin/products");
 }
 

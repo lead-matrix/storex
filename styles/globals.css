@@ -4,63 +4,60 @@
 
 @layer base {
   body {
-    background-color: #F6F3EE;
-    /* pearl */
-    color: #6E6A66;
-    /* textsoft */
-    font-family: var(--font-inter), Inter, sans-serif;
+    @apply bg-black text-white antialiased font-sans;
+    color-scheme: dark;
   }
 
   h1,
   h2,
   h3,
-  h4 {
-    font-family: var(--font-playfair), "Playfair Display", serif;
-    color: #1F1F1F;
-    /* charcoal */
-    letter-spacing: 0.04em;
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
   }
 }
 
 @layer components {
-  .section-padding {
-    padding-top: 6rem;
-    padding-bottom: 6rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+  .container-luxury {
+    @apply max-w-7xl mx-auto px-4 md:px-6;
   }
 
-  @media (min-width: 768px) {
-    .section-padding {
-      padding-left: 3rem;
-      padding-right: 3rem;
-    }
+  .nav-link {
+    @apply uppercase text-[10px] tracking-wide text-white transition-colors duration-300 hover:text-gold;
   }
 
-  .btn-luxury {
-    padding: 0.75rem 1.5rem;
-    border-radius: 14px;
-    border: 1px solid #C6A85C;
-    color: #1F1F1F;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 300ms;
+  .btn-gold {
+    @apply bg-gold text-black px-8 py-3 rounded-full font-medium transition-all duration-300 hover:bg-gold-light hover:shadow-gold uppercase text-sm tracking-wide;
   }
 
-  .btn-luxury:hover {
-    background-color: #C6A85C;
-    color: white;
+  .btn-outline-gold {
+    @apply border border-gold text-gold px-6 py-2 rounded-full font-medium transition-all duration-300 hover:bg-gold hover:text-black uppercase text-xs tracking-wide;
   }
 
-  .card-luxury {
-    background-color: white;
-    border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    transition: all 300ms;
+  .card-premium {
+    @apply bg-obsidian border border-luxury-border p-4 transition-all duration-300 hover:border-gold/30 hover:-translate-y-1;
   }
 
-  .card-luxury:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  .text-gold-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-gold via-gold-light to-gold-dark;
   }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-neutral-800 rounded-full hover:bg-neutral-700 transition-colors;
+}
+
+/* Micro-interactions */
+.gold-glow {
+  filter: drop-shadow(0 0 8px rgba(198, 167, 94, 0.2));
 }

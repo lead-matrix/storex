@@ -29,7 +29,7 @@ export async function POST(req: Request) {
             const productId = item.productId || item.id
             const { data: product } = await supabase
                 .from('products')
-                .select('name, price, images')
+                .select('name, base_price, images')
                 .eq('id', productId)
                 .single()
 

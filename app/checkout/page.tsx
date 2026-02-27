@@ -12,48 +12,35 @@ import { OrderSummary } from "@/features/checkout/components/OrderSummary";
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 const STRIPE_APPEARANCE: NonNullable<Parameters<typeof Elements>[0]["options"]>["appearance"] = {
-    theme: "stripe",
+    theme: "night",
     variables: {
-        colorPrimary: "#C6A85C", // gold
-        colorBackground: "#ffffff",
-        colorText: "#1F1F1F", // charcoal
-        colorTextSecondary: "#6E6A66", // textsoft
-        colorDanger: "#dc2626", // red-600
-        fontFamily: "Inter, system-ui, sans-serif",
-        borderRadius: "14px", // luxury radius
+        colorPrimary: "#C6A75E", // gold
+        colorBackground: "#0f0f0f",
+        colorText: "#ffffff",
+        colorTextSecondary: "#b3b3b3",
+        colorDanger: "#dc2626",
+        fontFamily: "var(--font-inter), sans-serif",
+        borderRadius: "14px",
         fontSizeBase: "14px",
     },
     rules: {
         ".Input": {
-            border: "1px solid rgba(31,31,31,0.2)", // charcoal/20
-            boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)", // shadow-soft
-            backgroundColor: "#ffffff",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: "#1a1a1a",
             padding: "12px 16px",
-            color: "#1F1F1F",
+            color: "#ffffff",
         },
         ".Input:focus": {
-            border: "1px solid rgba(198,168,92,0.8)", // gold
-            boxShadow: "0 0 0 1px rgba(198,168,92,0.8)",
+            borderColor: "#C6A75E",
+            boxShadow: "0 0 0 1px #C6A75E",
         },
         ".Label": {
-            color: "#1F1F1F",
+            color: "#ffffff",
             textTransform: "uppercase",
-            letterSpacing: "0.15em", // tracking-luxury
+            letterSpacing: "0.15em",
             fontSize: "12px",
             fontWeight: "500",
             marginBottom: "8px",
-        },
-        ".Tab": {
-            border: "1px solid rgba(31,31,31,0.1)",
-            backgroundColor: "#F6F3EE", // pearl
-            color: "#6E6A66",
-            boxShadow: "none",
-        },
-        ".Tab--selected": {
-            backgroundColor: "#ffffff",
-            borderColor: "rgba(198,168,92,0.5)", // gold/50
-            color: "#1F1F1F",
-            boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
         },
     },
 };
@@ -88,38 +75,37 @@ export default function CheckoutPage() {
     const total = cartTotal + shipping + tax;
 
     if (paid) return (
-        <div className="min-h-screen bg-pearl flex items-center justify-center px-6 section-padding">
-            <div className="bg-white max-w-md w-full p-12 text-center flex flex-col items-center rounded-luxury shadow-luxury border border-charcoal/5 animate-luxury-fade">
-                <div className="w-16 h-16 bg-pearl border border-gold/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-gold text-2xl font-light">✓</span>
+        <div className="min-h-screen bg-black flex items-center justify-center px-6 py-20">
+            <div className="bg-obsidian max-w-md w-full p-12 text-center flex flex-col items-center border border-luxury-border shadow-luxury animate-in fade-in duration-700">
+                <div className="w-16 h-16 border border-gold/30 rounded-full flex items-center justify-center mx-auto mb-8 shadow-gold">
+                    <span className="text-gold text-2xl">✓</span>
                 </div>
-                <h1 className="font-heading tracking-luxury text-3xl text-charcoal mb-4">Order Confirmed</h1>
-                <p className="text-sm tracking-luxury text-textsoft mb-8">
-                    Your exquisite selection from Obsidian Palace is being prepared. Follow updates via email.
+                <h1 className="font-serif text-3xl text-white mb-6 uppercase tracking-widest">Masterpiece Confirmed</h1>
+                <p className="text-sm tracking-wide text-luxury-subtext mb-10 leading-relaxed font-light font-serif italic text-gold">
+                    "Your selection from the Obsidian collection is being prepared for the ritual."
                 </p>
-                <Link href="/shop" className="inline-block px-8 py-4 bg-charcoal text-white text-xs uppercase tracking-luxury font-medium hover:bg-gold transition-colors w-full rounded-md shadow-soft">
-                    Continue Shopping
+                <Link href="/shop" className="btn-gold w-full text-center">
+                    Return to Boutique
                 </Link>
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-pearl text-charcoal py-12 px-6 pt-32">
-            <div className="max-w-5xl mx-auto">
-                <div className="mb-12 flex items-center justify-between">
-                    <Link href="/shop" id="checkout-back" className="flex items-center gap-2 text-xs uppercase tracking-luxury text-textsoft hover:text-charcoal transition-colors">
-                        <ArrowLeft size={16} /> Return to Shop
+        <div className="min-h-screen bg-black text-white py-12 px-6 pt-40">
+            <div className="container-luxury">
+                <div className="mb-20 flex flex-col md:flex-row items-center justify-between gap-8 border-b border-white/5 pb-12">
+                    <Link href="/shop" className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-luxury-subtext hover:text-white transition-all group">
+                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Return to Boutique
                     </Link>
                     <div className="text-center">
-                        <h1 className="font-heading text-2xl tracking-luxury text-charcoal uppercase">Secure Checkout</h1>
-                        <p className="text-[10px] uppercase tracking-luxury text-textsoft mt-1">Obsidian Palace · Stripe Encrypted</p>
+                        <h1 className="font-serif text-4xl tracking-tight text-white uppercase">Secure Checkout</h1>
+                        <p className="text-[9px] uppercase tracking-[0.5em] text-gold mt-4">The Obsidian Palace Collection</p>
                     </div>
                     <div className="w-32 hidden md:block" />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Order Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
                     <div>
                         <OrderSummary
                             cart={cart}
@@ -130,25 +116,24 @@ export default function CheckoutPage() {
                         />
                     </div>
 
-                    {/* Payment Details */}
-                    <div>
+                    <div className="bg-obsidian border border-luxury-border p-8 md:p-12">
                         {cart.length === 0 ? (
-                            <div className="text-center py-20 bg-white rounded-luxury border border-charcoal/5 shadow-soft">
-                                <p className="text-sm tracking-luxury text-textsoft mb-6 uppercase">Your elegant bag is empty.</p>
-                                <Link href="/shop" id="checkout-empty-shop" className="text-charcoal font-medium hover:text-gold text-xs uppercase tracking-luxury transition-colors border-b border-charcoal hover:border-gold pb-1">
-                                    Discover Collection
+                            <div className="text-center py-20">
+                                <p className="text-xs uppercase tracking-widest text-luxury-subtext mb-8">Your bag is currently empty.</p>
+                                <Link href="/shop" className="btn-outline-gold inline-block">
+                                    Browse Collection
                                 </Link>
                             </div>
                         ) : loading ? (
-                            <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-white rounded-luxury border border-charcoal/5 shadow-soft">
-                                <div className="w-8 h-8 border-2 border-charcoal/20 border-t-gold rounded-full animate-spin mb-4" />
-                                <p className="text-xs uppercase tracking-luxury text-textsoft">Initializing secure payment gateway…</p>
+                            <div className="flex flex-col items-center justify-center h-full min-h-[300px]">
+                                <div className="w-10 h-10 border-2 border-white/5 border-t-gold rounded-full animate-spin mb-6" />
+                                <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">Initializing secure gate…</p>
                             </div>
                         ) : error ? (
-                            <div className="bg-white p-8 rounded-luxury border border-charcoal/5 shadow-soft text-center">
-                                <p className="text-sm text-red-600 mb-6">{error}</p>
-                                <button onClick={createIntent} className="text-xs uppercase tracking-luxury text-charcoal hover:text-gold transition-colors font-medium border-b border-charcoal hover:border-gold pb-1">
-                                    Refresh Session
+                            <div className="p-8 text-center">
+                                <p className="text-sm text-red-500 mb-8 font-light tracking-wide">{error}</p>
+                                <button onClick={createIntent} className="btn-outline-gold">
+                                    Try Again
                                 </button>
                             </div>
                         ) : clientSecret ? (

@@ -9,17 +9,23 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                pearl: "#F6F3EE",
-                champagne: "#E9E1D8",
-                nude: "#E2D6C8",
-                gold: "#C6A85C",
-                charcoal: "#1F1F1F",
-                textsoft: "#6E6A66",
+                black: "#000000",
+                obsidian: "#0f0f0f",
+                gold: {
+                    DEFAULT: "#C6A75E",
+                    light: "#D4AF37",
+                    dark: "#A68A4C",
+                },
+                luxury: {
+                    text: "#ffffff",
+                    subtext: "#b3b3b3",
+                    border: "rgba(255,255,255,0.08)",
+                }
             },
 
             fontFamily: {
-                heading: ["var(--font-playfair)", "Playfair Display", "serif"],
-                body: ["var(--font-inter)", "Inter", "sans-serif"],
+                serif: ["var(--font-playfair)", "serif"],
+                sans: ["var(--font-inter)", "sans-serif"],
             },
 
             borderRadius: {
@@ -27,16 +33,17 @@ const config: Config = {
             },
 
             boxShadow: {
-                luxury: "0 8px 24px rgba(0,0,0,0.06)",
-                soft: "0 4px 12px rgba(0,0,0,0.04)",
+                gold: "0 0 20px rgba(198, 167, 94, 0.15)",
+                luxury: "0 8px 32px rgba(0,0,0,0.5)",
             },
 
             spacing: {
-                section: "6rem",
+                section: "120px",
             },
 
             letterSpacing: {
                 luxury: "0.04em",
+                wide: "0.15em",
             },
 
             transitionTimingFunction: {

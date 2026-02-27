@@ -20,7 +20,7 @@ RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 SET search_path = public AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND role = 'admin'
+    WHERE id = (select auth.uid()) AND role = 'admin'
   );
 $$;
 

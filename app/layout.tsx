@@ -108,15 +108,12 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.jpg" />
-      </head>
+    <html lang="en" className="bg-black">
       <body
-        className={`${playfair.variable} ${inter.variable} antialiased`}
+        className={`${playfair.variable} ${inter.variable} bg-black text-white antialiased selection:bg-gold/30 selection:text-white`}
       >
         <CartProvider>
-          <div className="min-h-screen flex flex-col pt-20">
+          <div className="relative flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">
               {children}
@@ -124,7 +121,15 @@ export default async function RootLayout({
             <ShoppingBagDrawer />
             <Footer />
           </div>
-          <Toaster position="bottom-right" theme="light" expand={false} richColors />
+          <Toaster
+            position="bottom-right"
+            theme="dark"
+            expand={false}
+            richColors
+            toastOptions={{
+              className: 'bg-obsidian border-luxury-border text-white',
+            }}
+          />
         </CartProvider>
         <Analytics />
       </body>

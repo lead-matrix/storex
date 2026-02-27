@@ -1,274 +1,81 @@
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, MapPin, Phone, Mail, Youtube } from "lucide-react";
-import { FaTiktok } from "react-icons/fa";
-import { createClient } from "@/utils/supabase/server";
-
-interface SocialLinks {
-    facebook?: string;
-    instagram?: string;
-    twitter?: string;
-    tiktok?: string;
-    youtube?: string;
-}
-
-interface ContactInfo {
-    email?: string;
-    phone?: string;
-    address?: string;
-    hours?: string;
-}
-
-interface StoreInfo {
-    name?: string;
-    tagline?: string;
-    description?: string;
-}
-
-interface FooterLink {
-    text: string;
-    url: string;
-}
-
-interface FooterColumn {
-    title: string;
-    links: FooterLink[];
-}
-
-interface FooterLinks {
-    columns?: FooterColumn[];
-}
+import { Instagram, MapPin, Phone, Mail, Globe } from "lucide-react";
 
 export async function Footer() {
-    const supabase = await createClient();
-
-    // Fetch site settings and footer content
-    const [settingsResult, footerContentResult] = await Promise.all([
-        supabase.from("site_settings").select("*"),
-        supabase.from("frontend_content").select("content_data").eq("content_key", "footer_main").single()
-    ]);
-
-    const { data: settings } = settingsResult;
-    const { data: footerContentData } = footerContentResult;
-    const footerContent = footerContentData?.content_data;
-
-    let storeInfo: StoreInfo = {
-        name: footerContent?.tagline || "DINA COSMETIC",
-        tagline: "The Obsidian Palace",
-        description: footerContent?.tagline || "Ultra-minimalist luxury beauty and skincare curated at the Obsidian Palace.",
-    };
-
-    let contactInfo: ContactInfo = {
-        email: "concierge@dinacosmetic.store",
-        phone: "+1 (800) 123-4567",
-        address: "123 Obsidian Avenue",
-        hours: "Mon-Fri: 9AM-6PM",
-    };
-
-    let socialLinks: SocialLinks = {
-        facebook: footerContent?.social_links?.facebook || "",
-        instagram: footerContent?.social_links?.instagram || "",
-        twitter: footerContent?.social_links?.twitter || "",
-        tiktok: footerContent?.social_links?.tiktok || "",
-        youtube: footerContent?.social_links?.youtube || "",
-    };
-
-    let footerLinks: FooterLinks = {
-        columns: footerContent?.columns || [
-            {
-                title: "THE COLLECTION",
-                links: [
-                    { text: "All Products", url: "/shop" },
-                    { text: "Curated Sets", url: "/collections" },
-                ],
-            },
-            {
-                title: "THE PALACE",
-                links: [
-                    { text: "Our Story", url: "/about" },
-                    { text: "Boutique", url: "/shop" },
-                    { text: "Contact", url: "/contact" },
-                ],
-            },
-        ],
-    };
-
-    // Parse settings if available (settings take precedence for operational info)
-    if (settings) {
-        settings.forEach((setting) => {
-            switch (setting.setting_key) {
-                case "store_info":
-                    storeInfo = { ...storeInfo, ...setting.setting_value };
-                    break;
-                case "contact_info":
-                    contactInfo = { ...contactInfo, ...setting.setting_value };
-                    break;
-                case "social_links":
-                    // If social links are defined in site_settings, they override footer_content
-                    socialLinks = { ...socialLinks, ...setting.setting_value };
-                    break;
-                case "footer_links":
-                    footerLinks = { ...footerLinks, ...setting.setting_value };
-                    break;
-            }
-        });
-    }
+    const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="bg-pearl border-t border-charcoal/10 pt-20 pb-10 px-6">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-                {/* Brand */}
-                <div className="space-y-6">
-                    <h2 className="text-2xl font-heading tracking-luxury text-charcoal">
-                        {storeInfo.name}
-                    </h2>
-                    <p className="text-xs uppercase tracking-luxury text-textsoft leading-relaxed">
-                        {storeInfo.description}
+        <footer className="bg-black border-t border-white/5 pt-24 pb-12 px-6">
+            <div className="container-luxury flex flex-col items-center">
+
+                {/* TOP SECTION: BRANDING & CONTACT */}
+                <div className="grid grid-cols-1 md:grid-cols-3 w-full gap-16 mb-24 border-b border-white/5 pb-24">
+
+                    {/* COL 1: BOUTIQUE */}
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-6">
+                        <h3 className="text-[10px] uppercase tracking-[0.3em] text-gold font-bold">The Boutique</h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-center md:justify-start gap-4 text-luxury-subtext group cursor-default">
+                                <MapPin size={14} className="group-hover:text-gold transition-colors" />
+                                <span className="text-[11px] uppercase tracking-widest font-light">Texas, USA</span>
+                            </div>
+                            <div className="flex items-center justify-center md:justify-start gap-4 text-luxury-subtext group cursor-default">
+                                <Globe size={14} className="group-hover:text-gold transition-colors" />
+                                <span className="text-[11px] uppercase tracking-widest font-light">Shipping Worldwide</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* COL 2: CENTERPIECE */}
+                    <div className="flex flex-col items-center order-first md:order-none space-y-8">
+                        <Link href="/" className="group text-center">
+                            <h2 className="font-serif text-3xl md:text-5xl tracking-[0.4em] text-gold uppercase transition-all duration-700 group-hover:tracking-[0.5em] group-hover:text-white">
+                                DINACOSMETIC
+                            </h2>
+                            <p className="text-luxury-subtext text-[10px] uppercase tracking-[0.6em] mt-6 font-light opacity-60">
+                                The Obsidian Palace
+                            </p>
+                        </Link>
+
+                        {/* SOCIALS */}
+                        <div className="flex items-center gap-10 pt-4">
+                            <Link href="https://www.instagram.com/dinacosmetic_1?igsh=MTB1ZmUyOWg0dDg1Mw==" target="_blank" className="text-luxury-subtext hover:text-gold transition-all duration-500 hover:scale-125">
+                                <Instagram size={20} strokeWidth={1.2} />
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* COL 3: CONCIERGE */}
+                    <div className="flex flex-col items-center md:items-end text-center md:text-right space-y-6">
+                        <h3 className="text-[10px] uppercase tracking-[0.3em] text-gold font-bold">Concierge</h3>
+                        <div className="space-y-4">
+                            <a href="tel:+12816877609" className="flex items-center justify-center md:justify-end gap-4 text-luxury-subtext hover:text-white transition-colors group">
+                                <span className="text-[11px] uppercase tracking-widest font-light">+1 (281) 687-7609</span>
+                                <Phone size={14} className="group-hover:text-gold transition-colors" />
+                            </a>
+                            <a href="mailto:support@dinacosmetic.store" className="flex items-center justify-center md:justify-end gap-4 text-luxury-subtext hover:text-white transition-colors group">
+                                <span className="text-[11px] uppercase tracking-widest font-light">support@dinacosmetic.store</span>
+                                <Mail size={14} className="group-hover:text-gold transition-colors" />
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* BOTTOM SECTION: NAVIGATION & LEGAL */}
+                <div className="flex flex-col md:flex-row justify-between items-center w-full gap-8">
+                    <nav className="flex flex-wrap justify-center gap-x-12 gap-y-4">
+                        <Link href="/shop" className="text-[9px] uppercase tracking-widest text-luxury-subtext/40 hover:text-gold transition-colors">Shop</Link>
+                        <Link href="/about" className="text-[9px] uppercase tracking-widest text-luxury-subtext/40 hover:text-gold transition-colors">The House</Link>
+                        <Link href="/privacy" className="text-[9px] uppercase tracking-widest text-luxury-subtext/40 hover:text-gold transition-colors">Privacy</Link>
+                        <Link href="/terms" className="text-[9px] uppercase tracking-widest text-luxury-subtext/40 hover:text-gold transition-colors">Terms</Link>
+                    </nav>
+
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-luxury-subtext/20">
+                        © {currentYear} DINACOSMETIC. Artfully Crafted in the Palace.
                     </p>
-                    <div className="flex gap-4">
-                        {socialLinks.instagram && (
-                            <Link
-                                href={socialLinks.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
-                                aria-label="Instagram"
-                            >
-                                <Instagram size={18} />
-                            </Link>
-                        )}
-                        {socialLinks.facebook && (
-                            <Link
-                                href={socialLinks.facebook}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
-                                aria-label="Facebook"
-                            >
-                                <Facebook size={18} />
-                            </Link>
-                        )}
-                        {socialLinks.twitter && (
-                            <Link
-                                href={socialLinks.twitter}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
-                                aria-label="Twitter"
-                            >
-                                <Twitter size={18} />
-                            </Link>
-                        )}
-                        {socialLinks.tiktok && (
-                            <Link
-                                href={socialLinks.tiktok}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
-                                aria-label="TikTok"
-                            >
-                                <FaTiktok size={18} />
-                            </Link>
-                        )}
-                        {socialLinks.youtube && (
-                            <Link
-                                href={socialLinks.youtube}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-text-mutedDark hover:text-gold-primary transition-colors"
-                                aria-label="YouTube"
-                            >
-                                <Youtube size={18} />
-                            </Link>
-                        )}
-                    </div>
                 </div>
 
-                {/* Dynamic Footer Columns */}
-                {footerLinks.columns?.map((column, index) => (
-                    <div key={index} className="space-y-6">
-                        <h3 className="text-xs uppercase tracking-luxury text-gold font-bold">
-                            {column.title}
-                        </h3>
-                        <nav className="flex flex-col gap-4 text-xs uppercase tracking-luxury text-textsoft">
-                            {column.links.map((link, linkIndex) => (
-                                <Link
-                                    key={linkIndex}
-                                    href={link.url}
-                                    className="hover:text-text-headingDark transition-colors"
-                                >
-                                    {link.text}
-                                </Link>
-                            ))}
-                        </nav>
-                    </div>
-                ))}
-
-                {/* Contact */}
-                <div className="space-y-6">
-                    <h3 className="text-xs uppercase tracking-luxury text-gold font-bold">
-                        Inquiries
-                    </h3>
-                    <div className="flex flex-col gap-4 text-xs uppercase tracking-luxury text-textsoft">
-                        {contactInfo.address && (
-                            <div className="flex items-start gap-3">
-                                <MapPin size={14} className="text-gold-primary mt-0.5 flex-shrink-0" />
-                                <span>{contactInfo.address}</span>
-                            </div>
-                        )}
-                        {contactInfo.email && (
-                            <div className="flex items-center gap-3">
-                                <Mail size={14} className="text-gold-primary flex-shrink-0" />
-                                <a
-                                    href={`mailto:${contactInfo.email}`}
-                                    className="hover:text-text-headingDark transition-colors break-all"
-                                >
-                                    {contactInfo.email}
-                                </a>
-                            </div>
-                        )}
-                        {contactInfo.phone && (
-                            <div className="flex items-center gap-3">
-                                <Phone size={14} className="text-gold-primary flex-shrink-0" />
-                                <a
-                                    href={`tel:${contactInfo.phone.replace(/\s/g, "")}`}
-                                    className="hover:text-text-headingDark transition-colors"
-                                    suppressHydrationWarning
-                                >
-                                    {contactInfo.phone}
-                                </a>
-                            </div>
-                        )}
-                        {contactInfo.hours && (
-                            <div className="flex items-start gap-3 pt-2 border-t border-text-headingDark/5">
-                                <span className="text-gold-primary text-[9px]">HOURS:</span>
-                                <span className="text-[9px]">{contactInfo.hours}</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p className="text-[9px] uppercase tracking-[0.3em] text-text-mutedDark/40" suppressHydrationWarning>
-                    © {new Date().getFullYear()} {storeInfo.name}. All rights reserved.
-                </p>
-                <div className="flex items-center gap-5 grayscale opacity-20">
-                    <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg"
-                        alt="PayPal"
-                        className="h-3"
-                    />
-                    <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-                        alt="Visa"
-                        className="h-2.5"
-                    />
-                    <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
-                        alt="Mastercard"
-                        className="h-3"
-                    />
-                </div>
             </div>
         </footer>
     );
