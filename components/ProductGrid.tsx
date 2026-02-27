@@ -37,30 +37,45 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
         const supabase = createClient();
 
         async function fetchProducts() {
-            // Include variants in the select
-            let query = supabase
-                .from("products")
-                .select("id, name, slug, base_price, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock)")
-                .eq("is_active", true);
+            try {
+                // Include variants in the select
+                let query = supabase
+                    .from("products")
+                    .select("id, name, slug, base_price, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock)")
+                    .eq("is_active", true);
 
-            if (categoryId) {
-                query = query.eq("category_id", categoryId);
+                if (categoryId) {
+                    query = query.eq("category_id", categoryId);
+                }
+
+                if (filter === "new") {
+                    query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+                }
+
+                query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
+
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error("Vault Query Failed:", error.message);
+                    // Fallback try without base_price if it fails (backwards compatibility)
+                    const { data: retryData } = await supabase
+                        .from("products")
+                        .select("id, name, slug, images, description")
+                        .eq("is_active", true)
+                        .limit(20);
+
+                    if (retryData) {
+                        setProducts(retryData as any);
+                    }
+                } else {
+                    setProducts((data ?? []) as unknown as Product[]);
+                }
+            } catch (err) {
+                console.error("CRITICAL VAULT ERROR:", err);
+            } finally {
+                setLoading(false);
             }
-
-            if (filter === "new") {
-                query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-            }
-
-            query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
-
-            const { data, error } = await query;
-
-            if (error) {
-                console.error("Error fetching products:", error);
-            } else {
-                setProducts((data ?? []) as unknown as Product[]);
-            }
-            setLoading(false);
         }
 
         fetchProducts();

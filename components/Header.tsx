@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, User, Menu, X, Search } from "lucide-react";
+import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet";
 
 const NAV_LEFT = [
     { label: "Shop", href: "/shop" },
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { label: "House", href: "/about" },
+    { label: "Concierge", href: "/contact" },
 ];
 
 export default function Header() {
@@ -39,30 +39,31 @@ export default function Header() {
     }, []);
 
     return (
-        <>
-            <nav
-                className={`fixed top-0 w-full z-50 transition-all duration-500 h-20 flex items-center
-          ${scrolled ? "bg-black/80 backdrop-blur-md border-b border-white/10" : "bg-transparent"}`}
-            >
-                <div className="container-luxury flex items-center justify-between relative h-full">
+        <nav
+            className={`fixed top-0 w-full z-50 transition-all duration-700 h-24 flex items-center
+          ${scrolled ? "bg-black/90 backdrop-blur-xl border-b border-white/5" : "bg-transparent"}`}
+        >
+            <div className="container-luxury grid grid-cols-3 items-center w-full">
 
-                    {/* MOBILE MENU TRIGGER */}
-                    <div className="md:hidden flex-1">
+                {/* LEFT: NAV (DESKTOP) / MENU (MOBILE) */}
+                <div className="flex items-center">
+                    {/* MOBILE */}
+                    <div className="md:hidden">
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                             <SheetTrigger asChild>
-                                <button className="text-white hover:text-gold transition-colors">
-                                    <Menu strokeWidth={1.5} />
+                                <button className="text-white/60 hover:text-gold transition-colors">
+                                    <Menu strokeWidth={1} size={24} />
                                 </button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="bg-black border-r border-luxury-border w-full max-w-xs p-10 flex flex-col pt-24">
+                            <SheetContent side="left" className="bg-black border-r border-white/5 w-full max-w-xs p-12 flex flex-col pt-32">
                                 <SheetTitle className="hidden">Navigation Menu</SheetTitle>
-                                <div className="flex flex-col gap-8">
+                                <div className="flex flex-col gap-10">
                                     {NAV_LEFT.map((link) => (
                                         <Link
                                             key={link.href}
                                             href={link.href}
                                             onClick={() => setIsMenuOpen(false)}
-                                            className="text-2xl font-serif text-white hover:text-gold transition-colors"
+                                            className="text-4xl font-serif text-white hover:text-gold transition-all tracking-tighter"
                                         >
                                             {link.label}
                                         </Link>
@@ -70,7 +71,7 @@ export default function Header() {
                                     <Link
                                         href={user ? "/account" : "/login"}
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="text-2xl font-serif text-white hover:text-gold transition-colors border-t border-white/10 pt-8"
+                                        className="text-4xl font-serif text-white hover:text-gold transition-all tracking-tighter border-t border-white/10 pt-10"
                                     >
                                         {user ? "Account" : "Sign In"}
                                     </Link>
@@ -79,45 +80,48 @@ export default function Header() {
                         </Sheet>
                     </div>
 
-                    {/* LEFT NAV (DESKTOP) */}
-                    <div className="hidden md:flex items-center gap-8 flex-1">
+                    {/* DESKTOP */}
+                    <div className="hidden md:flex items-center gap-10">
                         {NAV_LEFT.map((link) => (
-                            <Link key={link.href} href={link.href} className="nav-link">
+                            <Link key={link.href} href={link.href} className="text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-gold transition-all">
                                 {link.label}
                             </Link>
                         ))}
                     </div>
+                </div>
 
-                    {/* LOGO (Centered) */}
+                {/* CENTER: LOGO */}
+                <div className="flex justify-center">
                     <Link
                         href="/"
-                        className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center group transition-transform duration-500 hover:scale-105"
+                        className="flex flex-col items-center group transition-all duration-700 transform hover:scale-105"
                     >
-                        <span className="font-serif text-xl md:text-2xl tracking-[0.4em] text-gold uppercase transition-colors group-hover:text-gold-light">
+                        <span className="font-serif text-xl md:text-3xl tracking-[0.5em] text-gold uppercase transition-colors group-hover:text-white">
                             DINACOSMETIC
                         </span>
                     </Link>
-
-                    {/* RIGHT NAV */}
-                    <div className="flex items-center justify-end gap-3 md:gap-5 flex-1">
-                        <Link
-                            href={user ? "/account" : "/login"}
-                            className="flex items-center gap-2 px-3 py-1.5 border border-white/5 hover:border-gold/30 transition-all group"
-                        >
-                            <User size={14} strokeWidth={1.5} className="text-white/60 group-hover:text-gold transition-colors" />
-                            <span className="text-[10px] uppercase tracking-widest text-white/40 group-hover:text-gold transition-colors hidden md:block">Account</span>
-                        </Link>
-
-                        <button
-                            onClick={() => setIsCartOpen(true)}
-                            className="flex items-center gap-3 px-3 py-1.5 border border-white/10 hover:border-gold/50 transition-all group relative"
-                        >
-                            <ShoppingBag size={14} strokeWidth={1.5} className="text-white/60 group-hover:text-gold transition-colors" />
-                            <span className="text-[10px] uppercase tracking-widest text-gold font-bold">{totalItems}</span>
-                        </button>
-                    </div>
                 </div>
-            </nav>
-        </>
+
+                {/* RIGHT: ACCOUNT & CART */}
+                <div className="flex items-center justify-end gap-4 md:gap-8">
+                    <Link
+                        href={user ? "/account" : "/login"}
+                        className="hidden md:flex items-center gap-3 group"
+                    >
+                        <User size={16} strokeWidth={1} className="text-white/40 group-hover:text-gold transition-colors" />
+                        <span className="text-[9px] uppercase tracking-[0.3em] text-white/20 group-hover:text-gold transition-colors">Identity</span>
+                    </Link>
+
+                    <button
+                        onClick={() => setIsCartOpen(true)}
+                        className="flex items-center gap-4 group relative"
+                    >
+                        <ShoppingBag size={18} strokeWidth={1} className="text-white/40 group-hover:text-gold transition-colors" />
+                        <span className="text-[10px] uppercase font-bold text-gold tracking-widest">{totalItems}</span>
+                    </button>
+                </div>
+
+            </div>
+        </nav>
     );
 }
