@@ -54,20 +54,20 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     }, []);
 
     return (
-        <div className="flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden">
+        <div className="flex h-screen bg-gray-50 text-gray-900 font-sans overflow-hidden">
             {/* ══ SIDEBAR (DESKTOP) ══════════════════════════════════════════ */}
-            <aside className="hidden md:flex w-64 bg-black border-r border-white/5 flex-col justify-between flex-shrink-0 z-20">
+            <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col justify-between flex-shrink-0 z-20">
                 <div>
-                    <div className="h-24 flex items-center px-8 border-b border-white/5">
-                        <Link href="/admin" className="flex flex-col group">
-                            <span className="font-serif text-lg tracking-[0.4em] text-gold uppercase transition-colors group-hover:text-white">
-                                OP Admin
+                    <div className="h-20 flex items-center px-6 border-b border-gray-200">
+                        <Link href="/admin" className="flex flex-col">
+                            <span className="font-bold text-lg tracking-wide text-gray-900">
+                                Admin Portal
                             </span>
-                            <span className="text-[9px] uppercase tracking-widest text-[#7A746F] mt-1">Command Center</span>
+                            <span className="text-xs text-gray-500">Operation Center</span>
                         </Link>
                     </div>
 
-                    <nav className="p-4 space-y-2 mt-4">
+                    <nav className="p-4 space-y-1 mt-2">
                         {NAV_ITEMS.map(({ href, icon: Icon, label, exact }) => {
                             const active = exact
                                 ? pathname === href
@@ -76,16 +76,13 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                 <Link
                                     key={href}
                                     href={href}
-                                    className={`group flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300 relative ${active
-                                        ? "bg-white/5 text-gold"
-                                        : "text-[#A9A39A] hover:bg-white/5 hover:text-white"
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${active
+                                        ? "bg-gray-100 text-gray-900"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         }`}
                                 >
-                                    {active && (
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gold rounded-r-full" />
-                                    )}
-                                    <Icon size={18} strokeWidth={1.5} />
-                                    <span className="text-[11px] uppercase tracking-widest font-medium">
+                                    <Icon size={18} strokeWidth={2} className={active ? "text-gray-900" : "text-gray-500"} />
+                                    <span>
                                         {label}
                                     </span>
                                 </Link>
@@ -94,38 +91,38 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     </nav>
                 </div>
 
-                <div className="p-4 border-t border-white/5 space-y-2 pb-6">
+                <div className="p-4 border-t border-gray-200 space-y-1 pb-6">
                     <Link
                         href="/"
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-[#A9A39A] hover:bg-white/5 hover:text-white transition-all duration-300"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors text-sm font-medium"
                     >
-                        <Store size={18} strokeWidth={1.5} />
-                        <span className="text-[11px] uppercase tracking-widest font-medium">Boutique View</span>
+                        <Store size={18} strokeWidth={2} />
+                        <span>Storefront</span>
                     </Link>
 
                     <button
                         onClick={signOut}
-                        className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-[#A9A39A] hover:bg-red-500/10 hover:text-red-400 transition-all duration-300"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors text-sm font-medium"
                     >
-                        <LogOut size={18} strokeWidth={1.5} />
-                        <span className="text-[11px] uppercase tracking-widest font-medium">Sign Out</span>
+                        <LogOut size={18} strokeWidth={2} />
+                        <span>Sign Out</span>
                     </button>
 
-                    <div className="px-4 pt-4 mt-2 border-t border-white/5">
-                        <p className="text-[9px] text-[#7A746F] tracking-widest truncate">{userEmail || "Admin"}</p>
+                    <div className="px-3 pt-3 mt-2 border-t border-gray-200">
+                        <p className="text-xs text-gray-500 truncate">{userEmail || "Admin User"}</p>
                     </div>
                 </div>
             </aside>
 
             {/* ══ MAIN CONTENT ════════════════════════════════════════════════ */}
-            <main className="flex-1 overflow-y-auto bg-[#0a0a0a] p-4 md:p-8 lg:p-12 pb-24 md:pb-12">
+            <main className="flex-1 overflow-y-auto bg-gray-50 p-6 md:p-8 lg:p-10 pb-24 md:pb-10">
                 <div className="max-w-7xl mx-auto">
                     {children}
                 </div>
             </main>
 
             {/* ══ MOBILE BOTTOM NAV ════════════════════════════════════════════════ */}
-            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-black/90 backdrop-blur-xl border-t border-white/10 z-50 px-4 py-3 pb-safe block">
+            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50 px-2 py-2 pb-safe block shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
                 <div className="flex items-center justify-between">
                     {NAV_ITEMS.slice(0, 4).map(({ href, icon: Icon, label, exact }) => {
                         const active = exact
@@ -135,20 +132,20 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                             <Link
                                 key={href}
                                 href={href}
-                                className={`flex flex-col items-center gap-1 p-2 transition-all ${active ? "text-gold" : "text-[#7A746F]"
+                                className={`flex flex-col items-center gap-1 p-2 flex-1 transition-colors ${active ? "text-gray-900" : "text-gray-500"
                                     }`}
                             >
-                                <Icon size={20} strokeWidth={active ? 2 : 1.5} />
-                                <span className="text-[8px] uppercase tracking-widest">{label}</span>
+                                <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                                <span className="text-[10px] font-medium">{label}</span>
                             </Link>
                         );
                     })}
                     <button
                         onClick={signOut}
-                        className="flex flex-col items-center gap-1 p-2 transition-all text-[#7A746F] hover:text-red-400"
+                        className="flex flex-col items-center gap-1 p-2 flex-1 transition-colors text-gray-500 hover:text-red-600"
                     >
-                        <LogOut size={20} strokeWidth={1.5} />
-                        <span className="text-[8px] uppercase tracking-widest">Exit</span>
+                        <LogOut size={20} strokeWidth={2} />
+                        <span className="text-[10px] font-medium">Exit</span>
                     </button>
                 </div>
             </nav>

@@ -9,6 +9,13 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
+                background: "#0B0B0D",
+                surface: "#121214",
+                border: "#1F1F22",
+                primary: "#D4AF37", // luxury gold
+                textPrimary: "#F5F5F7",
+                textSecondary: "#A1A1AA",
+                // Legacy support
                 black: "#000000",
                 obsidian: "#0f0f0f",
                 gold: {
@@ -24,6 +31,8 @@ const config: Config = {
             },
 
             fontFamily: {
+                playfair: ["var(--font-playfair)", "serif"],
+                inter: ["var(--font-inter)", "sans-serif"],
                 serif: ["var(--font-playfair)", "serif"],
                 sans: ["var(--font-inter)", "sans-serif"],
             },

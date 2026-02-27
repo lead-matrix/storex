@@ -45,37 +45,40 @@ export function ProductCard({
     };
 
     return (
-        <div className="bg-[#0f0f0f] rounded-xl border border-white/10 p-4 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full group">
-            {/* IMAGE CONTAINER */}
-            <Link
-                href={`/product/${product.slug}`}
-                className="relative aspect-square mb-4 overflow-hidden bg-black rounded-lg flex items-center justify-center p-6"
-            >
-                <Image
-                    src={mainImage}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-contain transition-transform duration-700 group-hover:scale-105"
-                />
+        <div className="bg-surface border border-border p-6 group hover:border-primary transition">
+            <Link href={`/product/${product.slug}`}>
+                <div className="aspect-square overflow-hidden relative">
+                    <Image
+                        src={mainImage}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                </div>
             </Link>
 
-            {/* CONTENT */}
-            <div className="flex flex-col flex-grow text-center space-y-3 px-2">
+            <div className="mt-6 space-y-3">
                 <Link href={`/product/${product.slug}`}>
-                    <h3 className="font-serif text-[11px] md:text-sm tracking-[0.15em] uppercase text-white transition-colors line-clamp-2">
+                    <h3 className="font-playfair text-lg tracking-wide text-textPrimary">
                         {product.name}
                     </h3>
                 </Link>
 
-                <p className="text-[#C6A75E] font-medium tracking-wide text-sm md:text-base">
-                    ${Number(price).toFixed(2)}
-                </p>
+                {product.description && (
+                    <p className="text-textSecondary text-sm line-clamp-2">
+                        {product.description}
+                    </p>
+                )}
 
-                <div className="pt-2 mt-auto">
+                <div className="pt-2">
+                    <span className="text-primary font-semibold block mb-3">
+                        ${Number(price).toFixed(2)}
+                    </span>
+
                     <button
                         onClick={handleQuickAdd}
-                        className="w-full py-2.5 md:py-3 text-[10px] md:text-xs uppercase tracking-widest font-medium border border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-black transition-all duration-300 rounded-lg"
+                        className="w-full border border-primary px-4 py-3 text-primary text-xs tracking-widest uppercase hover:bg-primary hover:text-black transition"
                     >
                         Add to Cart
                     </button>

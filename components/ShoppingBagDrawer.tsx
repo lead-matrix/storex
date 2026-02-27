@@ -32,10 +32,10 @@ export function ShoppingBagDrawer() {
     return (
         <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
             <SheetContent className="bg-black border-l border-luxury-border w-full sm:max-w-md p-0 flex flex-col text-white">
-                <SheetHeader className="p-8 border-b border-luxury-border">
+                <SheetHeader className="p-8 border-b border-border">
                     <div className="flex items-center justify-between">
-                        <SheetTitle className="flex items-center gap-3 text-white font-serif tracking-[0.2em] text-xl">
-                            <ShoppingBag className="w-5 h-5 text-gold" strokeWidth={1.5} />
+                        <SheetTitle className="flex items-center gap-3 text-textPrimary font-playfair tracking-wide text-xl">
+                            <ShoppingBag className="w-5 h-5 text-primary" strokeWidth={1.5} />
                             YOUR BAG
                         </SheetTitle>
                     </div>
@@ -57,10 +57,10 @@ export function ShoppingBagDrawer() {
                 <ScrollArea className="flex-grow">
                     {cart.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full py-24 text-center px-8">
-                            <ShoppingBag className="w-12 h-12 text-white/10 mb-6" strokeWidth={1} />
-                            <p className="text-luxury-subtext uppercase tracking-widest text-xs">Your bag is currently empty</p>
+                            <ShoppingBag className="w-12 h-12 text-textSecondary mb-6" strokeWidth={1} />
+                            <p className="text-textSecondary uppercase tracking-widest text-xs">Your bag is currently empty</p>
                             <button
-                                className="mt-8 btn-outline-gold"
+                                className="mt-8 border border-primary px-6 py-3 text-primary tracking-widest uppercase hover:bg-primary hover:text-black transition"
                                 onClick={() => setIsCartOpen(false)}
                             >
                                 Continue Shopping
@@ -70,13 +70,13 @@ export function ShoppingBagDrawer() {
                         <div className="p-8 space-y-8">
                             {cart.map((item) => (
                                 <div key={item.id} className="flex gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                                    <div className="relative w-24 aspect-[4/5] bg-obsidian border border-luxury-border flex-shrink-0">
+                                    <div className="relative w-24 aspect-[4/5] bg-surface border border-border flex-shrink-0">
                                         <Image src={item.image} alt={item.name} fill className="object-contain p-2" />
                                     </div>
                                     <div className="flex-grow flex flex-col pt-1">
                                         <div className="flex justify-between items-start">
-                                            <h4 className="font-serif text-sm text-white tracking-wide uppercase leading-tight group-hover:text-gold transition-colors">{item.name}</h4>
-                                            <button onClick={() => removeFromCart(item.id)} className="text-white/20 hover:text-white transition-colors">
+                                            <h4 className="font-playfair text-sm text-textPrimary tracking-wide uppercase leading-tight group-hover:text-primary transition-colors">{item.name}</h4>
+                                            <button onClick={() => removeFromCart(item.id)} className="text-textSecondary hover:text-textPrimary transition-colors">
                                                 <X size={14} />
                                             </button>
                                         </div>
@@ -85,11 +85,11 @@ export function ShoppingBagDrawer() {
 
                                         <div className="flex items-center justify-between mt-auto pb-1">
                                             <div className="flex items-center gap-4 text-white/60">
-                                                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="hover:text-gold transition-colors">
+                                                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="hover:text-primary transition-colors">
                                                     <Minus size={12} />
                                                 </button>
                                                 <span className="text-[10px] uppercase tracking-widest font-medium w-4 text-center">{item.quantity}</span>
-                                                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="hover:text-gold transition-colors">
+                                                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="hover:text-primary transition-colors">
                                                     <Plus size={12} />
                                                 </button>
                                             </div>
@@ -102,33 +102,33 @@ export function ShoppingBagDrawer() {
                 </ScrollArea>
 
                 {cart.length > 0 && (
-                    <div className="p-8 bg-black border-t border-luxury-border space-y-6">
+                    <div className="p-8 bg-background border-t border-border space-y-6">
                         <div className="space-y-3">
-                            <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-luxury-subtext">
+                            <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-textSecondary">
                                 <span>Subtotal</span>
-                                <span className="text-white font-medium">${subtotal.toFixed(2)}</span>
+                                <span className="text-textPrimary font-medium">${subtotal.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-luxury-subtext">
+                            <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-textSecondary">
                                 <span>Shipping</span>
-                                <span className="text-white font-medium">{subtotal >= FREE_SHIPPING_THRESHOLD ? "FREE" : "$10.00"}</span>
+                                <span className="text-textPrimary font-medium">{subtotal >= FREE_SHIPPING_THRESHOLD ? "FREE" : "$10.00"}</span>
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center py-4 border-t border-white/5">
-                            <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-white">Total</span>
-                            <span className="text-gold text-2xl font-serif">
+                        <div className="flex justify-between items-center py-4 border-t border-border">
+                            <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-textPrimary">Total</span>
+                            <span className="text-primary text-2xl font-playfair">
                                 ${(subtotal >= FREE_SHIPPING_THRESHOLD ? subtotal : subtotal + 10).toFixed(2)}
                             </span>
                         </div>
 
                         <button
-                            className="btn-gold w-full py-5 flex items-center justify-center gap-3 disabled:opacity-50"
+                            className="bg-primary text-black w-full py-5 flex items-center justify-center gap-3 disabled:opacity-50 tracking-widest uppercase font-semibold hover:opacity-90 transition rounded-none"
                             disabled={isCheckingOut}
                             onClick={handleCheckout}
                         >
                             {isCheckingOut ? "Initializing..." : "Checkout Order"}
                         </button>
-                        <p className="text-[9px] text-center text-luxury-subtext uppercase tracking-widest pb-2 opacity-50">Secure SSL Encrypted Checkout</p>
+                        <p className="text-[9px] text-center text-textSecondary uppercase tracking-widest pb-2 opacity-50">Secure SSL Encrypted Checkout</p>
                     </div>
                 )}
             </SheetContent>
