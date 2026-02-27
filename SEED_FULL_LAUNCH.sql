@@ -24,8 +24,7 @@ BEGIN
       ('Eyes', 'eyes', 'Captivating high-pigment eye cosmetics.'),
       ('Lips', 'lips', 'Lustrous and enduring lip colors.'),
       ('Tools & Accessories', 'tools', 'Professional instruments for artistic precision.')
-    ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description
-    RETURNING id INTO face_id; -- This only works for one, so we select after.
+    ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description;
 
     SELECT id INTO face_id FROM public.categories WHERE slug = 'face';
     SELECT id INTO eyes_id FROM public.categories WHERE slug = 'eyes';
