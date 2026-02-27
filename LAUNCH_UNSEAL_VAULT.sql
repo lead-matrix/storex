@@ -20,3 +20,6 @@ END $$;
 UPDATE public.products 
 SET images = ARRAY['/logo.jpg'] 
 WHERE images IS NULL OR array_length(images, 1) = 0;
+
+-- 4. Create missing index for product images
+create index IF not exists idx_product_images_product on public.product_images using btree (product_id) TABLESPACE pg_default;

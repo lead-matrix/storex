@@ -25,7 +25,7 @@ const TRUST_ITEMS = [
 
 export function TrustIndicators() {
     return (
-        <section className="py-24 px-6 bg-white border-t border-b border-charcoal/5">
+        <section className="py-32 px-6 bg-white border-t border-b border-charcoal/5">
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 stagger-children">
                     {TRUST_ITEMS.map((item, index) => (

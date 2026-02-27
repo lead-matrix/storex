@@ -1,8 +1,7 @@
 import { ProductGrid } from "@/components/ProductGrid";
-import { Sparkles, Filter } from "lucide-react";
-import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { Metadata } from "next";
+import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 60;
 
@@ -36,35 +35,35 @@ export default async function ShopPage(props: ShopPageProps) {
         <div className="bg-black text-white min-h-screen pt-40 pb-20">
             <div className="container-luxury space-y-20">
 
-                {/* HEADER */}
-                <div className="flex flex-col md:flex-row justify-between items-end gap-10 border-b border-luxury-border pb-20">
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3 text-gold">
-                            <Sparkles size={14} className="animate-pulse" />
-                            <span className="text-xs uppercase tracking-[0.3em] font-medium">
-                                {selectedCategory ? selectedCategory.name : "The Full Collection"}
-                            </span>
-                        </div>
-                        <h1 className="text-6xl md:text-8xl font-serif tracking-tight text-white px-1">
+                {/* HEADER / BOUTIQUE SECTION */}
+                <section className="py-32 bg-background text-textPrimary tracking-[0.1em]">
+                    <div className="max-w-4xl mx-auto px-6 text-center">
+
+                        <p className="text-sm tracking-[0.3em] text-primary uppercase mb-6">
+                            ✦ {selectedCategory ? selectedCategory.name : "The Full Collection"}
+                        </p>
+
+                        <h2 className="text-5xl md:text-6xl font-playfair italic mb-8 tracking-[0.1em]">
                             {selectedCategory ? selectedCategory.name : "Boutique"}
-                        </h1>
+                        </h2>
+
+                        <p className="text-lg text-textSecondary leading-relaxed max-w-2xl mx-auto tracking-[0.1em]">
+                            {selectedCategory?.description || "Synchronized perfection for those who demand absolute excellence in every application."}
+                        </p>
+
                     </div>
-                    <p className="text-luxury-subtext text-xs uppercase tracking-widest max-w-sm text-center md:text-right leading-loose border-l md:border-l-0 md:border-r border-gold/20 px-6">
-                        {selectedCategory?.description || "Synchronized perfection for those who demand absolute excellence in every application."}
-                    </p>
-                </div>
+                </section>
 
                 {/* FILTERS */}
-                <div className="flex flex-wrap gap-10 items-center justify-center md:justify-start">
-                    <div className="flex items-center gap-3 text-gold border-r border-white/10 pr-10">
-                        <Filter size={16} strokeWidth={1.5} />
-                        <span className="text-[10px] uppercase tracking-widest font-bold">Refine</span>
+                <div className="flex justify-center gap-10 border-b border-border pb-6 tracking-[0.1em]">
+                    <div className="flex items-center gap-3 text-textSecondary border-r border-border pr-10">
+                        <span className="text-xs uppercase font-bold">Refine</span>
                     </div>
 
                     <Link
                         href="/shop"
-                        className={`text-[10px] uppercase tracking-widest transition-all duration-300 pb-1 border-b-2 
-                            ${!categorySlug ? "text-white border-gold" : "text-luxury-subtext border-transparent hover:text-white"}`}
+                        className={`text-xs uppercase transition-all duration-300 pb-1 border-b-2 
+                            ${!categorySlug ? "text-textPrimary border-primary" : "text-textSecondary border-transparent hover:text-textPrimary"}`}
                     >
                         All Editions
                     </Link>
@@ -73,8 +72,8 @@ export default async function ShopPage(props: ShopPageProps) {
                         <Link
                             key={category.id}
                             href={`/shop?category=${category.slug}`}
-                            className={`text-[10px] uppercase tracking-widest transition-all duration-300 pb-1 border-b-2 
-                                ${categorySlug === category.slug ? "text-white border-gold" : "text-luxury-subtext border-transparent hover:text-white"}`}
+                            className={`text-xs uppercase transition-all duration-300 pb-1 border-b-2 
+                                ${categorySlug === category.slug ? "text-textPrimary border-primary" : "text-textSecondary border-transparent hover:text-textPrimary"}`}
                         >
                             {category.name}
                         </Link>

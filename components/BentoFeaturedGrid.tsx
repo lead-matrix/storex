@@ -100,7 +100,7 @@ export function BentoFeaturedGrid({ products }: BentoFeaturedGridProps) {
     const tertiary = rest.slice(2, 5);
 
     return (
-        <section className="py-24 px-6 border-t border-[#D4AF37]/08">
+        <section className="py-32 px-6 border-t border-[#D4AF37]/08">
             <div className="max-w-7xl mx-auto">
                 <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     transition={{ duration: 0.8 }} className="flex items-end justify-between mb-12">
