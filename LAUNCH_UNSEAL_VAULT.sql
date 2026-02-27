@@ -23,3 +23,7 @@ WHERE images IS NULL OR array_length(images, 1) = 0;
 
 -- 4. Create missing index for product images
 create index IF not exists idx_product_images_product on public.product_images using btree (product_id) TABLESPACE pg_default;
+
+-- 5. Force inventory/stock to 100 per user request to unseal vault
+UPDATE public.products SET stock = 100 WHERE stock IS NULL OR stock <= 0;
+UPDATE public.variants SET stock = 100 WHERE stock IS NULL OR stock <= 0;

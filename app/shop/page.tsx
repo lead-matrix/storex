@@ -37,7 +37,7 @@ export default async function ShopPage(props: ShopPageProps) {
 
                 {/* HEADER / BOUTIQUE SECTION */}
                 <section className="py-32 bg-background text-textPrimary tracking-[0.1em]">
-                    <div className="max-w-4xl mx-auto px-6 text-center">
+                    <div className="max-w-5xl mx-auto px-6 text-center">
 
                         <p className="text-sm tracking-[0.3em] text-primary uppercase mb-6">
                             ✦ {selectedCategory ? selectedCategory.name : "The Full Collection"}
