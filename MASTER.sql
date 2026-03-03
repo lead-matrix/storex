@@ -805,34 +805,39 @@ CREATE INDEX IF NOT EXISTS idx_pages_slug ON public.pages(slug);
 -- §9  SEED DATA  (idempotent — ON CONFLICT DO UPDATE)
 -- ───────────────────────────────────────────────────────────────
 -- 9A. Categories
-INSERT INTO public.categories (name, slug, description, is_active)
+INSERT INTO public.categories (name, slug, description, image_url, is_active)
 VALUES (
         'Face',
         'face',
         'Exquisite complexion essentials.',
+        'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png',
         true
     ),
     (
         'Eyes',
         'eyes',
         'Captivating high-pigment eye cosmetics.',
+        'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png',
         true
     ),
     (
         'Lips',
         'lips',
         'Lustrous and enduring lip colors.',
+        'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png',
         true
     ),
     (
         'Tools & Accessories',
         'tools',
         'Professional instruments for artistic precision.',
+        'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png',
         true
     ) ON CONFLICT (slug) DO
 UPDATE
 SET name = EXCLUDED.name,
     description = EXCLUDED.description,
+    image_url = EXCLUDED.image_url,
     is_active = true;
 -- 9B. Products (full launch catalogue)
 DO $$
@@ -1188,6 +1193,13 @@ UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase
 UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'] WHERE slug = 'brush-set-18';
 UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'] WHERE slug = 'brush-set-14';
 UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png'] WHERE slug = 'makeup-remover';
+
+-- ── Patch existing live category rows ──
+UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png' WHERE slug = 'face';
+UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png' WHERE slug = 'eyes';
+UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png' WHERE slug = 'lips';
+UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png' WHERE slug = 'tools';
+
 -- Update hero image in frontend_content
 UPDATE public.frontend_content SET content_data = content_data || '{"image_url":"https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/hero-default.png"}'::jsonb WHERE content_key = 'hero_main';
 -- 9C. Admin accounts
