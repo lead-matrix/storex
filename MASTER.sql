@@ -67,6 +67,15 @@ $$;
 -- §1  CORE TABLES
 -- ───────────────────────────────────────────────────────────────
 -- 1A. profiles — extends Supabase auth.users
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email text UNIQUE NOT NULL,
+    full_name text,
+    avatar_url text,
+    role text NOT NULL DEFAULT 'user',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'user';
 ALTER TABLE public.profiles
@@ -87,6 +96,26 @@ CREATE TABLE IF NOT EXISTS public.categories (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 -- 1C. products
+CREATE TABLE IF NOT EXISTS public.products (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    slug text UNIQUE,
+    description text,
+    base_price numeric(10, 2) NOT NULL DEFAULT 0.00,
+    sale_price numeric(10, 2),
+    on_sale boolean NOT NULL DEFAULT false,
+    category_id uuid REFERENCES public.categories(id) ON DELETE
+    SET NULL,
+        stock integer NOT NULL DEFAULT 0,
+        images text [] NOT NULL DEFAULT '{}',
+        is_featured boolean NOT NULL DEFAULT false,
+        is_bestseller boolean NOT NULL DEFAULT false,
+        is_new boolean NOT NULL DEFAULT false,
+        is_active boolean NOT NULL DEFAULT true,
+        metadata jsonb NOT NULL DEFAULT '{}',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+);
 -- Rename legacy column price → base_price if present
 DO $$ BEGIN IF EXISTS (
     SELECT 1
@@ -181,12 +210,42 @@ ALTER TABLE public.variants
 END IF;
 END $$;
 -- 1E. orders
+CREATE TABLE IF NOT EXISTS public.orders (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid REFERENCES auth.users(id) ON DELETE
+    SET NULL,
+        customer_email text,
+        amount_total numeric(10, 2),
+        currency text NOT NULL DEFAULT 'usd',
+        status text NOT NULL DEFAULT 'pending' CHECK (
+            status IN (
+                'pending',
+                'paid',
+                'shipped',
+                'cancelled',
+                'refunded'
+            )
+        ),
+        fulfillment_status text NOT NULL DEFAULT 'unfulfilled',
+        shipping_address jsonb,
+        billing_address jsonb,
+        stripe_session_id text UNIQUE,
+        tracking_number text,
+        metadata jsonb,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.orders
+ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE
+SET NULL;
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS customer_email text;
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS amount_total numeric(10, 2);
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'usd';
+ALTER TABLE public.orders
+ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending';
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS stripe_session_id text UNIQUE;
 ALTER TABLE public.orders
@@ -207,6 +266,17 @@ SET amount_total = total_amount
 WHERE amount_total IS NULL
     AND total_amount IS NOT NULL;
 -- 1F. order_items
+CREATE TABLE IF NOT EXISTS public.order_items (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+    product_id uuid REFERENCES public.products(id) ON DELETE
+    SET NULL,
+        variant_id uuid REFERENCES public.variants(id) ON DELETE
+    SET NULL,
+        quantity integer NOT NULL CHECK (quantity > 0),
+        price numeric(10, 2) NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+);
 ALTER TABLE public.order_items
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 DO $$ BEGIN IF NOT EXISTS (
