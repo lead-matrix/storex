@@ -31,10 +31,7 @@ export function ProductCard({
     product: Product;
     variants?: Variant[]
 }) {
-    const themeColors = {
-        primary: "#C6A75E", // gold
-        accent: "#DC2626",  // red for sale
-    };
+    const { addToCart } = useCart();
 
     const mainImage = product.images?.[0] || "/logo.jpg";
     const isOnSale = product.on_sale && product.sale_price;
@@ -52,6 +49,7 @@ export function ProductCard({
             quantity: 1,
         });
     };
+
 
     return (
         <div className="bg-surface border border-border p-6 group hover:border-primary transition">
