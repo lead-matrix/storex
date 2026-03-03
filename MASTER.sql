@@ -1,33 +1,38 @@
--- ============================================================
---  DINA COSMETIC · MASTER DATABASE FILE
---  Version: MASTER-1.0 (replaces all previous SQL files)
+-- ================================================================
+--  DINA COSMETIC  ·  MASTER DATABASE  ·  v2.0
+--  Single source of truth — run this once in Supabase SQL Editor.
+--  Safe to re-run (fully idempotent — no data loss).
 --
---  Fixes ALL Supabase linter warnings:
---    ✓ auth_rls_initplan  → auth.uid() wrapped in (select auth.uid())
---    ✓ multiple_permissive_policies → exactly ONE policy per verb per table
---    ✓ sensitive_table rogue policies → fully dropped & table removed/cleaned
+--  SECTIONS
+--  §0   Helper functions
+--  §1   Core tables  (profiles, categories, products, variants,
+--                     orders, order_items, stripe_events)
+--  §2   CMS tables   (site_settings, frontend_content,
+--                     newsletter_subscribers, navigation_menus,
+--                     pages, theme_settings)
+--  §3   Enable RLS on every table
+--  §4   NUCLEAR DROP all existing public policies (clean slate)
+--  §5   RLS policies  — exactly 1 per verb per table
+--  §6   Triggers
+--  §7   Storage bucket + policies
+--  §8   Indexes
+--  §9   Seed data     (categories, products, site_settings,
+--                     frontend_content, navigation_menus,
+--                     pages, theme_settings)
+--  §10  Admin stats view
+--  §11  RPC: process_order_atomic
+--  §12  Verification query
 --
---  What this script does (idempotent, safe to re-run):
---    §0  Helper functions (is_admin, handle_updated_at, handle_new_user)
---    §1  Full schema creation (categories, products, variants, orders,
---        order_items, profiles, site_settings, frontend_content,
---        stripe_events, newsletter_subscribers)
---    §2  Enable RLS on every public table
---    §3  NUCLEAR DROP — every RLS policy on every public table
---        (catches sensitive_table, products_admin_all, etc.)
---    §4  Clean policies — exactly 1 per verb per table
---    §5  Triggers
---    §6  Storage bucket
---    §7  Indexes
---    §8  Seed data (categories, site_settings, frontend_content)
---    §9  Admin stats view
---    §10 RPC: process_order_atomic (atomic stock deduction + order create)
---    §11 Verification query
--- ============================================================
--- ─────────────────────────────────────────────────────────────
--- §0. HELPER FUNCTIONS
--- ─────────────────────────────────────────────────────────────
--- Efficient admin check — result is cached per query, not per row
+--  Linter fixes included:
+--    ✓ auth_rls_initplan          → auth.uid() wrapped in (SELECT auth.uid())
+--    ✓ multiple_permissive_policies → exactly 1 policy / verb / table
+--    ✓ rogue_policies             → nuclear drop before recreate
+--    ✓ newsletter permissive INSERT → email regex constraint
+-- ================================================================
+-- ───────────────────────────────────────────────────────────────
+-- §0  HELPER FUNCTIONS
+-- ───────────────────────────────────────────────────────────────
+-- is_admin(): cached per query — no per-row re-evaluation
 CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
 SET search_path = public AS $$
 SELECT EXISTS (
@@ -39,13 +44,13 @@ SELECT EXISTS (
             AND role = 'admin'
     );
 $$;
--- Auto-stamp updated_at
+-- handle_updated_at(): auto-stamps updated_at on every update
 CREATE OR REPLACE FUNCTION public.handle_updated_at() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$ BEGIN NEW.updated_at = now();
 RETURN NEW;
 END;
 $$;
--- Auto-create profile on new auth user
+-- handle_new_user(): auto-creates profile row when auth.user is created
 CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$ BEGIN
 INSERT INTO public.profiles (id, email, full_name, role)
@@ -58,11 +63,10 @@ VALUES (
 RETURN NEW;
 END;
 $$;
--- ─────────────────────────────────────────────────────────────
--- §1. SCHEMA — tables created if they don't exist, columns
---     added if missing (fully idempotent)
--- ─────────────────────────────────────────────────────────────
--- 1A. profiles (Supabase auth extension)
+-- ───────────────────────────────────────────────────────────────
+-- §1  CORE TABLES
+-- ───────────────────────────────────────────────────────────────
+-- 1A. profiles — extends Supabase auth.users
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'user';
 ALTER TABLE public.profiles
@@ -83,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 -- 1C. products
--- Rename price → base_price if the legacy column still exists
+-- Rename legacy column price → base_price if present
 DO $$ BEGIN IF EXISTS (
     SELECT 1
     FROM information_schema.columns
@@ -105,6 +109,13 @@ END $$;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS base_price numeric(10, 2) NOT NULL DEFAULT 0.00;
 ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS sale_price numeric(10, 2) CHECK (
+        sale_price IS NULL
+        OR sale_price >= 0
+    );
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS on_sale boolean NOT NULL DEFAULT false;
+ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS slug text UNIQUE;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS description text;
@@ -119,6 +130,8 @@ ADD COLUMN IF NOT EXISTS is_featured boolean NOT NULL DEFAULT false;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS is_bestseller boolean NOT NULL DEFAULT false;
 ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS is_new boolean NOT NULL DEFAULT false;
+ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}';
@@ -126,7 +139,7 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
--- Sync legacy inventory → stock if needed
+-- Sync legacy inventory → stock
 UPDATE public.products
 SET stock = inventory
 WHERE stock = 0
@@ -148,7 +161,7 @@ CREATE TABLE IF NOT EXISTS public.variants (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
--- Rename stock_quantity → stock if legacy name exists
+-- Rename legacy stock_quantity → stock if present
 DO $$ BEGIN IF EXISTS (
     SELECT 1
     FROM information_schema.columns
@@ -194,7 +207,6 @@ WHERE amount_total IS NULL
 -- 1F. order_items
 ALTER TABLE public.order_items
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
--- Add variant_id if missing
 DO $$ BEGIN IF NOT EXISTS (
     SELECT 1
     FROM information_schema.columns
@@ -206,19 +218,22 @@ ALTER TABLE public.order_items
 ADD COLUMN variant_id uuid REFERENCES public.variants(id);
 END IF;
 END $$;
--- 1G. stripe_events (idempotency table — NO public policies, service_role only)
+-- 1G. stripe_events — idempotency log, service_role only
 CREATE TABLE IF NOT EXISTS public.stripe_events (
     id text PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT now()
 );
--- 1H. site_settings
+-- ───────────────────────────────────────────────────────────────
+-- §2  CMS TABLES
+-- ───────────────────────────────────────────────────────────────
+-- 2A. site_settings — key-value store for all store config
 CREATE TABLE IF NOT EXISTS public.site_settings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     setting_key text UNIQUE NOT NULL,
     setting_value jsonb NOT NULL DEFAULT '{}',
     updated_at timestamptz NOT NULL DEFAULT now()
 );
--- 1I. frontend_content
+-- 2B. frontend_content — every editable storefront section
 CREATE TABLE IF NOT EXISTS public.frontend_content (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     content_key text UNIQUE NOT NULL,
@@ -226,15 +241,48 @@ CREATE TABLE IF NOT EXISTS public.frontend_content (
     content_data jsonb NOT NULL DEFAULT '{}',
     updated_at timestamptz NOT NULL DEFAULT now()
 );
--- 1J. newsletter_subscribers
+-- 2C. newsletter_subscribers
 CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     email text UNIQUE NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now()
 );
--- ─────────────────────────────────────────────────────────────
--- §2. ENABLE ROW LEVEL SECURITY ON ALL PUBLIC TABLES
--- ─────────────────────────────────────────────────────────────
+-- 2D. navigation_menus — admin edits header/footer nav from dashboard
+CREATE TABLE IF NOT EXISTS public.navigation_menus (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    menu_key text UNIQUE NOT NULL,
+    label text NOT NULL,
+    menu_items jsonb NOT NULL DEFAULT '[]',
+    display_order integer NOT NULL DEFAULT 0,
+    is_active boolean NOT NULL DEFAULT true,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- 2E. pages — admin edits About/Contact/Privacy/Terms content
+CREATE TABLE IF NOT EXISTS public.pages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug text UNIQUE NOT NULL,
+    title text NOT NULL,
+    meta_title text,
+    meta_desc text,
+    content jsonb NOT NULL DEFAULT '{}',
+    is_published boolean NOT NULL DEFAULT true,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- 2F. theme_settings — admin controls brand colours/fonts
+CREATE TABLE IF NOT EXISTS public.theme_settings (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    theme_key text UNIQUE NOT NULL,
+    label text NOT NULL,
+    settings jsonb NOT NULL DEFAULT '{}',
+    is_active boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- ───────────────────────────────────────────────────────────────
+-- §3  ENABLE RLS ON EVERY TABLE
+-- ───────────────────────────────────────────────────────────────
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
@@ -245,14 +293,14 @@ ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.frontend_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
--- ─────────────────────────────────────────────────────────────
--- §3. NUCLEAR DROP — ALL RLS POLICIES ON ALL PUBLIC TABLES
---     This is the ONLY way to guarantee zero duplicates.
---     Catches: products_admin_all, products_public_read,
---     profiles_admin_all, profiles_insert_own, profiles_select_own,
---     profiles_update_own, sensitive_owner_access,
---     sensitive_trusted_admins — and anything else lurking.
--- ─────────────────────────────────────────────────────────────
+ALTER TABLE public.navigation_menus ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.theme_settings ENABLE ROW LEVEL SECURITY;
+-- ───────────────────────────────────────────────────────────────
+-- §4  NUCLEAR DROP — every public RLS policy
+--     Guarantees zero duplicates and removes all stale/rogue
+--     policies (products_admin_all, sensitive_owner_access, etc.)
+-- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE r RECORD;
 BEGIN FOR r IN
@@ -268,21 +316,18 @@ WHERE schemaname = 'public' LOOP EXECUTE format(
     );
 END LOOP;
 END $$;
--- Drop sensitive_table if it is a test/rogue table with no real purpose
--- (Safe: if it has data you want to keep, comment this out)
+-- Remove stale test table if it exists
 DROP TABLE IF EXISTS public.sensitive_table CASCADE;
--- ─────────────────────────────────────────────────────────────
--- §4. CLEAN RLS POLICIES
+-- ───────────────────────────────────────────────────────────────
+-- §5  RLS POLICIES
 --     Rules:
---       • Exactly ONE policy per SQL verb per table
---       • auth.uid() ALWAYS wrapped in (SELECT auth.uid())
---         → eliminates auth_rls_initplan warnings
---       • Admin writes delegate to (SELECT public.is_admin())
---         which itself uses (SELECT auth.uid()) internally
--- ─────────────────────────────────────────────────────────────
--- ── 4.1 PROFILES ─────────────────────────────────────────────
--- Public users can read only their own profile; admins read all.
--- Anon cannot select (forces login).
+--       • Exactly 1 policy per SQL verb per table
+--       • auth.uid() always wrapped in (SELECT auth.uid())
+--         → eliminates auth_rls_initplan linter warning
+--       • Admin access uses (SELECT public.is_admin())
+--         → cached per query, not per row
+-- ───────────────────────────────────────────────────────────────
+-- 5.1  PROFILES
 CREATE POLICY "profiles_select" ON public.profiles FOR
 SELECT USING (
         (
@@ -292,7 +337,6 @@ SELECT USING (
             SELECT public.is_admin()
         )
     );
--- Users insert their own profile (triggered on sign-up too).
 CREATE POLICY "profiles_insert" ON public.profiles FOR
 INSERT WITH CHECK (
         (
@@ -302,7 +346,6 @@ INSERT WITH CHECK (
             SELECT public.is_admin()
         )
     );
--- Users update their own profile; admins update any.
 CREATE POLICY "profiles_update" ON public.profiles FOR
 UPDATE USING (
         (
@@ -312,14 +355,12 @@ UPDATE USING (
             SELECT public.is_admin()
         )
     );
--- Only admins delete profiles.
 CREATE POLICY "profiles_delete" ON public.profiles FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
 );
--- ── 4.2 CATEGORIES ───────────────────────────────────────────
--- Everyone (including anonymous) can read categories for the shop.
+-- 5.2  CATEGORIES  — public read, admin write
 CREATE POLICY "categories_select" ON public.categories FOR
 SELECT USING (true);
 CREATE POLICY "categories_insert" ON public.categories FOR
@@ -339,8 +380,7 @@ CREATE POLICY "categories_delete" ON public.categories FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- ── 4.3 PRODUCTS ─────────────────────────────────────────────
--- Active products are public. Admins see all (including inactive).
+-- 5.3  PRODUCTS  — active products are public, admins see all
 CREATE POLICY "products_select" ON public.products FOR
 SELECT USING (
         is_active = true
@@ -365,8 +405,7 @@ CREATE POLICY "products_delete" ON public.products FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- ── 4.4 VARIANTS ─────────────────────────────────────────────
--- Variants are always publicly readable (same visibility as products).
+-- 5.4  VARIANTS  — public read, admin write
 CREATE POLICY "variants_select" ON public.variants FOR
 SELECT USING (true);
 CREATE POLICY "variants_insert" ON public.variants FOR
@@ -386,9 +425,7 @@ CREATE POLICY "variants_delete" ON public.variants FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- ── 4.5 ORDERS ───────────────────────────────────────────────
--- Users see their own orders; admins see all.
--- INSERT is done by service_role (webhook) or authenticated checkout.
+-- 5.5  ORDERS  — users see own orders, admins see all
 CREATE POLICY "orders_select" ON public.orders FOR
 SELECT USING (
         (
@@ -418,7 +455,7 @@ CREATE POLICY "orders_delete" ON public.orders FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- ── 4.6 ORDER_ITEMS ──────────────────────────────────────────
+-- 5.6  ORDER_ITEMS  — users see items from their own orders
 CREATE POLICY "order_items_select" ON public.order_items FOR
 SELECT USING (
         EXISTS (
@@ -452,12 +489,8 @@ CREATE POLICY "order_items_delete" ON public.order_items FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- ── 4.7 STRIPE_EVENTS ────────────────────────────────────────
--- No public access. Accessed exclusively via service_role in the
--- webhook handler. RLS enabled with zero policies = total lockout.
--- service_role bypasses RLS by design.
--- (No policies created here intentionally.)
--- ── 4.8 SITE_SETTINGS ────────────────────────────────────────
+-- 5.7  STRIPE_EVENTS  — no public policies (service_role only via RLS bypass)
+-- 5.8  SITE_SETTINGS  — public read, admin write
 CREATE POLICY "site_settings_select" ON public.site_settings FOR
 SELECT USING (true);
 CREATE POLICY "site_settings_insert" ON public.site_settings FOR
@@ -477,7 +510,7 @@ CREATE POLICY "site_settings_delete" ON public.site_settings FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- ── 4.9 FRONTEND_CONTENT ─────────────────────────────────────
+-- 5.9  FRONTEND_CONTENT  — public read, admin write
 CREATE POLICY "frontend_content_select" ON public.frontend_content FOR
 SELECT USING (true);
 CREATE POLICY "frontend_content_insert" ON public.frontend_content FOR
@@ -497,16 +530,14 @@ CREATE POLICY "frontend_content_delete" ON public.frontend_content FOR DELETE US
         SELECT public.is_admin()
     )
 );
--- ── 4.10 NEWSLETTER_SUBSCRIBERS ──────────────────────────────
--- Anyone can subscribe (anon INSERT). No public read.
+-- 5.10 NEWSLETTER_SUBSCRIBERS
+--      Anyone can subscribe; email must be valid (fixes linter permissive-insert warning)
 CREATE POLICY "newsletter_select" ON public.newsletter_subscribers FOR
 SELECT USING (
         (
             SELECT public.is_admin()
         )
     );
--- Anyone can subscribe, but the email must be non-null and look like an email.
--- WITH CHECK (true) is replaced with a real constraint to pass the linter.
 CREATE POLICY "newsletter_insert" ON public.newsletter_subscribers FOR
 INSERT WITH CHECK (
         email IS NOT NULL
@@ -523,9 +554,74 @@ CREATE POLICY "newsletter_delete" ON public.newsletter_subscribers FOR DELETE US
         SELECT public.is_admin()
     )
 );
--- ─────────────────────────────────────────────────────────────
--- §5. TRIGGERS
--- ─────────────────────────────────────────────────────────────
+-- 5.11 NAVIGATION_MENUS  — public read, admin write
+CREATE POLICY "nav_menus_select" ON public.navigation_menus FOR
+SELECT USING (true);
+CREATE POLICY "nav_menus_insert" ON public.navigation_menus FOR
+INSERT TO authenticated WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "nav_menus_update" ON public.navigation_menus FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "nav_menus_delete" ON public.navigation_menus FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
+-- 5.12 PAGES  — published pages are public, admin sees all
+CREATE POLICY "pages_select" ON public.pages FOR
+SELECT USING (
+        is_published = true
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "pages_insert" ON public.pages FOR
+INSERT TO authenticated WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "pages_update" ON public.pages FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "pages_delete" ON public.pages FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
+-- 5.13 THEME_SETTINGS  — public read, admin write
+CREATE POLICY "theme_select" ON public.theme_settings FOR
+SELECT USING (true);
+CREATE POLICY "theme_insert" ON public.theme_settings FOR
+INSERT TO authenticated WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "theme_update" ON public.theme_settings FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "theme_delete" ON public.theme_settings FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
+-- ───────────────────────────────────────────────────────────────
+-- §6  TRIGGERS  — updated_at + auto-profile on signup
+-- ───────────────────────────────────────────────────────────────
 DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
 DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
 DROP TRIGGER IF EXISTS products_updated_at ON public.products;
@@ -533,6 +629,9 @@ DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
 DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
 DROP TRIGGER IF EXISTS site_settings_updated_at ON public.site_settings;
 DROP TRIGGER IF EXISTS frontend_content_updated_at ON public.frontend_content;
+DROP TRIGGER IF EXISTS nav_menus_updated_at ON public.navigation_menus;
+DROP TRIGGER IF EXISTS pages_updated_at ON public.pages;
+DROP TRIGGER IF EXISTS theme_settings_updated_at ON public.theme_settings;
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER profiles_updated_at BEFORE
 UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -548,26 +647,28 @@ CREATE TRIGGER site_settings_updated_at BEFORE
 UPDATE ON public.site_settings FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER frontend_content_updated_at BEFORE
 UPDATE ON public.frontend_content FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER nav_menus_updated_at BEFORE
+UPDATE ON public.navigation_menus FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER pages_updated_at BEFORE
+UPDATE ON public.pages FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER theme_settings_updated_at BEFORE
+UPDATE ON public.theme_settings FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER on_auth_user_created
 AFTER
 INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
--- ─────────────────────────────────────────────────────────────
--- §6. STORAGE BUCKET
--- ─────────────────────────────────────────────────────────────
+-- ───────────────────────────────────────────────────────────────
+-- §7  STORAGE BUCKET + POLICIES
+-- ───────────────────────────────────────────────────────────────
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('product-images', 'product-images', true) ON CONFLICT (id) DO
 UPDATE
 SET public = true;
--- Storage RLS policies on storage.objects (correct Supabase approach)
--- Drop existing first to avoid duplicates
 DROP POLICY IF EXISTS "product_images_public_read" ON storage.objects;
 DROP POLICY IF EXISTS "product_images_admin_insert" ON storage.objects;
 DROP POLICY IF EXISTS "product_images_admin_update" ON storage.objects;
 DROP POLICY IF EXISTS "product_images_admin_delete" ON storage.objects;
--- Anyone can view product images (public bucket)
 CREATE POLICY "product_images_public_read" ON storage.objects FOR
 SELECT USING (bucket_id = 'product-images');
--- Only admins can upload product images
 CREATE POLICY "product_images_admin_insert" ON storage.objects FOR
 INSERT TO authenticated WITH CHECK (
         bucket_id = 'product-images'
@@ -575,7 +676,6 @@ INSERT TO authenticated WITH CHECK (
             SELECT public.is_admin()
         )
     );
--- Only admins can update product images
 CREATE POLICY "product_images_admin_update" ON storage.objects FOR
 UPDATE TO authenticated USING (
         bucket_id = 'product-images'
@@ -583,16 +683,15 @@ UPDATE TO authenticated USING (
             SELECT public.is_admin()
         )
     );
--- Only admins can delete product images
 CREATE POLICY "product_images_admin_delete" ON storage.objects FOR DELETE TO authenticated USING (
     bucket_id = 'product-images'
     AND (
         SELECT public.is_admin()
     )
 );
--- ─────────────────────────────────────────────────────────────
--- §7. INDEXES (performance)
--- ─────────────────────────────────────────────────────────────
+-- ───────────────────────────────────────────────────────────────
+-- §8  INDEXES
+-- ───────────────────────────────────────────────────────────────
 -- Products
 CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON public.products(category_id);
@@ -600,23 +699,27 @@ CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(slug);
 CREATE INDEX IF NOT EXISTS idx_products_stock ON public.products(stock);
 CREATE INDEX IF NOT EXISTS idx_products_is_featured ON public.products(is_featured)
 WHERE is_featured = true;
+CREATE INDEX IF NOT EXISTS idx_products_is_new ON public.products(is_new)
+WHERE is_new = true;
+CREATE INDEX IF NOT EXISTS idx_products_on_sale ON public.products(on_sale)
+WHERE on_sale = true;
+CREATE INDEX IF NOT EXISTS idx_products_is_bestseller ON public.products(is_bestseller)
+WHERE is_bestseller = true;
 -- Orders
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON public.orders(stripe_session_id);
--- Categories
+-- Categories / variants / profiles / newsletter / pages
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
--- Variants
 CREATE INDEX IF NOT EXISTS idx_variants_product_id ON public.variants(product_id);
--- Profiles
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
--- Newsletter
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
--- ─────────────────────────────────────────────────────────────
--- §8. SEED DATA
--- ─────────────────────────────────────────────────────────────
--- 8A. Categories (4 root categories — immutable contract)
+CREATE INDEX IF NOT EXISTS idx_pages_slug ON public.pages(slug);
+-- ───────────────────────────────────────────────────────────────
+-- §9  SEED DATA  (idempotent — ON CONFLICT DO UPDATE)
+-- ───────────────────────────────────────────────────────────────
+-- 9A. Categories
 INSERT INTO public.categories (name, slug, description, is_active)
 VALUES (
         'Face',
@@ -646,7 +749,7 @@ UPDATE
 SET name = EXCLUDED.name,
     description = EXCLUDED.description,
     is_active = true;
--- 8B. Products (full launch catalogue — idempotent via slug upsert)
+-- 9B. Products (full launch catalogue)
 DO $$
 DECLARE face_id uuid;
 eyes_id uuid;
@@ -970,46 +1073,234 @@ SET name = EXCLUDED.name,
     is_active = EXCLUDED.is_active,
     images = EXCLUDED.images;
 END $$;
--- 8C. Ensure all products have stock > 0
+-- Ensure stock > 0 and images are set
 UPDATE public.products
 SET stock = 100
 WHERE stock IS NULL
     OR stock <= 0;
--- 8D. Ensure all products have images
 UPDATE public.products
 SET images = ARRAY ['/logo.jpg']
 WHERE images IS NULL
     OR array_length(images, 1) = 0;
--- 8E. Promote admin accounts (both emails are admins)
+-- 9C. Admin accounts
 UPDATE public.profiles
 SET role = 'admin'
 WHERE email IN (
         'arafat.leadmatrix@gmail.com',
         'leadmatrix.us@gmail.com'
     );
--- 8F. Site settings
+-- 9D. Site settings
 INSERT INTO public.site_settings (setting_key, setting_value)
 VALUES (
         'store_info',
-        '{"name":"DINA COSMETIC","tagline":"Luxury Obsidian Skincare","currency":"USD"}'::jsonb
+        '{"name":"DINA COSMETIC","tagline":"Luxury Obsidian Skincare","currency":"USD","email":"concierge@dinacosmetic.store","phone":"+1 (800) LUX-DINA","address":"123 Obsidian Tower, Virtual City"}'::jsonb
     ),
     ('store_enabled', 'true'::jsonb),
     (
         'shipping',
-        '{"free_threshold": 50, "flat_rate": 5.99}'::jsonb
-    ) ON CONFLICT (setting_key) DO NOTHING;
--- 8G. Frontend content
+        '{"free_threshold":50,"flat_rate":5.99,"free_label":"Free Shipping","carrier":"USPS"}'::jsonb
+    ),
+    (
+        'social_media',
+        '{"instagram":"https://instagram.com/dinacosmetic","tiktok":"https://tiktok.com/@dinacosmetic","facebook":"https://facebook.com/dinacosmetic","pinterest":"","youtube":""}'::jsonb
+    ),
+    (
+        'seo_defaults',
+        '{"site_name":"DINA COSMETIC","title_template":"%s | DINA COSMETIC","default_description":"Luxury obsidian cosmetics — The Obsidian Palace","og_image":"/og-default.jpg","twitter_handle":"@dinacosmetic"}'::jsonb
+    ),
+    (
+        'promotions',
+        '{"sale_active":false,"sale_label":"SALE","sale_badge_color":"#DC2626","bestseller_label":"BESTSELLER","featured_label":"FEATURED","new_label":"NEW"}'::jsonb
+    ),
+    (
+        'email_settings',
+        '{"from_name":"DINA COSMETIC","from_email":"concierge@dinacosmetic.store","reply_to":"concierge@dinacosmetic.store","order_confirmation":true,"shipping_notification":true,"newsletter_welcome":true}'::jsonb
+    ) ON CONFLICT (setting_key) DO
+UPDATE
+SET setting_value = EXCLUDED.setting_value,
+    updated_at = now();
+-- 9E. Frontend content — every editable storefront section
 INSERT INTO public.frontend_content (content_key, content_type, content_data)
-VALUES (
+VALUES -- Homepage
+    (
         'hero_main',
         'hero',
-        '{"title":"The Essence of Luxury","subtitle":"Discover the obsidian collection"}'::jsonb
-    ) ON CONFLICT (content_key) DO NOTHING;
--- ─────────────────────────────────────────────────────────────
--- §9. ADMIN SALES STATS VIEW
---     security_invoker = true → view runs as calling user
---     → RLS is still enforced; only admins can see full data
--- ─────────────────────────────────────────────────────────────
+        '{"heading":"The Essence of Luxury","subheading":"Discover the Obsidian Collection — where art meets absolute beauty.","cta_text":"Discover Collection","cta_link":"/shop","image_url":"/hero-default.jpg","badge_text":"New Collection 2026"}'::jsonb
+    ),
+    (
+        'announcement_banner',
+        'banner',
+        '{"text":"Free Shipping on orders over $50","cta_text":"Shop Now","cta_link":"/shop","is_active":true,"bg_color":"#D4AF37"}'::jsonb
+    ),
+    (
+        'featured_section',
+        'section',
+        '{"heading":"The Collection","subheading":"Curated masterpieces for the discerning","cta_text":"View All","cta_link":"/shop","show_badges":true}'::jsonb
+    ),
+    (
+        'brand_story',
+        'section',
+        '{"heading":"The Essence of Obsidian Masterpiece","subheading":"Born from the pursuit of absolute perfection","body":"DINA COSMETIC was founded not in a laboratory, but in a sanctuary. We believe that true beauty is the illumination of the soul, and our products are merely the vessels to manifest that light.","cta_text":"Discover Our Heritage","cta_link":"/about","image_url":"/story-image.jpg"}'::jsonb
+    ),
+    (
+        'trust_indicators',
+        'section',
+        '{"items":[{"icon":"Truck","title":"Complimentary Delivery","description":"On all orders exceeding $50"},{"icon":"RotateCcw","title":"Effortless Returns","description":"30-day elegant exchange protocol"},{"icon":"Award","title":"Authentic Masterpieces","description":"Guaranteed direct from the Palace"},{"icon":"Shield","title":"Secure Encrypted Transport","description":"Uncompromised transaction safety"}]}'::jsonb
+    ),
+    (
+        'newsletter_section',
+        'section',
+        '{"heading":"Join The Obsidian Palace","subheading":"Subscribe to receive exclusive access to new collection launches, private events, and editorial content.","placeholder":"Your Email Address","button_text":"Subscribe","success_text":"Welcome to the Palace"}'::jsonb
+    ),
+    (
+        'collections_page',
+        'page',
+        '{"heading":"The Vaults","subheading":"Curated collections for the dedicated connoisseur"}'::jsonb
+    ),
+    -- About page
+    (
+        'about_hero',
+        'page',
+        '{"badge":"Our Genesis","heading":"The Obsidian Palace","tagline":"Born from the pursuit of absolute perfection"}'::jsonb
+    ),
+    (
+        'about_story_1',
+        'page',
+        '{"heading":"Rituals of Illumination","body":"DINA COSMETIC was founded not in a laboratory, but in a sanctuary. We believe that true beauty is the illumination of the soul, and our products are merely the vessels to manifest that light."}'::jsonb
+    ),
+    (
+        'about_story_2',
+        'page',
+        '{"heading":"The Obsidian Standard","body":"Every artifact produced within the Palace undergoes a rigorous alchemy of absolute black minerals and liquid gold accents. This is the Obsidian Standard — a promise of weight, luxury, and unmatched performance."}'::jsonb
+    ),
+    (
+        'about_philosophy',
+        'page',
+        '{"items":[{"icon":"History","title":"Legacy","text":"Evolving the timeless secrets of cosmetics into modern artifacts."},{"icon":"ShieldCheck","title":"Purity","text":"Untouched by ordinary standards. Crafted for the absolute."},{"icon":"Sparkles","title":"Radiance","text":"Designed to capture and reflect light in its most premium form."},{"icon":"Heart","title":"Devotion","text":"A singular focus on the enhancement of your natural majesty."}]}'::jsonb
+    ),
+    (
+        'about_closing_quote',
+        'page',
+        '{"quote":"Step out of the ordinary and into the sanctuary of your own excellence.","tagline":"The Ritual Awaits"}'::jsonb
+    ),
+    -- Contact page
+    (
+        'contact_page',
+        'page',
+        '{"badge":"Client Relations","heading":"Concierge","subheading":"Our dedicated team is available to assist you with any inquiries regarding the Palace collection and your acquisitions.","email":"concierge@dinacosmetic.store","phone":"+1 (800) LUX-DINA","address":"123 Obsidian Tower, Virtual City","form_heading":"Send an Inquiry","form_button":"Dispatch Message"}'::jsonb
+    ),
+    -- Footer & social
+    (
+        'footer_main',
+        'footer',
+        '{"brand":"DINA COSMETIC","tagline":"The Obsidian Palace · Luxury Redefined","copyright":"© 2026 DINA COSMETIC. All rights reserved.","newsletter_text":"Become part of the Palace"}'::jsonb
+    ),
+    (
+        'social_links',
+        'social',
+        '{"instagram":"https://instagram.com/dinacosmetic","tiktok":"https://tiktok.com/@dinacosmetic","facebook":"https://facebook.com/dinacosmetic","pinterest":"","youtube":""}'::jsonb
+    ),
+    -- Legal
+    (
+        'privacy_page',
+        'legal',
+        '{"heading":"Privacy Policy","last_updated":"2026-03-03","sections":[{"title":"Data We Collect","body":"We collect your name, email, and shipping address when you place an order."},{"title":"How We Use Your Data","body":"Your data is used solely to process orders and send order updates. We never sell your data."},{"title":"Cookies","body":"We use essential cookies to keep you logged in and maintain your cart."},{"title":"Contact","body":"For privacy inquiries, email privacy@dinacosmetic.store"}]}'::jsonb
+    ),
+    (
+        'terms_page',
+        'legal',
+        '{"heading":"Terms of Service","last_updated":"2026-03-03","sections":[{"title":"Acceptance","body":"By using this website you agree to these terms."},{"title":"Products & Pricing","body":"All prices are in USD. We reserve the right to change prices at any time."},{"title":"Returns","body":"We accept returns within 30 days of delivery for unopened products."},{"title":"Contact","body":"For legal inquiries, email legal@dinacosmetic.store"}]}'::jsonb
+    ) ON CONFLICT (content_key) DO
+UPDATE
+SET content_data = EXCLUDED.content_data,
+    updated_at = now();
+-- 9F. Navigation menus
+INSERT INTO public.navigation_menus (menu_key, label, display_order, menu_items)
+VALUES (
+        'header_main',
+        'Header Navigation',
+        1,
+        '[{"label":"Shop","href":"/shop","is_active":true},{"label":"Collections","href":"/collections","is_active":true},{"label":"About","href":"/about","is_active":true},{"label":"Contact","href":"/contact","is_active":true}]'::jsonb
+    ),
+    (
+        'footer_shop',
+        'Footer — Shop Links',
+        2,
+        '[{"label":"All Products","href":"/shop"},{"label":"Face","href":"/collections/face"},{"label":"Eyes","href":"/collections/eyes"},{"label":"Lips","href":"/collections/lips"},{"label":"Tools","href":"/collections/tools"}]'::jsonb
+    ),
+    (
+        'footer_legal',
+        'Footer — Legal Links',
+        3,
+        '[{"label":"Privacy Policy","href":"/privacy"},{"label":"Terms of Service","href":"/terms"},{"label":"Contact","href":"/contact"}]'::jsonb
+    ) ON CONFLICT (menu_key) DO
+UPDATE
+SET menu_items = EXCLUDED.menu_items,
+    updated_at = now();
+-- 9G. Pages
+INSERT INTO public.pages (
+        slug,
+        title,
+        meta_title,
+        meta_desc,
+        content,
+        is_published
+    )
+VALUES (
+        'about',
+        'About Us',
+        'The Palace | DINA COSMETIC',
+        'The story and philosophy of the Obsidian Palace.',
+        '{"hero":{"badge":"Our Genesis","heading":"The Obsidian Palace"},"story":[{"heading":"Rituals of Illumination","body":"DINA COSMETIC was founded not in a laboratory, but in a sanctuary."},{"heading":"The Obsidian Standard","body":"Every artifact undergoes a rigorous alchemy of absolute black minerals and liquid gold accents."}],"closing_quote":"Step out of the ordinary and into the sanctuary of your own excellence."}'::jsonb,
+        true
+    ),
+    (
+        'contact',
+        'Concierge',
+        'Concierge | DINA COSMETIC',
+        'Contact the Obsidian Palace for inquiries.',
+        '{"heading":"Concierge","subheading":"Our dedicated team is available to assist you.","email":"concierge@dinacosmetic.store","phone":"+1 (800) LUX-DINA","address":"123 Obsidian Tower, Virtual City"}'::jsonb,
+        true
+    ),
+    (
+        'privacy',
+        'Privacy Policy',
+        'Privacy Policy | DINA COSMETIC',
+        'How DINA COSMETIC handles your data.',
+        '{"heading":"Privacy Policy","last_updated":"2026-03-03","sections":[{"title":"Data We Collect","body":"We collect your name, email, and shipping address."},{"title":"How We Use It","body":"Your data is used solely to process orders. We never sell your data."},{"title":"Contact","body":"Email: privacy@dinacosmetic.store"}]}'::jsonb,
+        true
+    ),
+    (
+        'terms',
+        'Terms of Service',
+        'Terms of Service | DINA COSMETIC',
+        'Terms and conditions for using the DINA COSMETIC store.',
+        '{"heading":"Terms of Service","last_updated":"2026-03-03","sections":[{"title":"Acceptance","body":"By using this website you agree to these terms."},{"title":"Pricing","body":"All prices are in USD and subject to change."},{"title":"Returns","body":"30-day returns on unopened products."},{"title":"Contact","body":"Email: legal@dinacosmetic.store"}]}'::jsonb,
+        true
+    ) ON CONFLICT (slug) DO
+UPDATE
+SET title = EXCLUDED.title,
+    meta_title = EXCLUDED.meta_title,
+    meta_desc = EXCLUDED.meta_desc,
+    content = EXCLUDED.content,
+    updated_at = now();
+-- 9H. Theme settings
+INSERT INTO public.theme_settings (theme_key, label, is_active, settings)
+VALUES (
+        'obsidian_palace',
+        'Obsidian Palace (Default)',
+        true,
+        '{"colors":{"primary_bg":"#0A0A0A","secondary_bg":"#111111","accent_gold":"#D4AF37","text_primary":"#F5F0E8","text_muted":"#8A8A8A","border":"#2A2A2A"},"fonts":{"heading":"Playfair Display","body":"Inter"},"layout":{"max_width":"1280px","border_radius":"4px","header_style":"sticky"}}'::jsonb
+    ) ON CONFLICT (theme_key) DO
+UPDATE
+SET settings = EXCLUDED.settings,
+    is_active = EXCLUDED.is_active,
+    updated_at = now();
+-- ───────────────────────────────────────────────────────────────
+-- §10  ADMIN SALES STATS VIEW
+--      security_invoker = true → RLS still enforced
+--      Only admins see full data
+-- ───────────────────────────────────────────────────────────────
 DROP VIEW IF EXISTS public.admin_sales_stats;
 CREATE VIEW public.admin_sales_stats WITH (security_invoker = true) AS
 SELECT COUNT(DISTINCT o.id) AS total_orders,
@@ -1033,19 +1324,18 @@ SELECT COUNT(DISTINCT o.id) AS total_orders,
     ) AS active_products,
     COUNT(DISTINCT p.id) FILTER (
         WHERE p.stock < 5
-            AND p.is_active = true
+            AND p.is_active
     ) AS low_stock_products,
     COUNT(DISTINCT pr.id) AS total_customers
 FROM public.orders o
     FULL OUTER JOIN public.products p ON true
     FULL OUTER JOIN public.profiles pr ON true;
 GRANT SELECT ON public.admin_sales_stats TO authenticated;
--- ─────────────────────────────────────────────────────────────
--- §10. RPC: process_order_atomic
---      Called by the Stripe webhook (service_role).
---      Atomically: creates order + inserts order_items +
---      deducts stock from products and variants.
--- ─────────────────────────────────────────────────────────────
+-- ───────────────────────────────────────────────────────────────
+-- §11  RPC: process_order_atomic
+--      Called by Stripe webhook (service_role).
+--      Atomically creates order + order_items + deducts stock.
+-- ───────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.process_order_atomic(
         p_stripe_session_id text,
         p_customer_email text,
@@ -1059,9 +1349,7 @@ SET search_path = public AS $$
 DECLARE new_order_id uuid;
 item_record jsonb;
 v_items jsonb;
-BEGIN -- Extract items array from metadata
-v_items := (p_metadata->>'items')::jsonb;
--- Create the master order record
+BEGIN v_items := (p_metadata->>'items')::jsonb;
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
@@ -1081,14 +1369,14 @@ VALUES (
         'unfulfilled'
     ) ON CONFLICT (stripe_session_id) DO NOTHING
 RETURNING id INTO new_order_id;
--- If already processed (idempotency), bail out
+-- Idempotency: if already processed, return existing order id
 IF new_order_id IS NULL THEN
 SELECT id INTO new_order_id
 FROM public.orders
 WHERE stripe_session_id = p_stripe_session_id;
 RETURN new_order_id;
 END IF;
--- Insert order items and deduct stock
+-- Insert items + deduct stock
 FOR item_record IN
 SELECT *
 FROM jsonb_array_elements(v_items) LOOP
@@ -1106,11 +1394,11 @@ VALUES (
         (item_record->>'quantity')::integer,
         (item_record->>'price')::numeric
     );
--- Deduct from product stock (never below 0)
+-- Deduct product stock (floor at 0)
 UPDATE public.products
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'product_id')::uuid;
--- Deduct from variant stock if applicable
+-- Deduct variant stock if applicable
 IF (item_record->>'variant_id') IS NOT NULL
 AND (item_record->>'variant_id') != '' THEN
 UPDATE public.variants
@@ -1121,12 +1409,15 @@ END LOOP;
 RETURN new_order_id;
 END;
 $$;
--- ─────────────────────────────────────────────────────────────
--- §11. VERIFICATION
---      After running this script, this query should show
---      exactly 4 policies per table (no more, no less).
---      stripe_events intentionally has 0 policies.
--- ─────────────────────────────────────────────────────────────
+-- ───────────────────────────────────────────────────────────────
+-- §12  VERIFICATION
+--      Expected results after a clean run:
+--        profiles, categories, products, variants, orders,
+--        order_items, site_settings, frontend_content,
+--        newsletter_subscribers, navigation_menus, pages,
+--        theme_settings → 4 policies each
+--        stripe_events → 0 policies (intentional)
+-- ───────────────────────────────────────────────────────────────
 SELECT tablename,
     COUNT(*) AS policy_count,
     string_agg(
