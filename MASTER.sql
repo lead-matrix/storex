@@ -1460,7 +1460,9 @@ ELSE -- Fallback: Create new order if it somehow doesn't exist (e.g., deleted)
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
+        email,
         amount_total,
+        total_amount,
         currency,
         status,
         fulfillment_status
@@ -1468,6 +1470,8 @@ INSERT INTO public.orders (
 VALUES (
         p_stripe_session_id,
         p_customer_email,
+        p_customer_email,
+        p_amount_total::numeric / 100.0,
         p_amount_total::numeric / 100.0,
         p_currency,
         'paid',

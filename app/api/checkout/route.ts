@@ -108,6 +108,7 @@ export async function POST(req: Request) {
                 customer_email: user?.email ?? null,  // guest email grabbed from Stripe later
                 email: user?.email ?? 'pending@guest.local', // Fallback for legacy database NOT NULL constraints
                 amount_total: subtotal + shippingRate + taxTotal,
+                total_amount: subtotal + shippingRate + taxTotal, // Fallback for legacy database NOT NULL constraints
                 status: 'pending',
                 fulfillment_status: 'unfulfilled',
             }])
