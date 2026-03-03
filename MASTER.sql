@@ -1108,7 +1108,7 @@ VALUES (
     ),
     (
         'social_media',
-        '{"instagram":"https://instagram.com/dinacosmetic","tiktok":"https://tiktok.com/@dinacosmetic","facebook":"https://facebook.com/dinacosmetic","pinterest":"","youtube":""}'::jsonb
+        '{"instagram":"https://www.instagram.com/dinacosmetic_1?igsh=MTB1ZmUyOWg0dDg1Mw==","tiktok":"https://tiktok.com/@dinacosmetic","facebook":"https://facebook.com/dinacosmetic","pinterest":"","youtube":""}'::jsonb
     ),
     (
         'seo_defaults',
@@ -1193,7 +1193,7 @@ VALUES -- Homepage
     (
         'contact_page',
         'page',
-        '{"badge":"Client Relations","heading":"Concierge","subheading":"Our dedicated team is available to assist you with any inquiries regarding the Palace collection and your acquisitions.","email":"concierge@dinacosmetic.store","phone":"+1 (800) LUX-DINA","address":"123 Obsidian Tower, Virtual City","form_heading":"Send an Inquiry","form_button":"Dispatch Message"}'::jsonb
+        '{"badge":"Client Relations","heading":"Concierge","subheading":"Our dedicated team is available to assist you with any inquiries regarding the Palace collection and your acquisitions.","email":"support@dinacosmetic.store","phone":"+1 (281) 687-7609","address":"Texas, USA · Shipping Worldwide","form_heading":"Send an Inquiry","form_button":"Dispatch Message"}'::jsonb
     ),
     -- Footer & social
     (
@@ -1204,7 +1204,7 @@ VALUES -- Homepage
     (
         'social_links',
         'social',
-        '{"instagram":"https://instagram.com/dinacosmetic","tiktok":"https://tiktok.com/@dinacosmetic","facebook":"https://facebook.com/dinacosmetic","pinterest":"","youtube":""}'::jsonb
+        '{"instagram":"https://www.instagram.com/dinacosmetic_1?igsh=MTB1ZmUyOWg0dDg1Mw==","tiktok":"https://tiktok.com/@dinacosmetic","facebook":"https://facebook.com/dinacosmetic","pinterest":"","youtube":""}'::jsonb
     ),
     -- Legal
     (

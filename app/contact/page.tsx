@@ -26,17 +26,17 @@ export default function ContactPage() {
                             <ContactItem
                                 icon={<Mail size={20} className="text-gold-primary" />}
                                 label="Electronic Mail"
-                                value="concierge@dinacosmetic.store"
+                                value="support@dinacosmetic.store"
                             />
                             <ContactItem
                                 icon={<Phone size={20} className="text-gold-primary" />}
                                 label="Tele-Inquiry"
-                                value="+1 (800) LUX-DINA"
+                                value="+1 (281) 687-7609"
                             />
                             <ContactItem
                                 icon={<MapPin size={20} className="text-gold-primary" />}
-                                label="The Palace Headquarters"
-                                value="123 Obsidian Tower, Virtual City"
+                                label="Location"
+                                value="Texas, USA · Shipping Worldwide"
                             />
                         </div>
                     </div>
