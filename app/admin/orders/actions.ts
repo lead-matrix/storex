@@ -37,12 +37,14 @@ export async function generateShippingLabel(orderId: string) {
         },
         body: JSON.stringify({
             address_from: {
-                name: "Dina Cosmetic Warehouse",
-                street1: "123 Warehouse St",
-                city: "NY",
-                state: "NY",
-                zip: "10001",
+                name: "Dina Cosmetic",
+                street1: "Texas",
+                city: "Houston",
+                state: "TX",
+                zip: "77001",
                 country: "US",
+                email: "support@dinacosmetic.store",
+                phone: "+12816877609",
             },
             address_to: order.shipping_address || {
                 name: "Customer",
@@ -52,8 +54,8 @@ export async function generateShippingLabel(orderId: string) {
                 zip: "10001",
                 country: "US",
             },
-            parcels: (order.metadata as any)?.parcels || [
-                { length: "10", width: "5", height: "5", distance_unit: "in", weight: "1", mass_unit: "lb" },
+            parcels: [
+                { length: "8", width: "6", height: "4", distance_unit: "in", weight: "0.5", mass_unit: "lb" },
             ],
             async: false,
         }),

@@ -24,7 +24,7 @@ export default async function EditProductPage({ params }: Props) {
 
     const { data: product, error } = await supabase
         .from('products')
-        .select('id, name, slug, description, base_price, stock, inventory, images, is_featured, is_bestseller, is_active, category_id, variants(*)')
+        .select('id, name, slug, description, base_price, sale_price, on_sale, is_new, stock, inventory, images, is_featured, is_bestseller, is_active, category_id, variants(*)')
         .eq('id', id)
         .single()
 
@@ -63,6 +63,9 @@ export default async function EditProductPage({ params }: Props) {
                         slug: product.slug,
                         description: product.description,
                         base_price: product.base_price,
+                        sale_price: product.sale_price,
+                        on_sale: product.on_sale,
+                        is_new: product.is_new,
                         stock: product.stock ?? product.inventory ?? 0,
                         images: product.images ?? [],
                         is_featured: product.is_featured,

@@ -194,6 +194,8 @@ ADD COLUMN IF NOT EXISTS fulfillment_status text NOT NULL DEFAULT 'unfulfilled';
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS tracking_number text;
 ALTER TABLE public.orders
+ADD COLUMN IF NOT EXISTS metadata jsonb;
+ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 -- Sync legacy columns
 UPDATE public.orders

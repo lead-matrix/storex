@@ -109,7 +109,6 @@ export async function POST(req: Request) {
                 amount_total: subtotal + shippingRate + taxTotal,
                 status: 'pending',
                 fulfillment_status: 'unfulfilled',
-                metadata: { items: metadataItems }
             }])
             .select()
             .single()

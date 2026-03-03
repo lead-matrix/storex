@@ -67,3 +67,33 @@ export async function deleteProduct(id: string) {
     if (error) throw new Error(error.message);
     revalidatePath("/admin/products");
 }
+
+export async function adjustStock(id: string, delta: number) {
+    const supabase = await createClient();
+
+    const { data: product } = await supabase
+        .from("products")
+        .select("stock")
+        .eq("id", id)
+        .single();
+
+    const newStock = Math.max(0, (product?.stock ?? 0) + delta);
+
+    const { error } = await supabase
+        .from("products")
+        .update({ stock: newStock })
+        .eq("id", id);
+
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin/products");
+}
+
+export async function toggleProductStatus(id: string, current: boolean) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from("products")
+        .update({ is_active: !current })
+        .eq("id", id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin/products");
+}
