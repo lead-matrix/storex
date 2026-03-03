@@ -101,13 +101,14 @@ export async function POST(req: Request) {
             })
         }
 
-        // ── 4. Create PENDING order (works for guests and signed-in users) ────
         const { data: order, error: orderError } = await supabase
             .from('orders')
             .insert([{
                 user_id: user?.id ?? null,
-                customer_email: user?.email ?? null, // guest email captured from Stripe session on webhook
+                customer_email: user?.email ?? null,
+                email: user?.email ?? 'pending@guest.local', // Fallback for legacy DB NOT NULL constraint
                 amount_total: subtotal + shippingRate + taxTotal,
+                total_amount: subtotal + shippingRate + taxTotal, // Fallback for legacy DB NOT NULL constraint
                 status: 'pending',
                 fulfillment_status: 'unfulfilled',
             }])
