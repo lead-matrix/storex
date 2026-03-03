@@ -865,7 +865,7 @@ VALUES (
         100,
         true,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
     ),
     (
         'Obsidian Face Powder',
@@ -876,7 +876,7 @@ VALUES (
         120,
         false,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
     ),
     (
         'Velvet Setting Powder',
@@ -887,7 +887,7 @@ VALUES (
         80,
         false,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
     ),
     (
         'Mist of Gold Setting Spray',
@@ -898,7 +898,7 @@ VALUES (
         60,
         true,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
     ),
     (
         'Primordial Face Primer',
@@ -909,7 +909,7 @@ VALUES (
         90,
         false,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
     ),
     (
         'Sculpting Contour Stick',
@@ -920,7 +920,7 @@ VALUES (
         50,
         false,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
     ),
     (
         'Ethereal Concealer',
@@ -931,7 +931,7 @@ VALUES (
         150,
         false,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
     ),
     (
         '3-in-1 Bloom Blush',
@@ -942,7 +942,7 @@ VALUES (
         40,
         true,
         true,
-        ARRAY ['/luxury_makeup_face_collection_1772224740512.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET name = EXCLUDED.name,
@@ -974,7 +974,7 @@ VALUES (
         70,
         true,
         true,
-        ARRAY ['/luxury_makeup_eye_collection_1772224770135.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png']
     ),
     (
         'Crease-Defying Eye Primer',
@@ -985,7 +985,7 @@ VALUES (
         110,
         false,
         true,
-        ARRAY ['/luxury_makeup_eye_collection_1772224770135.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
     ),
     (
         'Onyx Mascara',
@@ -996,7 +996,7 @@ VALUES (
         200,
         true,
         true,
-        ARRAY ['/luxury_makeup_eye_collection_1772224770135.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
     ),
     (
         'Precision Eyeliner',
@@ -1007,7 +1007,7 @@ VALUES (
         130,
         false,
         true,
-        ARRAY ['/luxury_makeup_eye_collection_1772224770135.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png']
     ),
     (
         'Arch Definition Eyebrow Pencil',
@@ -1018,7 +1018,7 @@ VALUES (
         180,
         false,
         true,
-        ARRAY ['/luxury_makeup_eye_collection_1772224770135.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET name = EXCLUDED.name,
@@ -1050,7 +1050,7 @@ VALUES (
         140,
         true,
         true,
-        ARRAY ['/luxury_makeup_lip_collection_1772224796578.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png']
     ),
     (
         'Crystal Lip Gloss',
@@ -1061,7 +1061,7 @@ VALUES (
         90,
         false,
         true,
-        ARRAY ['/luxury_makeup_lip_collection_1772224796578.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png']
     ),
     (
         'Eternal Lip Tint',
@@ -1072,7 +1072,7 @@ VALUES (
         80,
         false,
         true,
-        ARRAY ['/luxury_makeup_lip_collection_1772224796578.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png']
     ),
     (
         'Dual-Soul 2-in-1 Lipstick',
@@ -1083,7 +1083,7 @@ VALUES (
         65,
         true,
         true,
-        ARRAY ['/luxury_makeup_lip_collection_1772224796578.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET name = EXCLUDED.name,
@@ -1115,7 +1115,7 @@ VALUES (
         30,
         true,
         true,
-        ARRAY ['/luxury_makeup_tools_collection_1772224817128.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
     ),
     (
         'Artisan Brush Set (14pcs)',
@@ -1126,7 +1126,7 @@ VALUES (
         45,
         false,
         true,
-        ARRAY ['/luxury_makeup_tools_collection_1772224817128.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
     ),
     (
         'Pure Ritual Makeup Remover',
@@ -1137,7 +1137,7 @@ VALUES (
         100,
         false,
         true,
-        ARRAY ['/luxury_makeup_tools_collection_1772224817128.png']
+        ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET name = EXCLUDED.name,
@@ -1155,9 +1155,32 @@ SET stock = 100
 WHERE stock IS NULL
     OR stock <= 0;
 UPDATE public.products
-SET images = ARRAY ['/logo.jpg']
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
 WHERE images IS NULL
     OR array_length(images, 1) = 0;
+-- ── Patch existing live rows: replace any old/broken image paths with CDN URLs ──
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'] WHERE slug = 'luxurious-foundation';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png'] WHERE slug = 'face-powder';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png'] WHERE slug = 'setting-powder';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png'] WHERE slug = 'setting-spray';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'] WHERE slug = 'face-primer';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png'] WHERE slug = 'contour-stick';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'] WHERE slug = 'concealer';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png'] WHERE slug = 'bloom-blush';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png'] WHERE slug = 'eyeshadow-palette';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png'] WHERE slug = 'eye-primer';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png'] WHERE slug = 'mascara';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png'] WHERE slug = 'eyeliner';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png'] WHERE slug = 'eyebrow-pencil';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png'] WHERE slug = 'matte-lipstick';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png'] WHERE slug = 'lip-gloss';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png'] WHERE slug = 'lip-tint';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png'] WHERE slug = 'dual-lipstick';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'] WHERE slug = 'brush-set-18';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'] WHERE slug = 'brush-set-14';
+UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png'] WHERE slug = 'makeup-remover';
+-- Update hero image in frontend_content
+UPDATE public.frontend_content SET content_data = content_data || '{"image_url":"https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/hero-default.png"}'::jsonb WHERE content_key = 'hero_main';
 -- 9C. Admin accounts
 UPDATE public.profiles
 SET role = 'admin'
