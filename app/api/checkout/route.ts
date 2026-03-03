@@ -86,7 +86,8 @@ export async function POST(req: Request) {
         }
 
         // ── 3. Server-side shipping & tax ─────────────────────────────────────
-        const shippingRate = subtotal >= 75 ? 0 : 9.99
+        // Free shipping threshold: $50 (matches storefront banner + site_settings)
+        const shippingRate = subtotal >= 50 ? 0 : 9.99
         const taxTotal = subtotal * 0.08
 
         if (shippingRate > 0) {
@@ -105,10 +106,8 @@ export async function POST(req: Request) {
             .from('orders')
             .insert([{
                 user_id: user?.id ?? null,
-                customer_email: user?.email ?? null,  // guest email grabbed from Stripe later
-                email: user?.email ?? 'pending@guest.local', // Fallback for legacy database NOT NULL constraints
+                customer_email: user?.email ?? null, // guest email captured from Stripe session on webhook
                 amount_total: subtotal + shippingRate + taxTotal,
-                total_amount: subtotal + shippingRate + taxTotal, // Fallback for legacy database NOT NULL constraints
                 status: 'pending',
                 fulfillment_status: 'unfulfilled',
             }])
@@ -165,9 +164,8 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ url: session.url })
 
-    } catch (error: any) {
-        const msg = error?.message || 'Checkout failed'
-        console.error('Checkout Error Detailed:', error)
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : 'Checkout failed'
         return NextResponse.json({ error: msg }, { status: 500 })
     }
 }

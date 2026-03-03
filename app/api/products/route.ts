@@ -6,25 +6,31 @@ export async function GET() {
         const supabase = await createClient();
         const { data: products, error } = await supabase
             .from('products')
-            .select('id, name, description, base_price, images, inventory, is_active, created_at')
-            .eq('is_active', true);
+            .select('id, name, slug, description, base_price, sale_price, on_sale, images, stock, is_active, created_at')
+            .eq('is_active', true)
+            .gt('stock', 0)
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // Map to expected structure if needed
         const formatted = products.map(p => ({
             id: p.id,
             name: p.name,
+            slug: p.slug,
             description: p.description,
-            price: p.base_price,
+            price: p.on_sale && p.sale_price ? Number(p.sale_price) : Number(p.base_price),
+            base_price: Number(p.base_price),
+            sale_price: p.sale_price ? Number(p.sale_price) : null,
+            on_sale: p.on_sale,
             image_url: p.images?.[0] || '',
-            stock: p.inventory,
+            images: p.images ?? [],
+            stock: p.stock,
             is_active: p.is_active,
-            created_at: p.created_at
+            created_at: p.created_at,
         }));
 
         return NextResponse.json(formatted);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
     }
 }

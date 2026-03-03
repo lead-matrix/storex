@@ -26,7 +26,6 @@ export async function POST(req: Request) {
         event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Signature verification failed";
-        console.error(`❌ Webhook verification failed: ${msg}`);
         return NextResponse.json({ error: msg }, { status: 400 });
     }
 
@@ -39,7 +38,7 @@ export async function POST(req: Request) {
             .insert([{ id: event.id }]);
 
         if (dupError) {
-            console.warn(`🔔 Event ${event.id} already processed. Skipping.`);
+            // Already processed — idempotency guard
             return NextResponse.json({ received: true });
         }
 
@@ -50,8 +49,6 @@ export async function POST(req: Request) {
             null;
 
         const orderId = session.metadata?.order_id ?? null;
-
-        console.log(`🔔 Processing session: ${session.id} | order: ${orderId} | email: ${customerEmail}`);
 
         try {
             // ── Atomic: update order status, save email, deduct inventory ─────
@@ -64,7 +61,6 @@ export async function POST(req: Request) {
             });
 
             if (error) {
-                console.error("❌ process_order_atomic failed:", error.message);
                 throw error;
             }
 
@@ -76,10 +72,7 @@ export async function POST(req: Request) {
                     .update({ customer_email: customerEmail, status: "paid" })
                     .eq("id", orderId);
             }
-
-            console.log(`✅ Order ${orderId ?? session.id} fulfilled.`);
-        } catch (err: unknown) {
-            console.error("❌ Order processing failed:", err);
+        } catch {
             // Remove event record so Stripe can retry
             await supabase.from("stripe_events").delete().eq("id", event.id);
             return NextResponse.json({ error: "Order processing failed" }, { status: 500 });
