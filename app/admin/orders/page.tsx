@@ -67,9 +67,9 @@ export default function AdminOrdersPage() {
     async function handleGenerateLabel(orderId: string) {
         toast.promise(generateShippingLabel(orderId), {
             loading: "Generating shipping label...",
-            success: (url) => {
-                window.open(url as string, "_blank");
-                return "Shipping label generated";
+            success: (result) => {
+                window.open(result.labelUrl, "_blank");
+                return `Label ready — Tracking: ${result.trackingNumber}`;
             },
             error: "Fulfillment failed — check Shippo key",
         });
@@ -129,8 +129,8 @@ export default function AdminOrdersPage() {
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`px-4 py-1.5 text-[9px] uppercase tracking-luxury font-bold rounded border transition-all ${filter === f
-                                ? "bg-gold text-black border-gold"
-                                : "bg-transparent text-white/40 border-white/10 hover:border-gold/30 hover:text-white"
+                            ? "bg-gold text-black border-gold"
+                            : "bg-transparent text-white/40 border-white/10 hover:border-gold/30 hover:text-white"
                             }`}
                     >
                         {f}

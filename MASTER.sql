@@ -256,6 +256,10 @@ ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS metadata jsonb;
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE public.orders
+ADD COLUMN IF NOT EXISTS shipping_label_url text;
+-- Drop orphaned admin_audit_logs table (has RLS but no policies — not in schema)
+DROP TABLE IF EXISTS public.admin_audit_logs CASCADE;
 -- Sync legacy columns
 UPDATE public.orders
 SET customer_email = email
@@ -515,12 +519,6 @@ INSERT WITH CHECK (
         OR (
             SELECT auth.uid()
         ) = user_id
-        OR (
-            (
-                SELECT auth.role()
-            ) = 'anon'
-            AND status = 'pending'
-        )
     );
 CREATE POLICY "orders_update" ON public.orders FOR
 UPDATE USING (
@@ -1176,7 +1174,7 @@ VALUES (
     ('store_enabled', 'true'::jsonb),
     (
         'shipping',
-        '{"free_threshold":50,"flat_rate":5.99,"free_label":"Free Shipping","carrier":"USPS"}'::jsonb
+        '{"free_threshold":50,"flat_rate":9.99,"free_label":"Free Shipping on orders over $50","carrier":"USPS"}'::jsonb
     ),
     (
         'social_media',
@@ -1460,9 +1458,7 @@ ELSE -- Fallback: Create new order if it somehow doesn't exist (e.g., deleted)
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
-        email,
         amount_total,
-        total_amount,
         currency,
         status,
         fulfillment_status
@@ -1470,8 +1466,6 @@ INSERT INTO public.orders (
 VALUES (
         p_stripe_session_id,
         p_customer_email,
-        p_customer_email,
-        p_amount_total::numeric / 100.0,
         p_amount_total::numeric / 100.0,
         p_currency,
         'paid',
