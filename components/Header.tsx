@@ -59,8 +59,8 @@ export default function Header() {
                     <h1 className="text-2xl font-playfair text-primary tracking-widest hidden md:block">
                         DINA COSMETIC
                     </h1>
-                    <h1 className="text-xl font-playfair text-primary tracking-widest md:hidden">
-                        DINA
+                    <h1 className="text-base font-playfair text-primary tracking-widest md:hidden">
+                        DINA COSMETIC
                     </h1>
                 </Link>
 

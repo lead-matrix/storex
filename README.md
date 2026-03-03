@@ -62,9 +62,10 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 4. **Set up Supabase**
 
-Run the single initialization script in your Supabase SQL Editor:
-- **File**: `DATABASE_FINAL.sql` (Single source of truth for full setup)
-- **Harden**: `MIGRATION_V5_HARDENING.sql` (Run for production security)
+Run the **single** master script in your Supabase SQL Editor:
+- **File**: `MASTER.sql` — sole source of truth for schema, RLS, indexes, functions, and seed data
+- Zero linter warnings (auth_rls_initplan + multiple_permissive_policies fully resolved)
+- Idempotent — safe to re-run at any time
 
 5. **Create admin user**
 
@@ -97,8 +98,8 @@ Open [http://localhost:3000](http://localhost:3000)
 │   └── utils/            # Helper functions
 ├── utils/                 # Supabase clients
 │   └── supabase/          # Client & Server clients
-├── DATABASE_FINAL.sql     # Unified database setup script (Source of Truth)
-├── MIGRATION_V5_HARDENING.sql # Production security hardening script
+├── MASTER.sql             # Single source of truth — schema, RLS, functions, seed
+├── GUIDE.md               # Complete operations + deployment + admin guide
 └── route-guard.ts         # Core server-side security logic (Auth & RBAC)
 ```
 
