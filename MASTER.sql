@@ -436,12 +436,18 @@ SELECT USING (
         )
     );
 CREATE POLICY "orders_insert" ON public.orders FOR
-INSERT TO authenticated WITH CHECK (
+INSERT WITH CHECK (
         (
+            SELECT public.is_admin()
+        )
+        OR (
             SELECT auth.uid()
         ) = user_id
         OR (
-            SELECT public.is_admin()
+            (
+                SELECT auth.role()
+            ) = 'anon'
+            AND status = 'pending'
         )
     );
 CREATE POLICY "orders_update" ON public.orders FOR

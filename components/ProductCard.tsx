@@ -9,6 +9,10 @@ interface Product {
     name: string;
     slug: string;
     base_price: number;
+    sale_price?: number | null;
+    on_sale?: boolean;
+    is_new?: boolean;
+    is_bestseller?: boolean;
     images: string[];
     description?: string;
 }
@@ -27,9 +31,14 @@ export function ProductCard({
     product: Product;
     variants?: Variant[]
 }) {
-    const { addToCart } = useCart();
+    const themeColors = {
+        primary: "#C6A75E", // gold
+        accent: "#DC2626",  // red for sale
+    };
+
     const mainImage = product.images?.[0] || "/logo.jpg";
-    const price = product.base_price || 0;
+    const isOnSale = product.on_sale && product.sale_price;
+    const currentPrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
 
     const handleQuickAdd = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -38,7 +47,7 @@ export function ProductCard({
             id: product.id,
             productId: product.id,
             name: product.name,
-            price: price,
+            price: currentPrice,
             image: mainImage,
             quantity: 1,
         });
@@ -48,6 +57,25 @@ export function ProductCard({
         <div className="bg-surface border border-border p-6 group hover:border-primary transition">
             <Link href={`/product/${product.slug}`}>
                 <div className="aspect-square overflow-hidden relative">
+                    {/* Badges */}
+                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                        {product.is_new && (
+                            <span className="bg-white text-black text-[9px] font-bold tracking-[0.2em] px-3 py-1 uppercase">
+                                New
+                            </span>
+                        )}
+                        {isOnSale && (
+                            <span className="bg-red-600 text-white text-[9px] font-bold tracking-[0.2em] px-3 py-1 uppercase">
+                                Sale
+                            </span>
+                        )}
+                        {product.is_bestseller && (
+                            <span className="bg-gold text-black text-[9px] font-bold tracking-[0.2em] px-3 py-1 uppercase">
+                                Bestseller
+                            </span>
+                        )}
+                    </div>
+
                     <Image
                         src={mainImage}
                         alt={product.name}
@@ -72,9 +100,22 @@ export function ProductCard({
                 )}
 
                 <div className="pt-2">
-                    <span className="text-primary font-semibold block mb-3">
-                        ${Number(price).toFixed(2)}
-                    </span>
+                    <div className="flex items-center gap-3 mb-3">
+                        {isOnSale ? (
+                            <>
+                                <span className="text-red-500 font-semibold">
+                                    ${Number(product.sale_price).toFixed(2)}
+                                </span>
+                                <span className="text-textSecondary text-sm line-through opacity-50">
+                                    ${Number(product.base_price).toFixed(2)}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-primary font-semibold">
+                                ${Number(product.base_price).toFixed(2)}
+                            </span>
+                        )}
+                    </div>
 
                     <button
                         onClick={handleQuickAdd}

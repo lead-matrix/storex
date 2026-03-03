@@ -133,10 +133,13 @@ export default async function CategorySlugPage({ params }: Props) {
                                 stock: number; is_active: boolean
                             }>)?.filter(v => v.is_active) ?? []
 
-                            const displayPrice = activeVariants.length > 0
-                                ? Math.min(...activeVariants.map(v => v.price_override ?? (product as any).base_price))
-                                : (product as any).base_price
-
+                            const items = products ?? []
+                            const isOnSale = product.on_sale && product.sale_price;
+                            const displayPrice = isOnSale
+                                ? Number(product.sale_price)
+                                : activeVariants.length > 0
+                                    ? Math.min(...activeVariants.map(v => v.price_override ?? (product as any).base_price))
+                                    : (product as any).base_price;
                             const image = product.images?.[0]
 
                             return (
@@ -162,14 +165,19 @@ export default async function CategorySlugPage({ params }: Props) {
                                         )}
 
                                         {/* Badges */}
-                                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                                            {product.is_featured && (
-                                                <span className="bg-gold text-white text-[8px] font-medium uppercase tracking-luxury px-2 py-0.5 rounded-full shadow-sm">
-                                                    Featured
+                                        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                                            {product.is_new && (
+                                                <span className="bg-white text-charcoal text-[8px] font-bold uppercase tracking-luxury px-2 py-0.5 rounded shadow-sm border border-charcoal/5">
+                                                    New
+                                                </span>
+                                            )}
+                                            {isOnSale && (
+                                                <span className="bg-red-600 text-white text-[8px] font-bold uppercase tracking-luxury px-2 py-0.5 rounded shadow-sm">
+                                                    Sale
                                                 </span>
                                             )}
                                             {product.is_bestseller && (
-                                                <span className="bg-charcoal text-pearl text-[8px] font-medium uppercase tracking-luxury px-2 py-0.5 rounded-full shadow-sm">
+                                                <span className="bg-gold text-white text-[8px] font-bold uppercase tracking-luxury px-2 py-0.5 rounded shadow-sm">
                                                     Bestseller
                                                 </span>
                                             )}
@@ -189,10 +197,23 @@ export default async function CategorySlugPage({ params }: Props) {
                                             {product.name}
                                         </h2>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-semibold text-charcoal">
-                                                {activeVariants.length > 1 ? 'From ' : ''}
-                                                ${displayPrice.toFixed(2)}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                {isOnSale ? (
+                                                    <>
+                                                        <span className="text-sm font-bold text-red-600">
+                                                            ${displayPrice.toFixed(2)}
+                                                        </span>
+                                                        <span className="text-[10px] text-textsoft/50 line-through">
+                                                            ${Number((product as any).base_price).toFixed(2)}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-sm font-semibold text-charcoal">
+                                                        {activeVariants.length > 1 ? 'From ' : ''}
+                                                        ${displayPrice.toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <ArrowRight size={12} className="text-textsoft/40 group-hover:text-gold group-hover:translate-x-0.5 transition-all" />
                                         </div>
                                     </div>
