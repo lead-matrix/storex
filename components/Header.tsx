@@ -26,8 +26,8 @@ export default function Header() {
     }, []);
 
     return (
-        <header className="w-full bg-background border-b border-border sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+        <header className="w-full fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10 transition-colors duration-500 hover:bg-black/90">
+            <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center text-white">
 
                 {/* MOBILE MENU */}
                 <div className="md:hidden">
@@ -64,19 +64,19 @@ export default function Header() {
                     </h1>
                 </Link>
 
-                <nav className="hidden md:flex gap-10 text-sm tracking-wider uppercase font-medium">
-                    <Link href="/shop" className="text-textSecondary hover:text-primary transition">Shop</Link>
-                    <Link href="/collections" className="text-textSecondary hover:text-primary transition">Collections</Link>
-                    <Link href="/about" className="text-textSecondary hover:text-primary transition">About</Link>
-                    <Link href="/contact" className="text-textSecondary hover:text-primary transition">Contact</Link>
+                <nav className="hidden md:flex gap-10 text-sm tracking-widest uppercase font-medium">
+                    <Link href="/shop" className="text-white/80 hover:text-primary transition-colors">Shop</Link>
+                    <Link href="/collections" className="text-white/80 hover:text-primary transition-colors">Collections</Link>
+                    <Link href="/about" className="text-white/80 hover:text-primary transition-colors">About</Link>
+                    <Link href="/contact" className="text-white/80 hover:text-primary transition-colors">Contact</Link>
                 </nav>
 
-                <div className="flex gap-5 items-center text-textSecondary">
-                    <Link href={user ? "/account" : "/login"} className="hidden md:block hover:text-primary transition">
-                        <User size={20} />
+                <div className="flex gap-6 items-center text-white/90">
+                    <Link href={user ? "/account" : "/login"} className="hidden md:block hover:text-primary transition-colors">
+                        <User size={22} strokeWidth={1.5} />
                     </Link>
-                    <button onClick={() => setIsCartOpen(true)} className="hover:text-primary transition relative group flex items-center gap-2">
-                        <ShoppingBag size={20} />
+                    <button onClick={() => setIsCartOpen(true)} className="hover:text-primary transition-colors relative group flex items-center gap-2">
+                        <ShoppingBag size={22} strokeWidth={1.5} />
                         {totalItems > 0 && (
                             <span className="text-xs font-bold text-primary">{totalItems}</span>
                         )}
