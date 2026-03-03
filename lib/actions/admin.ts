@@ -40,6 +40,10 @@ export async function createProduct(formData: FormData) {
     const category_id = (formData.get('category_id') as string) || null;
     const is_featured = formData.get('is_featured') === 'on';
     const is_bestseller = formData.get('is_bestseller') === 'on';
+    const is_new = formData.get('is_new') === 'on';
+    const on_sale = formData.get('on_sale') === 'on';
+    const salePriceRaw = formData.get('sale_price') as string;
+    const sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
     const is_active = formData.get('is_active') !== 'off'; // default true
     const imagesRaw = formData.get('images') as string;
     const images = imagesRaw
@@ -64,6 +68,9 @@ export async function createProduct(formData: FormData) {
             images,
             is_featured,
             is_bestseller,
+            is_new,
+            on_sale,
+            sale_price,
             is_active,
             ...(category_id ? { category_id } : {}),
         }])
@@ -94,6 +101,10 @@ export async function updateProduct(formData: FormData) {
     const category_id = (formData.get('category_id') as string) || null;
     const is_featured = formData.get('is_featured') === 'on';
     const is_bestseller = formData.get('is_bestseller') === 'on';
+    const is_new = formData.get('is_new') === 'on';
+    const on_sale = formData.get('on_sale') === 'on';
+    const salePriceRaw = formData.get('sale_price') as string;
+    const sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
     const is_active = formData.get('is_active') !== 'off';
     const imagesRaw = formData.get('images') as string;
     const images = imagesRaw
@@ -116,6 +127,9 @@ export async function updateProduct(formData: FormData) {
             images,
             is_featured,
             is_bestseller,
+            is_new,
+            on_sale,
+            sale_price,
             is_active,
             category_id: category_id || null,
             updated_at: new Date().toISOString(),

@@ -37,10 +37,13 @@ interface ProductFormProps {
         slug?: string
         description?: string
         base_price?: number
+        sale_price?: number | null
+        on_sale?: boolean
         stock?: number
         images?: string[]
         is_featured?: boolean
         is_bestseller?: boolean
+        is_new?: boolean
         category_id?: string
         is_active?: boolean
     }
@@ -242,8 +245,35 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         )}
                     </div>
 
+                    {/* Sale Price */}
+                    <div className="space-y-2">
+                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            Sale Price (USD) — leave blank if not on sale
+                        </Label>
+                        <Input
+                            name="sale_price"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="e.g. 9.99"
+                            defaultValue={product?.sale_price ?? ''}
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
+                        />
+                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Set a sale price and toggle On Sale to activate the discount</p>
+                    </div>
+
                     {/* Toggles */}
                     <div className="space-y-3 pt-2">
+                        <div className="flex items-center space-x-3">
+                            <Switch
+                                id="on_sale"
+                                name="on_sale"
+                                defaultChecked={product?.on_sale}
+                            />
+                            <Label htmlFor="on_sale" className="text-[10px] uppercase tracking-luxury text-red-500 cursor-pointer font-medium">
+                                🔴 On Sale (shows strikethrough + sale price)
+                            </Label>
+                        </div>
                         <div className="flex items-center space-x-3">
                             <Switch
                                 id="is_featured"
@@ -251,7 +281,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 defaultChecked={product?.is_featured}
                             />
                             <Label htmlFor="is_featured" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
-                                Featured in Collection
+                                ⭐ Featured in Collection
                             </Label>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -261,7 +291,17 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 defaultChecked={product?.is_bestseller}
                             />
                             <Label htmlFor="is_bestseller" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
-                                Mark as Bestseller
+                                🏆 Mark as Bestseller
+                            </Label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <Switch
+                                id="is_new"
+                                name="is_new"
+                                defaultChecked={product?.is_new}
+                            />
+                            <Label htmlFor="is_new" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                                ✨ Mark as New Arrival
                             </Label>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -271,7 +311,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 defaultChecked={product?.is_active !== false}
                             />
                             <Label htmlFor="is_active" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
-                                Active (visible in store)
+                                ✅ Active (visible in store)
                             </Label>
                         </div>
                     </div>
