@@ -63,7 +63,12 @@ export default function CheckoutPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error ?? "Could not initiate checkout.");
-            setClientSecret(data.clientSecret);
+            // Redirect to Stripe hosted checkout (works for guests + signed in users)
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error("No checkout URL returned.");
+            }
         } catch (e) { setError((e as Error).message); }
         finally { setLoading(false); }
     }, [cart]);

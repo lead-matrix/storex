@@ -7,8 +7,8 @@ export default async function CheckoutLayout({
 }: {
     children: React.ReactNode
 }) {
-    // requireAuth → redirects to /login if no authenticated session
-    await requireAuth('/login?next=/checkout')
+    // No auth guard here — Guest checkout is fully enabled.
+    // Auth is handled optionally in the API to link users if they are logged in.
 
     return <>{children}</>
 }

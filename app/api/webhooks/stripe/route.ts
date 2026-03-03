@@ -7,9 +7,10 @@ export const runtime = "nodejs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+// Service-role client — bypasses RLS, safe server-side only
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY! // SERVER ONLY
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
@@ -21,54 +22,66 @@ export async function POST(req: Request) {
     }
 
     let event: Stripe.Event;
-
     try {
-        event = stripe.webhooks.constructEvent(
-            body,
-            sig,
-            process.env.STRIPE_WEBHOOK_SECRET!
-        );
-    } catch (err: any) {
-        console.error(`❌ Webhook signature verification failed: ${err.message}`);
-        return NextResponse.json({ error: err.message }, { status: 400 });
+        event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Signature verification failed";
+        console.error(`❌ Webhook verification failed: ${msg}`);
+        return NextResponse.json({ error: msg }, { status: 400 });
     }
 
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Idempotency check: prevent duplicate processing of the same Stripe event
-        const { error: eventError } = await supabase
-            .from('stripe_events')
+        // ── Idempotency: skip if already processed ───────────────────────────
+        const { error: dupError } = await supabase
+            .from("stripe_events")
             .insert([{ id: event.id }]);
 
-        if (eventError) {
-            console.warn(`🔔 Event ${event.id} already processed or conflict occurred. Skipping.`);
+        if (dupError) {
+            console.warn(`🔔 Event ${event.id} already processed. Skipping.`);
             return NextResponse.json({ received: true });
         }
 
-        console.log(`🔔 Processing order for session: ${session.id}`);
+        // ── Grab guest/customer email from Stripe session ────────────────────
+        const customerEmail =
+            session.customer_details?.email ??
+            session.customer_email ??
+            null;
+
+        const orderId = session.metadata?.order_id ?? null;
+
+        console.log(`🔔 Processing session: ${session.id} | order: ${orderId} | email: ${customerEmail}`);
 
         try {
-            // The process_order_atomic expects p_metadata->'items' to be a JSON array.
-            // We must ensure the checkout session was created with this metadata.
+            // ── Atomic: update order status, save email, deduct inventory ─────
             const { error } = await supabase.rpc("process_order_atomic", {
                 p_stripe_session_id: session.id,
-                p_customer_email: session.customer_details?.email,
+                p_customer_email: customerEmail,
                 p_amount_total: session.amount_total,
                 p_currency: session.currency,
                 p_metadata: session.metadata,
             });
 
             if (error) {
-                console.error("❌ Atomic DB processing failed:", error.message);
+                console.error("❌ process_order_atomic failed:", error.message);
                 throw error;
             }
 
-            console.log(`✅ Order ${session.id} processed successfully.`);
-        } catch (err: any) {
+            // ── If the RPC doesn't update email, do it directly ───────────────
+            // (covers guests whose email wasn't known at order creation time)
+            if (customerEmail && orderId) {
+                await supabase
+                    .from("orders")
+                    .update({ customer_email: customerEmail, status: "paid" })
+                    .eq("id", orderId);
+            }
+
+            console.log(`✅ Order ${orderId ?? session.id} fulfilled.`);
+        } catch (err: unknown) {
             console.error("❌ Order processing failed:", err);
-            // Delete the event record if processing fails so it can be retried
-            await supabase.from('stripe_events').delete().eq('id', event.id);
+            // Remove event record so Stripe can retry
+            await supabase.from("stripe_events").delete().eq("id", event.id);
             return NextResponse.json({ error: "Order processing failed" }, { status: 500 });
         }
     }

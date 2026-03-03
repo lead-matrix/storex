@@ -1344,24 +1344,54 @@ GRANT SELECT ON public.admin_sales_stats TO authenticated;
 --      Called by Stripe webhook (service_role).
 --      Atomically creates order + order_items + deducts stock.
 -- ───────────────────────────────────────────────────────────────
+-- ───────────────────────────────────────────────────────────────
+-- §11  RPC: process_order_atomic
+--      Called by Stripe webhook (service_role). 
+--      Handles transition from 'pending' (created at checkout) to 'paid'.
+--      Creates order_items and deducts stock only once.
+-- ───────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.process_order_atomic(
         p_stripe_session_id text,
         p_customer_email text,
-        p_user_id uuid,
         p_amount_total bigint,
         -- in cents
         p_currency text,
         p_metadata jsonb
     ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$
-DECLARE new_order_id uuid;
+DECLARE v_order_id uuid;
+v_already_paid boolean;
 item_record jsonb;
 v_items jsonb;
-BEGIN v_items := (p_metadata->>'items')::jsonb;
+BEGIN -- 1. Identify existing order (created in checkout route) or matching session
+v_order_id := (p_metadata->>'order_id')::uuid;
+-- If no order_id in metadata (or malformed), look up by stripe session
+IF v_order_id IS NULL THEN
+SELECT id,
+    (status = 'paid') INTO v_order_id,
+    v_already_paid
+FROM public.orders
+WHERE stripe_session_id = p_stripe_session_id;
+ELSE
+SELECT (status = 'paid') INTO v_already_paid
+FROM public.orders
+WHERE id = v_order_id;
+END IF;
+-- 2. Idempotency Check: if no order exists, or if order is already paid, bail early
+IF v_already_paid = true THEN RETURN v_order_id;
+END IF;
+-- 3. Transition to 'paid' 
+IF v_order_id IS NOT NULL THEN -- Link session if not yet linked, set status to paid, and capture customer email
+UPDATE public.orders
+SET stripe_session_id = p_stripe_session_id,
+    customer_email = p_customer_email,
+    status = 'paid',
+    updated_at = now()
+WHERE id = v_order_id;
+ELSE -- Fallback: Create new order if it somehow doesn't exist (e.g., deleted)
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
-        user_id,
         amount_total,
         currency,
         status,
@@ -1370,24 +1400,26 @@ INSERT INTO public.orders (
 VALUES (
         p_stripe_session_id,
         p_customer_email,
-        p_user_id,
         p_amount_total::numeric / 100.0,
         p_currency,
         'paid',
         'unfulfilled'
-    ) ON CONFLICT (stripe_session_id) DO NOTHING
-RETURNING id INTO new_order_id;
--- Idempotency: if already processed, return existing order id
-IF new_order_id IS NULL THEN
-SELECT id INTO new_order_id
-FROM public.orders
-WHERE stripe_session_id = p_stripe_session_id;
-RETURN new_order_id;
+    )
+RETURNING id INTO v_order_id;
 END IF;
--- Insert items + deduct stock
+-- 4. Re-fetch JSON items from metadata
+BEGIN v_items := (p_metadata->>'items')::jsonb;
+EXCEPTION
+WHEN others THEN -- Items should be in metadata, if not, we can't fulfill
+RETURN v_order_id;
+END;
+IF v_items IS NULL
+OR jsonb_array_length(v_items) = 0 THEN RETURN v_order_id;
+END IF;
+-- 5. Atomic Fulfillment: order_items + stock deduction
 FOR item_record IN
 SELECT *
-FROM jsonb_array_elements(v_items) LOOP
+FROM jsonb_array_elements(v_items) LOOP -- a. Insert order item
 INSERT INTO public.order_items (
         order_id,
         product_id,
@@ -1396,17 +1428,17 @@ INSERT INTO public.order_items (
         price
     )
 VALUES (
-        new_order_id,
+        v_order_id,
         (item_record->>'product_id')::uuid,
         NULLIF(item_record->>'variant_id', '')::uuid,
         (item_record->>'quantity')::integer,
         (item_record->>'price')::numeric
     );
--- Deduct product stock (floor at 0)
+-- b. Deduct product stock
 UPDATE public.products
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'product_id')::uuid;
--- Deduct variant stock if applicable
+-- c. Deduct variant stock if applicable
 IF (item_record->>'variant_id') IS NOT NULL
 AND (item_record->>'variant_id') != '' THEN
 UPDATE public.variants
@@ -1414,7 +1446,7 @@ SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'variant_id')::uuid;
 END IF;
 END LOOP;
-RETURN new_order_id;
+RETURN v_order_id;
 END;
 $$;
 -- ───────────────────────────────────────────────────────────────
