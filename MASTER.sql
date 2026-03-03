@@ -1341,15 +1341,13 @@ FROM public.orders o
 GRANT SELECT ON public.admin_sales_stats TO authenticated;
 -- ───────────────────────────────────────────────────────────────
 -- §11  RPC: process_order_atomic
---      Called by Stripe webhook (service_role).
---      Atomically creates order + order_items + deducts stock.
--- ───────────────────────────────────────────────────────────────
--- ───────────────────────────────────────────────────────────────
--- §11  RPC: process_order_atomic
 --      Called by Stripe webhook (service_role). 
 --      Handles transition from 'pending' (created at checkout) to 'paid'.
 --      Creates order_items and deducts stock only once.
 -- ───────────────────────────────────────────────────────────────
+-- Clean up signatures if they changed
+DROP FUNCTION IF EXISTS public.process_order_atomic(text, text, uuid, bigint, text, jsonb);
+DROP FUNCTION IF EXISTS public.process_order_atomic(text, text, bigint, text, jsonb);
 CREATE OR REPLACE FUNCTION public.process_order_atomic(
         p_stripe_session_id text,
         p_customer_email text,
