@@ -1205,10 +1205,7 @@ UPDATE public.frontend_content SET content_data = content_data || '{"image_url":
 -- 9C. Admin accounts
 UPDATE public.profiles
 SET role = 'admin'
-WHERE email IN (
-        'arafat.leadmatrix@gmail.com',
-        'leadmatrix.us@gmail.com'
-    );
+WHERE email = 'dinaecosmetic@gmail.com';
 -- 9D. Site settings
 INSERT INTO public.site_settings (setting_key, setting_value)
 VALUES (
