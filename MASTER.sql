@@ -269,6 +269,15 @@ UPDATE public.orders
 SET amount_total = total_amount
 WHERE amount_total IS NULL
     AND total_amount IS NOT NULL;
+-- Safely drop legacy NOT NULL constraints if columns still exist
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='orders' AND column_name='email') THEN
+        ALTER TABLE public.orders ALTER COLUMN email DROP NOT NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='orders' AND column_name='total_amount') THEN
+        ALTER TABLE public.orders ALTER COLUMN total_amount DROP NOT NULL;
+    END IF;
+END $$;
 -- 1F. order_items
 CREATE TABLE IF NOT EXISTS public.order_items (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1481,7 +1490,9 @@ ELSE -- Fallback: Create new order if it somehow doesn't exist (e.g., deleted)
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
+        email,
         amount_total,
+        total_amount,
         currency,
         status,
         fulfillment_status
@@ -1489,6 +1500,8 @@ INSERT INTO public.orders (
 VALUES (
         p_stripe_session_id,
         p_customer_email,
+        p_customer_email,
+        p_amount_total::numeric / 100.0,
         p_amount_total::numeric / 100.0,
         p_currency,
         'paid',
