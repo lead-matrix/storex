@@ -162,7 +162,11 @@ export default async function AdminProductsPage() {
 
                                             <td className="px-6 py-5">
                                                 <span className="text-[9px] uppercase tracking-widest text-white/40">
-                                                    {(product.categories as any)?.name || "—"}
+                                                    {(() => {
+                                                        const cat = product.categories;
+                                                        if (Array.isArray(cat)) return cat[0]?.name || "—";
+                                                        return (cat as any)?.name || "—";
+                                                    })()}
                                                 </span>
                                             </td>
 

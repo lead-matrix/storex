@@ -71,7 +71,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
     const [slugManual, setSlugManual] = useState(!!product?.slug)
 
     const generateSlug = useCallback((name: string) =>
-        name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
         []
     )
 
@@ -112,8 +112,25 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
         setLoading(true)
         setError(null)
         try {
+            // Explicitly sync images and variants
             formData.set('images', images.join(','))
             formData.set('variants', JSON.stringify(variants.filter(v => !v._deleted)))
+
+            // Ensure booleans are always sent as strings to avoid browser checkbox omission
+            const booleans = ['is_active', 'is_featured', 'is_bestseller', 'is_new', 'on_sale']
+            booleans.forEach(key => {
+                const element = document.getElementsByName(key)[0] as HTMLInputElement
+                if (element) {
+                    // Radix switches use a hidden input or the button state
+                    // We check if the key is present in the original formData first
+                    if (!formData.has(key)) {
+                        formData.set(key, 'false')
+                    } else {
+                        // If it's present but Radix sends 'on', we keep it as is
+                        // Our backend handles both 'on' and 'true'
+                    }
+                }
+            })
 
             if (product?.id) {
                 formData.set('id', product.id)

@@ -42,15 +42,12 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
 
         async function fetchProducts() {
             try {
-                // Include variants in the select
                 let query = supabase
                     .from("products")
                     .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock)")
                     .eq("is_active", true);
 
-                if (categoryId) {
-                    query = query.eq("category_id", categoryId);
-                }
+                if (categoryId) query = query.eq("category_id", categoryId);
 
                 if (filter === "new") {
                     query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
@@ -62,16 +59,13 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
 
                 if (error) {
                     console.error("Vault Query Failed:", error.message);
-                    // Fallback try without base_price if it fails (backwards compatibility)
+                    // Fallback to simpler query if the variant Join or column base_price fails
                     const { data: retryData } = await supabase
                         .from("products")
-                        .select("id, name, slug, images, description")
+                        .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_active")
                         .eq("is_active", true)
-                        .limit(20);
-
-                    if (retryData) {
-                        setProducts(retryData as any);
-                    }
+                        .limit(50);
+                    if (retryData) setProducts(retryData as any);
                 } else {
                     setProducts((data ?? []) as unknown as Product[]);
                 }
@@ -84,8 +78,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
 
         fetchProducts();
 
-        const supabaseClient = createClient();
-        const productChannel = supabaseClient
+        const productChannel = supabase
             .channel("product-updates")
             .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
                 fetchProducts();
@@ -93,7 +86,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
             .subscribe();
 
         return () => {
-            supabaseClient.removeChannel(productChannel);
+            supabase.removeChannel(productChannel);
         };
     }, [categoryId, filter]);
 

@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
-import { Save, ShieldCheck, Globe, CreditCard, Layout } from 'lucide-react'
-import { updateStoreSettings, updateHeroContent, updateMenusAndSocials } from './actions'
+import { Save, ShieldCheck, Globe, CreditCard, Layout, Image as ImageIcon, Plus, Trash2 } from 'lucide-react'
+import { updateStoreSettings, updateHeroContent, updateMenusAndSocials } from '@/lib/actions/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,17 +10,19 @@ export default async function AdminSettings() {
     const [
         { data: storeInfo },
         { data: storeStatus },
-        { data: hero },
+        { data: heroLegacy },
+        { data: heroSlides },
         { data: headerNav },
         { data: footerNav },
         { data: socialMedia },
     ] = await Promise.all([
-        supabase.from('site_settings').select('*').eq('setting_key', 'store_info').single(),
-        supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').single(),
-        supabase.from('frontend_content').select('*').eq('content_key', 'hero_main').single(),
-        supabase.from('navigation_menus').select('*').eq('menu_key', 'header_main').single(),
-        supabase.from('navigation_menus').select('*').eq('menu_key', 'footer_legal').single(),
-        supabase.from('site_settings').select('*').eq('setting_key', 'social_media').single(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
+        supabase.from('frontend_content').select('*').eq('content_key', 'hero_main').maybeSingle(),
+        supabase.from('frontend_content').select('*').eq('content_key', 'hero_slides').maybeSingle(),
+        supabase.from('navigation_menus').select('*').eq('menu_key', 'header_main').maybeSingle(),
+        supabase.from('navigation_menus').select('*').eq('menu_key', 'footer_legal').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'social_media').maybeSingle(),
     ])
 
     const isEnabled = storeStatus?.setting_value ?? true
@@ -29,8 +31,8 @@ export default async function AdminSettings() {
         <div className="space-y-12 pb-24 animate-luxury-fade">
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Site Editor</h1>
-                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Unified Control &amp; Identity</p>
+                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Site Vault & Editor</h1>
+                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Design the Obsidian Experience</p>
                 </div>
             </div>
 
@@ -56,31 +58,48 @@ export default async function AdminSettings() {
 
                     {/* ── Hero Masterpiece ── */}
                     <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
-                        <div className="flex items-center gap-4 border-b border-charcoal/10 pb-4">
-                            <Layout className="w-4 h-4 text-gold" />
-                            <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Hero Masterpiece</h2>
+                        <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
+                            <div className="flex items-center gap-4">
+                                <ImageIcon className="w-4 h-4 text-gold" />
+                                <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Hero Masterpiece Slides</h2>
+                            </div>
+                            <p className="text-[9px] text-gold uppercase tracking-widest font-bold font-mono animate-pulse">Live Canvas</p>
                         </div>
+
                         <form action={updateHeroContent} className="space-y-8">
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Main Callout</label>
-                                <textarea
-                                    name="hero_title"
-                                    defaultValue={hero?.content_data?.title || ''}
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-4 text-2xl font-heading text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all h-32 resize-none"
-                                />
+                            <div className="bg-pearl/50 rounded-md p-6 border border-charcoal/5 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Hero Slides Configuration (JSON Array)</label>
+                                    <div className="relative">
+                                        <textarea
+                                            name="hero_slides"
+                                            defaultValue={heroSlides?.content_data?.slides ? JSON.stringify(heroSlides.content_data.slides, null, 2) : '[\n  {\n    "id": 1,\n    "image": "",\n    "title": "DINA COSMETIC",\n    "subtitle": "ELEVATE YOUR BEAUTY RITUAL",\n    "buttonText": "SHOP THE LOOK",\n    "link": "/shop"\n  }\n]'}
+                                            className="w-full bg-white border border-charcoal/10 rounded-md px-6 py-4 text-xs font-mono text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all h-64 resize-none shadow-inner"
+                                        />
+                                        <div className="absolute top-4 right-4 bg-pearl text-[8px] px-2 py-1 rounded border border-charcoal/10 uppercase tracking-widest opacity-50 font-bold">JSON Matrix</div>
+                                    </div>
+                                    <p className="text-[9px] text-textsoft/70 uppercase tracking-luxury leading-relaxed">
+                                        Modify the image URLs and text to update the live storefront slides. <br />
+                                        <span className="text-gold font-bold">Wait 6s for slide transitions on home page.</span>
+                                    </p>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Subtext</label>
-                                <input
-                                    name="hero_subtitle"
-                                    type="text"
-                                    defaultValue={hero?.content_data?.subtitle || ''}
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-4 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
-                                />
+
+                            <div className="grid grid-cols-2 gap-6 opacity-40">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium line-through">Legacy Title (Hidden)</label>
+                                    <input name="hero_title" defaultValue={heroLegacy?.content_data?.title || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readonly />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium line-through">Legacy Subtitle (Hidden)</label>
+                                    <input name="hero_subtitle" defaultValue={heroLegacy?.content_data?.subtitle || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readonly />
+                                </div>
                             </div>
+
                             <button type="submit"
-                                className="bg-charcoal text-pearl rounded-full px-8 py-3 text-[11px] font-medium uppercase tracking-luxury hover:bg-gold transition-all shadow-soft hover:shadow-luxury">
-                                Update Presence
+                                className="bg-charcoal text-pearl rounded-full px-12 py-4 text-[11px] font-medium uppercase tracking-luxury hover:bg-gold transition-all shadow-luxury hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3">
+                                <Save className="w-3.5 h-3.5" />
+                                Update Storefront Canvas
                             </button>
                         </form>
                     </section>
@@ -94,74 +113,62 @@ export default async function AdminSettings() {
                                     <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Brand Identity</h2>
                                 </div>
                                 <button type="submit"
-                                    className="text-charcoal bg-pearl px-4 py-2 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-medium flex items-center gap-2 transition-colors">
-                                    <Save className="w-3 h-3" /> Save Changes
+                                    className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+                                    <Save className="w-3.5 h-3.5" /> Save Brand Details
                                 </button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Name</label>
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Signature</label>
                                     <input
                                         name="name"
                                         type="text"
                                         defaultValue={storeInfo?.setting_value?.name || 'DINA COSMETIC'}
-                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                        required
+                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Primary Currency</label>
                                     <select name="currency" defaultValue={storeInfo?.setting_value?.currency || 'USD'}
-                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all">
-                                        <option value="USD">USD ($)</option>
-                                        <option value="EUR">EUR (€)</option>
+                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="USD">USD ($) — Universal</option>
+                                        <option value="EUR">EUR (€) — Luxury Select</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Tagline</label>
+                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Global Tagline</label>
                                 <input
                                     name="tagline"
                                     type="text"
                                     defaultValue={storeInfo?.setting_value?.tagline || 'Luxury Obsidian Skincare'}
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between p-6 bg-red-50/50 border border-red-100 rounded-md">
-                                <div>
-                                    <p className="text-[10px] uppercase tracking-luxury text-charcoal font-medium">Store Activity Status</p>
-                                    <p className="text-[9px] text-red-500 uppercase tracking-luxury mt-1 font-medium">Maintenance Mode (Emergency Kill Switch)</p>
+                            <div className="flex items-center justify-between p-8 bg-rose-50 border border-rose-100/50 rounded-xl shadow-inner-soft">
+                                <div className="space-y-1">
+                                    <p className="text-[11px] uppercase tracking-widest text-charcoal font-bold">Vault Active Status</p>
+                                    <p className="text-[9px] text-rose-500 uppercase tracking-luxury font-medium flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
+                                        Emergency Kill Switch (Maintenance Mode)
+                                    </p>
                                 </div>
-                                <input
-                                    type="checkbox"
-                                    name="storeEnabled"
-                                    defaultChecked={isEnabled}
-                                    className="w-6 h-6 bg-white border-charcoal/20 text-gold focus:ring-gold rounded cursor-pointer"
-                                />
+                                <div className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        name="storeEnabled"
+                                        defaultChecked={isEnabled}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-14 h-7 bg-pearl peer-focus:outline-none rounded-full border border-charcoal/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
+                                </div>
                             </div>
                         </section>
                     </form>
-
-                    {/* ── Infrastructure ── */}
-                    <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
-                        <div className="flex items-center gap-4 border-b border-charcoal/10 pb-4">
-                            <ShieldCheck className="w-4 h-4 text-gold" />
-                            <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Infrastructure</h2>
-                        </div>
-                        <div className="flex items-center justify-between p-6 bg-emerald-50 border border-emerald-100 rounded-md">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                                </div>
-                                <div>
-                                    <p className="text-[11px] uppercase tracking-luxury text-emerald-700 font-medium">System Status: Optimal</p>
-                                    <p className="text-[10px] text-emerald-600/70 mt-0.5 uppercase tracking-luxury">Stripe Webhooks &amp; Supabase Engine Active</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
 
                     {/* ── Menus & Socials ── */}
                     <form action={updateMenusAndSocials}>
@@ -169,56 +176,64 @@ export default async function AdminSettings() {
                             <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
                                 <div className="flex mt-1 items-center gap-4">
                                     <Layout className="w-4 h-4 text-gold" />
-                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Menus &amp; Socials</h2>
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Navigations & Socials</h2>
                                 </div>
                                 <button type="submit"
-                                    className="text-charcoal bg-pearl px-4 py-2 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-medium flex items-center gap-2 transition-colors">
-                                    <Save className="w-3 h-3" /> Update Menus
+                                    className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+                                    <Save className="w-3.5 h-3.5" /> Synchronize Menus
                                 </button>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Links (JSON)</label>
-                                    <textarea
-                                        name="header_nav"
-                                        defaultValue={headerNav?.menu_items ? JSON.stringify(headerNav.menu_items, null, 2) : '[\n  {"label":"Shop", "href":"/shop"}\n]'}
-                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-4 text-sm font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-32 resize-none"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Footer Legal Links (JSON)</label>
-                                    <textarea
-                                        name="footer_legal"
-                                        defaultValue={footerNav?.menu_items ? JSON.stringify(footerNav.menu_items, null, 2) : '[\n  {"label":"Privacy", "href":"/privacy"}\n]'}
-                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-4 text-sm font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-32 resize-none"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Instagram URL</label>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Links</label>
+                                            <span className="text-[8px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded border border-emerald-100 font-bold tracking-widest uppercase">Live Link</span>
+                                        </div>
+                                        <textarea
+                                            name="header_nav"
+                                            defaultValue={headerNav?.menu_items ? JSON.stringify(headerNav.menu_items, null, 2) : '[\n  {"label":"Shop", "href":"/shop"}\n]'}
+                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-4 text-[11px] font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-48 resize-none shadow-inner"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Legal Terms</label>
+                                            <span className="text-[8px] bg-pearl text-textsoft/50 px-2 py-0.5 rounded border border-charcoal/10 font-bold tracking-widest uppercase">Footer Stack</span>
+                                        </div>
+                                        <textarea
+                                            name="footer_legal"
+                                            defaultValue={footerNav?.menu_items ? JSON.stringify(footerNav.menu_items, null, 2) : '[\n  {"label":"Privacy", "href":"/privacy"}\n]'}
+                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-4 text-[11px] font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-48 resize-none shadow-inner"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-pearl/30 rounded-xl border border-charcoal/5">
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Instagram</label>
                                         <input name="instagram" type="text"
                                             defaultValue={socialMedia?.setting_value?.instagram || ''}
                                             placeholder="https://instagram.com/..."
-                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-3 text-sm text-charcoal outline-none focus:border-gold/50 transition-all"
+                                            className="w-full bg-white border border-charcoal/10 rounded-md px-4 py-3 text-xs text-charcoal outline-none focus:border-gold/50 transition-all shadow-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">TikTok URL</label>
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">TikTok</label>
                                         <input name="tiktok" type="text"
                                             defaultValue={socialMedia?.setting_value?.tiktok || ''}
                                             placeholder="https://tiktok.com/..."
-                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-3 text-sm text-charcoal outline-none focus:border-gold/50 transition-all"
+                                            className="w-full bg-white border border-charcoal/10 rounded-md px-4 py-3 text-xs text-charcoal outline-none focus:border-gold/50 transition-all shadow-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Facebook URL</label>
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Facebook</label>
                                         <input name="facebook" type="text"
                                             defaultValue={socialMedia?.setting_value?.facebook || ''}
                                             placeholder="https://facebook.com/..."
-                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-3 text-sm text-charcoal outline-none focus:border-gold/50 transition-all"
+                                            className="w-full bg-white border border-charcoal/10 rounded-md px-4 py-3 text-xs text-charcoal outline-none focus:border-gold/50 transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
