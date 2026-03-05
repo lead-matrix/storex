@@ -1,9 +1,8 @@
-"use client";
-
-import { createClient } from "@/utils/supabase/client";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 export default function NewProductPage() {
     return (

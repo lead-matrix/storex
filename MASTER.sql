@@ -306,7 +306,46 @@ END $$;
 -- 1G. stripe_events — idempotency log, service_role only
 CREATE TABLE IF NOT EXISTS public.stripe_events (
     id text PRIMARY KEY,
+    type text,
+    data jsonb,
     created_at timestamptz NOT NULL DEFAULT now()
+);
+-- 1H. email_logs — idempotency log for sent emails (service_role only)
+CREATE TABLE IF NOT EXISTS public.email_logs (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    email_type text NOT NULL,
+    recipient text NOT NULL,
+    order_id uuid REFERENCES public.orders(id) ON DELETE SET NULL,
+    sent_at timestamptz NOT NULL DEFAULT now(),
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+-- 1I. inventory_reservations — hold stock during checkout (service_role only)
+CREATE TABLE IF NOT EXISTS public.inventory_reservations (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    variant_id uuid REFERENCES public.variants(id) ON DELETE CASCADE,
+    quantity integer NOT NULL CHECK (quantity > 0),
+    session_id text NOT NULL,
+    expires_at timestamptz NOT NULL DEFAULT (now() + interval '15 minutes'),
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+-- 1J. product_images — optional separate image metadata table
+CREATE TABLE IF NOT EXISTS public.product_images (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    url text NOT NULL,
+    alt_text text,
+    sort_order integer NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+-- 1K. user_profiles — extended user data (maps 1:1 with profiles)
+-- Note: profiles is the primary user table; user_profiles holds extra UI preferences
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+    id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+    display_name text,
+    preferences jsonb NOT NULL DEFAULT '{}',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
 );
 -- ───────────────────────────────────────────────────────────────
 -- §2  CMS TABLES
@@ -375,6 +414,10 @@ ALTER TABLE public.variants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inventory_reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.frontend_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
@@ -574,7 +617,66 @@ CREATE POLICY "order_items_delete" ON public.order_items FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- 5.7  STRIPE_EVENTS  — no public policies (service_role only via RLS bypass)
+-- 5.7  STRIPE_EVENTS  — service_role only (via RLS bypass)
+--      Public and authenticated users have zero access.
+--      Only the webhook handler (service_role) can read/write.
+CREATE POLICY "stripe_events_admin_select" ON public.stripe_events FOR
+SELECT USING (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "stripe_events_admin_insert" ON public.stripe_events FOR
+INSERT WITH CHECK (
+    (SELECT public.is_admin())
+);
+-- 5.7b EMAIL_LOGS  — service_role only
+CREATE POLICY "email_logs_admin_select" ON public.email_logs FOR
+SELECT USING (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "email_logs_admin_insert" ON public.email_logs FOR
+INSERT WITH CHECK (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "email_logs_admin_delete" ON public.email_logs FOR DELETE USING (
+    (SELECT public.is_admin())
+);
+-- 5.7c INVENTORY_RESERVATIONS  — service_role only
+CREATE POLICY "inv_res_admin_all" ON public.inventory_reservations FOR ALL USING (
+    (SELECT public.is_admin())
+);
+-- 5.7d PRODUCT_IMAGES  — public read (images are public), admin write
+CREATE POLICY "product_images_select" ON public.product_images FOR
+SELECT USING (true);
+CREATE POLICY "product_images_insert" ON public.product_images FOR
+INSERT TO authenticated WITH CHECK (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "product_images_update" ON public.product_images FOR
+UPDATE USING (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "product_images_delete" ON public.product_images FOR DELETE USING (
+    (SELECT public.is_admin())
+);
+-- 5.7e USER_PROFILES  — users see/edit own row, admin sees all
+CREATE POLICY "user_profiles_select" ON public.user_profiles FOR
+SELECT USING (
+    (SELECT auth.uid()) = id
+    OR (SELECT public.is_admin())
+);
+CREATE POLICY "user_profiles_insert" ON public.user_profiles FOR
+INSERT WITH CHECK (
+    (SELECT auth.uid()) = id
+    OR (SELECT public.is_admin())
+);
+CREATE POLICY "user_profiles_update" ON public.user_profiles FOR
+UPDATE USING (
+    (SELECT auth.uid()) = id
+    OR (SELECT public.is_admin())
+);
+CREATE POLICY "user_profiles_delete" ON public.user_profiles FOR DELETE USING (
+    (SELECT public.is_admin())
+);
 -- 5.8  SITE_SETTINGS  — public read, admin write
 CREATE POLICY "site_settings_select" ON public.site_settings FOR
 SELECT USING (true);
