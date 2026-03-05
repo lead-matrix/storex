@@ -56,7 +56,7 @@ export default async function AdminCategories() {
                             </div>
 
                             <p className="text-[11px] text-textsoft/80 leading-relaxed uppercase tracking-luxury mb-8">
-                                {category.description || 'No description provided for this collection.'}
+                                Permanent collection identified by unique slug identifier.
                             </p>
 
                             <div className="mt-auto pt-6 border-t border-charcoal/5 flex items-center justify-between">

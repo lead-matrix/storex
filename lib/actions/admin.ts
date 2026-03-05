@@ -1,13 +1,13 @@
 'use server'
 
-import { createClient as createAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { createShippingLabel } from "@/lib/utils/shippo";
 import { sendShippingNotificationEmail } from "@/lib/utils/email";
 
 // Helper to ensure the user is an admin
 async function ensureAdmin() {
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("Authentication required");
@@ -33,19 +33,16 @@ export async function createProduct(formData: FormData) {
     const supabase = await ensureAdmin();
 
     try {
-        const name = formData.get('name') as string;
+        const title = formData.get('title') as string;
         const description = (formData.get('description') as string) || '';
         const priceRaw = (formData.get('base_price') || formData.get('price')) as string;
-        let base_price = parseFloat(priceRaw);
-        if (isNaN(base_price)) base_price = 0;
+        let base_price = parseFloat(priceRaw) || 0;
 
         const stockRaw = formData.get('stock') as string;
-        let stock = parseInt(stockRaw || '0');
-        if (isNaN(stock)) stock = 0;
+        let stock = parseInt(stockRaw || '0') || 0;
 
         const category_id = (formData.get('category_id') as string) || null;
 
-        // Boolean logic handling for standard checkboxes/switches
         const is_featured = formData.get('is_featured') === 'on' || formData.get('is_featured') === 'true';
         const is_bestseller = formData.get('is_bestseller') === 'on' || formData.get('is_bestseller') === 'true';
         const is_new = formData.get('is_new') === 'on' || formData.get('is_new') === 'true';
@@ -53,45 +50,29 @@ export async function createProduct(formData: FormData) {
 
         const salePriceRaw = formData.get('sale_price') as string;
         let sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
-        if (sale_price !== null && isNaN(sale_price)) sale_price = null;
 
-        // Fix: is_active should default to true on creation if field is missing (Quick Add)
-        // Switch component sends nothing when unchecked, so we check for existence
-        const is_active = formData.has('is_active')
-            ? (formData.get('is_active') === 'on' || formData.get('is_active') === 'true')
-            : true;
+        const status = formData.get('status') as string || (formData.get('is_active') === 'false' ? 'draft' : 'active');
 
-        // Explicit images handling
         const imagesRaw = formData.get('images') as string;
         const images = imagesRaw
             ? (imagesRaw.startsWith('[') ? JSON.parse(imagesRaw) : imagesRaw.split(',').map(img => img.trim()).filter(Boolean))
             : [];
 
-        // Slug: use provided or auto-generate from name
         let slug = (formData.get('slug') as string)?.trim();
         if (!slug) {
-            slug = name.toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
+            slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         }
 
-        if (!name) throw new Error("Product name is required.");
+        if (!title) throw new Error("Product title is required.");
 
         const { data: product, error } = await supabase
             .from('products')
             .insert([{
-                name,
+                title,
                 slug,
                 description,
-                base_price,
-                stock,
                 images,
-                is_featured,
-                is_bestseller,
-                is_new,
-                on_sale,
-                sale_price,
-                is_active,
+                status,
                 category_id: category_id === '' ? null : category_id,
             }])
             .select()
@@ -99,10 +80,31 @@ export async function createProduct(formData: FormData) {
 
         if (error) throw new Error(`Failed to create product: ${error.message}`);
 
-        // Save variants if provided
+        // Handle Variants & Inventory
         const variantsRaw = formData.get('variants') as string;
-        if (variantsRaw && product) {
-            await upsertVariants(supabase, product.id, JSON.parse(variantsRaw));
+        const variantsJson = variantsRaw ? JSON.parse(variantsRaw) : [];
+
+        if (variantsJson.length > 0) {
+            await upsertVariants(supabase, product.id, variantsJson);
+        } else {
+            // Create a default variant if none provided to hold the base price and stock
+            const { data: vData, error: vError } = await supabase
+                .from('product_variants')
+                .insert({
+                    product_id: product.id,
+                    title: 'Default',
+                    price: base_price,
+                    compare_price: on_sale ? sale_price : null
+                })
+                .select()
+                .single();
+
+            if (!vError && vData) {
+                await supabase.from('inventory').insert({
+                    variant_id: vData.id,
+                    stock_quantity: stock
+                });
+            }
         }
 
         revalidatePaths(product?.id, product?.slug);
@@ -117,49 +119,30 @@ export async function updateProduct(formData: FormData) {
     const supabase = await ensureAdmin();
 
     const id = formData.get('id') as string;
-    const name = formData.get('name') as string;
+    const title = formData.get('title') as string;
     const description = formData.get('description') as string;
-    const basePriceRaw = (formData.get('base_price') || formData.get('price')) as string;
-    const base_price = parseFloat(basePriceRaw);
-    const stock = parseInt((formData.get('stock') as string) || '0');
     const category_id = (formData.get('category_id') as string) || null;
 
-    // Boolean logic handling for standard checkboxes/switches
-    const is_featured = formData.get('is_featured') === 'on' || formData.get('is_featured') === 'true';
-    const is_bestseller = formData.get('is_bestseller') === 'on' || formData.get('is_bestseller') === 'true';
-    const is_new = formData.get('is_new') === 'on' || formData.get('is_new') === 'true';
-    const on_sale = formData.get('on_sale') === 'on' || formData.get('on_sale') === 'true';
-    const is_active = formData.get('is_active') === 'on' || formData.get('is_active') === 'true';
+    const status = formData.get('status') as string || (formData.get('is_active') === 'false' ? 'draft' : 'active');
 
-    const salePriceRaw = formData.get('sale_price') as string;
-    const sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
-
-    // Explicit images handling
     const imagesRaw = formData.get('images') as string;
     const images = imagesRaw
         ? (imagesRaw.startsWith('[') ? JSON.parse(imagesRaw) : imagesRaw.split(',').map(img => img.trim()).filter(Boolean))
         : [];
 
     let slug = (formData.get('slug') as string)?.trim();
-    if (!slug) slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!slug) slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
     if (!id) throw new Error("Product ID is required for update.");
 
     const { error } = await supabase
         .from('products')
         .update({
-            name,
+            title,
             slug,
             description,
-            base_price,
-            stock,
             images,
-            is_featured,
-            is_bestseller,
-            is_new,
-            on_sale,
-            sale_price,
-            is_active,
+            status,
             category_id: category_id || null,
             updated_at: new Date().toISOString(),
         })
@@ -167,7 +150,6 @@ export async function updateProduct(formData: FormData) {
 
     if (error) throw new Error(`Failed to update product: ${error.message}`);
 
-    // Save variants if provided
     const variantsRaw = formData.get('variants') as string;
     if (variantsRaw) {
         await upsertVariants(supabase, id, JSON.parse(variantsRaw));
@@ -184,28 +166,27 @@ export async function deleteProduct(id: string) {
     revalidatePaths(id, product?.slug);
 }
 
-export async function adjustStock(id: string, delta: number) {
+export async function adjustStock(variantId: string, delta: number) {
     const supabase = await ensureAdmin();
-    // Fetch product to get slug for revalidation
-    const { data: product } = await supabase.from('products').select('slug, stock').eq('id', id).single();
-    if (!product) throw new Error("Product not found");
 
-    const newStock = Math.max(0, (product.stock ?? 0) + delta);
-    const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', id);
+    const { data: inv } = await supabase.from('inventory').select('stock_quantity').eq('variant_id', variantId).single();
+    if (!inv) throw new Error("Inventory not found");
+
+    const newStock = Math.max(0, (inv.stock_quantity ?? 0) + delta);
+    const { error } = await supabase.from('inventory').update({ stock_quantity: newStock }).eq('variant_id', variantId);
     if (error) throw new Error(error.message);
 
-    revalidatePaths(id, product.slug);
+    revalidatePath('/admin/products');
 }
 
-export async function toggleProductStatus(id: string, current: boolean) {
+export async function toggleProductStatus(id: string, currentStatus: string) {
     const supabase = await ensureAdmin();
-    const { data: product } = await supabase.from('products').select('slug').eq('id', id).single();
-    if (!product) throw new Error("Product not found");
+    const newStatus = currentStatus === 'active' ? 'draft' : 'active';
 
-    const { error } = await supabase.from('products').update({ is_active: !current }).eq('id', id);
+    const { error } = await supabase.from('products').update({ status: newStatus }).eq('id', id);
     if (error) throw new Error(error.message);
 
-    revalidatePaths(id, product.slug);
+    revalidatePath('/admin/products');
 }
 
 // ─────────────────────────────────────────────────
@@ -214,62 +195,76 @@ export async function toggleProductStatus(id: string, current: boolean) {
 
 interface VariantInput {
     id?: string
-    name: string
-    variant_type: 'shade' | 'size' | 'bundle' | 'type'
-    color_code?: string
-    price_override: number | null
+    title: string
+    variant_type?: string
+    sku?: string
+    price: number
+    compare_price: number | null
     stock: number
-    is_active: boolean
     _isNew?: boolean
 }
 
 async function upsertVariants(
-    supabase: Awaited<ReturnType<typeof createAdminClient>>,
+    supabase: any,
     productId: string,
-    variants: VariantInput[]
+    variants: (VariantInput & { _deleted?: boolean })[]
 ) {
-    for (const v of variants) {
-        let price_override = v.price_override;
-        if (price_override !== null && isNaN(price_override)) price_override = null;
+    // 1. Delete variants marked as _deleted
+    const toDelete = variants.filter(v => v._deleted && v.id);
+    if (toDelete.length > 0) {
+        await supabase
+            .from('product_variants')
+            .delete()
+            .in('id', toDelete.map(v => v.id));
+    }
 
-        let stock = v.stock;
-        if (isNaN(stock)) stock = 0;
+    // 2. Filter out deleted items
+    const activeVariants = variants.filter(v => !v._deleted);
+
+    for (const v of activeVariants) {
+        const variantPayload = {
+            product_id: productId,
+            title: v.title,
+            sku: v.sku,
+            price: v.price || 0,
+            compare_price: v.compare_price,
+            weight: 0
+        };
 
         if (v.id && !v._isNew) {
             // Update existing
-            const { error } = await supabase
-                .from('variants')
-                .update({
-                    name: v.name,
-                    variant_type: v.variant_type,
-                    color_code: v.color_code,
-                    price_override,
-                    stock,
-                    is_active: v.is_active,
-                })
+            const { error: vErr } = await supabase
+                .from('product_variants')
+                .update(variantPayload)
                 .eq('id', v.id);
-            if (error) console.error("Error updating variant:", error);
+
+            if (!vErr) {
+                await supabase.from('inventory').upsert({
+                    variant_id: v.id,
+                    stock_quantity: v.stock
+                }, { onConflict: 'variant_id' });
+            }
         } else {
             // Insert new
-            const { error } = await supabase
-                .from('variants')
-                .insert({
-                    product_id: productId,
-                    name: v.name,
-                    variant_type: v.variant_type,
-                    color_code: v.color_code,
-                    price_override,
-                    stock,
-                    is_active: v.is_active,
+            const { data: vData, error: vErr } = await supabase
+                .from('product_variants')
+                .insert(variantPayload)
+                .select()
+                .single();
+
+            if (!vErr && vData) {
+                await supabase.from('inventory').insert({
+                    variant_id: vData.id,
+                    stock_quantity: v.stock
                 });
-            if (error) console.error("Error inserting variant:", error);
+            }
         }
     }
 }
 
 export async function deleteVariant(variantId: string) {
     const supabase = await ensureAdmin();
-    const { error } = await supabase.from('variants').delete().eq('id', variantId);
+    const { error } = await supabase.from('product_variants').delete().eq('id', variantId);
     if (error) throw new Error(`Failed to delete variant: ${error.message}`);
     revalidatePath('/admin/products');
 }
@@ -292,14 +287,12 @@ export async function updateUserRole(userId: string, newRole: string) {
 export async function createCategory(formData: FormData) {
     const supabase = await ensureAdmin();
     const name = formData.get('name') as string;
-    const description = (formData.get('description') as string) || '';
 
-    // Better slug generation
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
     const { error } = await supabase
         .from('categories')
-        .insert([{ name, description, slug }]);
+        .insert([{ name, slug }]);
 
     if (error) throw new Error(`Failed to create category: ${error.message}`);
 
@@ -309,13 +302,12 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(id: string, formData: FormData) {
     const supabase = await ensureAdmin();
     const name = formData.get('name') as string;
-    const description = (formData.get('description') as string) || '';
 
     const { data: category } = await supabase.from('categories').select('slug').eq('id', id).single();
 
     const { error } = await supabase
         .from('categories')
-        .update({ name, description })
+        .update({ name })
         .eq('id', id);
 
     if (error) throw new Error(`Failed to update category: ${error.message}`);
@@ -370,7 +362,7 @@ export async function fulfillOrder(orderId: string) {
             orderId,
             customerEmail,
             customerName: (order.shipping_address as { name?: string })?.name || 'Valued Client',
-            totalAmount: order.amount_total,
+            totalAmount: Number(order.total_amount),
             trackingNumber: shipping.tracking_number,
             labelUrl: shipping.label_url
         });

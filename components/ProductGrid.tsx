@@ -42,32 +42,38 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
 
         async function fetchProducts() {
             try {
+                // Querying for V2 but including fallback fields if they exist
                 let query = supabase
                     .from("products")
-                    .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock)")
-                    .eq("is_active", true);
+                    .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, category_id, status, is_featured, product_variants(id, title, price, compare_price)")
+                    .eq("status", "active");
 
-                if (categoryId) query = query.eq("category_id", categoryId);
-
-                if (filter === "new") {
-                    query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-                }
+                if (categoryId && categoryId !== "all") query = query.eq("category_id", categoryId);
 
                 query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
 
                 const { data, error } = await query;
 
                 if (error) {
-                    console.error("Vault Query Failed:", error.message);
-                    // Fallback to simpler query if the variant Join or column base_price fails
-                    const { data: retryData } = await supabase
+                    console.error("V2 Vault Query Failed, falling back to V1 compatibility mode:", error.message);
+                    // Fallback to V1 if V2 schema isn't fully applied to DB yet
+                    const { data: v1Data } = await supabase
                         .from("products")
                         .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_active")
                         .eq("is_active", true)
                         .limit(50);
-                    if (retryData) setProducts(retryData as any);
+
+                    if (v1Data) {
+                        setProducts(v1Data.map((p: any) => ({ ...p, title: p.name })) as any);
+                    }
                 } else {
-                    setProducts((data ?? []) as unknown as Product[]);
+                    // Map V2 data to the UI expected 'Product' interface
+                    const mapped = (data ?? []).map((p: any) => ({
+                        ...p,
+                        name: p.title, // Map V2 title to legacy name for components
+                        variants: p.product_variants ? p.product_variants.map((v: any) => ({ ...v, name: v.title, price_override: v.price })) : []
+                    }));
+                    setProducts(mapped as any);
                 }
             } catch (err) {
                 console.error("CRITICAL VAULT ERROR:", err);
