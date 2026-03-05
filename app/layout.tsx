@@ -90,7 +90,6 @@ export const metadata: Metadata = {
   },
 };
 
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -98,13 +97,25 @@ export default async function RootLayout({
 }>) {
   const supabase = await createClient();
 
-  // Fetch user server-side safely
-  let user = null;
+  // Fetch navs
+  let headerNavItems = [];
+  let footerShopItems = [];
+  let footerLegalItems = [];
+  let socialLinks = null;
+
   try {
-    const { data: { user: foundUser } } = await supabase.auth.getUser();
-    user = foundUser;
+    const [headerRes, shopLinksRes, legalLinksRes, socialRes] = await Promise.all([
+      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'header_main').single(),
+      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_shop').single(),
+      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_legal').single(),
+      supabase.from('site_settings').select('setting_value').eq('setting_key', 'social_media').single(),
+    ]);
+    if (headerRes.data) headerNavItems = headerRes.data.menu_items || [];
+    if (shopLinksRes.data) footerShopItems = shopLinksRes.data.menu_items || [];
+    if (legalLinksRes.data) footerLegalItems = legalLinksRes.data.menu_items || [];
+    if (socialRes.data) socialLinks = socialRes.data.setting_value;
   } catch (err) {
-    console.error("Auth session sync failed:", err);
+    console.error("Navigation fetch failed:", err);
   }
 
   return (
@@ -114,12 +125,12 @@ export default async function RootLayout({
       >
         <CartProvider>
           <div className="relative flex flex-col min-h-screen">
-            <Header />
+            <Header navItems={headerNavItems} />
             <main className="flex-grow">
               {children}
             </main>
             <ShoppingBagDrawer />
-            <Footer />
+            <Footer shopLinks={footerShopItems} legalLinks={footerLegalItems} social={socialLinks} />
           </div>
           <Toaster
             position="bottom-right"

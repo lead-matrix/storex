@@ -1,8 +1,22 @@
 import Link from "next/link";
-import { Instagram } from "lucide-react";
+import { Instagram, Youtube, Twitter, Facebook } from "lucide-react";
 
-export async function Footer() {
+interface FooterProps {
+    shopLinks?: { label: string, href: string }[];
+    legalLinks?: { label: string, href: string }[];
+    social?: { instagram?: string, tiktok?: string, facebook?: string, pinterest?: string, youtube?: string };
+}
+
+export async function Footer({ shopLinks = [], legalLinks = [], social }: FooterProps) {
     const currentYear = new Date().getFullYear();
+
+    const fallbackLegal = [
+        { label: 'Privacy', href: '/privacy' },
+        { label: 'Terms', href: '/terms' },
+        { label: 'Contact', href: '/contact' }
+    ];
+
+    const legal = legalLinks.length > 0 ? legalLinks : fallbackLegal;
 
     return (
         <footer className="bg-background border-t border-border pt-20 pb-10 px-6 mt-10">
@@ -15,15 +29,31 @@ export async function Footer() {
                 </Link>
 
                 <div className="flex items-center gap-8 mb-12">
-                    <Link href="/privacy" className="text-xs uppercase tracking-widest text-textSecondary hover:text-primary transition-colors">Privacy</Link>
-                    <Link href="/terms" className="text-xs uppercase tracking-widest text-textSecondary hover:text-primary transition-colors">Terms</Link>
-                    <Link href="/contact" className="text-xs uppercase tracking-widest text-textSecondary hover:text-primary transition-colors">Contact</Link>
+                    {legal.map(link => (
+                        <Link key={link.href} href={link.href} className="text-xs uppercase tracking-widest text-textSecondary hover:text-primary transition-colors">
+                            {link.label}
+                        </Link>
+                    ))}
                 </div>
 
                 <div className="flex flex-col items-center space-y-6">
-                    <Link href="https://www.instagram.com/dinacosmetic_1?igsh=MTB1ZmUyOWg0dDg1Mw==" target="_blank" className="text-textSecondary hover:text-primary transition-colors">
-                        <Instagram size={18} strokeWidth={1.5} />
-                    </Link>
+                    <div className="flex gap-4">
+                        {social?.instagram && (
+                            <Link href={social.instagram} target="_blank" className="text-textSecondary hover:text-primary transition-colors">
+                                <Instagram size={18} strokeWidth={1.5} />
+                            </Link>
+                        )}
+                        {social?.facebook && (
+                            <Link href={social.facebook} target="_blank" className="text-textSecondary hover:text-primary transition-colors">
+                                <Facebook size={18} strokeWidth={1.5} />
+                            </Link>
+                        )}
+                        {social?.youtube && (
+                            <Link href={social.youtube} target="_blank" className="text-textSecondary hover:text-primary transition-colors">
+                                <Youtube size={18} strokeWidth={1.5} />
+                            </Link>
+                        )}
+                    </div>
 
                     <p className="text-[10px] uppercase tracking-widest text-textSecondary opacity-50">
                         © {currentYear} DINA COSMETIC. All Rights Reserved.

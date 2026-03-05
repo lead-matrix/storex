@@ -134,7 +134,13 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
     const visibleVariants = variants.filter(v => !v._deleted)
 
     return (
-        <form action={handleSubmit} className="space-y-10">
+        <form
+            onSubmit={(e) => {
+                e.preventDefault()
+                handleSubmit(new FormData(e.currentTarget))
+            }}
+            className="space-y-10"
+        >
 
             {/* Error Banner */}
             {error && (
