@@ -1,6 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { Plus, Trash2, Edit3, Tag } from 'lucide-react'
 import { createCategory, deleteCategory } from '@/lib/actions/admin'
+import type { Metadata } from 'next'
+
+export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { title: 'Categories | Admin' }
+
 
 export default async function AdminCategories() {
     const supabase = await createClient()

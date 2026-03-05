@@ -1,14 +1,20 @@
 "use server";
 
+import { createClient } from "@/utils/supabase/server";
 import { createClient as createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 // Ensure the caller is an authenticated admin
+// Uses the regular server client for cookie-based session resolution,
+// then the admin client for the privileged role lookup.
 async function ensureAdmin() {
-    const supabase = await createAdminClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // Must use the server (anon) client for cookie-based session
+    const serverClient = await createClient();
+    const { data: { user } } = await serverClient.auth.getUser();
     if (!user) throw new Error("Authentication required");
 
+    // Use admin client to bypass RLS for role lookup
+    const supabase = await createAdminClient();
     const { data: profile } = await supabase
         .from("profiles")
         .select("role")
