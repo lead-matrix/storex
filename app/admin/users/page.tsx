@@ -1,9 +1,15 @@
-import { createClient } from "@/utils/supabase/server";
-import { Shield, User, Search, Trash2, Mail, Calendar } from "lucide-react";
+import { createClient as createAdminClient } from "@/utils/supabase/admin";
+import { Shield, User, Mail, Calendar } from "lucide-react";
 import { updateUserRole } from "@/lib/actions/admin";
+import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Clientele | Admin" };
+
 
 export default async function AdminUsersPage() {
-    const supabase = await createClient();
+    // Must use admin client to read all profiles (RLS restricts anon to own row)
+    const supabase = await createAdminClient();
 
     const { data: users } = await supabase
         .from("profiles")

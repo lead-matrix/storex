@@ -1,7 +1,25 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { createClient as createAdminClient } from "@/utils/supabase/admin";
+import { revalidatePath } from "next/cache";
+
+// Ensure caller is an authenticated admin
+async function ensureAdmin() {
+    const serverClient = await createClient();
+    const { data: { user } } = await serverClient.auth.getUser();
+    if (!user) throw new Error('Authentication required');
+
+    const supabase = await createAdminClient();
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    if (profile?.role !== 'admin') throw new Error('Unauthorized');
+    return supabase;
+}
 
 // =====================================================
 // FRONTEND CONTENT ACTIONS
@@ -9,9 +27,9 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function updateFrontendContent(
     contentKey: string,
-    contentData: any
+    contentData: Record<string, unknown>
 ) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("frontend_content")
@@ -24,18 +42,16 @@ export async function updateFrontendContent(
         .single();
 
     if (error) {
-        console.error("Error updating frontend content:", error);
         return { success: false, error: error.message };
     }
 
-    // Revalidate all paths to show changes immediately
     revalidatePath("/", "layout");
-    // revalidateTag("frontend-content");
 
     return { success: true, data };
 }
 
 export async function getFrontendContent(contentKey: string) {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -45,7 +61,6 @@ export async function getFrontendContent(contentKey: string) {
         .single();
 
     if (error) {
-        console.error("Error fetching frontend content:", error);
         return null;
     }
 
@@ -53,6 +68,7 @@ export async function getFrontendContent(contentKey: string) {
 }
 
 export async function getAllFrontendContent() {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -61,7 +77,6 @@ export async function getAllFrontendContent() {
         .order("content_type");
 
     if (error) {
-        console.error("Error fetching all frontend content:", error);
         return [];
     }
 
@@ -71,9 +86,9 @@ export async function getAllFrontendContent() {
 export async function createFrontendContent(
     contentKey: string,
     contentType: string,
-    contentData: any
+    contentData: Record<string, unknown>
 ) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("frontend_content")
@@ -86,18 +101,16 @@ export async function createFrontendContent(
         .single();
 
     if (error) {
-        console.error("Error creating frontend content:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("frontend-content");
 
     return { success: true, data };
 }
 
 export async function deleteFrontendContent(contentKey: string) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
 
     const { error } = await supabase
         .from("frontend_content")
@@ -105,12 +118,10 @@ export async function deleteFrontendContent(contentKey: string) {
         .eq("content_key", contentKey);
 
     if (error) {
-        console.error("Error deleting frontend content:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("frontend-content");
 
     return { success: true };
 }
@@ -119,8 +130,8 @@ export async function deleteFrontendContent(contentKey: string) {
 // NAVIGATION MENU ACTIONS
 // =====================================================
 
-export async function updateNavigationMenu(menuKey: string, menuItems: any) {
-    const supabase = await createClient();
+export async function updateNavigationMenu(menuKey: string, menuItems: Record<string, unknown>[]) {
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("navigation_menus")
@@ -133,17 +144,16 @@ export async function updateNavigationMenu(menuKey: string, menuItems: any) {
         .single();
 
     if (error) {
-        console.error("Error updating navigation menu:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("navigation");
 
     return { success: true, data };
 }
 
 export async function getNavigationMenu(menuKey: string) {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -153,7 +163,6 @@ export async function getNavigationMenu(menuKey: string) {
         .single();
 
     if (error) {
-        console.error("Error fetching navigation menu:", error);
         return null;
     }
 
@@ -161,6 +170,7 @@ export async function getNavigationMenu(menuKey: string) {
 }
 
 export async function getAllNavigationMenus() {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -169,7 +179,6 @@ export async function getAllNavigationMenus() {
         .order("display_order");
 
     if (error) {
-        console.error("Error fetching navigation menus:", error);
         return [];
     }
 
@@ -180,8 +189,8 @@ export async function getAllNavigationMenus() {
 // PAGE CONTENT ACTIONS
 // =====================================================
 
-export async function updatePage(slug: string, pageData: any) {
-    const supabase = await createClient();
+export async function updatePage(slug: string, pageData: Record<string, unknown>) {
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("pages")
@@ -194,18 +203,17 @@ export async function updatePage(slug: string, pageData: any) {
         .single();
 
     if (error) {
-        console.error("Error updating page:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath(`/${slug}`);
     revalidatePath("/", "layout");
-    // revalidateTag("pages");
 
     return { success: true, data };
 }
 
 export async function getPage(slug: string) {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -215,7 +223,6 @@ export async function getPage(slug: string) {
         .single();
 
     if (error) {
-        console.error("Error fetching page:", error);
         return null;
     }
 
@@ -223,6 +230,7 @@ export async function getPage(slug: string) {
 }
 
 export async function getAllPages() {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -231,15 +239,14 @@ export async function getAllPages() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        console.error("Error fetching pages:", error);
         return [];
     }
 
     return data;
 }
 
-export async function createPage(pageData: any) {
-    const supabase = await createClient();
+export async function createPage(pageData: Record<string, unknown>) {
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("pages")
@@ -248,28 +255,24 @@ export async function createPage(pageData: any) {
         .single();
 
     if (error) {
-        console.error("Error creating page:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("pages");
 
     return { success: true, data };
 }
 
 export async function deletePage(slug: string) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
 
     const { error } = await supabase.from("pages").delete().eq("slug", slug);
 
     if (error) {
-        console.error("Error deleting page:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("pages");
 
     return { success: true };
 }
@@ -278,8 +281,8 @@ export async function deletePage(slug: string) {
 // THEME SETTINGS ACTIONS
 // =====================================================
 
-export async function updateThemeSettings(themeKey: string, settings: any) {
-    const supabase = await createClient();
+export async function updateThemeSettings(themeKey: string, settings: Record<string, unknown>) {
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("theme_settings")
@@ -292,17 +295,16 @@ export async function updateThemeSettings(themeKey: string, settings: any) {
         .single();
 
     if (error) {
-        console.error("Error updating theme settings:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("theme");
 
     return { success: true, data };
 }
 
 export async function getActiveTheme() {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -312,7 +314,6 @@ export async function getActiveTheme() {
         .single();
 
     if (error) {
-        console.error("Error fetching active theme:", error);
         return null;
     }
 
@@ -320,6 +321,7 @@ export async function getActiveTheme() {
 }
 
 export async function getAllThemes() {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -328,7 +330,6 @@ export async function getAllThemes() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        console.error("Error fetching themes:", error);
         return [];
     }
 
@@ -336,7 +337,7 @@ export async function getAllThemes() {
 }
 
 export async function activateTheme(themeKey: string) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
 
     // Deactivate all themes
     await supabase.from("theme_settings").update({ is_active: false }).neq("theme_key", "");
@@ -350,12 +351,10 @@ export async function activateTheme(themeKey: string) {
         .single();
 
     if (error) {
-        console.error("Error activating theme:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("theme");
 
     return { success: true, data };
 }
@@ -364,8 +363,8 @@ export async function activateTheme(themeKey: string) {
 // SITE SETTINGS ACTIONS (Enhanced)
 // =====================================================
 
-export async function updateSiteSettings(settingKey: string, settingValue: any) {
-    const supabase = await createClient();
+export async function updateSiteSettings(settingKey: string, settingValue: Record<string, unknown>) {
+    const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
         .from("site_settings")
@@ -378,17 +377,16 @@ export async function updateSiteSettings(settingKey: string, settingValue: any) 
         .single();
 
     if (error) {
-        console.error("Error updating site settings:", error);
         return { success: false, error: error.message };
     }
 
     revalidatePath("/", "layout");
-    // revalidateTag("site-settings");
 
     return { success: true, data };
 }
 
 export async function getSiteSettings(settingKey: string) {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -398,7 +396,6 @@ export async function getSiteSettings(settingKey: string) {
         .single();
 
     if (error) {
-        console.error("Error fetching site settings:", error);
         return null;
     }
 
@@ -406,6 +403,7 @@ export async function getSiteSettings(settingKey: string) {
 }
 
 export async function getAllSiteSettings() {
+    // Read-only: use anon client
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -414,7 +412,6 @@ export async function getAllSiteSettings() {
         .order("setting_key");
 
     if (error) {
-        console.error("Error fetching all site settings:", error);
         return [];
     }
 

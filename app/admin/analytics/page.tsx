@@ -31,12 +31,12 @@ function LineChart({ data, color = '#D4AF37', h = 120 }: { data: number[]; color
     )
 }
 
-function buildDailyTotals(orders: { total_amount: number; created_at: string }[], days: number) {
+function buildDailyTotals(orders: { amount_total: number; created_at: string }[], days: number) {
     const arr = Array(days).fill(0)
     orders.forEach(o => {
         const diff = Math.floor((Date.now() - new Date(o.created_at).getTime()) / 86400000)
         const idx = days - 1 - Math.min(diff, days - 1)
-        arr[idx] += Number(o.total_amount) || 0
+        arr[idx] += Number(o.amount_total) || 0
     })
     return arr
 }
@@ -53,22 +53,22 @@ export default async function AnalyticsPage() {
         { data: monthly },
         { data: topItems },
     ] = await Promise.all([
-        supabase.from('orders').select('total_amount, created_at').eq('status', 'paid'),
+        supabase.from('orders').select('amount_total, created_at').eq('status', 'paid'),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('orders').select('total_amount, created_at')
+        supabase.from('orders').select('amount_total, created_at')
             .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).order('created_at', { ascending: true }),
-        supabase.from('orders').select('total_amount, created_at')
+        supabase.from('orders').select('amount_total, created_at')
             .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString()).order('created_at', { ascending: true }),
         supabase.from('order_items').select('product_id, quantity, products(name)').limit(100),
     ])
 
-    const grossRevenue = paidOrders?.reduce((s, o) => s + (o.total_amount || 0), 0) ?? 0
+    const grossRevenue = paidOrders?.reduce((s, o) => s + (o.amount_total || 0), 0) ?? 0
     const aov = (totalOrders ?? 0) > 0 ? grossRevenue / (totalOrders ?? 1) : 0
 
-    const w7 = buildDailyTotals((weekly ?? []) as { total_amount: number; created_at: string }[], 7)
-    const m30 = buildDailyTotals((monthly ?? []) as { total_amount: number; created_at: string }[], 30)
+    const w7 = buildDailyTotals((weekly ?? []) as { amount_total: number; created_at: string }[], 7)
+    const m30 = buildDailyTotals((monthly ?? []) as { amount_total: number; created_at: string }[], 30)
     const chartW = w7.every(v => v === 0) ? [3200, 4800, 3900, 6100, 5400, 7200, 5800] : w7
     const chartM = m30.every(v => v === 0) ? Array.from({ length: 30 }, (_, i) => 2000 + Math.sin(i * 0.5) * 1500 + i * 80) : m30
 
