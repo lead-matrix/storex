@@ -50,7 +50,7 @@ export async function POST(req: Request) {
                 p_user_id: userId,
                 p_amount: session.amount_total ? session.amount_total / 100 : 0,
                 p_currency: session.currency || 'usd',
-                p_shipping_address: session.shipping_details?.address || {},
+                p_shipping_address: (session as any).shipping_details?.address || {},
                 p_items: items
             });
 
