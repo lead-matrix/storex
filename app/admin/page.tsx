@@ -207,22 +207,22 @@ export default async function AdminCommandCenter() {
         { data: weeklyOrders },
         { data: topProducts },
     ] = await Promise.all([
-        supabase.from('orders').select('total_amount').eq('status', 'paid'),
+        supabase.from('orders').select('amount_total').eq('status', 'paid'),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('orders')
-            .select('id, email, status, total_amount, created_at')
+            .select('id, customer_email, status, amount_total, created_at')
             .order('created_at', { ascending: false })
             .limit(6),
         supabase.from('products')
-            .select('id, name, inventory')
-            .lt('inventory', 5)
+            .select('id, name, stock')
+            .lt('stock', 5)
             .eq('is_active', true)
-            .order('inventory', { ascending: true })
+            .order('stock', { ascending: true })
             .limit(5),
         supabase.from('orders')
-            .select('total_amount, created_at')
+            .select('amount_total, created_at')
             .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
             .order('created_at', { ascending: true }),
         supabase.from('order_items')
@@ -230,7 +230,7 @@ export default async function AdminCommandCenter() {
             .limit(50),
     ])
 
-    const totalRevenue = revenueData?.reduce((a, c) => a + (c.total_amount || 0), 0) || 0
+    const totalRevenue = revenueData?.reduce((a, c) => a + (Number(c.amount_total) || 0), 0) || 0
     const avgOrderValue = (totalOrders ?? 0) > 0 ? totalRevenue / (totalOrders ?? 1) : 0
 
     // Weekly chart
@@ -238,7 +238,7 @@ export default async function AdminCommandCenter() {
     weeklyOrders?.forEach(o => {
         const d = new Date(o.created_at as string).getDay()
         const idx = d === 0 ? 6 : d - 1
-        dayTotals[idx] += Number(o.total_amount) || 0
+        dayTotals[idx] += Number(o.amount_total) || 0
     })
     const chartData = dayTotals.every(v => v === 0)
         ? [4200, 5100, 4800, 6300, 5800, 7200, 5500]
@@ -383,11 +383,11 @@ export default async function AdminCommandCenter() {
                                 >
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="w-8 h-8 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center text-xs text-gray-600 font-medium">
-                                            {((order.email as string) || '?')[0].toUpperCase()}
+                                            {((order.customer_email as string) || '?')[0].toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-sm text-gray-900 font-medium truncate">
-                                                {(order.email as string)?.split('@')[0] || 'Guest'}
+                                                {(order.customer_email as string)?.split('@')[0] || 'Guest'}
                                             </p>
                                             <p className="text-xs text-gray-500 mt-1">
                                                 {order.created_at ? new Date(order.created_at as string).toLocaleDateString() : ''}
@@ -397,7 +397,7 @@ export default async function AdminCommandCenter() {
                                     <div className="flex items-center gap-4 flex-shrink-0">
                                         <StatusBadge status={order.status as string} />
                                         <span className="text-sm font-bold text-gray-900">
-                                            ${Number(order.total_amount || 0).toFixed(2)}
+                                            ${Number(order.amount_total || 0).toFixed(2)}
                                         </span>
                                     </div>
                                 </Link>
@@ -434,14 +434,14 @@ export default async function AdminCommandCenter() {
                                     <div className="flex items-center gap-4 min-w-0">
                                         <AlertTriangle
                                             size={16}
-                                            className={`flex-shrink-0 ${Number(product.inventory) === 0 ? 'text-red-500' : 'text-amber-500'}`}
+                                            className={`flex-shrink-0 ${Number(product.stock) === 0 ? 'text-red-500' : 'text-amber-500'}`}
                                         />
                                         <p className="text-sm text-gray-900 font-medium truncate">
                                             {product.name as string}
                                         </p>
                                     </div>
-                                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${Number(product.inventory) === 0 ? 'text-red-700 bg-red-100' : 'text-amber-700 bg-amber-100'}`}>
-                                        {Number(product.inventory) === 0 ? 'Out of Stock' : `Low (${product.inventory})`}
+                                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${Number(product.stock) === 0 ? 'text-red-700 bg-red-100' : 'text-amber-700 bg-amber-100'}`}>
+                                        {Number(product.stock) === 0 ? 'Out of Stock' : `Low (${product.stock})`}
                                     </span>
                                 </Link>
                             ))}

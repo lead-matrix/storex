@@ -33,28 +33,30 @@ export async function createProduct(formData: FormData) {
     const supabase = await ensureAdmin();
 
     const name = formData.get('name') as string;
-    const description = formData.get('description') as string;
+    const description = (formData.get('description') as string) || '';
     const priceRaw = (formData.get('base_price') || formData.get('price')) as string;
-    const price = parseFloat(priceRaw);
-    const inventoryQty = parseInt((formData.get('stock') as string) || '0');
+    const base_price = parseFloat(priceRaw) || 0;
+    const stock = parseInt((formData.get('stock') as string) || '0');
     const category_id = (formData.get('category_id') as string) || null;
-    const is_featured = formData.get('is_featured') === 'on';
+    const is_featured = formData.get('is_featured') === 'on' || formData.get('is_featured') === 'true';
     const is_bestseller = formData.get('is_bestseller') === 'on';
     const is_new = formData.get('is_new') === 'on';
     const on_sale = formData.get('on_sale') === 'on';
     const salePriceRaw = formData.get('sale_price') as string;
     const sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
     const is_active = formData.get('is_active') !== 'off'; // default true
+
+    // Explicit images handling
     const imagesRaw = formData.get('images') as string;
     const images = imagesRaw
-        ? imagesRaw.split(',').map(img => img.trim()).filter(Boolean)
+        ? (imagesRaw.startsWith('[') ? JSON.parse(imagesRaw) : imagesRaw.split(',').map(img => img.trim()).filter(Boolean))
         : [];
 
     // Slug: use provided or auto-generate from name
     let slug = (formData.get('slug') as string)?.trim();
     if (!slug) slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/, '');
 
-    if (!name || isNaN(price)) throw new Error("Product name and price are required.");
+    if (!name || isNaN(base_price)) throw new Error("Product name and price are required.");
 
     const { data: product, error } = await supabase
         .from('products')
@@ -62,9 +64,8 @@ export async function createProduct(formData: FormData) {
             name,
             slug,
             description,
-            price,
-            inventory: inventoryQty,
-            stock: inventoryQty,
+            base_price,
+            stock,
             images,
             is_featured,
             is_bestseller,
@@ -72,7 +73,7 @@ export async function createProduct(formData: FormData) {
             on_sale,
             sale_price,
             is_active,
-            ...(category_id ? { category_id } : {}),
+            category_id: category_id || null,
         }])
         .select()
         .single();
@@ -85,7 +86,7 @@ export async function createProduct(formData: FormData) {
         await upsertVariants(supabase, product.id, JSON.parse(variantsRaw));
     }
 
-    revalidatePaths(product?.id);
+    revalidatePaths(product?.id, product?.slug);
     return product;
 }
 
@@ -99,7 +100,7 @@ export async function updateProduct(formData: FormData) {
     const base_price = parseFloat(basePriceRaw);
     const stock = parseInt((formData.get('stock') as string) || '0');
     const category_id = (formData.get('category_id') as string) || null;
-    const is_featured = formData.get('is_featured') === 'on';
+    const is_featured = formData.get('is_featured') === 'on' || formData.get('is_featured') === 'true';
     const is_bestseller = formData.get('is_bestseller') === 'on';
     const is_new = formData.get('is_new') === 'on';
     const on_sale = formData.get('on_sale') === 'on';
@@ -108,7 +109,7 @@ export async function updateProduct(formData: FormData) {
     const is_active = formData.get('is_active') !== 'off';
     const imagesRaw = formData.get('images') as string;
     const images = imagesRaw
-        ? imagesRaw.split(',').map(img => img.trim()).filter(Boolean)
+        ? (imagesRaw.startsWith('[') ? JSON.parse(imagesRaw) : imagesRaw.split(',').map(img => img.trim()).filter(Boolean))
         : [];
 
     let slug = (formData.get('slug') as string)?.trim();
@@ -144,7 +145,7 @@ export async function updateProduct(formData: FormData) {
         await upsertVariants(supabase, id, JSON.parse(variantsRaw));
     }
 
-    revalidatePaths(id);
+    revalidatePaths(id, slug);
 }
 
 export async function deleteProduct(id: string) {
@@ -152,6 +153,30 @@ export async function deleteProduct(id: string) {
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) throw new Error(`Failed to delete product: ${error.message}`);
     revalidatePaths();
+}
+
+export async function adjustStock(id: string, delta: number) {
+    const supabase = await ensureAdmin();
+    // Fetch product to get slug for revalidation
+    const { data: product } = await supabase.from('products').select('slug, stock').eq('id', id).single();
+    if (!product) throw new Error("Product not found");
+
+    const newStock = Math.max(0, (product.stock ?? 0) + delta);
+    const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', id);
+    if (error) throw new Error(error.message);
+
+    revalidatePaths(id, product.slug);
+}
+
+export async function toggleProductStatus(id: string, current: boolean) {
+    const supabase = await ensureAdmin();
+    const { data: product } = await supabase.from('products').select('slug').eq('id', id).single();
+    if (!product) throw new Error("Product not found");
+
+    const { error } = await supabase.from('products').update({ is_active: !current }).eq('id', id);
+    if (error) throw new Error(error.message);
+
+    revalidatePaths(id, product.slug);
 }
 
 // ─────────────────────────────────────────────────
@@ -213,6 +238,69 @@ export async function deleteVariant(variantId: string) {
 }
 
 // ─────────────────────────────────────────────────
+// USER MANAGEMENT
+// ─────────────────────────────────────────────────
+
+export async function updateUserRole(userId: string, newRole: string) {
+    const supabase = await ensureAdmin();
+    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+    if (error) throw new Error(`Failed to update user: ${error.message}`);
+    revalidatePath('/admin/users');
+}
+
+// ─────────────────────────────────────────────────
+// CATEGORY CRUD
+// ─────────────────────────────────────────────────
+
+export async function createCategory(formData: FormData) {
+    const supabase = await ensureAdmin();
+    const name = formData.get('name') as string;
+    const description = (formData.get('description') as string) || '';
+
+    // Better slug generation
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/, '');
+
+    const { error } = await supabase
+        .from('categories')
+        .insert([{ name, description, slug }]);
+
+    if (error) throw new Error(`Failed to create category: ${error.message}`);
+
+    revalidatePaths(undefined, slug);
+}
+
+export async function updateCategory(id: string, formData: FormData) {
+    const supabase = await ensureAdmin();
+    const name = formData.get('name') as string;
+    const description = (formData.get('description') as string) || '';
+
+    const { data: category } = await supabase.from('categories').select('slug').eq('id', id).single();
+
+    const { error } = await supabase
+        .from('categories')
+        .update({ name, description })
+        .eq('id', id);
+
+    if (error) throw new Error(`Failed to update category: ${error.message}`);
+
+    revalidatePaths(undefined, category?.slug);
+}
+
+export async function deleteCategory(id: string) {
+    const supabase = await ensureAdmin();
+    const { data: category } = await supabase.from('categories').select('slug').eq('id', id).single();
+
+    const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw new Error(`Failed to delete category: ${error.message}`);
+
+    revalidatePaths(undefined, category?.slug);
+}
+
+// ─────────────────────────────────────────────────
 // ORDER ACTIONS
 // ─────────────────────────────────────────────────
 
@@ -252,6 +340,8 @@ export async function fulfillOrder(orderId: string) {
     }
 
     revalidatePath('/admin/orders');
+    revalidatePath(`/account/orders/${orderId}`);
+    revalidatePath('/admin/dashboard');
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
@@ -263,23 +353,38 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
     if (error) throw new Error(error.message);
     revalidatePath('/admin/orders');
+    revalidatePath(`/account/orders/${orderId}`);
+    revalidatePath('/admin/dashboard');
 }
 
 // ─────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────
 
-function revalidatePaths(productId?: string) {
+function revalidatePaths(productId?: string, slug?: string) {
+    // Admin areas
     revalidatePath('/admin/products');
+    revalidatePath('/admin/products/new');
     revalidatePath('/admin/vault');
+    revalidatePath('/admin/dashboard');
+
+    // Frontend areas
+    revalidatePath('/');
     revalidatePath('/shop');
     revalidatePath('/collections');
-    revalidatePath('/category/face');
-    revalidatePath('/category/eyes');
-    revalidatePath('/category/lips');
-    revalidatePath('/category/tools');
-    revalidatePath('/');
-    if (productId) {
-        revalidatePath(`/shop/${productId}`);
+    revalidatePath('/(shop)/[slug]', 'layout'); // Catch-all for shop routes if they use layout revalidation
+
+    // Specific slugs
+    if (slug) {
+        revalidatePath(`/product/${slug}`);
+        revalidatePath(`/shop?category=${slug}`); // If it's a category update
     }
+
+    if (productId) {
+        revalidatePath(`/product/${productId}`); // Fallback
+    }
+
+    // Since we can't easily know all category slugs a product belongs to without more queries,
+    // we revalidate the main category paths.
+    revalidatePath('/category/[slug]', 'layout');
 }

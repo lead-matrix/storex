@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { Plus, Trash2, Edit3, Tag } from 'lucide-react'
-import { createCategory, deleteCategory } from './actions'
+import { createCategory, deleteCategory } from '@/lib/actions/admin'
 
 export default async function AdminCategories() {
     const supabase = await createClient()

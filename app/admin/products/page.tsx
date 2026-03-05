@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { createProduct, deleteProduct, adjustStock, toggleProductStatus } from "./actions";
+import { createProduct, deleteProduct, adjustStock, toggleProductStatus } from "@/lib/actions/admin";
 import { Package, Plus, Trash2, DollarSign, Database, Tag, Star, Pencil, ChevronUp, ChevronDown, ToggleLeft, ToggleRight, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
