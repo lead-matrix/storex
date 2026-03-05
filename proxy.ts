@@ -76,3 +76,11 @@ export async function isStoreEnabled(): Promise<boolean> {
         return true // fail open
     }
 }
+
+/** Default entry point for the Route Proxy mechanism. */
+export default async function proxy() {
+    return { success: true };
+}
+
+/** Named export as requested by certain build environments. */
+export { proxy };
