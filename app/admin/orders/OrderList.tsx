@@ -90,7 +90,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                             {/* Revenue & Items Tooltip Link */}
                             <td className="px-6 py-6">
                                 <div className="space-y-1">
-                                    <p className="text-sm font-serif text-white">${Number(order.amount_total || 0).toFixed(2)}</p>
+                                    <p className="text-sm font-serif text-white">${Number(order.total_amount || 0).toFixed(2)}</p>
                                     <p className="text-[10px] text-white/30 uppercase tracking-luxury flex items-center gap-1.5">
                                         <ShoppingBag className="w-3 h-3" />
                                         {order.order_items?.length || 0} Assets

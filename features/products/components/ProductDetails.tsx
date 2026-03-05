@@ -7,19 +7,19 @@ import { Minus, Plus, ShoppingBag } from "lucide-react"
 interface ProductDetailsProps {
     product: {
         id: string
-        name: string
-        base_price: number
+        title: string
+        base_price?: number
         description: string
-        image: string
-        stock?: number
-        variants?: {
+        images: string[]
+        product_variants?: {
             id: string,
-            name: string,
-            variant_type?: 'shade' | 'size' | 'bundle' | 'type',
-            price_override?: number | null,
-            color_code?: string,
-            stock?: number,
-            is_active?: boolean
+            title: string,
+            sku?: string,
+            price: number,
+            compare_price?: number | null,
+            inventory?: {
+                stock_quantity: number
+            }
         }[]
     }
 }
@@ -28,12 +28,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     const { addToCart, setIsCartOpen } = useCart()
     const [quantity, setQuantity] = useState(1)
 
-    const activeVariants = product.variants?.filter(v => v.is_active !== false) ?? []
+    const activeVariants = product.product_variants || []
     const [selectedVariantId, setSelectedVariantId] = useState(activeVariants[0]?.id || "")
 
     const selectedVariant = activeVariants.find(v => v.id === selectedVariantId)
-    const displayPrice = selectedVariant?.price_override ?? product.base_price
-    const currentStock = selectedVariant ? (selectedVariant.stock ?? 0) : (product.stock ?? 0)
+    const displayPrice = selectedVariant?.price ?? product.base_price ?? 0
+    const currentStock = selectedVariant?.inventory?.stock_quantity ?? 0
     const isOutOfStock = currentStock <= 0
 
     const handleAddToCart = () => {
@@ -42,21 +42,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         addToCart({
             id: selectedVariantId || product.id,
             productId: product.id,
-            name: product.name,
+            name: product.title,
             price: Number(displayPrice),
             quantity: Math.min(quantity, currentStock),
-            image: product.image,
-            variantName: selectedVariant?.name
+            image: product.images[0] || '',
+            variantName: selectedVariant?.title
         })
         setIsCartOpen(true)
     }
 
-    const variantType = activeVariants[0]?.variant_type || 'shade'
-
     return (
         <div className="flex flex-col animate-in fade-in duration-1000">
             <h1 className="text-4xl md:text-6xl font-serif text-white tracking-tight mb-4 leading-tight">
-                {product.name}
+                {product.title}
             </h1>
 
             <p className="text-2xl text-gold font-light mb-8 font-serif italic">${Number(displayPrice).toFixed(2)}</p>
@@ -68,7 +66,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             {activeVariants.length > 0 && (
                 <div className="mb-12">
                     <label className="text-[10px] uppercase tracking-widest text-gold font-bold block mb-6">
-                        Select {variantType === 'shade' ? 'Shade Edition' : 'Edition'}
+                        Select Edition
                     </label>
 
                     <div className="flex flex-wrap gap-4">
@@ -82,7 +80,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                                         : "border-white/10 text-luxury-subtext hover:border-white/30"
                                     }`}
                             >
-                                {v.name}
+                                {v.title}
                             </button>
                         ))}
                     </div>
@@ -90,7 +88,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             )}
 
             <div className="flex flex-col sm:flex-row gap-6 pt-10 border-t border-white/5">
-                {/* QUANTITY PICKER */}
                 <div className="flex items-center justify-between border border-white/10 w-full sm:w-40 h-16 px-6 bg-obsidian">
                     <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
