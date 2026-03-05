@@ -1,11 +1,28 @@
 import { Mail, MapPin, Phone, Send } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
 
 export const metadata = {
     title: "Concierge | DINA COSMETIC",
     description: "Contact the Obsidian Palace for inquiries and luxury support.",
 };
 
-export default function ContactPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function ContactPage() {
+    const supabase = await createClient();
+    const { data } = await supabase.from('frontend_content').select('content_data').eq('content_key', 'contact_page').single();
+
+    const content = data?.content_data || {
+        badge: "Client Relations",
+        heading: "Concierge",
+        subheading: "Our dedicated team is available to assist you with any inquiries regarding the Palace collection and your acquisitions.",
+        email: "support@dinacosmetic.store",
+        phone: "+1 (281) 687-7609",
+        address: "Texas, USA · Shipping Worldwide",
+        form_heading: "Send an Inquiry",
+        form_button: "Dispatch Message"
+    };
+
     return (
         <div className="bg-background-primary text-text-bodyDark min-h-screen pt-32 pb-24">
             <div className="px-6 max-w-7xl mx-auto">
@@ -13,12 +30,12 @@ export default function ContactPage() {
                     {/* Left: Info */}
                     <div className="space-y-16">
                         <div className="space-y-6">
-                            <h2 className="text-gold-primary uppercase tracking-[0.5em] text-xs font-light">Client Relations</h2>
+                            <h2 className="text-gold-primary uppercase tracking-[0.5em] text-xs font-light">{content.badge}</h2>
                             <h1 className="text-6xl md:text-8xl font-serif italic tracking-tighter uppercase leading-none text-text-headingDark">
-                                Concierge
+                                {content.heading}
                             </h1>
                             <p className="text-text-mutedDark text-sm uppercase tracking-[0.3em] max-w-md leading-relaxed">
-                                Our dedicated team is available to assist you with any inquiries regarding the Palace collection and your acquisitions.
+                                {content.subheading}
                             </p>
                         </div>
 
@@ -26,24 +43,24 @@ export default function ContactPage() {
                             <ContactItem
                                 icon={<Mail size={20} className="text-gold-primary" />}
                                 label="Electronic Mail"
-                                value="support@dinacosmetic.store"
+                                value={content.email}
                             />
                             <ContactItem
                                 icon={<Phone size={20} className="text-gold-primary" />}
                                 label="Tele-Inquiry"
-                                value="+1 (281) 687-7609"
+                                value={content.phone}
                             />
                             <ContactItem
                                 icon={<MapPin size={20} className="text-gold-primary" />}
                                 label="Location"
-                                value="Texas, USA · Shipping Worldwide"
+                                value={content.address}
                             />
                         </div>
                     </div>
 
                     {/* Right: Form */}
                     <div className="bg-background-secondary border border-gold-primary/10 p-12 space-y-10 group hover:border-gold-primary/30 transition-all duration-700">
-                        <h3 className="text-xl font-serif italic text-text-headingDark">Send an Inquiry</h3>
+                        <h3 className="text-xl font-serif italic text-text-headingDark">{content.form_heading}</h3>
                         <form className="space-y-8">
                             <div className="space-y-2">
                                 <label className="text-[10px] uppercase tracking-[0.4em] text-text-mutedDark font-bold">Your Identity</label>
@@ -70,7 +87,7 @@ export default function ContactPage() {
                                 />
                             </div>
                             <button className="w-full bg-gold-primary text-background-primary py-5 uppercase text-[10px] tracking-[0.4em] font-bold hover:bg-gold-hover transition-all flex items-center justify-center gap-4">
-                                Dispatch Message <Send size={14} />
+                                {content.form_button} <Send size={14} />
                             </button>
                         </form>
                     </div>

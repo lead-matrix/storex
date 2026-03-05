@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { Save, ShieldCheck, Globe, CreditCard, Bell, Layout } from 'lucide-react'
 import { updateStoreSettings } from './actions'
-import { updateFrontendContent } from '../actions/frontend-actions'
+import { updateFrontendContent, updateNavigationMenu, updateSiteSettings } from '../actions/frontend-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +11,10 @@ export default async function AdminSettings() {
     const { data: storeInfo } = await supabase.from('site_settings').select('*').eq('setting_key', 'store_info').single()
     const { data: storeStatus } = await supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').single()
     const { data: hero } = await supabase.from('frontend_content').select('*').eq('content_key', 'hero_main').single()
+    const { data: headerNav } = await supabase.from('navigation_menus').select('*').eq('menu_key', 'header_main').single()
+    const { data: footerNav } = await supabase.from('navigation_menus').select('*').eq('menu_key', 'footer_legal').single()
+    const { data: socialMedia } = await supabase.from('site_settings').select('*').eq('setting_key', 'social_media').single()
+
 
     const isEnabled = storeStatus?.setting_value ?? true
 
@@ -151,6 +155,64 @@ export default async function AdminSettings() {
                             </div>
                         </div>
                     </section>
+                    {/* Navigation & Social */}
+                    <form action={async (formData) => {
+                        "use server"
+                        const headerStr = formData.get("header_nav") as string
+                        const footerStr = formData.get("footer_legal") as string
+                        const insta = formData.get("instagram") as string
+                        if (headerStr) {
+                            try { await updateNavigationMenu('header_main', JSON.parse(headerStr)) } catch (e) { }
+                        }
+                        if (footerStr) {
+                            try { await updateNavigationMenu('footer_legal', JSON.parse(footerStr)) } catch (e) { }
+                        }
+                        await updateSiteSettings('social_media', { instagram: insta })
+                    }}>
+                        <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8 mt-12">
+                            <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
+                                <div className="flex mt-1 items-center gap-4">
+                                    <Layout className="w-4 h-4 text-gold" />
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Menus & Socials</h2>
+                                </div>
+                                <button type="submit" className="text-charcoal bg-pearl px-4 py-2 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-medium flex items-center gap-2 transition-colors">
+                                    <Save className="w-3 h-3" /> Update Menus
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Links (JSON Format)</label>
+                                    <textarea
+                                        name="header_nav"
+                                        defaultValue={headerNav?.menu_items ? JSON.stringify(headerNav.menu_items, null, 2) : '[\n  {"label":"Shop", "href":"/shop"}\n]'}
+                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-4 text-sm font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-32 resize-none"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Footer Legal Links (JSON Format)</label>
+                                    <textarea
+                                        name="footer_legal"
+                                        defaultValue={footerNav?.menu_items ? JSON.stringify(footerNav.menu_items, null, 2) : '[\n  {"label":"Privacy", "href":"/privacy"}\n]'}
+                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-4 text-sm font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-32 resize-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-8 mt-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Instagram Link</label>
+                                        <input
+                                            name="instagram"
+                                            type="text"
+                                            defaultValue={socialMedia?.setting_value?.instagram || ''}
+                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </form>
                 </div>
             </div>
         </div>
