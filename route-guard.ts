@@ -15,6 +15,7 @@
  */
 
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createAdminClient } from '@/utils/supabase/admin'
 import { redirect } from 'next/navigation'
 
 /** Redirects to /login if no authenticated user exists. Returns the user. */
@@ -25,14 +26,21 @@ export async function requireAuth(redirectTo = '/login') {
     return user
 }
 
-/** Redirects to / if the authenticated user is not an admin. Returns the profile. */
+/** 
+ * Redirects to / if the authenticated user is not an admin. Returns the profile.
+ * Uses the admin client for the profile lookup to bypass RLS restrictions
+ * that might prevent the anon client from reading profiles during auth checks.
+ */
 export async function requireAdmin() {
+    // Use regular client just for auth session
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) redirect('/login')
 
-    const { data: profile } = await supabase
+    // Use admin client for the profile role lookup to bypass RLS
+    const adminSupabase = await createAdminClient()
+    const { data: profile } = await adminSupabase
         .from('profiles')
         .select('role, full_name, avatar_url')
         .eq('id', user.id)

@@ -1,10 +1,26 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient as createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 
+// Ensure the caller is an authenticated admin
+async function ensureAdmin() {
+    const supabase = await createAdminClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Authentication required");
+
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+    if (profile?.role !== "admin") throw new Error("Unauthorized");
+    return supabase;
+}
+
 export async function updateOrderStatus(orderId: string, status: string) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
     const { error } = await supabase
         .from("orders")
         .update({ status })
@@ -12,13 +28,14 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
     if (error) throw error;
     revalidatePath("/admin/orders");
+    revalidatePath("/admin");
 }
 
 export async function generateShippingLabel(orderId: string) {
-    const supabase = await createClient();
+    const supabase = await ensureAdmin();
     const shippoKey = process.env.SHIPPO_API_KEY;
 
-    if (!shippoKey) throw new Error("Shippo API key missing");
+    if (!shippoKey) throw new Error("Shippo API key not configured. Add SHIPPO_API_KEY to your environment variables.");
 
     // 1. Fetch the order with shipping address
     const { data: order, error: fetchError } = await supabase
@@ -29,7 +46,7 @@ export async function generateShippingLabel(orderId: string) {
 
     if (fetchError || !order) throw new Error("Order not found");
 
-    const shippingAddr = order.shipping_address;
+    const shippingAddr = order.shipping_address as Record<string, string> | null;
     if (!shippingAddr) throw new Error("No shipping address on this order. Customer must complete checkout first.");
 
     // 2. Create Shippo shipment to get rates
@@ -85,9 +102,8 @@ export async function generateShippingLabel(orderId: string) {
     }
 
     // 3. Pick the cheapest rate (or USPS if available)
-    const rates: Array<{ provider: string; amount: string; object_id: string; tracking_number?: string; label_url?: string }> = shipment.rates;
-    const preferredRate =
-        rates.find((r) => r.provider === "USPS") ?? rates[0];
+    const rates: Array<{ provider: string; amount: string; object_id: string }> = shipment.rates;
+    const preferredRate = rates.find((r) => r.provider === "USPS") ?? rates[0];
 
     // 4. Purchase the rate to generate the label
     const transactionRes = await fetch("https://api.goshippo.com/transactions/", {
@@ -131,6 +147,7 @@ export async function generateShippingLabel(orderId: string) {
 
     if (updateError) throw updateError;
     revalidatePath("/admin/orders");
+    revalidatePath("/admin");
 
     return { labelUrl, trackingNumber };
 }
