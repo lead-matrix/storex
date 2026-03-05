@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { Shield, User, Search, Trash2, Mail, Calendar } from "lucide-react";
-import { updateUserRole } from "./actions";
+import { updateUserRole } from "@/lib/actions/admin";
 
 export default async function AdminUsersPage() {
     const supabase = await createClient();
@@ -52,8 +52,8 @@ export default async function AdminUsersPage() {
                                     <td className="px-8 py-6">
                                         <div className="flex justify-center">
                                             <span className={`px-3 py-1 rounded-full text-[9px] uppercase tracking-luxury font-medium border ${user.role === 'admin'
-                                                    ? 'border-gold/30 text-gold bg-gold/5'
-                                                    : 'border-charcoal/10 text-charcoal bg-pearl/50'
+                                                ? 'border-gold/30 text-gold bg-gold/5'
+                                                : 'border-charcoal/10 text-charcoal bg-pearl/50'
                                                 }`}>
                                                 {user.role === 'admin' ? 'Administrator' : 'Client'}
                                             </span>
