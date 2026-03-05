@@ -88,11 +88,11 @@ export default async function AdminSettings() {
                             <div className="grid grid-cols-2 gap-6 opacity-40">
                                 <div className="space-y-2">
                                     <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium line-through">Legacy Title (Hidden)</label>
-                                    <input name="hero_title" defaultValue={heroLegacy?.content_data?.title || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readonly />
+                                    <input name="hero_title" defaultValue={heroLegacy?.content_data?.title || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readOnly />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium line-through">Legacy Subtitle (Hidden)</label>
-                                    <input name="hero_subtitle" defaultValue={heroLegacy?.content_data?.subtitle || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readonly />
+                                    <input name="hero_subtitle" defaultValue={heroLegacy?.content_data?.subtitle || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readOnly />
                                 </div>
                             </div>
 
