@@ -18,7 +18,7 @@ async function getHomePageData() {
     .order("sort_order", { foreignTable: "cms_sections", ascending: true })
     .single();
 
-  if (cmsHome) return { cmsHome };
+  if (cmsHome) return { cmsHome, products: [], categories: [] };
 
   // 2. Fallback to curated legacy layout if no CMS home exists
   const { data: products } = await supabase
