@@ -1,6 +1,6 @@
 import HeroSection from "./HeroSection";
 import ProductGridSection from "./ProductGridSection";
-import philosophyBlock from "./PhilosophyBlock";
+import PhilosophyBlock from "./PhilosophyBlock";
 import ImageBannerSection from "./ImageBannerSection";
 
 interface Section {
@@ -11,7 +11,7 @@ interface Section {
 const COMPONENT_MAP: Record<string, React.FC<any>> = {
     hero: HeroSection,
     productGrid: ProductGridSection,
-    richText: philosophyBlock,
+    richText: PhilosophyBlock,
     imageBanner: ImageBannerSection,
 };
 
