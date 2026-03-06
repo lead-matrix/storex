@@ -39,11 +39,11 @@ export async function POST(req: Request) {
 
             const { data: product } = await supabase
                 .from('products')
-                .select('name, base_price, sale_price, on_sale, stock, images, is_active')
+                .select('title, base_price, sale_price, on_sale, stock, images, status')
                 .eq('id', item.productId)
                 .single()
 
-            if (!product || !product.is_active)
+            if (!product || product.status !== 'active')
                 throw new Error(`"${item.name}" is no longer available.`)
 
             let dbPrice = product.on_sale && product.sale_price ? Number(product.sale_price) : Number(product.base_price)
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: item.variantName ? `${product.name} — ${item.variantName}` : product.name,
+                        name: item.variantName ? `${product.title} — ${item.variantName}` : product.title,
                         images: product.images?.[0] ? [product.images[0]] : [],
                     },
                     unit_amount: unitAmount,

@@ -11,14 +11,14 @@ import { Plus } from "lucide-react";
 
 interface Variant {
     id: string;
-    name: string;
+    title: string;
     price_override?: number | null;
     stock?: number;
 }
 
 interface Product {
     id: string;
-    name: string;
+    title: string;
     slug: string;
     base_price: number;
     images: string[];
@@ -41,8 +41,8 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
     const handleAdd = (e: React.MouseEvent) => {
         e.preventDefault();
         setAdding(true);
-        addToCart({ id: firstVariant?.id || product.id, productId: product.id, name: product.name, price, image: mainImage, quantity: 1, variantName: firstVariant?.name });
-        toast.success("Added to bag", { description: product.name });
+        addToCart({ id: firstVariant?.id || product.id, productId: product.id, name: product.title, price, image: mainImage, quantity: 1, variantName: firstVariant?.title });
+        toast.success("Added to bag", { description: product.title });
         setTimeout(() => setAdding(false), 800);
     };
 
@@ -57,7 +57,7 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
             <Link href={`/product/${product.slug}`} id={`bento-${product.id}`}
                 className={`group relative overflow-hidden glass gold-glow-hover flex flex-col h-full transition-all duration-500 ${tall ? "min-h-[500px]" : "min-h-[340px]"}`}>
                 <div className={`relative overflow-hidden flex-shrink-0 ${tall ? "h-72" : "h-48"}`}>
-                    <Image src={mainImage} alt={product.name} fill
+                    <Image src={mainImage} alt={product.title} fill
                         className="object-cover transition-transform duration-1000 group-hover:scale-105"
                         sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,33vw" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -67,7 +67,7 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
                 </div>
                 <div className="flex flex-col flex-grow p-5 gap-3">
                     <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-serif text-white/90 text-base tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">{product.name}</h3>
+                        <h3 className="font-serif text-white/90 text-base tracking-tight group-hover:text-[#D4AF37] transition-colors leading-snug">{product.title}</h3>
                         <span className="text-sm font-serif text-[#D4AF37] flex-shrink-0">${price.toFixed(2)}</span>
                     </div>
                     {product.description && (
@@ -76,7 +76,7 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
                     {product.variants && product.variants.length > 1 && (
                         <div className="flex flex-wrap gap-1.5 mt-auto">
                             {product.variants.slice(0, 3).map(v => (
-                                <span key={v.id} className="px-2 py-0.5 border border-[#D4AF37]/15 text-[8px] uppercase tracking-widest text-white/35">{v.name}</span>
+                                <span key={v.id} className="px-2 py-0.5 border border-[#D4AF37]/15 text-[8px] uppercase tracking-widest text-white/35">{v.title}</span>
                             ))}
                             {product.variants.length > 3 && <span className="text-[8px] text-white/20 px-1">+{product.variants.length - 3}</span>}
                         </div>

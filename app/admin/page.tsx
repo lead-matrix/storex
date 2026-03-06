@@ -50,14 +50,14 @@ export default async function AdminDashboard() {
         { data: recentOrders },
         { data: lowStockProducts }
     ] = await Promise.all([
-        supabase.from('orders').select('total_amount').in('status', ['paid', 'shipped', 'delivered']),
+        supabase.from('orders').select('amount_total').in('status', ['paid', 'shipped', 'delivered']),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('id, customer_email, status, total_amount, created_at').order('created_at', { ascending: false }).limit(6),
-        supabase.from('product_variants').select('id, title, product_id, products(title), inventory(stock_quantity)').lt('inventory.stock_quantity', 10).order('inventory(stock_quantity)', { ascending: true }).limit(5)
+        supabase.from('orders').select('id, customer_email, status, amount_total, created_at').order('created_at', { ascending: false }).limit(6),
+        supabase.from('variants').select('id, title, product_id, products(title), stock').lt('stock', 10).order('stock', { ascending: true }).limit(5)
     ])
 
-    const totalRevenue = revenueRes?.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0) || 0
+    const totalRevenue = revenueRes?.reduce((sum, o) => sum + (Number(o.amount_total) || 0), 0) || 0
     const activeOrders = recentOrders?.filter(o => o.status === 'paid' || o.status === 'processing').length || 0
 
     return (
@@ -140,7 +140,7 @@ export default async function AdminDashboard() {
                                             </span>
                                         </td>
                                         <td className="px-8 py-4 text-right">
-                                            <p className="text-xs font-serif text-white">${Number(order.total_amount).toFixed(2)}</p>
+                                            <p className="text-xs font-serif text-white">${Number(order.amount_total).toFixed(2)}</p>
                                         </td>
                                     </tr>
                                 ))}
@@ -163,7 +163,7 @@ export default async function AdminDashboard() {
                                     <p className="text-[10px] text-white font-medium truncate group-hover:text-gold transition-colors">
                                         {variant.products?.title} ({variant.title})
                                     </p>
-                                    <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">Remaining: {variant.inventory?.stock_quantity ?? 0}</p>
+                                    <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">Remaining: {variant.stock ?? 0}</p>
                                 </div>
                                 <Link href="/admin/products" className="p-2 bg-black/40 text-white/30 hover:text-gold transition-colors">
                                     <BarChart3 size={14} />

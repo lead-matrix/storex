@@ -6,7 +6,7 @@ import Link from "next/link";
 
 interface Product {
     id: string;
-    name: string;
+    title: string;
     slug: string;
     base_price: number;
     sale_price?: number | null;
@@ -19,7 +19,7 @@ interface Product {
 
 interface Variant {
     id: string;
-    name: string;
+    title: string;
     price_override?: number | null;
     stock?: number;
 }
@@ -43,7 +43,7 @@ export function ProductCard({
         addToCart({
             id: product.id,
             productId: product.id,
-            name: product.name,
+            name: product.title,
             price: currentPrice,
             image: mainImage,
             quantity: 1,
@@ -76,7 +76,7 @@ export function ProductCard({
 
                     <Image
                         src={mainImage}
-                        alt={product.name}
+                        alt={product.title}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
@@ -87,7 +87,7 @@ export function ProductCard({
             <div className="mt-6 space-y-3">
                 <Link href={`/product/${product.slug}`}>
                     <h3 className="font-playfair text-lg tracking-wide text-textPrimary">
-                        {product.name}
+                        {product.title}
                     </h3>
                 </Link>
 

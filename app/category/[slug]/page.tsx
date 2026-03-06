@@ -46,7 +46,7 @@ export default async function CategorySlugPage({ params }: Props) {
     const { data: products } = await supabase
         .from('products')
         .select('*, variants(*)')
-        .eq('is_active', true)
+        .eq('status', 'active')
         .eq('category_id', category.id)
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false })
@@ -129,7 +129,7 @@ export default async function CategorySlugPage({ params }: Props) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {items.map((product) => {
                             const activeVariants = (product.variants as Array<{
-                                id: string; name: string; price_override: number | null;
+                                id: string; title: string; price_override: number | null;
                                 stock: number; is_active: boolean
                             }>)?.filter(v => v.is_active) ?? []
 
@@ -153,7 +153,7 @@ export default async function CategorySlugPage({ params }: Props) {
                                         {image ? (
                                             <Image
                                                 src={image}
-                                                alt={product.name}
+                                                alt={product.title}
                                                 fill
                                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
@@ -194,7 +194,7 @@ export default async function CategorySlugPage({ params }: Props) {
                                     {/* Info */}
                                     <div className="p-4 space-y-2">
                                         <h2 className="font-heading text-charcoal text-sm tracking-luxury group-hover:text-gold transition-colors leading-tight">
-                                            {product.name}
+                                            {product.title}
                                         </h2>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">

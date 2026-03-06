@@ -91,10 +91,49 @@ CREATE TABLE IF NOT EXISTS public.categories (
     slug text UNIQUE NOT NULL,
     description text,
     image_url text,
-    is_active boolean NOT NULL DEFAULT true,
+    status text NOT NULL DEFAULT 'active',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS slug text;
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS image_url text;
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
+ALTER TABLE public.categories
+ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+-- Rename legacy is_active → status if present
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'categories'
+        AND column_name = 'is_active'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'categories'
+        AND column_name = 'status'
+) THEN
+ALTER TABLE public.categories
+    RENAME COLUMN is_active TO status;
+UPDATE public.categories
+SET status = 'active'
+WHERE status = 'true';
+UPDATE public.categories
+SET status = 'draft'
+WHERE status = 'false';
+END IF;
+END $$;
 -- 1C. products
 CREATE TABLE IF NOT EXISTS public.products (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -161,7 +200,7 @@ ADD COLUMN IF NOT EXISTS is_bestseller boolean NOT NULL DEFAULT false;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS is_new boolean NOT NULL DEFAULT false;
 ALTER TABLE public.products
-ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}';
 ALTER TABLE public.products
@@ -182,7 +221,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS public.variants (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-    name text NOT NULL,
+    title text NOT NULL,
     variant_type text NOT NULL DEFAULT 'shade',
     price_override numeric(10, 2) CHECK (
         price_override IS NULL
@@ -191,10 +230,45 @@ CREATE TABLE IF NOT EXISTS public.variants (
     stock integer NOT NULL DEFAULT 0 CHECK (stock >= 0),
     sku text,
     color_code text,
-    is_active boolean NOT NULL DEFAULT true,
+    status text NOT NULL DEFAULT 'active',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS title text;
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS variant_type text NOT NULL DEFAULT 'shade';
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS price_override numeric(10, 2);
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS stock integer NOT NULL DEFAULT 0;
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS sku text;
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS color_code text;
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+-- Rename legacy name → title if present
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'name'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'title'
+) THEN
+ALTER TABLE public.variants
+    RENAME COLUMN name TO title;
+END IF;
+END $$;
 -- Rename legacy stock_quantity → stock if present
 DO $$ BEGIN IF EXISTS (
     SELECT 1
@@ -212,6 +286,25 @@ AND NOT EXISTS (
 ) THEN
 ALTER TABLE public.variants
     RENAME COLUMN stock_quantity TO stock;
+END IF;
+END $$;
+-- Rename legacy is_active → status if present
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'is_active'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'status'
+) THEN
+ALTER TABLE public.variants
+    RENAME COLUMN is_active TO status;
 END IF;
 END $$;
 -- 1E. orders
@@ -266,14 +359,31 @@ ADD COLUMN IF NOT EXISTS shipping_label_url text;
 -- Drop orphaned admin_audit_logs table (has RLS but no policies — not in schema)
 DROP TABLE IF EXISTS public.admin_audit_logs CASCADE;
 -- Sync legacy columns
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'orders'
+        AND column_name = 'email'
+) THEN
 UPDATE public.orders
 SET customer_email = email
 WHERE customer_email IS NULL
     AND email IS NOT NULL;
+END IF;
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'orders'
+        AND column_name = 'total_amount'
+) THEN
 UPDATE public.orders
 SET amount_total = total_amount
 WHERE amount_total IS NULL
     AND total_amount IS NOT NULL;
+END IF;
+END $$;
 -- Safely drop legacy NOT NULL constraints if columns still exist
 DO $$ BEGIN IF EXISTS (
     SELECT 1
@@ -530,7 +640,7 @@ CREATE POLICY "categories_delete" ON public.categories FOR DELETE USING (
 -- 5.3  PRODUCTS  — active products are public, admins see all
 CREATE POLICY "products_select" ON public.products FOR
 SELECT USING (
-        is_active = true
+        status = 'active'
         OR (
             SELECT public.is_admin()
         )
@@ -931,7 +1041,7 @@ CREATE POLICY "product_images_admin_delete" ON storage.objects FOR DELETE TO aut
 -- §8  INDEXES
 -- ───────────────────────────────────────────────────────────────
 -- Products
-CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON public.products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(slug);
 CREATE INDEX IF NOT EXISTS idx_products_stock ON public.products(stock);
@@ -958,40 +1068,40 @@ CREATE INDEX IF NOT EXISTS idx_pages_slug ON public.pages(slug);
 -- §9  SEED DATA  (idempotent — ON CONFLICT DO UPDATE)
 -- ───────────────────────────────────────────────────────────────
 -- 9A. Categories
-INSERT INTO public.categories (name, slug, description, image_url, is_active)
+INSERT INTO public.categories (name, slug, description, image_url, status)
 VALUES (
         'Face',
         'face',
         'Exquisite complexion essentials.',
         'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png',
-        true
+        'active'
     ),
     (
         'Eyes',
         'eyes',
         'Captivating high-pigment eye cosmetics.',
         'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png',
-        true
+        'active'
     ),
     (
         'Lips',
         'lips',
         'Lustrous and enduring lip colors.',
         'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png',
-        true
+        'active'
     ),
     (
         'Tools & Accessories',
         'tools',
         'Professional instruments for artistic precision.',
         'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png',
-        true
+        'active'
     ) ON CONFLICT (slug) DO
 UPDATE
 SET name = EXCLUDED.name,
     description = EXCLUDED.description,
     image_url = EXCLUDED.image_url,
-    is_active = true;
+    status = EXCLUDED.status;
 -- 9B. Products (full launch catalogue)
 DO $$
 DECLARE face_id uuid;
@@ -1638,11 +1748,11 @@ SELECT COUNT(DISTINCT o.id) AS total_orders,
         WHERE o.status = 'shipped'
     ) AS shipped_orders,
     COUNT(DISTINCT p.id) FILTER (
-        WHERE p.is_active = true
+        WHERE p.status = 'active'
     ) AS active_products,
     COUNT(DISTINCT p.id) FILTER (
         WHERE p.stock < 5
-            AND p.is_active
+            AND p.status = 'active'
     ) AS low_stock_products,
     COUNT(DISTINCT pr.id) AS total_customers
 FROM public.orders o

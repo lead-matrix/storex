@@ -26,9 +26,8 @@ export default async function EditProductPage({ params }: Props) {
         .from('products')
         .select(`
             id, title, slug, description, images, is_featured, is_bestseller, status, category_id,
-            product_variants(
-                id, title, sku, price, compare_price, 
-                inventory(stock_quantity)
+            variants(
+                id, title, sku, price_override, stock
             )
         `)
         .eq('id', id)
@@ -37,13 +36,13 @@ export default async function EditProductPage({ params }: Props) {
     if (error || !product) notFound()
 
     // Normalise variants for the form
-    const variants = (product.product_variants ?? []).map((v: any) => ({
+    const variants = (product.variants ?? []).map((v: any) => ({
         id: v.id,
         title: v.title,
         sku: v.sku,
-        price: v.price,
-        compare_price: v.compare_price,
-        stock: v.inventory?.stock_quantity ?? 0
+        price: Number(v.price_override) || 0,
+        compare_price: null,
+        stock: v.stock ?? 0
     }))
 
     return (

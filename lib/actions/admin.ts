@@ -73,21 +73,38 @@ export async function createProduct(formData: FormData) {
                 description,
                 images,
                 status,
+                base_price,
+                stock,
                 category_id: category_id === '' ? null : category_id,
+                is_featured,
+                is_bestseller,
+                is_new,
+                on_sale,
+                sale_price
             }])
             .select()
             .single();
 
         if (error) throw new Error(`Failed to create product: ${error.message}`);
 
-        // Handle Inventory
-        await supabase.from('inventory').insert({
-            product_id: product.id,
-            stock_quantity: stock
-        });
-
-        // If you still have images handling or separate variants mapping later, add it here for products.
-        // The variantsJson logic is removed as product_variants table is removed.
+        // Handle Variants
+        const variantsJson = formData.get('variants') as string;
+        if (variantsJson) {
+            const variants = JSON.parse(variantsJson);
+            if (Array.isArray(variants) && variants.length > 0) {
+                const variantsToInsert = variants
+                    .filter(v => !v._deleted)
+                    .map(v => ({
+                        product_id: product.id,
+                        title: v.title,
+                        variant_type: v.variant_type || 'shade',
+                        sku: v.sku,
+                        price_override: v.price,
+                        stock: v.stock,
+                    }));
+                await supabase.from('variants').insert(variantsToInsert);
+            }
+        }
 
         revalidatePaths(product?.id, product?.slug);
         return product;
@@ -125,6 +142,8 @@ export async function updateProduct(formData: FormData) {
             description,
             images,
             status,
+            base_price: parseFloat(formData.get('base_price') as string) || 0,
+            stock: parseInt(formData.get('stock') as string) || 0,
             category_id: category_id || null,
             updated_at: new Date().toISOString(),
         })
@@ -132,13 +151,31 @@ export async function updateProduct(formData: FormData) {
 
     if (error) throw new Error(`Failed to update product: ${error.message}`);
 
-    // update inventory directly or it should be managed from stock manager
-    // assuming there's a stock field inside formData if user updates stock from main form:
-    const stockRaw = formData.get('stock') as string;
-    if (stockRaw !== null && stockRaw !== undefined) {
-        const stock = parseInt(stockRaw, 10);
-        if (!isNaN(stock)) {
-            await supabase.from('inventory').update({ stock_quantity: stock }).eq('product_id', id);
+    // Handle Variants (Update/Insert/Delete)
+    const variantsJson = formData.get('variants') as string;
+    if (variantsJson) {
+        const variants = JSON.parse(variantsJson);
+        for (const v of variants) {
+            if (v._deleted && v.id) {
+                await supabase.from('variants').delete().eq('id', v.id);
+            } else if (v._isNew) {
+                await supabase.from('variants').insert({
+                    product_id: id,
+                    title: v.title,
+                    variant_type: v.variant_type || 'shade',
+                    sku: v.sku,
+                    price_override: v.price,
+                    stock: v.stock,
+                });
+            } else if (v.id) {
+                await supabase.from('variants').update({
+                    title: v.title,
+                    variant_type: v.variant_type || 'shade',
+                    sku: v.sku,
+                    price_override: v.price,
+                    stock: v.stock,
+                }).eq('id', v.id);
+            }
         }
     }
 
@@ -156,11 +193,11 @@ export async function deleteProduct(id: string) {
 export async function adjustStock(productId: string, delta: number) {
     const supabase = await ensureAdmin();
 
-    const { data: inv } = await supabase.from('inventory').select('stock_quantity').eq('product_id', productId).single();
-    if (!inv) throw new Error("Inventory not found");
+    const { data: prod } = await supabase.from('products').select('stock').eq('id', productId).single();
+    if (!prod) throw new Error("Product not found");
 
-    const newStock = Math.max(0, (inv.stock_quantity ?? 0) + delta);
-    const { error } = await supabase.from('inventory').update({ stock_quantity: newStock }).eq('product_id', productId);
+    const newStock = Math.max(0, (prod.stock ?? 0) + delta);
+    const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', productId);
     if (error) throw new Error(error.message);
 
     revalidatePath('/admin/products');
@@ -271,7 +308,7 @@ export async function fulfillOrder(orderId: string) {
             orderId,
             customerEmail,
             customerName: (order.shipping_address as { name?: string })?.name || 'Valued Client',
-            totalAmount: Number(order.total_amount),
+            totalAmount: Number(order.amount_total),
             trackingNumber: shipping.tracking_number,
             labelUrl: shipping.label_url
         });

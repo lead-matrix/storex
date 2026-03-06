@@ -7,7 +7,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         const supabase = await createClient();
         const { data: product, error } = await supabase
             .from('products')
-            .select('id, name, description, base_price, images, inventory, is_active, created_at')
+            .select('id, title, description, base_price, images, stock, status, created_at')
             .eq('id', id)
             .single();
 
@@ -15,12 +15,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
         return NextResponse.json({
             id: product.id,
-            name: product.name,
+            name: product.title,
             description: product.description,
             price: product.base_price,
             image_url: product.images?.[0] || '',
-            stock: product.inventory,
-            is_active: product.is_active,
+            stock: product.stock,
+            is_active: product.status === 'active',
             created_at: product.created_at
         });
     } catch (error) {
