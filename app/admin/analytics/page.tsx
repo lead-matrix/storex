@@ -56,12 +56,12 @@ export default async function AnalyticsPage() {
         supabase.from('orders').select('amount_total, created_at').eq('status', 'paid'),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('orders').select('amount_total, created_at')
             .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).order('created_at', { ascending: true }),
         supabase.from('orders').select('amount_total, created_at')
             .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString()).order('created_at', { ascending: true }),
-        supabase.from('order_items').select('product_id, quantity, products(name)').limit(100),
+        supabase.from('order_items').select('product_id, quantity, products(title)').limit(100),
     ])
 
     const grossRevenue = paidOrders?.reduce((s, o) => s + (o.amount_total || 0), 0) ?? 0
@@ -73,12 +73,12 @@ export default async function AnalyticsPage() {
     const chartM = m30.every(v => v === 0) ? Array.from({ length: 30 }, (_, i) => 2000 + Math.sin(i * 0.5) * 1500 + i * 80) : m30
 
     // Top products
-    const pMap: Record<string, { name: string; qty: number }> = {}
+    const pMap: Record<string, { title: string; qty: number }> = {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     topItems?.forEach((item: any) => {
         if (!item.product_id) return
-        const name = Array.isArray(item.products) ? item.products[0]?.name : item.products?.name ?? 'Unknown'
-        if (!pMap[item.product_id]) pMap[item.product_id] = { name, qty: 0 }
+        const title = Array.isArray(item.products) ? item.products[0]?.title : item.products?.title ?? 'Unknown'
+        if (!pMap[item.product_id]) pMap[item.product_id] = { title, qty: 0 }
         pMap[item.product_id].qty += Number(item.quantity) || 0
     })
     const topProds = Object.entries(pMap).sort(([, a], [, b]) => b.qty - a.qty).slice(0, 8)
@@ -169,7 +169,7 @@ export default async function AnalyticsPage() {
                                                 <div className="w-20 h-1.5 rounded-full bg-charcoal/5 overflow-hidden">
                                                     <div className="h-full bg-gold rounded-full" style={{ width: `${pct}%` }} />
                                                 </div>
-                                                <span className="text-charcoal font-medium text-xs">{p.name}</span>
+                                                <span className="text-charcoal font-medium text-xs">{p.title}</span>
                                             </div>
                                         </td>
                                         <td className="text-right p-4 font-mono text-gold text-xs">{p.qty}</td>

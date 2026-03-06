@@ -20,12 +20,12 @@ interface Category {
 
 interface Variant {
     id?: string
-    name: string
-    variant_type: 'shade' | 'size' | 'bundle' | 'type'
-    color_code?: string
-    price_override: number | null
+    title: string
+    variant_type?: string
+    sku?: string
+    price: number
+    compare_price: number | null
     stock: number
-    is_active: boolean
     _isNew?: boolean
     _deleted?: boolean
 }
@@ -33,19 +33,17 @@ interface Variant {
 interface ProductFormProps {
     product?: {
         id?: string
-        name?: string
+        title?: string
         slug?: string
         description?: string
         base_price?: number
         sale_price?: number | null
-        on_sale?: boolean
-        stock?: number
         images?: string[]
         is_featured?: boolean
         is_bestseller?: boolean
         is_new?: boolean
         category_id?: string
-        is_active?: boolean
+        status?: string
     }
     variants?: Variant[]
 }
@@ -71,7 +69,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
     const [slugManual, setSlugManual] = useState(!!product?.slug)
 
     const generateSlug = useCallback((name: string) =>
-        name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
         []
     )
 
@@ -89,11 +87,10 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
 
     function addVariant() {
         setVariants(prev => [...prev, {
-            name: '',
-            variant_type: 'shade',
-            price_override: null,
+            title: '',
+            price: 0,
+            compare_price: null,
             stock: 0,
-            is_active: true,
             _isNew: true,
         }])
     }
@@ -112,8 +109,25 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
         setLoading(true)
         setError(null)
         try {
-            formData.set('images', images.join(','))
-            formData.set('variants', JSON.stringify(variants.filter(v => !v._deleted)))
+            // Explicitly sync images and variants
+            formData.set('images', images.join(','));
+            formData.set('variants', JSON.stringify(variants));
+
+            // Ensure booleans are always sent as strings to avoid browser checkbox omission
+            const booleans = ['is_active', 'is_featured', 'is_bestseller', 'is_new', 'on_sale']
+            booleans.forEach(key => {
+                const element = document.getElementsByName(key)[0] as HTMLInputElement
+                if (element) {
+                    // Radix switches use a hidden input or the button state
+                    // We check if the key is present in the original formData first
+                    if (!formData.has(key)) {
+                        formData.set(key, 'false')
+                    } else {
+                        // If it's present but Radix sends 'on', we keep it as is
+                        // Our backend handles both 'on' and 'true'
+                    }
+                }
+            })
 
             if (product?.id) {
                 formData.set('id', product.id)
@@ -157,11 +171,11 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     {/* Product Name */}
                     <div className="space-y-2">
                         <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
-                            Product Name *
+                            Product Title *
                         </Label>
                         <Input
-                            name="name"
-                            defaultValue={product?.name}
+                            name="title"
+                            defaultValue={product?.title}
                             placeholder="e.g. Obsidian Foundation"
                             required
                             className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
@@ -208,17 +222,17 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         <p className="text-[10px] text-textsoft/50 tracking-luxury">Variants may override this price</p>
                     </div>
 
-                    {/* Stock */}
+                    {/* Stock (Base) */}
                     <div className="space-y-2">
                         <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
-                            Base Stock Quantity *
+                            Initial Stock *
                         </Label>
                         <Input
                             name="stock"
                             type="number"
                             min="0"
                             placeholder="50"
-                            defaultValue={product?.stock ?? 0}
+                            defaultValue={0}
                             required
                             className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
                         />
@@ -272,16 +286,6 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     <div className="space-y-3 pt-2">
                         <div className="flex items-center space-x-3">
                             <Switch
-                                id="on_sale"
-                                name="on_sale"
-                                defaultChecked={product?.on_sale}
-                            />
-                            <Label htmlFor="on_sale" className="text-[10px] uppercase tracking-luxury text-red-500 cursor-pointer font-medium">
-                                🔴 On Sale (shows strikethrough + sale price)
-                            </Label>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <Switch
                                 id="is_featured"
                                 name="is_featured"
                                 defaultChecked={product?.is_featured}
@@ -311,13 +315,17 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             </Label>
                         </div>
                         <div className="flex items-center space-x-3">
-                            <Switch
-                                id="is_active"
-                                name="is_active"
-                                defaultChecked={product?.is_active !== false}
-                            />
-                            <Label htmlFor="is_active" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
-                                ✅ Active (visible in store)
+                            <select
+                                name="status"
+                                defaultValue={product?.status || 'active'}
+                                className="bg-pearl border border-charcoal/10 rounded px-2 py-1 text-[10px] uppercase tracking-luxury font-bold outline-none"
+                            >
+                                <option value="active">Active</option>
+                                <option value="draft">Draft</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">
+                                Visibility Status
                             </Label>
                         </div>
                     </div>
@@ -389,56 +397,38 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                     key={index}
                                     className="grid grid-cols-12 gap-3 items-end p-4 bg-pearl rounded-md border border-charcoal/5"
                                 >
-                                    {/* Name */}
-                                    <div className="col-span-3 space-y-1.5">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Name</label>
+                                    {/* Title */}
+                                    <div className="col-span-4 space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Variant Title</label>
                                         <Input
-                                            value={variant.name}
-                                            onChange={e => updateVariant(index, 'name', e.target.value)}
+                                            value={variant.title}
+                                            onChange={e => updateVariant(index, 'title', e.target.value)}
                                             placeholder="e.g. Ruby Red"
                                             className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
                                         />
                                     </div>
 
-                                    {/* Type */}
+                                    {/* SKU */}
                                     <div className="col-span-2 space-y-1.5">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Type</label>
-                                        <select
-                                            value={variant.variant_type}
-                                            onChange={e => updateVariant(index, 'variant_type', e.target.value as Variant['variant_type'])}
-                                            className="w-full h-9 bg-white border border-charcoal/10 rounded-md px-2 text-xs text-charcoal focus:outline-none focus:ring-1 focus:ring-gold/50"
-                                        >
-                                            {VARIANT_TYPE_OPTIONS.map(o => (
-                                                <option key={o.value} value={o.value}>{o.label}</option>
-                                            ))}
-                                        </select>
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">SKU</label>
+                                        <Input
+                                            value={variant.sku || ''}
+                                            onChange={e => updateVariant(index, 'sku', e.target.value)}
+                                            placeholder="SKU-001"
+                                            className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
+                                        />
                                     </div>
 
-                                    {/* Color Code (only for shades) */}
-                                    {variant.variant_type === 'shade' && (
-                                        <div className="col-span-1 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Color</label>
-                                            <div className="flex items-center gap-2">
-                                                <Input
-                                                    type="color"
-                                                    value={variant.color_code || '#000000'}
-                                                    onChange={e => updateVariant(index, 'color_code', e.target.value)}
-                                                    className="h-9 w-9 p-0.5 bg-white border-charcoal/10 cursor-pointer"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Price Override */}
-                                    <div className={variant.variant_type === 'shade' ? "col-span-2 space-y-1.5" : "col-span-3 space-y-1.5"}>
+                                    {/* Price */}
+                                    <div className="col-span-2 space-y-1.5">
                                         <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Price ($)</label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            value={variant.price_override ?? ''}
-                                            onChange={e => updateVariant(index, 'price_override', e.target.value ? parseFloat(e.target.value) : null)}
-                                            placeholder="Base"
+                                            value={variant.price}
+                                            onChange={e => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
+                                            placeholder="0.00"
                                             className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
                                         />
                                     </div>
@@ -453,17 +443,6 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                             onChange={e => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
                                             className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
                                         />
-                                    </div>
-
-                                    {/* Active */}
-                                    <div className="col-span-2 space-y-1.5">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Active</label>
-                                        <div className="flex items-center h-9">
-                                            <Switch
-                                                checked={variant.is_active}
-                                                onCheckedChange={v => updateVariant(index, 'is_active', v)}
-                                            />
-                                        </div>
                                     </div>
 
                                     {/* Delete */}

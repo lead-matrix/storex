@@ -18,14 +18,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const supabase = await createClient();
     const { data: product } = await supabase
         .from("products")
-        .select("name, description")
+        .select("title, description")
         .eq("slug", slug)
         .single();
 
     if (!product) return { title: "Product Not Found" };
 
     return {
-        title: `${product.name} | DINA COSMETIC`,
+        title: `${product.title} | DINA COSMETIC`,
         description: product.description,
     };
 }
@@ -38,7 +38,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
         .from('products')
         .select('*, variants(*)')
         .eq('slug', slug)
-        .eq('is_active', true)
+        .eq('status', 'active')
         .single();
 
     if (error || !product) {
@@ -47,8 +47,8 @@ export default async function ProductSlugPage({ params }: PageProps) {
 
     const { data: relatedProducts } = await supabase
         .from('products')
-        .select('id, name, slug, base_price, images, description')
-        .eq('is_active', true)
+        .select('id, title, slug, base_price, images, description')
+        .eq('status', 'active')
         .eq('category_id', product.category_id)
         .neq('id', product.id)
         .limit(4);
@@ -66,7 +66,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
                     <div className="w-full animate-in fade-in slide-in-from-left-5 duration-1000">
-                        <ProductGallery images={product.images} productName={product.name} />
+                        <ProductGallery images={product.images} productName={product.title} />
                     </div>
 
                     <div className="flex flex-col">
@@ -77,11 +77,11 @@ export default async function ProductSlugPage({ params }: PageProps) {
                             <ProductDetails
                                 product={{
                                     id: product.id,
-                                    name: product.name,
+                                    title: product.title,
                                     base_price: product.base_price,
                                     description: product.description || "The quintessence of modern luxury.",
-                                    image: product.images?.[0] || "/placeholder-product.jpg",
-                                    variants: product.variants
+                                    images: product.images || ["/placeholder-product.jpg"],
+                                    product_variants: product.variants
                                 }}
                             />
                         </div>

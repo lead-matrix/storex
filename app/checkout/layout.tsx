@@ -1,4 +1,4 @@
-import { requireAuth } from '@/route-guard'
+import { requireAuth } from '@/proxy'
 
 export const dynamic = 'force-dynamic'
 

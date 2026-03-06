@@ -37,8 +37,8 @@ export default async function CollectionSlugPage({ params }: Props) {
 
     const { data: products } = await supabase
         .from('products')
-        .select('id, name, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_featured, variants(id, name, price_override, stock)')
-        .eq('is_active', true)
+        .select('id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_featured, variants(id, title, price_override, stock)')
+        .eq('status', 'active')
         .eq('category_id', category.id)
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false })

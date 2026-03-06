@@ -142,35 +142,37 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                 <div
                     {...getRootProps()}
                     className={`
-            border-2 border-dashed rounded-luxury p-8 text-center cursor-pointer transition-all
+            border-2 border-dashed rounded-luxury p-12 text-center cursor-pointer transition-all duration-300
             ${isDragActive
-                            ? 'border-gold bg-gold/5'
-                            : 'border-charcoal/20 hover:border-gold/40 bg-white shadow-sm'
+                            ? 'border-gold bg-gold/10 scale-[0.99] shadow-inner font-bold'
+                            : 'border-charcoal/20 hover:border-gold/40 bg-white shadow-soft hover:shadow-luxury'
                         }
             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
           `}
                 >
                     <input {...getInputProps()} />
-                    <div className="flex flex-col items-center gap-3">
-                        <Upload className={`w-8 h-8 ${isDragActive ? 'text-gold' : 'text-textsoft/40'}`} />
+                    <div className="flex flex-col items-center gap-4">
+                        <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-pearl text-textsoft/40 shadow-inner'}`}>
+                            <Upload className={`w-10 h-10 ${isDragActive ? 'animate-bounce' : ''}`} />
+                        </div>
                         <div>
-                            <p className="text-sm text-charcoal font-medium mb-1">
-                                {isDragActive ? 'Drop images here' : 'Drag & drop images here'}
+                            <p className="text-lg text-charcoal font-heading tracking-luxury mb-1">
+                                {isDragActive ? 'Release to Upload Masterpiece' : 'Deposit Visual Assets'}
                             </p>
                             <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
-                                or click to browse • Max {maxImages} images • 5MB each
+                                drag & drop or click to browse • Max {maxImages} images • 5MB each
                             </p>
                         </div>
                         <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="border-charcoal/30 text-charcoal hover:bg-charcoal hover:text-pearl rounded-full text-[10px] uppercase font-medium tracking-luxury mt-2 shadow-sm"
+                            className="border-charcoal/30 text-charcoal hover:bg-charcoal hover:text-pearl rounded-full text-[10px] uppercase font-medium tracking-luxury mt-2 shadow-sm px-10 h-10"
                             disabled={uploading}
                         >
                             {uploading ? (
                                 <>
-                                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Uploading...
                                 </>
                             ) : (
@@ -185,12 +187,12 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
             {Object.keys(uploadProgress).length > 0 && (
                 <div className="space-y-2">
                     {Object.entries(uploadProgress).map(([fileName, progress]) => (
-                        <div key={fileName} className="bg-pearl border border-charcoal/10 p-3 rounded-md shadow-sm">
+                        <div key={fileName} className="bg-pearl border border-charcoal/10 p-4 rounded-md shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-[10px] text-textsoft uppercase tracking-luxury truncate">
                                     {fileName}
                                 </span>
-                                <span className="text-[10px] text-gold font-mono">{progress}%</span>
+                                <span className="text-[10px] text-gold font-mono font-bold">{progress}%</span>
                             </div>
                             <div className="h-1 bg-white overflow-hidden rounded-full">
                                 <div
@@ -205,11 +207,11 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
             {/* Image Gallery */}
             {images.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {images.map((url, index) => (
                         <div
                             key={url}
-                            className="relative group aspect-square bg-pearl border border-charcoal/10 overflow-hidden rounded-luxury shadow-sm"
+                            className="relative group aspect-square bg-pearl border border-charcoal/10 overflow-hidden rounded-luxury shadow-soft transition-all hover:scale-[1.02]"
                         >
                             <Image
                                 src={url}
@@ -221,7 +223,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
                             {/* Primary Image Badge */}
                             {index === 0 && (
-                                <div className="absolute top-2 left-2 bg-gold text-white px-2 py-1 text-[8px] uppercase tracking-luxury font-medium rounded-full shadow-sm">
+                                <div className="absolute top-3 left-3 bg-gold text-white px-3 py-1 text-[8px] uppercase tracking-luxury font-bold rounded-full shadow-luxury z-10">
                                     Primary
                                 </div>
                             )}
@@ -230,16 +232,18 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                             <button
                                 type="button"
                                 onClick={() => removeImage(url)}
-                                className="absolute top-2 right-2 bg-rose-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-600"
+                                className="absolute top-3 right-3 bg-rose-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-600 shadow-md z-10"
                                 title="Remove image"
                             >
-                                <X size={12} />
+                                <X size={14} />
                             </button>
 
                             {/* Image Index */}
-                            <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm text-charcoal px-2 py-1 text-[8px] uppercase tracking-luxury font-medium rounded-full shadow-sm">
-                                {index + 1} of {images.length}
+                            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm text-charcoal px-2 py-1 text-[8px] uppercase tracking-luxury font-bold rounded-full shadow-sm z-10">
+                                {index + 1}
                             </div>
+
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
                         </div>
                     ))}
                 </div>
@@ -247,21 +251,21 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
             {/* Empty State */}
             {images.length === 0 && (
-                <div className="border border-dashed border-charcoal/10 rounded-luxury py-12 flex flex-col items-center justify-center text-textsoft">
-                    <ImageIcon size={32} className="mb-3 opacity-20" />
-                    <span className="text-[10px] uppercase tracking-luxury font-medium">No images uploaded yet</span>
+                <div className="border border-dashed border-charcoal/10 rounded-luxury py-16 flex flex-col items-center justify-center text-textsoft bg-pearl/50">
+                    <ImageIcon size={48} className="mb-4 opacity-10" />
+                    <span className="text-[10px] uppercase tracking-luxury font-medium">No Masterpiece Visuals Uploaded</span>
                 </div>
             )}
 
             {/* Image Count */}
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-luxury text-textsoft font-medium">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-luxury text-textsoft font-medium pt-2">
                 <span>
-                    {images.length} / {maxImages} images
+                    {images.length} / {maxImages} Visual Assets
                 </span>
                 {images.length > 0 && (
-                    <span className="text-gold">
-                        <Check size={12} className="inline mr-1" />
-                        First image is primary
+                    <span className="text-gold font-bold">
+                        <Check size={14} className="inline mr-1" />
+                        Ascending order: First is Primary
                     </span>
                 )}
             </div>

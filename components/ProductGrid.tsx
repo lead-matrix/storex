@@ -7,14 +7,14 @@ import { Loader2 } from "lucide-react";
 
 interface Variant {
     id: string;
-    name: string;
+    title: string;
     price_override?: number | null;
     stock?: number;
 }
 
 interface Product {
     id: string;
-    name: string;
+    title: string;
     slug: string;
     base_price: number;
     sale_price?: number | null;
@@ -42,38 +42,36 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
 
         async function fetchProducts() {
             try {
-                // Include variants in the select
+                // Querying for V2 but including fallback fields if they exist
                 let query = supabase
                     .from("products")
-                    .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, category_id, is_active, is_featured, variants(id, name, price_override, stock)")
-                    .eq("is_active", true);
+                    .select("*")
+                    .eq("status", "active")
+                    .order("created_at", { ascending: false });
 
-                if (categoryId) {
-                    query = query.eq("category_id", categoryId);
-                }
-
-                if (filter === "new") {
-                    query = query.gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-                }
-
-                query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
+                if (categoryId && categoryId !== "all") query = query.eq("category_id", categoryId);
 
                 const { data, error } = await query;
 
                 if (error) {
-                    console.error("Vault Query Failed:", error.message);
-                    // Fallback try without base_price if it fails (backwards compatibility)
-                    const { data: retryData } = await supabase
+                    console.error("V2 Vault Query Failed, falling back to V1 compatibility mode:", error.message);
+                    // Fallback to V1 if V2 schema isn't fully applied to DB yet
+                    const { data: v1Data } = await supabase
                         .from("products")
-                        .select("id, name, slug, images, description")
+                        .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_active")
                         .eq("is_active", true)
-                        .limit(20);
+                        .limit(50);
 
-                    if (retryData) {
-                        setProducts(retryData as any);
+                    if (v1Data) {
+                        setProducts(v1Data.map((p: any) => ({ ...p, title: p.name || p.title })) as any);
                     }
                 } else {
-                    setProducts((data ?? []) as unknown as Product[]);
+                    // Map V2 data to the UI expected 'Product' interface
+                    const mapped = (data ?? []).map((p: any) => ({
+                        ...p,
+                        variants: p.product_variants ? p.product_variants.map((v: any) => ({ ...v, title: v.title, price_override: v.price })) : []
+                    }));
+                    setProducts(mapped as any);
                 }
             } catch (err) {
                 console.error("CRITICAL VAULT ERROR:", err);
@@ -84,8 +82,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
 
         fetchProducts();
 
-        const supabaseClient = createClient();
-        const productChannel = supabaseClient
+        const productChannel = supabase
             .channel("product-updates")
             .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
                 fetchProducts();
@@ -93,7 +90,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
             .subscribe();
 
         return () => {
-            supabaseClient.removeChannel(productChannel);
+            supabase.removeChannel(productChannel);
         };
     }, [categoryId, filter]);
 

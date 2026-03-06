@@ -14,8 +14,8 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params
     const supabase = await createClient()
-    const { data } = await supabase.from('products').select('name').eq('id', id).single()
-    return { title: data ? `Edit: ${data.name} | Admin` : 'Edit Product | Admin' }
+    const { data } = await supabase.from('products').select('title').eq('id', id).single()
+    return { title: data ? `Edit: ${data.title} | Admin` : 'Edit Product | Admin' }
 }
 
 export default async function EditProductPage({ params }: Props) {
@@ -24,21 +24,26 @@ export default async function EditProductPage({ params }: Props) {
 
     const { data: product, error } = await supabase
         .from('products')
-        .select('id, name, slug, description, base_price, sale_price, on_sale, is_new, stock, images, is_featured, is_bestseller, is_active, category_id, variants(*)')
+        .select(`
+            id, title, slug, description, images, is_featured, is_bestseller, status, category_id,
+            variants(
+                id, title, sku, price_override, stock
+            )
+        `)
         .eq('id', id)
         .single()
 
     if (error || !product) notFound()
 
-    // Normalise variants
-    const variants = (product.variants ?? []) as Array<{
-        id: string
-        name: string
-        variant_type: 'shade' | 'size' | 'bundle' | 'type'
-        price_override: number | null
-        stock: number
-        is_active: boolean
-    }>
+    // Normalise variants for the form
+    const variants = (product.variants ?? []).map((v: any) => ({
+        id: v.id,
+        title: v.title,
+        sku: v.sku,
+        price: Number(v.price_override) || 0,
+        compare_price: null,
+        stock: v.stock ?? 0
+    }))
 
     return (
         <div className="max-w-4xl space-y-8 animate-luxury-fade">
@@ -52,25 +57,20 @@ export default async function EditProductPage({ params }: Props) {
 
             <div>
                 <h1 className="text-3xl font-heading text-charcoal mb-1 tracking-luxury">Refine Masterpiece</h1>
-                <p className="text-textsoft text-sm tracking-luxury uppercase font-medium">Evolving: {product.name}</p>
+                <p className="text-textsoft text-sm tracking-luxury uppercase font-medium">Evolving: {product.title}</p>
             </div>
 
             <div className="bg-white rounded-luxury border border-charcoal/10 p-8 shadow-soft">
                 <ProductForm
                     product={{
                         id: product.id,
-                        name: product.name,
+                        title: product.title,
                         slug: product.slug,
                         description: product.description,
-                        base_price: product.base_price,
-                        sale_price: product.sale_price,
-                        on_sale: product.on_sale,
-                        is_new: product.is_new,
-                        stock: product.stock ?? 0,
                         images: product.images ?? [],
                         is_featured: product.is_featured,
                         is_bestseller: product.is_bestseller,
-                        is_active: product.is_active,
+                        status: product.status,
                         category_id: product.category_id,
                     }}
                     variants={variants}

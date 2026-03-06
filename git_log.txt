@@ -1,0 +1,10 @@
+﻿5e6f2d3 fix: modify MASTER.sql to use a DO block for inventory column update
+7157b7c fix: resolve build error in home page by ensuring products and categories are always initialized
+0f249fe fix: resolve stripe webhook type error by casting checkout session to any for shipping_details access
+809a809 fix: add default and named 'proxy' exports to proxy.ts to satisfy build requirements
+412100d fix: resolve build error by adding missing ImageBannerSection component and standardizing registry imports
+0e83e50 refactor: replace middleware.ts with proxy.ts and migrate orders/details to V2
+0eb83c0 feat: migrate admin and cms to Schema V2 architecture
+a4ec631 fix(admin): use readOnly instead of readonly in settings page
+4b55c17 feat(admin): launch-ready site editor and image vault
+43cc7c6 Fix: remove illegal inline server action closures crashing admin SSR

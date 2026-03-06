@@ -2,42 +2,59 @@ import { createClient } from "@/utils/supabase/server";
 import { Hero } from "@/components/Hero";
 import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid";
 import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid";
+import CMSRenderer from "@/components/cms/CMSRenderer";
 
 export const revalidate = 60;
 
 async function getHomePageData() {
   const supabase = await createClient();
 
-  // Fetch featured products
+  // 1. Try to fetch CMS driven home page
+  const { data: cmsHome } = await supabase
+    .from("site_pages")
+    .select(`*, site_blocks(*)`)
+    .eq("slug", "home")
+    .eq("is_published", true)
+    .order("sort_order", { foreignTable: "site_blocks", ascending: true })
+    .single();
+
+  if (cmsHome) return { cmsHome, products: [], categories: [] };
+
+  // 2. Fallback to curated legacy layout if no CMS home exists
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_featured")
-    .eq("is_active", true)
+    .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status")
+    .eq("status", "active")
     .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false })
     .limit(4);
 
-  // Fetch active categories with images
   const { data: categories } = await supabase
     .from("categories")
-    .select("id, name, slug, description, image_url")
-    .eq("is_active", true)
-    .not("image_url", "is", null)
-    .order("name", { ascending: true });
+    .select("id, name, slug, description")
+    .limit(6);
 
   return {
-    products: products ?? [],
-    categories: categories ?? []
+    products: products?.map(p => ({ ...p, name: p.title })) ?? [],
+    categories: categories ?? [],
+    cmsHome: null
   };
 }
 
 export default async function Home() {
-  const { products, categories } = await getHomePageData();
+  const { products, categories, cmsHome } = await getHomePageData();
+
+  if (cmsHome) {
+    return (
+      <main className="bg-obsidian">
+        <CMSRenderer sections={cmsHome.site_blocks || []} />
+      </main>
+    );
+  }
 
   return (
     <div className="bg-black">
       <Hero />
-      <HomeCategoryGrid categories={categories} />
+      <HomeCategoryGrid categories={categories as any} />
       <FeaturedProductsGrid products={products} />
     </div>
   );
