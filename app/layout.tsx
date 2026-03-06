@@ -5,7 +5,7 @@ import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
 import { ShoppingBagDrawer } from "@/components/ShoppingBagDrawer";
 import { Analytics } from "@vercel/analytics/next";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Footer } from "@/components/Footer";
 import { Toaster } from 'sonner';
 import { validateEnv } from "@/lib/env";

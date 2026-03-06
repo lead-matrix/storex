@@ -1,4 +1,5 @@
 import { motion } from "framer-motion"
+import Image from "next/image"
 
 interface HeroProps {
     title: string
@@ -11,7 +12,16 @@ export default function HeroSection({ title, subtitle, imageUrl }: HeroProps) {
         <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-black">
             {imageUrl && (
                 <div className="absolute inset-0 z-0">
-                    <img src={imageUrl} alt="" className="w-full h-full object-cover opacity-60" />
+                    <div className="relative h-full w-full">
+                        <Image
+                            src={imageUrl}
+                            alt={title || "Hero"}
+                            fill
+                            className="object-cover opacity-60"
+                            priority
+                            sizes="100vw"
+                        />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-obsidian" />
                 </div>
             )}

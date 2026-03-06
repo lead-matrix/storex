@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Hero } from "@/components/Hero";
 import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid";
 import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid";
@@ -12,13 +12,16 @@ async function getHomePageData() {
   // 1. Try to fetch CMS driven home page
   const { data: cmsHome } = await supabase
     .from("site_pages")
-    .select(`*, site_blocks(*)`)
+    .select(`*, site_sections(*, content_blocks(*))`)
     .eq("slug", "home")
-    .eq("is_published", true)
-    .order("sort_order", { foreignTable: "site_blocks", ascending: true })
+    .order("position", { foreignTable: "site_sections", ascending: true })
     .single();
 
-  if (cmsHome) return { cmsHome, products: [], categories: [] };
+  if (cmsHome) {
+    // Transform the nested structure to what CMSRenderer expects if needed
+    // For now, let's keep it simple as a proof of concept
+    return { cmsHome, products: [], categories: [] };
+  }
 
   // 2. Fallback to curated legacy layout if no CMS home exists
   const { data: products } = await supabase

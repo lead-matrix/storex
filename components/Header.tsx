@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ShoppingBag, User, Menu } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet";
 
 export default function Header({ navItems = [] }: { navItems?: { label: string, href: string, is_active?: boolean }[] }) {
