@@ -17,10 +17,7 @@ export default async function AdminProductsPage() {
         .select(`
             *, 
             categories(name),
-            product_variants(
-                id, price, compare_price,
-                inventory(stock_quantity)
-            )
+            inventory(stock_quantity)
         `)
         .order("created_at", { ascending: false });
 
@@ -32,29 +29,25 @@ export default async function AdminProductsPage() {
             .select(`
                 *, 
                 categories(name),
-                product_variants(
-                    id, price, compare_price,
-                    inventory(stock_quantity)
-                )
+                inventory(stock_quantity)
             `)
             .order("created_at", { ascending: false });
         products = adminProducts;
     }
 
     const processedProducts = products?.map(p => {
-        const variants = p.product_variants || [];
-        const totalStock = variants.reduce((sum: number, v: any) => sum + (v.inventory?.stock_quantity || 0), 0);
-        const firstVariantPrice = variants[0]?.price || 0;
-        const firstVariantCompare = variants[0]?.compare_price || null;
+        // Handle stock mapping. If inventory joined, we can use it, else fallback to stock.
+        const invArray = Array.isArray(p.inventory) ? p.inventory : (p.inventory ? [p.inventory] : []);
+        const totalStock = invArray.reduce((sum: number, v: any) => sum + (v.stock_quantity || 0), p.stock || 0);
 
         return {
             ...p,
-            name: p.title, // alias for UI compatibility if needed
+            name: p.title || p.name,
             stock: totalStock,
-            display_price: firstVariantPrice,
-            display_compare: firstVariantCompare,
+            display_price: p.base_price || 0,
+            display_compare: p.sale_price || null,
             is_active: p.status === 'active',
-            first_variant_id: variants[0]?.id
+            first_variant_id: p.id
         };
     }) || [];
 

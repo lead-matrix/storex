@@ -11,11 +11,11 @@ async function getHomePageData() {
 
   // 1. Try to fetch CMS driven home page
   const { data: cmsHome } = await supabase
-    .from("cms_pages")
-    .select(`*, cms_sections(*)`)
+    .from("site_pages")
+    .select(`*, site_blocks(*)`)
     .eq("slug", "home")
     .eq("is_published", true)
-    .order("sort_order", { foreignTable: "cms_sections", ascending: true })
+    .order("sort_order", { foreignTable: "site_blocks", ascending: true })
     .single();
 
   if (cmsHome) return { cmsHome, products: [], categories: [] };
@@ -46,7 +46,7 @@ export default async function Home() {
   if (cmsHome) {
     return (
       <main className="bg-obsidian">
-        <CMSRenderer sections={cmsHome.cms_sections || []} />
+        <CMSRenderer sections={cmsHome.site_blocks || []} />
       </main>
     );
   }

@@ -45,12 +45,11 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                 // Querying for V2 but including fallback fields if they exist
                 let query = supabase
                     .from("products")
-                    .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, category_id, status, is_featured, product_variants(id, title, price, compare_price)")
-                    .eq("status", "active");
+                    .select("*")
+                    .eq("status", "active")
+                    .order("created_at", { ascending: false });
 
                 if (categoryId && categoryId !== "all") query = query.eq("category_id", categoryId);
-
-                query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
 
                 const { data, error } = await query;
 

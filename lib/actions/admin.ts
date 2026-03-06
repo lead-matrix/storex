@@ -80,32 +80,14 @@ export async function createProduct(formData: FormData) {
 
         if (error) throw new Error(`Failed to create product: ${error.message}`);
 
-        // Handle Variants & Inventory
-        const variantsRaw = formData.get('variants') as string;
-        const variantsJson = variantsRaw ? JSON.parse(variantsRaw) : [];
+        // Handle Inventory
+        await supabase.from('inventory').insert({
+            product_id: product.id,
+            stock_quantity: stock
+        });
 
-        if (variantsJson.length > 0) {
-            await upsertVariants(supabase, product.id, variantsJson);
-        } else {
-            // Create a default variant if none provided to hold the base price and stock
-            const { data: vData, error: vError } = await supabase
-                .from('product_variants')
-                .insert({
-                    product_id: product.id,
-                    title: 'Default',
-                    price: base_price,
-                    compare_price: on_sale ? sale_price : null
-                })
-                .select()
-                .single();
-
-            if (!vError && vData) {
-                await supabase.from('inventory').insert({
-                    variant_id: vData.id,
-                    stock_quantity: stock
-                });
-            }
-        }
+        // If you still have images handling or separate variants mapping later, add it here for products.
+        // The variantsJson logic is removed as product_variants table is removed.
 
         revalidatePaths(product?.id, product?.slug);
         return product;
@@ -150,9 +132,14 @@ export async function updateProduct(formData: FormData) {
 
     if (error) throw new Error(`Failed to update product: ${error.message}`);
 
-    const variantsRaw = formData.get('variants') as string;
-    if (variantsRaw) {
-        await upsertVariants(supabase, id, JSON.parse(variantsRaw));
+    // update inventory directly or it should be managed from stock manager
+    // assuming there's a stock field inside formData if user updates stock from main form:
+    const stockRaw = formData.get('stock') as string;
+    if (stockRaw !== null && stockRaw !== undefined) {
+        const stock = parseInt(stockRaw, 10);
+        if (!isNaN(stock)) {
+            await supabase.from('inventory').update({ stock_quantity: stock }).eq('product_id', id);
+        }
     }
 
     revalidatePaths(id, slug);
@@ -166,14 +153,14 @@ export async function deleteProduct(id: string) {
     revalidatePaths(id, product?.slug);
 }
 
-export async function adjustStock(variantId: string, delta: number) {
+export async function adjustStock(productId: string, delta: number) {
     const supabase = await ensureAdmin();
 
-    const { data: inv } = await supabase.from('inventory').select('stock_quantity').eq('variant_id', variantId).single();
+    const { data: inv } = await supabase.from('inventory').select('stock_quantity').eq('product_id', productId).single();
     if (!inv) throw new Error("Inventory not found");
 
     const newStock = Math.max(0, (inv.stock_quantity ?? 0) + delta);
-    const { error } = await supabase.from('inventory').update({ stock_quantity: newStock }).eq('variant_id', variantId);
+    const { error } = await supabase.from('inventory').update({ stock_quantity: newStock }).eq('product_id', productId);
     if (error) throw new Error(error.message);
 
     revalidatePath('/admin/products');
@@ -189,85 +176,7 @@ export async function toggleProductStatus(id: string, currentStatus: string) {
     revalidatePath('/admin/products');
 }
 
-// ─────────────────────────────────────────────────
-// VARIANT HELPER
-// ─────────────────────────────────────────────────
-
-interface VariantInput {
-    id?: string
-    title: string
-    variant_type?: string
-    sku?: string
-    price: number
-    compare_price: number | null
-    stock: number
-    _isNew?: boolean
-}
-
-async function upsertVariants(
-    supabase: any,
-    productId: string,
-    variants: (VariantInput & { _deleted?: boolean })[]
-) {
-    // 1. Delete variants marked as _deleted
-    const toDelete = variants.filter(v => v._deleted && v.id);
-    if (toDelete.length > 0) {
-        await supabase
-            .from('product_variants')
-            .delete()
-            .in('id', toDelete.map(v => v.id));
-    }
-
-    // 2. Filter out deleted items
-    const activeVariants = variants.filter(v => !v._deleted);
-
-    for (const v of activeVariants) {
-        const variantPayload = {
-            product_id: productId,
-            title: v.title,
-            sku: v.sku,
-            price: v.price || 0,
-            compare_price: v.compare_price,
-            weight: 0
-        };
-
-        if (v.id && !v._isNew) {
-            // Update existing
-            const { error: vErr } = await supabase
-                .from('product_variants')
-                .update(variantPayload)
-                .eq('id', v.id);
-
-            if (!vErr) {
-                await supabase.from('inventory').upsert({
-                    variant_id: v.id,
-                    stock_quantity: v.stock
-                }, { onConflict: 'variant_id' });
-            }
-        } else {
-            // Insert new
-            const { data: vData, error: vErr } = await supabase
-                .from('product_variants')
-                .insert(variantPayload)
-                .select()
-                .single();
-
-            if (!vErr && vData) {
-                await supabase.from('inventory').insert({
-                    variant_id: vData.id,
-                    stock_quantity: v.stock
-                });
-            }
-        }
-    }
-}
-
-export async function deleteVariant(variantId: string) {
-    const supabase = await ensureAdmin();
-    const { error } = await supabase.from('product_variants').delete().eq('id', variantId);
-    if (error) throw new Error(`Failed to delete variant: ${error.message}`);
-    revalidatePath('/admin/products');
-}
+// Variant logic has been removed to align with flat product and inventory tables
 
 // ─────────────────────────────────────────────────
 // USER MANAGEMENT

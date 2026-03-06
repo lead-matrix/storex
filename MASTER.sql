@@ -169,10 +169,15 @@ ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 -- Sync legacy inventory → stock
-UPDATE public.products
-SET stock = inventory
-WHERE stock = 0
-    AND inventory > 0;
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'inventory'
+) THEN EXECUTE 'UPDATE public.products SET stock = inventory WHERE stock = 0 AND inventory > 0';
+END IF;
+END $$;
 -- 1D. variants
 CREATE TABLE IF NOT EXISTS public.variants (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -270,13 +275,26 @@ SET amount_total = total_amount
 WHERE amount_total IS NULL
     AND total_amount IS NOT NULL;
 -- Safely drop legacy NOT NULL constraints if columns still exist
-DO $$ BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='orders' AND column_name='email') THEN
-        ALTER TABLE public.orders ALTER COLUMN email DROP NOT NULL;
-    END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='orders' AND column_name='total_amount') THEN
-        ALTER TABLE public.orders ALTER COLUMN total_amount DROP NOT NULL;
-    END IF;
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'orders'
+        AND column_name = 'email'
+) THEN
+ALTER TABLE public.orders
+ALTER COLUMN email DROP NOT NULL;
+END IF;
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'orders'
+        AND column_name = 'total_amount'
+) THEN
+ALTER TABLE public.orders
+ALTER COLUMN total_amount DROP NOT NULL;
+END IF;
 END $$;
 -- 1F. order_items
 CREATE TABLE IF NOT EXISTS public.order_items (
@@ -315,9 +333,10 @@ CREATE TABLE IF NOT EXISTS public.email_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     email_type text NOT NULL,
     recipient text NOT NULL,
-    order_id uuid REFERENCES public.orders(id) ON DELETE SET NULL,
-    sent_at timestamptz NOT NULL DEFAULT now(),
-    created_at timestamptz NOT NULL DEFAULT now()
+    order_id uuid REFERENCES public.orders(id) ON DELETE
+    SET NULL,
+        sent_at timestamptz NOT NULL DEFAULT now(),
+        created_at timestamptz NOT NULL DEFAULT now()
 );
 -- 1I. inventory_reservations — hold stock during checkout (service_role only)
 CREATE TABLE IF NOT EXISTS public.inventory_reservations (
@@ -622,60 +641,92 @@ CREATE POLICY "order_items_delete" ON public.order_items FOR DELETE USING (
 --      Only the webhook handler (service_role) can read/write.
 CREATE POLICY "stripe_events_admin_select" ON public.stripe_events FOR
 SELECT USING (
-    (SELECT public.is_admin())
-);
+        (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "stripe_events_admin_insert" ON public.stripe_events FOR
 INSERT WITH CHECK (
-    (SELECT public.is_admin())
-);
+        (
+            SELECT public.is_admin()
+        )
+    );
 -- 5.7b EMAIL_LOGS  — service_role only
 CREATE POLICY "email_logs_admin_select" ON public.email_logs FOR
 SELECT USING (
-    (SELECT public.is_admin())
-);
+        (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "email_logs_admin_insert" ON public.email_logs FOR
 INSERT WITH CHECK (
-    (SELECT public.is_admin())
-);
+        (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "email_logs_admin_delete" ON public.email_logs FOR DELETE USING (
-    (SELECT public.is_admin())
+    (
+        SELECT public.is_admin()
+    )
 );
 -- 5.7c INVENTORY_RESERVATIONS  — service_role only
 CREATE POLICY "inv_res_admin_all" ON public.inventory_reservations FOR ALL USING (
-    (SELECT public.is_admin())
+    (
+        SELECT public.is_admin()
+    )
 );
 -- 5.7d PRODUCT_IMAGES  — public read (images are public), admin write
 CREATE POLICY "product_images_select" ON public.product_images FOR
 SELECT USING (true);
 CREATE POLICY "product_images_insert" ON public.product_images FOR
 INSERT TO authenticated WITH CHECK (
-    (SELECT public.is_admin())
-);
+        (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "product_images_update" ON public.product_images FOR
 UPDATE USING (
-    (SELECT public.is_admin())
-);
+        (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "product_images_delete" ON public.product_images FOR DELETE USING (
-    (SELECT public.is_admin())
+    (
+        SELECT public.is_admin()
+    )
 );
 -- 5.7e USER_PROFILES  — users see/edit own row, admin sees all
 CREATE POLICY "user_profiles_select" ON public.user_profiles FOR
 SELECT USING (
-    (SELECT auth.uid()) = id
-    OR (SELECT public.is_admin())
-);
+        (
+            SELECT auth.uid()
+        ) = id
+        OR (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "user_profiles_insert" ON public.user_profiles FOR
 INSERT WITH CHECK (
-    (SELECT auth.uid()) = id
-    OR (SELECT public.is_admin())
-);
+        (
+            SELECT auth.uid()
+        ) = id
+        OR (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "user_profiles_update" ON public.user_profiles FOR
 UPDATE USING (
-    (SELECT auth.uid()) = id
-    OR (SELECT public.is_admin())
-);
+        (
+            SELECT auth.uid()
+        ) = id
+        OR (
+            SELECT public.is_admin()
+        )
+    );
 CREATE POLICY "user_profiles_delete" ON public.user_profiles FOR DELETE USING (
-    (SELECT public.is_admin())
+    (
+        SELECT public.is_admin()
+    )
 );
 -- 5.8  SITE_SETTINGS  — public read, admin write
 CREATE POLICY "site_settings_select" ON public.site_settings FOR
@@ -1275,35 +1326,83 @@ SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/
 WHERE images IS NULL
     OR array_length(images, 1) = 0;
 -- ── Patch existing live rows: replace any old/broken image paths with CDN URLs ──
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'] WHERE slug = 'luxurious-foundation';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png'] WHERE slug = 'face-powder';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png'] WHERE slug = 'setting-powder';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png'] WHERE slug = 'setting-spray';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'] WHERE slug = 'face-primer';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png'] WHERE slug = 'contour-stick';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'] WHERE slug = 'concealer';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png'] WHERE slug = 'bloom-blush';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png'] WHERE slug = 'eyeshadow-palette';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png'] WHERE slug = 'eye-primer';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png'] WHERE slug = 'mascara';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png'] WHERE slug = 'eyeliner';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png'] WHERE slug = 'eyebrow-pencil';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png'] WHERE slug = 'matte-lipstick';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png'] WHERE slug = 'lip-gloss';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png'] WHERE slug = 'lip-tint';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png'] WHERE slug = 'dual-lipstick';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'] WHERE slug = 'brush-set-18';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'] WHERE slug = 'brush-set-14';
-UPDATE public.products SET images = ARRAY['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png'] WHERE slug = 'makeup-remover';
-
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
+WHERE slug = 'luxurious-foundation';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
+WHERE slug = 'face-powder';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
+WHERE slug = 'setting-powder';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
+WHERE slug = 'setting-spray';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
+WHERE slug = 'face-primer';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
+WHERE slug = 'contour-stick';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
+WHERE slug = 'concealer';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
+WHERE slug = 'bloom-blush';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png']
+WHERE slug = 'eyeshadow-palette';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
+WHERE slug = 'eye-primer';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
+WHERE slug = 'mascara';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png']
+WHERE slug = 'eyeliner';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
+WHERE slug = 'eyebrow-pencil';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png']
+WHERE slug = 'matte-lipstick';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png']
+WHERE slug = 'lip-gloss';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png']
+WHERE slug = 'lip-tint';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png']
+WHERE slug = 'dual-lipstick';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
+WHERE slug = 'brush-set-18';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
+WHERE slug = 'brush-set-14';
+UPDATE public.products
+SET images = ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png','https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png']
+WHERE slug = 'makeup-remover';
 -- ── Patch existing live category rows ──
-UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png' WHERE slug = 'face';
-UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png' WHERE slug = 'eyes';
-UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png' WHERE slug = 'lips';
-UPDATE public.categories SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png' WHERE slug = 'tools';
-
+UPDATE public.categories
+SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png'
+WHERE slug = 'face';
+UPDATE public.categories
+SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png'
+WHERE slug = 'eyes';
+UPDATE public.categories
+SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png'
+WHERE slug = 'lips';
+UPDATE public.categories
+SET image_url = 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png'
+WHERE slug = 'tools';
 -- Update hero image in frontend_content
-UPDATE public.frontend_content SET content_data = content_data || '{"image_url":"https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/hero-default.png"}'::jsonb WHERE content_key = 'hero_main';
+UPDATE public.frontend_content
+SET content_data = content_data || '{"image_url":"https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/hero-default.png"}'::jsonb
+WHERE content_key = 'hero_main';
 -- 9C. Admin accounts
 UPDATE public.profiles
 SET role = 'admin'
