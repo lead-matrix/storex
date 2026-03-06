@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         .from('categories')
         .select('name, description')
         .eq('slug', slug)
-        .eq('is_active', true)
+        .eq('status', 'active')
         .single()
 
     if (!data) return { title: 'Category | DINA COSMETIC' }
@@ -37,7 +37,7 @@ export default async function CategorySlugPage({ params }: Props) {
         .from('categories')
         .select('*')
         .eq('slug', slug)
-        .eq('is_active', true)
+        .eq('status', 'active')
         .single()
 
     if (!category) notFound()
@@ -130,8 +130,8 @@ export default async function CategorySlugPage({ params }: Props) {
                         {items.map((product) => {
                             const activeVariants = (product.variants as Array<{
                                 id: string; title: string; price_override: number | null;
-                                stock: number; is_active: boolean
-                            }>)?.filter(v => v.is_active) ?? []
+                                stock: number; status: string
+                            }>)?.filter(v => v.status === 'active') ?? []
 
                             const items = products ?? []
                             const isOnSale = product.on_sale && product.sale_price;

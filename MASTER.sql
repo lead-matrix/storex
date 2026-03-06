@@ -207,6 +207,54 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS title text;
+-- Rename legacy name → title if present
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'name'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'title'
+) THEN
+ALTER TABLE public.products
+    RENAME COLUMN name TO title;
+END IF;
+END $$;
+-- Rename legacy is_active → status if present
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'is_active'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'status'
+) THEN
+ALTER TABLE public.products
+    RENAME COLUMN is_active TO status;
+UPDATE public.products
+SET status = 'active'
+WHERE status = 'true'
+    OR status = '1';
+UPDATE public.products
+SET status = 'draft'
+WHERE status = 'false'
+    OR status = '0';
+END IF;
+END $$;
 -- Sync legacy inventory → stock
 DO $$ BEGIN IF EXISTS (
     SELECT 1

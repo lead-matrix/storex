@@ -7,14 +7,14 @@ import { Loader2 } from "lucide-react";
 
 interface Variant {
     id: string;
-    name: string;
+    title: string;
     price_override?: number | null;
     stock?: number;
 }
 
 interface Product {
     id: string;
-    name: string;
+    title: string;
     slug: string;
     base_price: number;
     sale_price?: number | null;
@@ -63,14 +63,13 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                         .limit(50);
 
                     if (v1Data) {
-                        setProducts(v1Data.map((p: any) => ({ ...p, title: p.name })) as any);
+                        setProducts(v1Data.map((p: any) => ({ ...p, title: p.name || p.title })) as any);
                     }
                 } else {
                     // Map V2 data to the UI expected 'Product' interface
                     const mapped = (data ?? []).map((p: any) => ({
                         ...p,
-                        name: p.title, // Map V2 title to legacy name for components
-                        variants: p.product_variants ? p.product_variants.map((v: any) => ({ ...v, name: v.title, price_override: v.price })) : []
+                        variants: p.product_variants ? p.product_variants.map((v: any) => ({ ...v, title: v.title, price_override: v.price })) : []
                     }));
                     setProducts(mapped as any);
                 }
