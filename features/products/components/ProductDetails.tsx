@@ -33,7 +33,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
     const selectedVariant = activeVariants.find(v => v.id === selectedVariantId)
     const displayPrice = selectedVariant?.price ?? product.base_price ?? 0
-    const currentStock = selectedVariant?.inventory?.stock_quantity ?? 0
+    const currentStock = (selectedVariant as any)?.stock ?? 0
     const isOutOfStock = currentStock <= 0
 
     const handleAddToCart = () => {
