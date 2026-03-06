@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
 -- 1C. products
 CREATE TABLE IF NOT EXISTS public.products (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    name text NOT NULL,
+    title text NOT NULL,
     slug text UNIQUE,
     description text,
     base_price numeric(10, 2) NOT NULL DEFAULT 0.00,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.products (
         is_featured boolean NOT NULL DEFAULT false,
         is_bestseller boolean NOT NULL DEFAULT false,
         is_new boolean NOT NULL DEFAULT false,
-        is_active boolean NOT NULL DEFAULT true,
+        status text NOT NULL DEFAULT 'active',
         metadata jsonb NOT NULL DEFAULT '{}',
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
@@ -1013,14 +1013,14 @@ FROM public.categories
 WHERE slug = 'tools';
 -- FACE
 INSERT INTO public.products (
-        name,
+        title,
         slug,
         base_price,
         description,
         category_id,
         stock,
         is_featured,
-        is_active,
+        status,
         images
     )
 VALUES (
@@ -1031,7 +1031,7 @@ VALUES (
         face_id,
         100,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
     ),
     (
@@ -1042,7 +1042,7 @@ VALUES (
         face_id,
         120,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
     ),
     (
@@ -1053,7 +1053,7 @@ VALUES (
         face_id,
         80,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png']
     ),
     (
@@ -1064,7 +1064,7 @@ VALUES (
         face_id,
         60,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
     ),
     (
@@ -1075,7 +1075,7 @@ VALUES (
         face_id,
         90,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
     ),
     (
@@ -1086,7 +1086,7 @@ VALUES (
         face_id,
         50,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
     ),
     (
@@ -1097,7 +1097,7 @@ VALUES (
         face_id,
         150,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/foundation.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png']
     ),
     (
@@ -1108,28 +1108,28 @@ VALUES (
         face_id,
         40,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/face-powder.png']
     ) ON CONFLICT (slug) DO
 UPDATE
-SET name = EXCLUDED.name,
+SET title = EXCLUDED.title,
     base_price = EXCLUDED.base_price,
     description = EXCLUDED.description,
     category_id = EXCLUDED.category_id,
     stock = EXCLUDED.stock,
     is_featured = EXCLUDED.is_featured,
-    is_active = EXCLUDED.is_active,
+    status = EXCLUDED.status,
     images = EXCLUDED.images;
 -- EYES
 INSERT INTO public.products (
-        name,
+        title,
         slug,
         base_price,
         description,
         category_id,
         stock,
         is_featured,
-        is_active,
+        status,
         images
     )
 VALUES (
@@ -1140,7 +1140,7 @@ VALUES (
         eyes_id,
         70,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png']
     ),
     (
@@ -1151,7 +1151,7 @@ VALUES (
         eyes_id,
         110,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
     ),
     (
@@ -1162,7 +1162,7 @@ VALUES (
         eyes_id,
         200,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
     ),
     (
@@ -1173,7 +1173,7 @@ VALUES (
         eyes_id,
         130,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/mascara.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png']
     ),
     (
@@ -1184,28 +1184,28 @@ VALUES (
         eyes_id,
         180,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/eyeshadow.png']
     ) ON CONFLICT (slug) DO
 UPDATE
-SET name = EXCLUDED.name,
+SET title = EXCLUDED.title,
     base_price = EXCLUDED.base_price,
     description = EXCLUDED.description,
     category_id = EXCLUDED.category_id,
     stock = EXCLUDED.stock,
     is_featured = EXCLUDED.is_featured,
-    is_active = EXCLUDED.is_active,
+    status = EXCLUDED.status,
     images = EXCLUDED.images;
 -- LIPS
 INSERT INTO public.products (
-        name,
+        title,
         slug,
         base_price,
         description,
         category_id,
         stock,
         is_featured,
-        is_active,
+        status,
         images
     )
 VALUES (
@@ -1216,7 +1216,7 @@ VALUES (
         lips_id,
         140,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png']
     ),
     (
@@ -1227,7 +1227,7 @@ VALUES (
         lips_id,
         90,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png']
     ),
     (
@@ -1238,7 +1238,7 @@ VALUES (
         lips_id,
         80,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lips.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png']
     ),
     (
@@ -1249,28 +1249,28 @@ VALUES (
         lips_id,
         65,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lipstick.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/lip-gloss.png']
     ) ON CONFLICT (slug) DO
 UPDATE
-SET name = EXCLUDED.name,
+SET title = EXCLUDED.title,
     base_price = EXCLUDED.base_price,
     description = EXCLUDED.description,
     category_id = EXCLUDED.category_id,
     stock = EXCLUDED.stock,
     is_featured = EXCLUDED.is_featured,
-    is_active = EXCLUDED.is_active,
+    status = EXCLUDED.status,
     images = EXCLUDED.images;
 -- TOOLS & ACCESSORIES
 INSERT INTO public.products (
-        name,
+        title,
         slug,
         base_price,
         description,
         category_id,
         stock,
         is_featured,
-        is_active,
+        status,
         images
     )
 VALUES (
@@ -1281,7 +1281,7 @@ VALUES (
         tools_id,
         30,
         true,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
     ),
     (
@@ -1292,7 +1292,7 @@ VALUES (
         tools_id,
         45,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
     ),
     (
@@ -1303,17 +1303,17 @@ VALUES (
         tools_id,
         100,
         false,
-        true,
+        'active',
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png']
     ) ON CONFLICT (slug) DO
 UPDATE
-SET name = EXCLUDED.name,
+SET title = EXCLUDED.title,
     base_price = EXCLUDED.base_price,
     description = EXCLUDED.description,
     category_id = EXCLUDED.category_id,
     stock = EXCLUDED.stock,
     is_featured = EXCLUDED.is_featured,
-    is_active = EXCLUDED.is_active,
+    status = EXCLUDED.status,
     images = EXCLUDED.images;
 END $$;
 -- Ensure stock > 0 and images are set
