@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Package, ShieldCheck, AlertTriangle, Box, ChevronRight, DollarSign } from 'lucide-react'
@@ -139,3 +139,4 @@ export default async function VaultPage() {
         </div>
     )
 }
+

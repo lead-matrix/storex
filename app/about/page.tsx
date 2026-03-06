@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Sparkles, ShieldCheck, History, Heart } from "lucide-react";
 import Image from "next/image";
 
@@ -112,3 +112,4 @@ function PhilosophyPoint({ icon, title, text }: { icon: React.ReactNode; title: 
         </div>
     );
 }
+

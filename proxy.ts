@@ -14,8 +14,8 @@
  * This file exports re-usable server-side auth helpers that layouts call.
  */
 
-import { createClient } from '@/utils/supabase/server'
-import { createClient as createAdminClient } from '@/utils/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 
 /** Redirects to /login if no authenticated user exists. Returns the user. */
@@ -84,3 +84,4 @@ export default async function proxy() {
 
 /** Named export as requested by certain build environments. */
 export { proxy };
+

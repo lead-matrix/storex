@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Plus, Layout, Globe, Lock, Trash2, Edit2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -93,3 +93,4 @@ export default async function AdminCMSPage() {
         </div>
     );
 }
+

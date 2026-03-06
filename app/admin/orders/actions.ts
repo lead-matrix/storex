@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
-import { createClient as createAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 // Ensure the caller is an authenticated admin
@@ -157,3 +157,4 @@ export async function generateShippingLabel(orderId: string) {
 
     return { labelUrl, trackingNumber };
 }
+

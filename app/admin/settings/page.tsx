@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { Save, ShieldCheck, Globe, CreditCard, Layout, Image as ImageIcon, Plus, Trash2 } from 'lucide-react'
 import { updateStoreSettings, updateHeroContent, updateMenusAndSocials } from '@/lib/actions/admin'
 
@@ -246,3 +246,4 @@ export default async function AdminSettings() {
         </div>
     )
 }
+

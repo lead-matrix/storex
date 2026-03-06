@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -97,3 +97,4 @@ export async function saveSections(pageId: string, sections: any[]) {
     revalidatePath(`/admin/cms/${pageId}`)
     revalidatePath("/") // Revalidate home/dynamic pages
 }
+

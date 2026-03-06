@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -184,3 +184,4 @@ export default async function AnalyticsPage() {
         </div>
     )
 }
+

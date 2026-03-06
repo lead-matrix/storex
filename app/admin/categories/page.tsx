@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { Plus, Trash2, Edit3, Tag } from 'lucide-react'
 import { createCategory, deleteCategory } from '@/lib/actions/admin'
 import type { Metadata } from 'next'
@@ -79,3 +79,4 @@ export default async function AdminCategories() {
         </div>
     )
 }
+

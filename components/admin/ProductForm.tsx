@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 interface Category {
     id: string
@@ -485,3 +485,4 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
         </form>
     )
 }
+
