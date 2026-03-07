@@ -17,35 +17,35 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: 1,
-        image: "https://images.unsplash.com/photo-1571781526291-c477eb311df6?q=80&w=2000&auto=format&fit=crop",
+        image: "/products/Banner-1.jpg",
         title: "THE OBSIDIAN COLLECTION",
         subtitle: "ELEVATE YOUR BEAUTY RITUAL.",
         buttonText: "SHOP NOW",
-        link: "/collections"
+        link: "/shop"
     },
     {
         id: 2,
-        image: "https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=2000&auto=format&fit=crop",
+        image: "/products/Banner-2.jfif",
         title: "FLAWLESS FINISH",
         subtitle: "Discover the foundation of elegance.",
         buttonText: "SHOP NOW",
-        link: "/collections"
+        link: "/shop"
     },
     {
         id: 3,
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2000&auto=format&fit=crop",
+        image: "/products/banner-3.jfif",
         title: "LUMINOUS GLOW",
         subtitle: "High-performance skincare for radiant results.",
         buttonText: "SHOP NOW",
-        link: "/collections"
+        link: "/shop"
     },
     {
         id: 4,
-        image: "https://images.unsplash.com/photo-1583001809873-10a3ee46a9e8?q=80&w=2000&auto=format&fit=crop",
+        image: "/products/Banner-4.png",
         title: "TIMELESS ELEGANCE",
         subtitle: "Signature palettes for the bold.",
         buttonText: "SHOP NOW",
-        link: "/collections"
+        link: "/shop"
     }
 ];
 

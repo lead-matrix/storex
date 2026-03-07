@@ -9,106 +9,121 @@ export const metadata = {
 
 export default function AboutPage() {
     return (
-        <div className="bg-background-primary text-text-bodyDark min-h-screen pt-32 pb-24 overflow-hidden">
-            {/* Hero Section */}
-            <div className="px-6 max-w-7xl mx-auto space-y-24 mb-32">
-                <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-12 duration-1000">
-                    <div className="flex justify-center mb-6">
-                        <div className="relative w-24 h-24 opacity-80">
-                            <Image src="/logo.jpg" alt="Palace Sigil" fill className="object-contain" />
+        <div className="bg-black text-white min-h-screen pt-32 pb-24 overflow-hidden font-inter">
+            {/* Meet The Founder Section */}
+            <div className="px-6 max-w-7xl mx-auto mb-32 relative">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gold/5 blur-[120px] rounded-full pointer-events-none" />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center relative z-10">
+                    <div className="space-y-10 order-2 lg:order-1">
+                        <div>
+                            <p className="text-gold uppercase tracking-[0.3em] text-xs font-semibold mb-4">
+                                MEET THE FOUNDER
+                            </p>
+                            <h1 className="text-4xl md:text-5xl font-serif text-white mb-8">
+                                Dina Edouarin Pierre
+                            </h1>
+                            <div className="w-16 h-px bg-gold border-0 mb-8" />
                         </div>
-                    </div>
-                    <p className="text-gold-primary uppercase tracking-[0.5em] text-[10px] md:text-xs font-light">
-                        Our Genesis
-                    </p>
-                    <h1 className="text-6xl md:text-9xl font-serif italic tracking-tighter uppercase leading-[0.8] text-text-headingDark">
-                        The Obsidian <br /> Palace
-                    </h1>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                    <div className="relative aspect-square bg-background-secondary border border-gold-primary/10 overflow-hidden group">
-                        <Image
-                            src="/logo.jpg"
-                            alt="The Genesis"
-                            fill
-                            className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background-primary to-transparent" />
-                    </div>
-
-                    <div className="space-y-12">
-                        <div className="space-y-6">
-                            <h2 className="text-gold-primary font-serif text-3xl italic">Rituals of Illumination</h2>
-                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.3em] leading-relaxed font-light">
-                                Dina, the visionary founder behind DINA COSMETIC, established this brand not in a laboratory, but in a sanctuary. She believes that true beauty is the illumination of the soul, and our products are merely the vessels to manifest that light.
+                        <div className="space-y-6 text-luxury-subtext text-sm md:text-base leading-relaxed font-light">
+                            <p>
+                                Dina Edouarin Pierre is the visionary behind Dina Cosmetic, a beauty brand created to inspire confidence and elegance in women everywhere.
+                            </p>
+                            <p>
+                                With a passion for beauty, fashion, and creativity, Dina built Dina Cosmetic to provide high-quality makeup products designed for every skin tone and every occasion.
+                            </p>
+                            <p className="text-gold italic font-serif text-lg">
+                                "Her goal is simple: to help women feel powerful, confident, and beautiful in their own skin."
                             </p>
                         </div>
 
-                        <div className="space-y-6">
-                            <h2 className="text-gold-primary font-serif text-3xl italic">The Obsidian Standard</h2>
-                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.3em] leading-relaxed font-light">
-                                Every artifact produced within the Palace undergoes a rigorous alchemy of absolute black minerals and liquid gold accents. This is the Obsidian Standard—a promise of weight, luxury, and unmatched performance.
+                        {/* Mission */}
+                        <div className="pt-12 border-t border-white/10">
+                            <p className="text-gold uppercase tracking-[0.3em] text-xs font-semibold mb-8">
+                                OUR MISSION
                             </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                <div className="flex items-start gap-4 group">
+                                    <div className="text-gold mt-1 group-hover:scale-110 transition-transform"><Heart size={20} strokeWidth={1.5} /></div>
+                                    <div>
+                                        <p className="text-white text-sm font-medium mb-1">Inclusive Beauty</p>
+                                        <p className="text-luxury-subtext text-xs">for All Skin Tones</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4 group">
+                                    <div className="text-gold mt-1 group-hover:scale-110 transition-transform"><Sparkles size={20} strokeWidth={1.5} /></div>
+                                    <div>
+                                        <p className="text-white text-sm font-medium mb-1">High-Quality</p>
+                                        <p className="text-luxury-subtext text-xs">Cosmetic Formulas</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4 group sm:col-span-2">
+                                    <div className="text-gold mt-1 group-hover:scale-110 transition-transform"><ShieldCheck size={20} strokeWidth={1.5} /></div>
+                                    <div>
+                                        <p className="text-white text-sm font-medium mb-1">Confidence Through Beauty</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="order-1 lg:order-2">
+                        <div className="relative aspect-[3/4] rounded-sm overflow-hidden border border-white/10 group">
+                            <Image
+                                src="/products/Banner-1.jpg" // Using one of the new local banners that might feature a model
+                                alt="Founder Dina Edouarin Pierre"
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Philosophy Grid */}
-            <div className="bg-background-secondary/50 border-y border-gold-primary/5 py-32 mt-32">
+            {/* A Growing Beauty Community Section */}
+            <div className="relative border-y border-gold/20 bg-gradient-to-b from-black via-[#0a0a0a] to-black py-24 object-cover">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-px bg-gradient-to-r from-transparent via-gold to-transparent opacity-50" />
+
                 <div className="px-6 max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-                        <PhilosophyPoint
-                            icon={<History className="text-gold-primary" size={20} />}
-                            title="Legacy"
-                            text="Evolving the timeless secrets of cosmetics into modern artifacts."
-                        />
-                        <PhilosophyPoint
-                            icon={<ShieldCheck className="text-gold-primary" size={20} />}
-                            title="Purity"
-                            text="Untouched by ordinary standards. Crafted for the absolute."
-                        />
-                        <PhilosophyPoint
-                            icon={<Sparkles className="text-gold-primary" size={20} />}
-                            title="Radiance"
-                            text="Designed to capture and reflect light in its most premium form."
-                        />
-                        <PhilosophyPoint
-                            icon={<Heart className="text-gold-primary" size={20} />}
-                            title="Devotion"
-                            text="A singular focus on the enhancement of your natural majesty."
-                        />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+                        <div>
+                            <div className="relative aspect-[4/3] rounded-sm overflow-hidden border border-white/10 group">
+                                <Image
+                                    src="/products/banner-3.jfif" // Lifestyle/community shot
+                                    alt="Dina Cosmetic Community"
+                                    fill
+                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors duration-500" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            <h2 className="text-gold uppercase tracking-[0.3em] text-xs font-semibold mb-6">
+                                A GROWING BEAUTY COMMUNITY
+                            </h2>
+                            <div className="space-y-6 text-luxury-subtext text-sm md:text-base leading-relaxed font-light">
+                                <p>
+                                    Dina Cosmetic continues to grow through community events, beauty showcases, and collaborations.
+                                </p>
+                                <p>
+                                    Our brand connects with beauty lovers, makeup artists, and entrepreneurs who share a passion for creativity and self-expression.
+                                </p>
+                            </div>
+
+                            <div className="pt-8">
+                                <a href="/shop" className="inline-block px-10 py-4 border border-gold text-gold text-xs tracking-[0.2em] uppercase hover:bg-gold hover:text-black transition-colors duration-300">
+                                    Shop Collection
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Final Call to Order */}
-            <div className="py-40 text-center px-6">
-                <h2 className="text-2xl md:text-4xl font-serif italic text-text-headingDark/40 max-w-2xl mx-auto leading-relaxed">
-                    "Step out of the ordinary and into the sanctuary of your own excellence."
-                </h2>
-                <div className="mt-12">
-                    <div className="w-px h-24 bg-gold-primary/30 mx-auto" />
-                    <p className="mt-8 text-[9px] uppercase tracking-[0.5em] text-gold-primary font-bold italic">
-                        The Ritual Awaits
-                    </p>
-                </div>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-px bg-gradient-to-r from-transparent via-gold to-transparent opacity-50" />
             </div>
-        </div>
-    );
-}
-
-function PhilosophyPoint({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-    return (
-        <div className="space-y-6 group">
-            <div className="w-12 h-12 flex items-center justify-center border border-gold-primary/10 bg-background-primary group-hover:border-gold-primary/40 transition-all duration-500">
-                {icon}
-            </div>
-            <h3 className="text-xs uppercase tracking-[0.4em] text-text-headingDark font-bold">{title}</h3>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-text-mutedDark leading-loose">
-                {text}
-            </p>
         </div>
     );
 }

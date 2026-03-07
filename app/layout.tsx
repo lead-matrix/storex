@@ -130,8 +130,10 @@ export default async function RootLayout({
   return (
     <html lang="en" className="bg-black">
       <body
-        className={`${playfair.variable} ${inter.variable} bg-black text-white antialiased selection:bg-gold/30 selection:text-white`}
+        className={`${playfair.variable} ${inter.variable} bg-black text-white antialiased selection:bg-gold/30 selection:text-white relative`}
       >
+        {/* Subtle Gold Sprinkle Background */}
+        <div className="fixed inset-0 pointer-events-none z-[-1] opacity-[0.03]" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')", mixBlendMode: "color-dodge", backgroundColor: "#D4AF37" }} />
         <CartProvider>
           <div className="relative flex flex-col min-h-screen">
             <Header navItems={headerNavItems} />
