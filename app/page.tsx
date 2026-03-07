@@ -35,7 +35,7 @@ async function getHomePageData() {
 
   const { data: categories, error: catErr } = await supabase
     .from("categories")
-    .select("id, name, slug, description, image_url")
+    .select("id, name, slug, description")
     .limit(6);
 
   if (prodErr) console.error("Error fetching products:", prodErr);

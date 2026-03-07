@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface Slide {
     id: string | number;
@@ -16,41 +17,60 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: 1,
-        image: "/hero-1.jpg",
+        image: "https://images.unsplash.com/photo-1571781526291-c477eb311df6?q=80&w=2000&auto=format&fit=crop",
         title: "THE OBSIDIAN COLLECTION",
         subtitle: "ELEVATE YOUR BEAUTY RITUAL.",
         buttonText: "SHOP NOW",
-        link: "/shop"
+        link: "/collections"
     },
     {
         id: 2,
-        image: "/hero-2.jpg",
-        title: "",
-        subtitle: "",
-        buttonText: "",
-        link: "/shop"
+        image: "https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=2000&auto=format&fit=crop",
+        title: "FLAWLESS FINISH",
+        subtitle: "Discover the foundation of elegance.",
+        buttonText: "SHOP NOW",
+        link: "/collections"
     },
     {
         id: 3,
-        image: "/hero-1.jpg",
+        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2000&auto=format&fit=crop",
         title: "LUMINOUS GLOW",
         subtitle: "High-performance skincare for radiant results.",
         buttonText: "SHOP NOW",
-        link: "/shop"
+        link: "/collections"
     },
     {
         id: 4,
-        image: "/hero-3.png",
+        image: "https://images.unsplash.com/photo-1583001809873-10a3ee46a9e8?q=80&w=2000&auto=format&fit=crop",
         title: "TIMELESS ELEGANCE",
         subtitle: "Signature palettes for the bold.",
         buttonText: "SHOP NOW",
-        link: "/shop"
+        link: "/collections"
     }
 ];
 
 export function Hero() {
-    const [slides] = useState<Slide[]>(DEFAULT_SLIDES);
+    const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSlides = async () => {
+            const supabase = createClient();
+            const { data } = await supabase
+                .from('frontend_content')
+                .select('content_data')
+                .eq('content_key', 'hero_slides')
+                .single();
+
+            if (data?.content_data?.slides) {
+                setSlides(data.content_data.slides);
+            }
+            setLoading(false);
+        };
+
+        fetchSlides();
+    }, []);
 
     useEffect(() => {
         if (slides.length <= 1) return;
@@ -59,6 +79,10 @@ export function Hero() {
         }, 6000);
         return () => clearInterval(timer);
     }, [slides.length]);
+
+    if (loading) {
+        return <div className="w-full h-[100svh] bg-black animate-pulse" />;
+    }
 
     return (
         <section className="relative w-full h-[100svh] min-h-[600px] overflow-hidden bg-black">
@@ -77,24 +101,18 @@ export function Hero() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
 
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto">
-                        {slide.title && (
-                            <h2 className="text-4xl md:text-6xl font-playfair text-primary tracking-[0.15em] uppercase mb-4 drop-shadow-md">
-                                {slide.title}
-                            </h2>
-                        )}
-                        {slide.subtitle && (
-                            <p className="text-base md:text-xl text-white/90 font-light tracking-widest max-w-2xl mx-auto mb-10 drop-shadow-sm">
-                                {slide.subtitle}
-                            </p>
-                        )}
-                        {slide.buttonText && (
-                            <Link
-                                href={slide.link}
-                                className="inline-block px-10 py-4 bg-primary text-black text-sm font-semibold tracking-[0.2em] uppercase hover:bg-[#b08d2d] transition-colors rounded-sm"
-                            >
-                                {slide.buttonText}
-                            </Link>
-                        )}
+                        <h2 className="text-4xl md:text-6xl font-playfair text-primary tracking-[0.15em] uppercase mb-4 drop-shadow-md">
+                            {slide.title}
+                        </h2>
+                        <p className="text-base md:text-xl text-white/90 font-light tracking-widest max-w-2xl mx-auto mb-10 drop-shadow-sm">
+                            {slide.subtitle}
+                        </p>
+                        <Link
+                            href={slide.link}
+                            className="inline-block px-10 py-4 bg-primary text-black text-sm font-semibold tracking-[0.2em] uppercase hover:bg-[#b08d2d] transition-colors rounded-sm"
+                        >
+                            {slide.buttonText}
+                        </Link>
                     </div>
                 </div>
             ))}

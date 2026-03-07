@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
-import { Plus } from 'lucide-react'
-import { createCategory } from '@/lib/actions/admin'
+import { Plus, Trash2, Edit3, Tag } from 'lucide-react'
+import { createCategory, deleteCategory } from '@/lib/actions/admin'
 import type { Metadata } from 'next'
-import { CategoryCard } from '@/components/admin/CategoryCard'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Categories | Admin' }
+
 
 export default async function AdminCategories() {
     const supabase = await createClient()
@@ -38,7 +38,36 @@ export default async function AdminCategories() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {categories?.map((category) => (
-                    <CategoryCard key={category.id} category={category as any} />
+                    <div key={category.id} className="group relative bg-white rounded-luxury shadow-soft border border-charcoal/10 p-8 hover:shadow-luxury hover:border-gold/30 transition-all duration-500 overflow-hidden">
+                        {/* Background Ornament */}
+                        <Tag className="absolute -right-4 -bottom-4 w-24 h-24 text-charcoal/[0.02] -rotate-12 group-hover:text-gold/[0.05] transition-all duration-700 pointer-events-none" />
+
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-6">
+                                <h3 className="text-lg font-heading text-charcoal tracking-luxury">{category.name}</h3>
+                                <form action={async () => {
+                                    "use server"
+                                    await deleteCategory(category.id);
+                                }}>
+                                    <button className="text-textsoft hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-colors">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </form>
+                            </div>
+
+                            <p className="text-[11px] text-textsoft/80 leading-relaxed uppercase tracking-luxury mb-8">
+                                Permanent collection identified by unique slug identifier.
+                            </p>
+
+                            <div className="mt-auto pt-6 border-t border-charcoal/5 flex items-center justify-between">
+                                <span className="text-[9px] text-textsoft/60 uppercase tracking-luxury font-medium">Slug: {category.slug}</span>
+                                <button className="text-[9px] text-gold uppercase tracking-luxury font-bold flex items-center gap-2 hover:text-charcoal transition-all">
+                                    <Edit3 className="w-3 h-3" />
+                                    Modify
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 ))}
 
                 {(!categories || categories.length === 0) && (
