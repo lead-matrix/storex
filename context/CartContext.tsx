@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 export interface CartItem {
     id: string; // variant id or product id if no variants
     productId: string;
+    variantId?: string; // explicit variant id for order_items / stock deduction
     name: string;
     price: number;
     image: string;

@@ -18,7 +18,7 @@ export function ShoppingBagDrawer() {
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const router = useRouter();
 
-    const FREE_SHIPPING_THRESHOLD = 75;
+    const FREE_SHIPPING_THRESHOLD = 100;
     const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
     const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 

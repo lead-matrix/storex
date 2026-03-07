@@ -20,7 +20,8 @@ export async function POST(req: Request) {
 
         // 1. Calculate shipping & tax (for Stripe, we pass them as line items or shipping options)
         const subtotal = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
-        const shipping = subtotal >= 50 ? 0 : 9.99;
+        const FREE_SHIPPING_THRESHOLD = 100;
+        const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 9.99;
 
         // 2. We should ideally create a DB order first, to attach its ID to Stripe metadata
         const { data: order, error: orderError } = await supabase
@@ -95,7 +96,12 @@ export async function POST(req: Request) {
             metadata: {
                 order_id: order.id,
                 // Serialize cart to json so webhook can create order_items easily
-                cart_items: JSON.stringify(items.map((i: any) => ({ product_id: i.productId, quantity: i.quantity, price: i.price }))),
+                cart_items: JSON.stringify(items.map((i: any) => ({
+                    product_id: i.productId,
+                    variant_id: i.variantId ?? i.id !== i.productId ? i.id : null,
+                    quantity: i.quantity,
+                    price: i.price,
+                }))),
             },
         });
 
