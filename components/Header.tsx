@@ -63,13 +63,8 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
                     </Sheet>
                 </div>
 
-                <Link href="/">
-                    <h1 className="text-2xl font-playfair text-primary tracking-widest hidden md:block">
-                        DINA COSMETIC
-                    </h1>
-                    <h1 className="text-base font-playfair text-primary tracking-widest md:hidden">
-                        DINA COSMETIC
-                    </h1>
+                <Link href="/" className="flex items-center">
+                    <img src="/logo.jpg" alt="DINA COSMETIC" className="h-8 md:h-20 lg:h-24 w-auto object-contain py-2" />
                 </Link>
 
                 <nav className="hidden md:flex gap-10 text-sm tracking-widest uppercase font-medium">

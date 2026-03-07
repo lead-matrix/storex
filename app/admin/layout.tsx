@@ -1,4 +1,4 @@
-import { requireAdmin } from '@/proxy'
+import { requireAdmin } from '@/lib/auth'
 import AdminLayoutClient from '@/components/admin/AdminLayoutClient'
 
 export const dynamic = 'force-dynamic'

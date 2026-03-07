@@ -14,11 +14,7 @@ export default async function AdminProductsPage() {
     // ── DATA FETCHING ──
     let { data: products, error } = await supabase
         .from("products")
-        .select(`
-            *, 
-            categories(name),
-            inventory(stock_quantity)
-        `)
+        .select(`*, categories(name)`)
         .order("created_at", { ascending: false });
 
     if (error || !products) {
@@ -26,30 +22,20 @@ export default async function AdminProductsPage() {
         const adminSupabase = await createAdminClient();
         const { data: adminProducts } = await adminSupabase
             .from("products")
-            .select(`
-                *, 
-                categories(name),
-                inventory(stock_quantity)
-            `)
+            .select(`*, categories(name)`)
             .order("created_at", { ascending: false });
         products = adminProducts;
     }
 
-    const processedProducts = products?.map(p => {
-        // Handle stock mapping. If inventory joined, we can use it, else fallback to stock.
-        const invArray = Array.isArray(p.inventory) ? p.inventory : (p.inventory ? [p.inventory] : []);
-        const totalStock = invArray.reduce((sum: number, v: any) => sum + (v.stock_quantity || 0), p.stock || 0);
-
-        return {
-            ...p,
-            name: p.title || p.name,
-            stock: totalStock,
-            display_price: p.base_price || 0,
-            display_compare: p.sale_price || null,
-            is_active: p.status === 'active',
-            first_variant_id: p.id
-        };
-    }) || [];
+    const processedProducts = products?.map(p => ({
+        ...p,
+        name: p.title || p.name,
+        stock: p.stock ?? 0,
+        display_price: p.base_price || 0,
+        display_compare: p.sale_price || null,
+        is_active: p.status === 'active',
+        first_variant_id: p.id
+    })) || [];
 
     const { data: categories } = await supabase.from("categories").select("id, name");
 

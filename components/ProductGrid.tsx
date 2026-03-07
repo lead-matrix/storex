@@ -50,6 +50,8 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                     .order("created_at", { ascending: false });
 
                 if (categoryId && categoryId !== "all") query = query.eq("category_id", categoryId);
+                if (filter === 'sale') query = query.not("sale_price", "is", null).eq("on_sale", true);
+                if (filter === 'bestsellers') query = query.eq("is_bestseller", true);
 
                 const { data, error } = await query;
 

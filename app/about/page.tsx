@@ -41,7 +41,7 @@ export default function AboutPage() {
                         <div className="space-y-6">
                             <h2 className="text-gold-primary font-serif text-3xl italic">Rituals of Illumination</h2>
                             <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.3em] leading-relaxed font-light">
-                                DINA COSMETIC was founded not in a laboratory, but in a sanctuary. We believe that true beauty is the illumination of the soul, and our products are merely the vessels to manifest that light.
+                                Dina, the visionary founder behind DINA COSMETIC, established this brand not in a laboratory, but in a sanctuary. She believes that true beauty is the illumination of the soul, and our products are merely the vessels to manifest that light.
                             </p>
                         </div>
 

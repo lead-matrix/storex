@@ -17,19 +17,35 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: 1,
-        image: "https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/slide-1.png",
-        title: "DINA COSMETIC",
-        subtitle: "ELEVATE YOUR BEAUTY RITUAL",
-        buttonText: "SHOP THE LOOK",
-        link: "/shop"
+        image: "https://images.unsplash.com/photo-1571781526291-c477eb311df6?q=80&w=2000&auto=format&fit=crop",
+        title: "THE OBSIDIAN COLLECTION",
+        subtitle: "ELEVATE YOUR BEAUTY RITUAL.",
+        buttonText: "SHOP NOW",
+        link: "/collections"
     },
     {
         id: 2,
-        image: "https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/slide-2.png",
-        title: "THE BEAUTY DIALOGUE",
-        subtitle: "Step into the Spotlight: An Exclusive Talk on Elegance and Glamour.",
-        buttonText: "WATCH EPISODE",
-        link: "/blog"
+        image: "https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=2000&auto=format&fit=crop",
+        title: "FLAWLESS FINISH",
+        subtitle: "Discover the foundation of elegance.",
+        buttonText: "SHOP NOW",
+        link: "/collections"
+    },
+    {
+        id: 3,
+        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2000&auto=format&fit=crop",
+        title: "LUMINOUS GLOW",
+        subtitle: "High-performance skincare for radiant results.",
+        buttonText: "SHOP NOW",
+        link: "/collections"
+    },
+    {
+        id: 4,
+        image: "https://images.unsplash.com/photo-1583001809873-10a3ee46a9e8?q=80&w=2000&auto=format&fit=crop",
+        title: "TIMELESS ELEGANCE",
+        subtitle: "Signature palettes for the bold.",
+        buttonText: "SHOP NOW",
+        link: "/collections"
     }
 ];
 

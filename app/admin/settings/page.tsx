@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Save, ShieldCheck, Globe, CreditCard, Layout, Image as ImageIcon, Plus, Trash2 } from 'lucide-react'
 import { updateStoreSettings, updateHeroContent, updateMenusAndSocials } from '@/lib/actions/admin'
+import HeroSlidesEditor from '@/components/admin/HeroSlidesEditor'
+import MenuEditor from '@/components/admin/MenuEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,19 +71,10 @@ export default async function AdminSettings() {
                         <form action={updateHeroContent} className="space-y-8">
                             <div className="bg-pearl/50 rounded-md p-6 border border-charcoal/5 space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Hero Slides Configuration (JSON Array)</label>
-                                    <div className="relative">
-                                        <textarea
-                                            name="hero_slides"
-                                            defaultValue={heroSlides?.content_data?.slides ? JSON.stringify(heroSlides.content_data.slides, null, 2) : '[\n  {\n    "id": 1,\n    "image": "",\n    "title": "DINA COSMETIC",\n    "subtitle": "ELEVATE YOUR BEAUTY RITUAL",\n    "buttonText": "SHOP THE LOOK",\n    "link": "/shop"\n  }\n]'}
-                                            className="w-full bg-white border border-charcoal/10 rounded-md px-6 py-4 text-xs font-mono text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all h-64 resize-none shadow-inner"
-                                        />
-                                        <div className="absolute top-4 right-4 bg-pearl text-[8px] px-2 py-1 rounded border border-charcoal/10 uppercase tracking-widest opacity-50 font-bold">JSON Matrix</div>
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Visual Slides Editor</label>
+                                    <div className="relative pt-2">
+                                        <HeroSlidesEditor initialSlides={heroSlides?.content_data?.slides || []} />
                                     </div>
-                                    <p className="text-[9px] text-textsoft/70 uppercase tracking-luxury leading-relaxed">
-                                        Modify the image URLs and text to update the live storefront slides. <br />
-                                        <span className="text-gold font-bold">Wait 6s for slide transitions on home page.</span>
-                                    </p>
                                 </div>
                             </div>
 
@@ -187,26 +180,24 @@ export default async function AdminSettings() {
                             <div className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between pb-2">
                                             <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Links</label>
                                             <span className="text-[8px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded border border-emerald-100 font-bold tracking-widest uppercase">Live Link</span>
                                         </div>
-                                        <textarea
+                                        <MenuEditor
                                             name="header_nav"
-                                            defaultValue={headerNav?.menu_items ? JSON.stringify(headerNav.menu_items, null, 2) : '[\n  {"label":"Shop", "href":"/shop"}\n]'}
-                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-4 text-[11px] font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-48 resize-none shadow-inner"
+                                            initialItems={headerNav?.menu_items || [{ label: 'Shop', href: '/shop' }]}
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between pb-2">
                                             <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Legal Terms</label>
                                             <span className="text-[8px] bg-pearl text-textsoft/50 px-2 py-0.5 rounded border border-charcoal/10 font-bold tracking-widest uppercase">Footer Stack</span>
                                         </div>
-                                        <textarea
+                                        <MenuEditor
                                             name="footer_legal"
-                                            defaultValue={footerNav?.menu_items ? JSON.stringify(footerNav.menu_items, null, 2) : '[\n  {"label":"Privacy", "href":"/privacy"}\n]'}
-                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-4 py-4 text-[11px] font-mono text-charcoal focus:border-gold/50 focus:ring-1 outline-none h-48 resize-none shadow-inner"
+                                            initialItems={footerNav?.menu_items || [{ label: 'Privacy', href: '/privacy' }]}
                                         />
                                     </div>
                                 </div>
