@@ -1,25 +1,23 @@
 -- ================================================================
---  DINA COSMETIC  ·  VARIANTS & IMAGES MIGRATION  ·  v1.0
+--  DINA COSMETIC  ·  VARIANTS & IMAGES MIGRATION  ·  v1.1
 --  Run once in Supabase SQL Editor.
---  Safe to re-run (fully idempotent — ON CONFLICT / IF NOT EXISTS).
+--  Safe to re-run (fully idempotent).
 --
---  SECTIONS
---  §1   Add image_url column to variants table
---  §2   Update category images to use local /products/ paths
---  §3   Restructure Brush Set → 1 product + 2 variants (14pcs / 18pcs)
---  §4   Seed Lipstick product family with colour variants
---  §5   Seed Liquid Lipstick product with colour variants
---  §6   Seed remaining lip products with colour variants
---  §7   Update shipping threshold to $100 in site_settings
---  §8   Update shipping threshold to $100 in frontend_content
+--  FIX v1.1:  variants table still has a NOT NULL 'name' column
+--             (the name→title rename in MASTER.sql hadn't run yet).
+--             Every variant INSERT now writes BOTH name AND title.
 -- ================================================================
 -- ───────────────────────────────────────────────────────────────
--- §1  ADD image_url TO variants (idempotent)
+-- §0  ENSURE name column exists (safety — no-op if already there)
 -- ───────────────────────────────────────────────────────────────
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.variants
+ADD COLUMN IF NOT EXISTS title text;
 ALTER TABLE public.variants
 ADD COLUMN IF NOT EXISTS image_url text;
 -- ───────────────────────────────────────────────────────────────
--- §2  UPDATE CATEGORY IMAGES  (local /products/ paths)
+-- §1  UPDATE CATEGORY IMAGES  (local /products/ paths)
 -- ───────────────────────────────────────────────────────────────
 UPDATE public.categories
 SET image_url = '/products/Catgry-eye.jfif'
@@ -34,12 +32,7 @@ UPDATE public.categories
 SET image_url = '/products/catgry-face.jfif'
 WHERE slug = 'face';
 -- ───────────────────────────────────────────────────────────────
--- §3  BRUSH SET  — 1 parent product + 14pcs / 18pcs variants
---     Strategy:
---       a) Remove the two separate brush-set products that were
---          seeded before (brush-set-14, brush-set-18)
---       b) Insert a single "Brush Set" parent product
---       c) Insert 14pcs + 18pcs variants linked to it
+-- §2  BRUSH SET  — 1 parent product + 14pcs / 18pcs variants
 -- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE tools_id uuid;
@@ -48,17 +41,16 @@ BEGIN
 SELECT id INTO tools_id
 FROM public.categories
 WHERE slug = 'tools';
--- a) Remove children (variants) first to avoid FK violations
+-- Remove old separate products (children first to satisfy FK)
 DELETE FROM public.variants
 WHERE product_id IN (
         SELECT id
         FROM public.products
         WHERE slug IN ('brush-set-14', 'brush-set-18')
     );
--- b) Remove the two separate products
 DELETE FROM public.products
 WHERE slug IN ('brush-set-14', 'brush-set-18');
--- c) Upsert the single parent "Brush Set" product
+-- Upsert single parent product
 INSERT INTO public.products (
         title,
         slug,
@@ -77,15 +69,9 @@ VALUES (
         'Professional-grade makeup brush set. Choose your edition — the essential 14pcs for daily rituals or the complete 18pcs for full artistic mastery.',
         tools_id,
         75,
-        -- sum of both variant stocks
         true,
         'active',
-        ARRAY [
-      '/products/Brush-set-cover.jpg',
-      '/products/brushes.png',
-      '/products/Brush-set-14pcs.jpg',
-      '/products/Brush-set-18pcs.jpg'
-    ]
+        ARRAY ['/products/Brush-set-cover.jpg','/products/brushes.png','/products/Brush-set-14pcs.jpg','/products/Brush-set-18pcs.jpg']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET title = EXCLUDED.title,
@@ -99,9 +85,13 @@ SET title = EXCLUDED.title,
 SELECT id INTO brush_pid
 FROM public.products
 WHERE slug = 'brush-set';
--- d) 14pcs variant
+-- Remove any existing variants for clean re-seed
+DELETE FROM public.variants
+WHERE product_id = brush_pid;
+-- 14pcs variant  (name = title for backwards compat)
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -113,16 +103,18 @@ INSERT INTO public.variants (
 VALUES (
         brush_pid,
         '14 Pieces',
+        '14 Pieces',
         'size',
         15.00,
         45,
         'BRUSH-14',
         '/products/Brush-set-14pcs.jpg',
         'active'
-    ) ON CONFLICT DO NOTHING;
--- e) 18pcs variant
+    );
+-- 18pcs variant
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -134,16 +126,17 @@ INSERT INTO public.variants (
 VALUES (
         brush_pid,
         '18 Pieces',
+        '18 Pieces',
         'size',
         20.00,
         30,
         'BRUSH-18',
         '/products/Brush-set-18pcs.jpg',
         'active'
-    ) ON CONFLICT DO NOTHING;
+    );
 END $$;
 -- ───────────────────────────────────────────────────────────────
--- §4  SOLID CREAM LIPSTICK  — colour variants
+-- §3  SOLID CREAM LIPSTICK  — Classic & Marron colour variants
 -- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE lips_id uuid;
@@ -152,7 +145,6 @@ BEGIN
 SELECT id INTO lips_id
 FROM public.categories
 WHERE slug = 'lips';
--- Upsert parent product
 INSERT INTO public.products (
         title,
         slug,
@@ -173,10 +165,7 @@ VALUES (
         120,
         true,
         'active',
-        ARRAY [
-      '/products/Solidcream-lipstick.jpg',
-      '/products/Solidcream-lipstick-marron.jpg'
-    ]
+        ARRAY ['/products/Solidcream-lipstick.jpg','/products/Solidcream-lipstick-marron.jpg']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET title = EXCLUDED.title,
@@ -190,11 +179,11 @@ SET title = EXCLUDED.title,
 SELECT id INTO prod_pid
 FROM public.products
 WHERE slug = 'solid-cream-lipstick';
--- Remove existing variants so we can re-seed cleanly
 DELETE FROM public.variants
 WHERE product_id = prod_pid;
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -207,6 +196,7 @@ INSERT INTO public.variants (
 VALUES (
         prod_pid,
         'Classic',
+        'Classic',
         'shade',
         12.00,
         60,
@@ -218,6 +208,7 @@ VALUES (
     (
         prod_pid,
         'Marron',
+        'Marron',
         'shade',
         12.00,
         60,
@@ -228,7 +219,7 @@ VALUES (
     );
 END $$;
 -- ───────────────────────────────────────────────────────────────
--- §5  SOLID MATTE LIPSTICK  — colour variants
+-- §4  SOLID MATTE LIPSTICK  — Royal & Bold Purple
 -- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE lips_id uuid;
@@ -257,10 +248,7 @@ VALUES (
         100,
         false,
         'active',
-        ARRAY [
-      '/products/Solidmatte-lipstick-royal.jpg',
-      '/products/Solidmatte-lipstick-purple.jpg'
-    ]
+        ARRAY ['/products/Solidmatte-lipstick-royal.jpg','/products/Solidmatte-lipstick-purple.jpg']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET title = EXCLUDED.title,
@@ -278,6 +266,7 @@ DELETE FROM public.variants
 WHERE product_id = prod_pid;
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -290,6 +279,7 @@ INSERT INTO public.variants (
 VALUES (
         prod_pid,
         'Royal',
+        'Royal',
         'shade',
         12.00,
         50,
@@ -301,6 +291,7 @@ VALUES (
     (
         prod_pid,
         'Bold Purple',
+        'Bold Purple',
         'shade',
         12.00,
         50,
@@ -311,7 +302,7 @@ VALUES (
     );
 END $$;
 -- ───────────────────────────────────────────────────────────────
--- §6  SOLID LIPSTICK  — Abricot & Light Pink
+-- §5  SOLID LIPSTICK  — Abricot & Light Pink
 -- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE lips_id uuid;
@@ -340,10 +331,7 @@ VALUES (
         120,
         false,
         'active',
-        ARRAY [
-      '/products/Solidlipstick-abrico.jpg',
-      '/products/Solidlipstick-lightpink.jpg'
-    ]
+        ARRAY ['/products/Solidlipstick-abrico.jpg','/products/Solidlipstick-lightpink.jpg']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET title = EXCLUDED.title,
@@ -361,6 +349,7 @@ DELETE FROM public.variants
 WHERE product_id = prod_pid;
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -373,6 +362,7 @@ INSERT INTO public.variants (
 VALUES (
         prod_pid,
         'Abricot',
+        'Abricot',
         'shade',
         10.00,
         60,
@@ -384,6 +374,7 @@ VALUES (
     (
         prod_pid,
         'Light Pink',
+        'Light Pink',
         'shade',
         10.00,
         60,
@@ -394,7 +385,7 @@ VALUES (
     );
 END $$;
 -- ───────────────────────────────────────────────────────────────
--- §7  LIQUID MATTE LIPSTICK  — colour variants
+-- §6  LIQUID MATTE LIPSTICK  — Classic Red / Deep Matte / Matte Nude
 -- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE lips_id uuid;
@@ -423,11 +414,7 @@ VALUES (
         130,
         true,
         'active',
-        ARRAY [
-      '/products/Liquidmatte-lipstick.jpg',
-      '/products/matte-lipstick.jpg',
-      '/products/matte-liquid-lipstick.jpg'
-    ]
+        ARRAY ['/products/Liquidmatte-lipstick.jpg','/products/matte-lipstick.jpg','/products/matte-liquid-lipstick.jpg']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET title = EXCLUDED.title,
@@ -445,6 +432,7 @@ DELETE FROM public.variants
 WHERE product_id = prod_pid;
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -457,6 +445,7 @@ INSERT INTO public.variants (
 VALUES (
         prod_pid,
         'Classic Red',
+        'Classic Red',
         'shade',
         14.00,
         45,
@@ -467,6 +456,7 @@ VALUES (
     ),
     (
         prod_pid,
+        'Deep Matte',
         'Deep Matte',
         'shade',
         14.00,
@@ -479,6 +469,7 @@ VALUES (
     (
         prod_pid,
         'Matte Nude',
+        'Matte Nude',
         'shade',
         14.00,
         40,
@@ -489,7 +480,7 @@ VALUES (
     );
 END $$;
 -- ───────────────────────────────────────────────────────────────
--- §8  LIQUID LIP — Abricot, Burgundy, Rose Matte, Red, Gloss
+-- §7  LIQUID LIP COLOUR  — 5 shades
 -- ───────────────────────────────────────────────────────────────
 DO $$
 DECLARE lips_id uuid;
@@ -518,13 +509,7 @@ VALUES (
         200,
         false,
         'active',
-        ARRAY [
-      '/products/Liq-lip-abrico.jpg',
-      '/products/Liq-lip-burgundy.jpg',
-      '/products/liq-lip-Rose-matte.jpg',
-      '/products/liq-lip-red.jpg',
-      '/products/liq-lip-gloss.jpg'
-    ]
+        ARRAY ['/products/Liq-lip-abrico.jpg','/products/Liq-lip-burgundy.jpg','/products/liq-lip-Rose-matte.jpg','/products/liq-lip-red.jpg','/products/liq-lip-gloss.jpg']
     ) ON CONFLICT (slug) DO
 UPDATE
 SET title = EXCLUDED.title,
@@ -542,6 +527,7 @@ DELETE FROM public.variants
 WHERE product_id = prod_pid;
 INSERT INTO public.variants (
         product_id,
+        name,
         title,
         variant_type,
         price_override,
@@ -554,6 +540,7 @@ INSERT INTO public.variants (
 VALUES (
         prod_pid,
         'Abricot',
+        'Abricot',
         'shade',
         13.00,
         40,
@@ -564,6 +551,7 @@ VALUES (
     ),
     (
         prod_pid,
+        'Burgundy',
         'Burgundy',
         'shade',
         13.00,
@@ -576,6 +564,7 @@ VALUES (
     (
         prod_pid,
         'Rose Matte',
+        'Rose Matte',
         'shade',
         13.00,
         40,
@@ -586,6 +575,7 @@ VALUES (
     ),
     (
         prod_pid,
+        'Red',
         'Red',
         'shade',
         13.00,
@@ -598,6 +588,7 @@ VALUES (
     (
         prod_pid,
         'Gloss',
+        'Gloss',
         'shade',
         14.00,
         40,
@@ -608,40 +599,34 @@ VALUES (
     );
 END $$;
 -- ───────────────────────────────────────────────────────────────
--- §9  UPDATE EXISTING matte-lipstick slug → use correct image
---     (already seeded — just patch the image array)
+-- §8  PATCH EXISTING matte-lipstick product images
 -- ───────────────────────────────────────────────────────────────
 UPDATE public.products
-SET images = ARRAY [
-  '/products/Liquidmatte-lipstick.jpg',
-  '/products/matte-lipstick.jpg'
-]
+SET images = ARRAY ['/products/Liquidmatte-lipstick.jpg','/products/matte-lipstick.jpg']
 WHERE slug = 'matte-lipstick';
 -- ───────────────────────────────────────────────────────────────
--- §10  UPDATE BANNER IMAGES in products folder
+-- §9  UPDATE HERO BANNER IMAGE
 -- ───────────────────────────────────────────────────────────────
 UPDATE public.frontend_content
 SET content_data = content_data || '{"image_url":"/products/Banner-1.jpg"}'::jsonb
 WHERE content_key = 'hero_main';
 -- ───────────────────────────────────────────────────────────────
--- §11  UPDATE FREE-SHIPPING THRESHOLD → $100
+-- §10  FREE-SHIPPING THRESHOLD → $100  (site_settings + CMS)
 -- ───────────────────────────────────────────────────────────────
 UPDATE public.site_settings
 SET setting_value = '{"free_threshold":100,"flat_rate":9.99,"free_label":"Free Shipping on orders over $100","carrier":"USPS"}'::jsonb,
     updated_at = now()
 WHERE setting_key = 'shipping';
--- Update announcement banner text
 UPDATE public.frontend_content
 SET content_data = content_data || '{"text":"Free Shipping on orders over $100","cta_text":"Shop Now","cta_link":"/shop","is_active":true,"bg_color":"#D4AF37"}'::jsonb,
     updated_at = now()
 WHERE content_key = 'announcement_banner';
--- Update trust indicators section
 UPDATE public.frontend_content
 SET content_data = '{"items":[{"icon":"Truck","title":"Complimentary Delivery","description":"On all orders exceeding $100"},{"icon":"RotateCcw","title":"Effortless Returns","description":"30-day elegant exchange protocol"},{"icon":"Award","title":"Authentic Masterpieces","description":"Guaranteed direct from the Palace"},{"icon":"Shield","title":"Secure Encrypted Transport","description":"Uncompromised transaction safety"}]}'::jsonb,
     updated_at = now()
 WHERE content_key = 'trust_indicators';
 -- ───────────────────────────────────────────────────────────────
--- §12  MAKE SURE ALL NEW PRODUCTS HAVE STOCK > 0
+-- §11  SAFETY — ensure no zero-stock rows
 -- ───────────────────────────────────────────────────────────────
 UPDATE public.products
 SET stock = 50
@@ -651,14 +636,23 @@ UPDATE public.variants
 SET stock = 30
 WHERE stock IS NULL
     OR stock <= 0;
+-- Sync name → title on any older rows that were inserted with only name
+UPDATE public.variants
+SET title = name
+WHERE title IS NULL
+    AND name IS NOT NULL;
+UPDATE public.variants
+SET name = title
+WHERE name IS NULL
+    AND title IS NOT NULL;
 -- ───────────────────────────────────────────────────────────────
--- §13  VERIFICATION QUERY
+-- §12  VERIFICATION
 -- ───────────────────────────────────────────────────────────────
 SELECT p.slug,
     p.title,
     COUNT(v.id) AS variant_count,
     string_agg(
-        v.title,
+        v.title || ' (' || v.variant_type || ')',
         ', '
         ORDER BY v.title
     ) AS variants
