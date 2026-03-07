@@ -233,12 +233,13 @@ export async function updateUserRole(userId: string, newRole: string) {
 export async function createCategory(formData: FormData) {
     const supabase = await ensureAdmin();
     const name = formData.get('name') as string;
+    const image_url = formData.get('image_url') as string || null;
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
     const { error } = await supabase
         .from('categories')
-        .insert([{ name, slug }]);
+        .insert([{ name, slug, image_url }]);
 
     if (error) throw new Error(`Failed to create category: ${error.message}`);
 
@@ -248,12 +249,13 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(id: string, formData: FormData) {
     const supabase = await ensureAdmin();
     const name = formData.get('name') as string;
+    const image_url = formData.get('image_url') as string || null;
 
     const { data: category } = await supabase.from('categories').select('slug').eq('id', id).single();
 
     const { error } = await supabase
         .from('categories')
-        .update({ name })
+        .update({ name, image_url })
         .eq('id', id);
 
     if (error) throw new Error(`Failed to update category: ${error.message}`);
