@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
@@ -230,8 +230,8 @@ export default function LoginPage() {
                                 aria-selected={mode === m}
                                 onClick={() => { setMode(m); setError(null); setSuccess(null); }}
                                 className={`flex-1 py-3 text-[10px] uppercase tracking-[0.3em] transition-all duration-300 font-medium min-h-[44px] ${mode === m
-                                        ? "bg-[#D4AF37] text-[#050505] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                                        : "text-[#A9A39A] hover:text-[#F3EFE8] hover:bg-white/5"
+                                    ? "bg-[#D4AF37] text-[#050505] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                                    : "text-[#A9A39A] hover:text-[#F3EFE8] hover:bg-white/5"
                                     }`}
                             >
                                 {m === "login" ? "Sign In" : "Sign Up"}

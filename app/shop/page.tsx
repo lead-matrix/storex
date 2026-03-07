@@ -1,7 +1,7 @@
 import { ProductGrid } from "@/components/ProductGrid";
 import Link from "next/link";
 import { Metadata } from "next";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 60;
 
@@ -20,6 +20,16 @@ export default async function ShopPage(props: ShopPageProps) {
     const filter = searchParams?.filter;
 
     const supabase = await createClient();
+
+    const { data: products, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error(error);
+    }
 
     const { data: categories } = await supabase
         .from("categories")

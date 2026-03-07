@@ -1939,3 +1939,57 @@ FROM pg_policies
 WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
+-- ================================================================
+-- USER REQUESTED TASKS
+-- ================================================================
+-- Task 3
+alter table products
+add column if not exists status text default 'active';
+alter table profiles
+add column if not exists role text default 'customer';
+create policy "Admins full access" on products for all using (
+    exists (
+        select 1
+        from profiles
+        where profiles.id = auth.uid()
+            and profiles.role = 'admin'
+    )
+);
+create policy "Public can view active products" on products for
+select using (status = 'active');
+-- Task 4
+update profiles
+set role = 'admin'
+where email = 'leadmatrix.us@gmail.com';
+-- Task 7
+create table if not exists site_pages (
+    id uuid primary key default gen_random_uuid(),
+    slug text unique,
+    title text,
+    created_at timestamptz default now()
+);
+create table if not exists site_sections (
+    id uuid primary key default gen_random_uuid(),
+    page_id uuid references site_pages(id),
+    type text,
+    position int
+);
+create table if not exists content_blocks (
+    id uuid primary key default gen_random_uuid(),
+    section_id uuid references site_sections(id),
+    key text,
+    value jsonb
+);
+-- Task 8
+create table if not exists inventory (
+    product_id uuid references products(id),
+    stock int default 0
+);
+-- Task 9
+create table if not exists orders (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid,
+    status text,
+    total numeric,
+    created_at timestamptz default now()
+);

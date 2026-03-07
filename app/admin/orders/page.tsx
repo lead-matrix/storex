@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Package, Truck, ExternalLink, Box, MapPin, RefreshCw, Filter, ShoppingBag, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -75,3 +75,4 @@ export default async function AdminOrdersPage() {
         </div>
     );
 }
+

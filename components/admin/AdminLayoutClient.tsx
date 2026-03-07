@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import {
     LayoutDashboard,
     Package,
@@ -152,3 +152,4 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
         </div>
     );
 }
+

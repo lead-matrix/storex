@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@/utils/supabase/admin";
+import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { Shield, User, Mail, Calendar } from "lucide-react";
 import { updateUserRole } from "@/lib/actions/admin";
 import type { Metadata } from "next";
@@ -109,3 +109,4 @@ export default async function AdminUsersPage() {
         </div>
     );
 }
+

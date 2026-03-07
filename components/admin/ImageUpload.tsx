@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { Upload, X, Loader2, Image as ImageIcon, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -272,3 +272,4 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
         </div>
     )
 }
+

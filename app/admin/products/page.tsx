@@ -1,5 +1,5 @@
-import { createClient } from "@/utils/supabase/server";
-import { createClient as createAdminClient } from "@/utils/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Filter, MoreHorizontal, ChevronDown, ChevronUp, Trash2, ToggleLeft, ToggleRight, Edit, Package, Layers, Activity } from "lucide-react";
 import Link from "next/link";

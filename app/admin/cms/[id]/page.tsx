@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import CMSEditor from "./CMSEditor";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -56,3 +56,4 @@ export default async function PageArchitect({ params }: { params: { id: string }
         </div>
     );
 }
+

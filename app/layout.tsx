@@ -5,7 +5,7 @@ import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
 import { ShoppingBagDrawer } from "@/components/ShoppingBagDrawer";
 import { Analytics } from "@vercel/analytics/next";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Footer } from "@/components/Footer";
 import { Toaster } from 'sonner';
 import { validateEnv } from "@/lib/env";
@@ -104,18 +104,27 @@ export default async function RootLayout({
   let socialLinks = null;
 
   try {
-    const [headerRes, shopLinksRes, legalLinksRes, socialRes] = await Promise.all([
-      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'header_main').single(),
-      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_shop').single(),
-      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_legal').single(),
-      supabase.from('site_settings').select('setting_value').eq('setting_key', 'social_media').single(),
+    const [headerRes, shopLinksRes, legalLinksRes, socialRes] = await Promise.allSettled([
+      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'header_main').maybeSingle(),
+      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_shop').maybeSingle(),
+      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_legal').maybeSingle(),
+      supabase.from('site_settings').select('setting_value').eq('setting_key', 'social_media').maybeSingle(),
     ]);
-    if (headerRes.data) headerNavItems = headerRes.data.menu_items || [];
-    if (shopLinksRes.data) footerShopItems = shopLinksRes.data.menu_items || [];
-    if (legalLinksRes.data) footerLegalItems = legalLinksRes.data.menu_items || [];
-    if (socialRes.data) socialLinks = socialRes.data.setting_value;
+
+    if (headerRes.status === 'fulfilled' && headerRes.value.data) {
+      headerNavItems = headerRes.value.data.menu_items || [];
+    }
+    if (shopLinksRes.status === 'fulfilled' && shopLinksRes.value.data) {
+      footerShopItems = shopLinksRes.value.data.menu_items || [];
+    }
+    if (legalLinksRes.status === 'fulfilled' && legalLinksRes.value.data) {
+      footerLegalItems = legalLinksRes.value.data.menu_items || [];
+    }
+    if (socialRes.status === 'fulfilled' && socialRes.value.data) {
+      socialLinks = socialRes.value.data.setting_value;
+    }
   } catch (err) {
-    console.error("Navigation fetch failed:", err);
+    console.error("Critical Layout Error:", err);
   }
 
   return (

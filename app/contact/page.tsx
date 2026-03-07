@@ -1,5 +1,5 @@
 import { Mail, MapPin, Phone, Send } from "lucide-react";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
     title: "Concierge | DINA COSMETIC",
@@ -108,3 +108,4 @@ function ContactItem({ icon, label, value }: { icon: React.ReactNode; label: str
         </div>
     );
 }
+

@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export type AuditAction =
     | 'product_create'
@@ -37,3 +37,4 @@ export async function logAdminAction(
         // Do not throw here, as audit logging failure shouldn't necessarily block the main action unless critically required
     }
 }
+

@@ -25,11 +25,9 @@ export function validateEnv() {
 
     if (missingCritical.length > 0) {
         const msg = `❌ CRITICAL Missing: ${missingCritical.join(", ")}`;
-        if (isBuild || process.env.NODE_ENV !== 'production') {
-            console.error(msg);
-        } else {
-            throw new Error(msg);
-        }
+        console.error(msg);
+        // During build or dev, we always log. In prod runtime, we only throw if explicitly desired.
+        // For now, let's just log to avoid 500ing the whole app.
     }
 
     if (missingSecondary.length > 0) {

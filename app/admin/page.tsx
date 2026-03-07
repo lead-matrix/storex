@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { AlertTriangle, Eye, TrendingUp, Package, DollarSign, Users, ShoppingCart, Activity, RefreshCw, BarChart3, Clock, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
