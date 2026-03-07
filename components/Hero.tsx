@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 interface Slide {
     id: string | number;
@@ -17,7 +16,7 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: 1,
-        image: "/products/Banner-1.jpg",
+        image: "/hero-1.jpg",
         title: "THE OBSIDIAN COLLECTION",
         subtitle: "ELEVATE YOUR BEAUTY RITUAL.",
         buttonText: "SHOP NOW",
@@ -25,15 +24,15 @@ const DEFAULT_SLIDES: Slide[] = [
     },
     {
         id: 2,
-        image: "/products/Banner-2.jfif",
-        title: "FLAWLESS FINISH",
-        subtitle: "Discover the foundation of elegance.",
-        buttonText: "SHOP NOW",
+        image: "/hero-2.jpg",
+        title: "",
+        subtitle: "",
+        buttonText: "",
         link: "/shop"
     },
     {
         id: 3,
-        image: "/products/banner-3.jfif",
+        image: "/hero-1.jpg",
         title: "LUMINOUS GLOW",
         subtitle: "High-performance skincare for radiant results.",
         buttonText: "SHOP NOW",
@@ -41,7 +40,7 @@ const DEFAULT_SLIDES: Slide[] = [
     },
     {
         id: 4,
-        image: "/products/Banner-4.png",
+        image: "/hero-3.png",
         title: "TIMELESS ELEGANCE",
         subtitle: "Signature palettes for the bold.",
         buttonText: "SHOP NOW",
@@ -50,27 +49,8 @@ const DEFAULT_SLIDES: Slide[] = [
 ];
 
 export function Hero() {
-    const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+    const [slides] = useState<Slide[]>(DEFAULT_SLIDES);
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchSlides = async () => {
-            const supabase = createClient();
-            const { data } = await supabase
-                .from('frontend_content')
-                .select('content_data')
-                .eq('content_key', 'hero_slides')
-                .single();
-
-            if (data?.content_data?.slides) {
-                setSlides(data.content_data.slides);
-            }
-            setLoading(false);
-        };
-
-        fetchSlides();
-    }, []);
 
     useEffect(() => {
         if (slides.length <= 1) return;
@@ -79,10 +59,6 @@ export function Hero() {
         }, 6000);
         return () => clearInterval(timer);
     }, [slides.length]);
-
-    if (loading) {
-        return <div className="w-full h-[100svh] bg-black animate-pulse" />;
-    }
 
     return (
         <section className="relative w-full h-[100svh] min-h-[600px] overflow-hidden bg-black">
@@ -101,18 +77,24 @@ export function Hero() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
 
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto">
-                        <h2 className="text-4xl md:text-6xl font-playfair text-primary tracking-[0.15em] uppercase mb-4 drop-shadow-md">
-                            {slide.title}
-                        </h2>
-                        <p className="text-base md:text-xl text-white/90 font-light tracking-widest max-w-2xl mx-auto mb-10 drop-shadow-sm">
-                            {slide.subtitle}
-                        </p>
-                        <Link
-                            href={slide.link}
-                            className="inline-block px-10 py-4 bg-primary text-black text-sm font-semibold tracking-[0.2em] uppercase hover:bg-[#b08d2d] transition-colors rounded-sm"
-                        >
-                            {slide.buttonText}
-                        </Link>
+                        {slide.title && (
+                            <h2 className="text-4xl md:text-6xl font-playfair text-primary tracking-[0.15em] uppercase mb-4 drop-shadow-md">
+                                {slide.title}
+                            </h2>
+                        )}
+                        {slide.subtitle && (
+                            <p className="text-base md:text-xl text-white/90 font-light tracking-widest max-w-2xl mx-auto mb-10 drop-shadow-sm">
+                                {slide.subtitle}
+                            </p>
+                        )}
+                        {slide.buttonText && (
+                            <Link
+                                href={slide.link}
+                                className="inline-block px-10 py-4 bg-primary text-black text-sm font-semibold tracking-[0.2em] uppercase hover:bg-[#b08d2d] transition-colors rounded-sm"
+                            >
+                                {slide.buttonText}
+                            </Link>
+                        )}
                     </div>
                 </div>
             ))}
