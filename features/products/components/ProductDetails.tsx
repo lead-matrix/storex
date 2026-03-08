@@ -6,7 +6,7 @@ import { Minus, Plus, ShoppingBag } from "lucide-react"
 
 interface Variant {
     id: string
-    title: string
+    name: string
     variant_type?: string
     sku?: string
     price_override?: number | null
@@ -64,12 +64,12 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
             productId: product.id,
             variantId: selectedVariantId || undefined,
             name: selectedVariant
-                ? `${product.title} – ${selectedVariant.title}`
+                ? `${product.title} – ${selectedVariant.name}`
                 : product.title,
             price: Number(displayPrice),
             quantity: Math.min(quantity, currentStock),
             image: selectedVariant?.image_url || product.images[0] || "",
-            variantName: selectedVariant?.title,
+            variantName: selectedVariant?.name,
         })
         setIsCartOpen(true)
     }
@@ -115,7 +115,7 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
                                     <button
                                         key={v.id}
                                         onClick={() => handleVariantSelect(v)}
-                                        title={v.title}
+                                        title={v.name}
                                         className={`relative group flex flex-col items-center gap-2 transition-all duration-300`}
                                     >
                                         <span
@@ -130,7 +130,7 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
                                             className={`text-[9px] uppercase tracking-widest font-medium transition-colors
                                                 ${isSelected ? "text-gold" : "text-luxury-subtext group-hover:text-white"}`}
                                         >
-                                            {v.title}
+                                            {v.name}
                                         </span>
                                     </button>
                                 )
@@ -146,7 +146,7 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
                                             : "border-white/10 text-luxury-subtext hover:border-white/30"
                                         }`}
                                 >
-                                    {v.title}
+                                    {v.name}
                                     {v.price_override != null && (
                                         <span className="ml-2 opacity-60">
                                             ${Number(v.price_override).toFixed(2)}

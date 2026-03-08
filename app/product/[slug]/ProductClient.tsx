@@ -6,7 +6,7 @@ import { ProductDetails } from "@/features/products/components/ProductDetails"
 
 interface Variant {
     id: string
-    title: string
+    name: string
     variant_type?: string
     sku?: string
     price_override?: number | null

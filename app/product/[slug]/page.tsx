@@ -39,7 +39,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
             *,
             variants (
                 id,
-                title,
+                name,
                 variant_type,
                 sku,
                 price_override,
