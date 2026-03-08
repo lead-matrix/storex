@@ -29,7 +29,7 @@ export default function AboutPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
                     <div className="relative aspect-[3/4] bg-background-secondary border border-gold-primary/10 overflow-hidden group">
                         <Image
-                            src="/images/dina.png"
+                            src="https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/WhatsApp%20Image%202026-03-07%20at%208.36.24%20PM%20(1).jpeg"
                             alt="Dina, Founder of DINA COSMETIC"
                             fill
                             priority
