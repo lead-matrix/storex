@@ -265,11 +265,11 @@ DO $$ BEGIN IF EXISTS (
 ) THEN EXECUTE 'UPDATE public.products SET stock = inventory WHERE stock = 0 AND inventory > 0';
 END IF;
 END $$;
--- 1D. variants
-CREATE TABLE IF NOT EXISTS public.variants (
+-- 1D. product_variants
+CREATE TABLE IF NOT EXISTS public.product_variants (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-    title text NOT NULL,
+    name text NOT NULL,
     variant_type text NOT NULL DEFAULT 'shade',
     price_override numeric(10, 2) CHECK (
         price_override IS NULL
@@ -282,21 +282,21 @@ CREATE TABLE IF NOT EXISTS public.variants (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.variants
-ADD COLUMN IF NOT EXISTS title text;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
+ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS variant_type text NOT NULL DEFAULT 'shade';
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS price_override numeric(10, 2);
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS stock integer NOT NULL DEFAULT 0;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS sku text;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS color_code text;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 -- Rename legacy name → title if present
 DO $$ BEGIN IF EXISTS (
@@ -710,22 +710,22 @@ CREATE POLICY "products_delete" ON public.products FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- 5.4  VARIANTS  — public read, admin write
-CREATE POLICY "variants_select" ON public.variants FOR
+-- 5.4  PRODUCT_VARIANTS  — public read, admin write
+CREATE POLICY "product_variants_select" ON public.product_variants FOR
 SELECT USING (true);
-CREATE POLICY "variants_insert" ON public.variants FOR
+CREATE POLICY "product_variants_insert" ON public.product_variants FOR
 INSERT TO authenticated WITH CHECK (
         (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "variants_update" ON public.variants FOR
+CREATE POLICY "product_variants_update" ON public.product_variants FOR
 UPDATE USING (
         (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "variants_delete" ON public.variants FOR DELETE USING (
+CREATE POLICY "product_variants_delete" ON public.product_variants FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
