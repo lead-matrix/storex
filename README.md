@@ -7,6 +7,7 @@ A high-performance, ultra-luxury e-commerce engine designed for the elite profes
 - **Payment Infrastructure**: [Stripe](https://stripe.com/) (Service-Side Logic with Webhook Guards)
 - **Logistics**: [Shippo](https://goshippo.com/) (Server-Side Rate Calculation)
 - **Communications**: [Resend](https://resend.com/) (Automated Order Rituals)
+- **Content Management**: Interactive Drag-and-Drop Page Builder & CMS
 - **Styling**: [Tailwind CSS 4.0](https://tailwindcss.com/)
 - **Core Engine**: TypeScript (Strict Mode)
 
@@ -41,7 +42,7 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ### 2. Database Initialization
 1. Navigate to the **Supabase SQL Editor**.
 2. Run the **`MASTER.sql`** script found in the root directory.
-    - This creates the schema, establishes the strict RLS (Row Level Security), fixes performance bottlenecks, and seeds the initial luxury items.
+    - This creates the schema, establishes the strict RLS (Row Level Security), fixes performance bottlenecks, creates the builder tables, and seeds the initial luxury items.
 3. **Idempotency**: This script is safe to rerun at any point; it will non-destructively sync the schema.
 
 ### 3. Activating The Admin Portal
@@ -53,7 +54,7 @@ UPDATE public.profiles
 SET role = 'admin' 
 WHERE email = 'your-professional@email.com';
 ```
-3. Navigate to `/admin` to manage inventory, fulfill orders, and monitor KPIs.
+3. Navigate to `/admin` to manage inventory, fulfill orders, design new landing pages, and monitor KPIs.
 
 ### 4. Stripe Webhook Configuration
 1. Go to your **Stripe Dashboard** > **Developers** > **Webhooks**.
@@ -66,19 +67,21 @@ WHERE email = 'your-professional@email.com';
 ## 📁 CORE ARCHITECTURE
 ```
 ├── app/                    # Next.js 16 App Router
-│   ├── admin/             # The Obsidian Command Center
-│   ├── shop/              # Product permutations & storefront
-│   └── checkout/          # Managed payment flows
-├── components/            # High-Aesthetic UI Modules
-│   ├── admin/            # Administrative UI
-│   └── ui/               # Tailored React components
-├── features/              # Modular business logic units
-├── lib/                   # Core Infrastructure
-│   ├── actions/          # Server Actions (Atomic Operations)
-│   └── supabase/         # Secure DB Clients (Admin/Server/Client)
-├── public/                # Static assets (Logos/Palettes)
-├── MASTER.sql             # Unified Database Source of Truth
-└── GUIDE.md               # Advanced Operational Playbook
+│   ├── admin/              # The Obsidian Command Center (Dashboard, CMS, Page Builder)
+│   ├── shop/               # Product permutations & storefront
+│   ├── pages/              # dynamically generated builder pages
+│   └── checkout/           # Managed payment flows
+├── components/             # High-Aesthetic UI Modules
+│   ├── admin/              # Administrative UI
+│   └── ui/                 # Tailored React components
+├── features/               # Modular business logic units
+├── lib/                    # Core Infrastructure
+│   ├── actions/            # Server Actions (Atomic Operations)
+│   ├── builder/            # Page drag-and-drop mechanics
+│   └── supabase/           # Secure DB Clients (Admin/Server/Client)
+├── public/                 # Static assets (Logos/Palettes)
+├── MASTER.sql              # Unified Database Source of Truth
+└── GUIDE.md                # Advanced Operational Playbook
 ```
 
 ---
@@ -93,14 +96,21 @@ WHERE email = 'your-professional@email.com';
 
 ## 🎨 THE DESIGN CODE
 Elite beauty requires elite aesthetics.
-- **Background**: Obsidian Black (#000000 / #111111)
+- **Background**: Obsidian Black (#000000 / #0B0B0D)
 - **Primary Accent**: Liquid Gold (#D4AF37)
 - **Typography**: Playfair Display (Luxury Serif), Inter (Modern Sans-Serif)
-- **Experience**: 120fps motion design using Framer Motion.
+
+---
+
+## ⚡ IMAGE OPTIMIZATION & PERFORMANCE
+To ensure lightning-fast load times matching the luxury aesthetic:
+- **Automatic Optimization**: All product and site images use the Next.js `<Image>` component, which automatically serves them in optimized formats (like WebP).
+- **External CDN Priority**: High-res assets (like Dina's portrait) are loaded directly from the Supabase Storage CDN. Because the hostname is registered in `next.config.ts`, Next.js Edge networks instantly cache and optimize the payload globally.
+- **Above-The-Fold**: Critical hero and banner images utilize the `priority` flag to pre-load critical CSS and UI.
 
 ---
 
 ## 🚢 CONTINUOUS INTEGRATION
 Pushing code to the `dev` branch triggers a Vercel Preview deployment. Merging to `main` executes a production environment update.
 
-**Current Version 0.1.0 - The Obsidian Standard**
+**Current Version 1.0.0 - The Obsidian Standard**

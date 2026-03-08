@@ -96,10 +96,10 @@ export async function POST(req: Request) {
             shipping_options: shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
             metadata: {
                 order_id: order.id,
-                // Serialize cart to json so webhook can create order_items easily
-                cart_items: JSON.stringify(items.map((i: any) => ({
+                // Serialize cart to json so webhook can call process_order_atomic
+                items: JSON.stringify(items.map((i: any) => ({
                     product_id: i.productId,
-                    variant_id: i.variantId ?? i.id !== i.productId ? i.id : null,
+                    variant_id: i.variantId || null,
                     quantity: i.quantity,
                     price: i.price,
                 }))),

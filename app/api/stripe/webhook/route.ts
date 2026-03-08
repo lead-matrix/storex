@@ -35,63 +35,32 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Retrieve order_id and cart_items from metadata
+        // Use the atomic RPC to:
+        // 1. Mark order as paid
+        // 2. Insert all order items
+        // 3. Deduct stock from products and variants
+        // All in one Postgres transaction.
+        const { error: rpcError } = await supabase.rpc("process_order_atomic", {
+            p_stripe_session_id: session.id,
+            p_customer_email: session.customer_details?.email || session.customer_email,
+            p_amount_total: session.amount_total,
+            p_currency: session.currency,
+            p_metadata: {
+                ...session.metadata,
+                items: session.metadata?.items ? JSON.parse(session.metadata.items) : []
+            }
+        });
+
+        if (rpcError) {
+            console.error("Atomic order processing failed:", rpcError);
+        }
+
         const orderId = session.metadata?.order_id;
         const email = session.customer_details?.email || session.customer_email;
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
 
-        if (orderId && email) {
-            // 1. Update order status and attach email
-            const { error: updateError } = await supabase
-                .from("orders")
-                .update({ status: "paid", customer_email: email, amount_total: amountTotal })
-                .eq("id", orderId);
-
-            if (updateError) {
-                console.error("Failed to update order status:", updateError);
-            }
-
-            // 2. Parse items and deduct inventory
-            const cartItemsStr = session.metadata?.cart_items;
-            let items: any[] = [];
-
-            if (cartItemsStr) {
-                try {
-                    items = JSON.parse(cartItemsStr);
-
-                    // Insert order_items
-                    const itemsToInsert = items.map((item: any) => ({
-                        order_id: orderId,
-                        variant_id: item.variant_id || item.product_id,
-                        quantity: item.quantity,
-                        price: item.price
-                    }));
-
-                    const { error: itemsError } = await supabase.from("order_items").insert(itemsToInsert);
-                    if (itemsError) console.error("Failed to insert items:", itemsError);
-
-                    // Deduct stock natively in Supabase (or here iteratively)
-                    for (const item of items) {
-                        const variantId = item.variant_id;
-                        if (variantId && variantId !== item.product_id) {
-                            const { data: v } = await supabase.from("product_variants").select("stock").eq("id", variantId).single();
-                            if (v && typeof v.stock === 'number') {
-                                await supabase.from("product_variants").update({ stock: Math.max(0, v.stock - item.quantity) }).eq("id", variantId);
-                            }
-                        } else {
-                            const { data: prod } = await supabase.from("products").select("stock").eq("id", item.product_id).single();
-                            if (prod && typeof prod.stock === 'number') {
-                                await supabase.from("products").update({ stock: Math.max(0, prod.stock - item.quantity) }).eq("id", item.product_id);
-                            }
-                        }
-                    }
-
-                } catch (e) {
-                    console.error("Error processing cart items:", e);
-                }
-            }
-
-            // 3. Fire Resend Email
+        if (orderId && email && !rpcError) {
+            // Fire Resend Email
             await sendOrderConfirmationEmail({
                 orderId,
                 customerEmail: email,
