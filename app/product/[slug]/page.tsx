@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { ProductGallery } from "@/features/products/components/ProductGallery";
-import { ProductDetails } from "@/features/products/components/ProductDetails";
 import { RelatedProducts } from "@/features/products/components/RelatedProducts";
+import { ProductClient } from "./ProductClient";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +35,19 @@ export default async function ProductSlugPage({ params }: PageProps) {
 
     const { data: product, error } = await supabase
         .from('products')
-        .select('*, variants(*)')
+        .select(`
+            *,
+            product_variants (
+                id,
+                name,
+                variant_type,
+                sku,
+                price_override,
+                stock,
+                color_code,
+                status
+            )
+        `)
         .eq('slug', slug)
         .eq('status', 'active')
         .single();
@@ -64,47 +75,15 @@ export default async function ProductSlugPage({ params }: PageProps) {
                     Back to Collection
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
-                    <div className="w-full animate-in fade-in slide-in-from-left-5 duration-1000">
-                        <ProductGallery images={product.images} productName={product.title} />
-                    </div>
-
-                    <div className="flex flex-col">
-                        <div className="pb-8">
-                            <p className="text-gold text-[10px] uppercase tracking-[0.5em] font-medium mb-6">
-                                Obsidian Masterpiece
-                            </p>
-                            <ProductDetails
-                                product={{
-                                    id: product.id,
-                                    title: product.title,
-                                    base_price: product.base_price,
-                                    description: product.description || "The quintessence of modern luxury.",
-                                    images: product.images || ["/placeholder-product.jpg"],
-                                    product_variants: product.variants
-                                }}
-                            />
-                        </div>
-
-                        {/* PRODUCT ACCOLADES */}
-                        <div className="grid grid-cols-2 gap-8 pt-12 border-t border-white/5">
-                            <div>
-                                <h4 className="text-[10px] uppercase tracking-widest text-white font-bold mb-3 underline decoration-gold/30 underline-offset-4">The Ritual</h4>
-                                <p className="text-luxury-subtext text-[11px] leading-relaxed font-light italic">Apply with intention. Pressed gently into prepared skin.</p>
-                            </div>
-                            <div>
-                                <h4 className="text-[10px] uppercase tracking-widest text-white font-bold mb-3 underline decoration-gold/30 underline-offset-4">Integrity</h4>
-                                <p className="text-luxury-subtext text-[11px] leading-relaxed font-light italic">Sustainably sourced. Vegan. Cruelty-free masterpiece.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ProductClient product={product} />
             </div>
 
             {relatedProducts && relatedProducts.length > 0 && (
                 <div className="mt-40 border-t border-white/5 pt-32">
                     <div className="container-luxury">
-                        <h2 className="text-2xl md:text-4xl font-serif text-white tracking-tight mb-20 text-center">Selected Companions</h2>
+                        <h2 className="text-2xl md:text-4xl font-serif text-white tracking-tight mb-20 text-center">
+                            Selected Companions
+                        </h2>
                         <RelatedProducts products={relatedProducts} />
                     </div>
                 </div>
@@ -112,4 +91,3 @@ export default async function ProductSlugPage({ params }: PageProps) {
         </div>
     );
 }
-

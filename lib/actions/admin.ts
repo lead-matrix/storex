@@ -96,13 +96,13 @@ export async function createProduct(formData: FormData) {
                     .filter(v => !v._deleted)
                     .map(v => ({
                         product_id: product.id,
-                        title: v.title,
+                        name: v.title || v.name,
                         variant_type: v.variant_type || 'shade',
                         sku: v.sku,
                         price_override: v.price,
                         stock: v.stock,
                     }));
-                await supabase.from('variants').insert(variantsToInsert);
+                await supabase.from('product_variants').insert(variantsToInsert);
             }
         }
 
@@ -157,19 +157,19 @@ export async function updateProduct(formData: FormData) {
         const variants = JSON.parse(variantsJson);
         for (const v of variants) {
             if (v._deleted && v.id) {
-                await supabase.from('variants').delete().eq('id', v.id);
+                await supabase.from('product_variants').delete().eq('id', v.id);
             } else if (v._isNew) {
-                await supabase.from('variants').insert({
+                await supabase.from('product_variants').insert({
                     product_id: id,
-                    title: v.title,
+                    name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
                     price_override: v.price,
                     stock: v.stock,
                 });
             } else if (v.id) {
-                await supabase.from('variants').update({
-                    title: v.title,
+                await supabase.from('product_variants').update({
+                    name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
                     price_override: v.price,
@@ -190,15 +190,34 @@ export async function deleteProduct(id: string) {
     revalidatePaths(id, product?.slug);
 }
 
-export async function adjustStock(productId: string, delta: number) {
+export async function adjustStock(variantId: string, delta: number) {
     const supabase = await ensureAdmin();
 
-    const { data: prod } = await supabase.from('products').select('stock').eq('id', productId).single();
-    if (!prod) throw new Error("Product not found");
+    // 1. Try to find it in product_variants first (v2 schema)
+    const { data: variant, error: variantErr } = await supabase
+        .from('product_variants')
+        .select('stock, product_id')
+        .eq('id', variantId)
+        .single();
 
-    const newStock = Math.max(0, (prod.stock ?? 0) + delta);
-    const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', productId);
-    if (error) throw new Error(error.message);
+    if (variant && !variantErr) {
+        const newStock = Math.max(0, (variant.stock ?? 0) + delta);
+        await supabase.from('product_variants').update({ stock: newStock }).eq('id', variantId);
+
+        // Also fire off a reval for the product
+        const { data: prod } = await supabase.from('products').select('slug').eq('id', variant.product_id).single();
+        if (prod?.slug) revalidatePath(`/product/${prod.slug}`);
+    } else {
+        // 2. Fallback to base products table if it's a v1 product without variants
+        const { data: prod } = await supabase.from('products').select('stock, slug').eq('id', variantId).single();
+        if (!prod) throw new Error("Item not found in vault.");
+
+        const newStock = Math.max(0, (prod.stock ?? 0) + delta);
+        const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', variantId);
+        if (error) throw new Error(error.message);
+
+        if (prod.slug) revalidatePath(`/product/${prod.slug}`);
+    }
 
     revalidatePath('/admin/products');
 }

@@ -1,139 +1,106 @@
-# DINA COSMETIC - The Obsidian Palace
+# DINA COSMETIC - THE OBSIDIAN PALACE
+A high-performance, ultra-luxury e-commerce engine designed for the elite professional beauty industry. Built using the "Obsidian Standard" architecture for uncompromising performance, security, and aesthetics.
 
-A luxury e-commerce platform built with Next.js 15, Supabase, and Stripe.
+## 🏗️ THE TECHNOLOGY STACK
+- **Framework**: [Next.js 16.1.6](https://nextjs.org/) (Full App Router Architecture)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL with Fine-Grained RLS)
+- **Payment Infrastructure**: [Stripe](https://stripe.com/) (Service-Side Logic with Webhook Guards)
+- **Logistics**: [Shippo](https://goshippo.com/) (Server-Side Rate Calculation)
+- **Communications**: [Resend](https://resend.com/) (Automated Order Rituals)
+- **Styling**: [Tailwind CSS 4.0](https://tailwindcss.com/)
+- **Core Engine**: TypeScript (Strict Mode)
 
-## 🏗️ Tech Stack
+---
 
-- **Framework**: Next.js 15 (App Router + Pages Router Hybrid)
-- **Database**: Supabase (PostgreSQL with RLS)
-- **Authentication**: Supabase Auth
-- **Payments**: Stripe
-- **Storage**: Supabase Storage
-- **Email**: Resend
-- **Shipping**: Shippo
-- **Styling**: Tailwind CSS
-- **UI Components**: Shadcn UI
-- **Language**: TypeScript
+## 🚀 THE LAUNCH RITUAL (DEPLOYMENT GUIDE)
 
-## 🚀 Quick Start
+Follow these steps with precision to go live with the Obsidian Palace.
 
-### Prerequisites
+### 1. Environment Orchestration
+Create a `.env.local` (local) and mirror these variables to your Vercel/Production dashboard:
 
-- Node.js 18+
-- Supabase account
-- Stripe account
-- Resend account (for emails)
-- Shippo account (for shipping)
-
-### Installation
-
-1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
-cd commerce
-```
+# SUPABASE COMMAND & CONTROL
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key # CRITICAL: KEEP PRIVATE
 
-2. **Install dependencies**
-```bash
-npm install --legacy-peer-deps
-```
+# THE PAYMENT VAULT (STRIPE)
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_... # Verified after creating Webhook in Stripe Dashboard
 
-3. **Set up environment variables**
-
-Create `.env.local` file (use `.env.example` as a template):
-```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Stripe Configuration
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Outbound Communications
+# LOGISTICS & COMMUNICATION
 RESEND_API_KEY=re_...
-SHIPPO_API_KEY=shippo_test_...
+SHIPPO_API_KEY=shippo_live_...
 
-# Site URL
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# PRODUCTION URL
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 
-4. **Set up Supabase**
+### 2. Database Initialization
+1. Navigate to the **Supabase SQL Editor**.
+2. Run the **`MASTER.sql`** script found in the root directory.
+    - This creates the schema, establishes the strict RLS (Row Level Security), fixes performance bottlenecks, and seeds the initial luxury items.
+3. **Idempotency**: This script is safe to rerun at any point; it will non-destructively sync the schema.
 
-Run the **single** master script in your Supabase SQL Editor:
-- **File**: `MASTER.sql` — sole source of truth for schema, RLS, indexes, functions, and seed data
-- Zero linter warnings (auth_rls_initplan + multiple_permissive_policies fully resolved)
-- Idempotent — safe to re-run at any time
-
-5. **Create admin user**
-
-After signing up via the app, run this in the SQL Editor:
+### 3. Activating The Admin Portal
+To gain access to the secure administrative command center:
+1. Sign up/Login to the frontend of your application.
+2. In the Supabase SQL Editor, promote your profile to 'admin':
 ```sql
 UPDATE public.profiles 
 SET role = 'admin' 
-WHERE email = 'your-email@email.com';
+WHERE email = 'your-professional@email.com';
+```
+3. Navigate to `/admin` to manage inventory, fulfill orders, and monitor KPIs.
+
+### 4. Stripe Webhook Configuration
+1. Go to your **Stripe Dashboard** > **Developers** > **Webhooks**.
+2. Add a new endpoint: `https://your-domain.com/api/stripe/webhook`
+3. Select events: `checkout.session.completed`.
+4. Copy the `Signing Secret` and paste it as `STRIPE_WEBHOOK_SECRET` in your environment variables.
+
+---
+
+## 📁 CORE ARCHITECTURE
+```
+├── app/                    # Next.js 16 App Router
+│   ├── admin/             # The Obsidian Command Center
+│   ├── shop/              # Product permutations & storefront
+│   └── checkout/          # Managed payment flows
+├── components/            # High-Aesthetic UI Modules
+│   ├── admin/            # Administrative UI
+│   └── ui/               # Tailored React components
+├── features/              # Modular business logic units
+├── lib/                   # Core Infrastructure
+│   ├── actions/          # Server Actions (Atomic Operations)
+│   └── supabase/         # Secure DB Clients (Admin/Server/Client)
+├── public/                # Static assets (Logos/Palettes)
+├── MASTER.sql             # Unified Database Source of Truth
+└── GUIDE.md               # Advanced Operational Playbook
 ```
 
-6. **Run development server**
-```bash
-npm run dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000)
+## 🔐 SECURITY & INTEGRITY
+- **Atomic Operations**: Inventory is deducted within database transactions during Stripe confirmation.
+- **Server-Only Logic**: Pricing, finance, and stock calculation never happen on the client.
+- **RLS Enforced**: Every table is locked behind Supabase Row Level Security.
+- **Guest Checkout**: Seamless, secure guest flow with placeholder state management.
 
-## 📁 Project Structure
+---
 
-```
-├── app/                    # Next.js App Router
-│   ├── admin/             # Admin portal (protected)
-│   ├── shop/              # Product pages
-│   └── checkout/          # Checkout flow
-├── components/            # React components
-│   ├── admin/            # Admin components
-│   └── ui/               # Shadcn UI components
-├── lib/                   # Shared logic
-│   ├── actions/          # Server actions (Mutations)
-│   └── utils/            # Helper functions
-├── utils/                 # Supabase clients
-│   └── supabase/          # Client & Server clients
-├── MASTER.sql             # Single source of truth — schema, RLS, functions, seed
-├── GUIDE.md               # Complete operations + deployment + admin guide
-└── route-guard.ts         # Core server-side security logic (Auth & RBAC)
-```
+## 🎨 THE DESIGN CODE
+Elite beauty requires elite aesthetics.
+- **Background**: Obsidian Black (#000000 / #111111)
+- **Primary Accent**: Liquid Gold (#D4AF37)
+- **Typography**: Playfair Display (Luxury Serif), Inter (Modern Sans-Serif)
+- **Experience**: 120fps motion design using Framer Motion.
 
-## 🔐 Security
+---
 
-- **Row Level Security (RLS)**: Enforced on all tables with zero public access to logs.
-- **Admin Guard**: Server-side role checks and layout protection.
-- **Transactions**: Atomic order creation and inventory deduction via RPC.
-- **Webhook Verification**: Secure Stripe signature + Idempotency tracking.
+## 🚢 CONTINUOUS INTEGRATION
+Pushing code to the `dev` branch triggers a Vercel Preview deployment. Merging to `main` executes a production environment update.
 
-## 🎨 Design System
-
-**The Obsidian Palace** - Ultra-minimalist luxury design:
-- **Background**: Deep Obsidian (#111111)
-- **Accents**: Liquid Gold (#D4AF37)
-- **Typography**: Playfair Display (headings), Inter (body)
-- **Experience**: Premium micro-animations and smooth transitions.
-
-## 🚢 Deployment
-
-### Vercel (Recommended)
-
-1. **Push to GitHub**
-2. **Connect to Vercel**
-3. **Environment Variables**: Add all keys from `.env.local`
-4. **Stripe Webhook**: Endpoint: `https://your-domain.com/api/webhooks/stripe`
-
-## 📞 Support
-
-For issues or questions:
-1. Verify `product-images` bucket exists in Supabase Storage.
-2. Check `role = 'admin'` in the profiles table.
-3. Review Vercel and Supabase logs.
-
-## 📄 License
-
-Private - All rights reserved
+**Current Version 0.1.0 - The Obsidian Standard**

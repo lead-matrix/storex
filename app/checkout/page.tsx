@@ -75,7 +75,8 @@ export default function CheckoutPage() {
 
     useEffect(() => { createIntent(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const shipping = cartTotal >= 50 ? 0 : 9.99;
+    const FREE_SHIPPING_THRESHOLD = 100;
+    const shipping = cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : 9.99;
     const tax = cartTotal * 0.08;
     const total = cartTotal + shipping + tax;
 

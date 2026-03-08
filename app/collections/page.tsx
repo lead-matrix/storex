@@ -50,9 +50,10 @@ export default async function CollectionsPage() {
             slug: cat.slug,
             subtitle: cat.description ? cat.description.split('.')[0] : 'Curated Experience',
             description: cat.description || 'Luxury beauty crafted for the discerning collector.',
+            image: cat.image_url || 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80',
             index: i,
         }))
-        : fallbackCollections.map((c, i) => ({ ...c, index: i }))
+        : fallbackCollections.map((c, i) => ({ ...c, image: 'https://images.unsplash.com/photo-1596462502278-27bf85033e5a?auto=format&fit=crop&w=800&q=80', index: i }))
 
     const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
@@ -82,41 +83,33 @@ export default async function CollectionsPage() {
 
             {/* ── Collections Grid ── */}
             <div className="px-6 max-w-7xl mx-auto pb-32">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {displayItems.map((col, i) => {
-                        const href = col.slug ? `/collections/${col.slug}` : '/shop'
+                        const href = col.slug ? `/collections/${col.slug}` : `/shop?category=${col.slug || col.id}`
                         return (
                             <Link
                                 key={col.id}
                                 href={href}
-                                className="group relative border border-gold-primary/8 bg-background-secondary/30 p-10 space-y-10 hover:border-gold-primary/25 transition-all duration-700 overflow-hidden gold-glow-hover block"
+                                className="group relative aspect-[4/5] overflow-hidden block"
                             >
-                                {/* Roman numeral watermark */}
-                                <div className="absolute top-6 right-8 text-[40px] font-serif text-gold-primary/4 group-hover:text-gold-primary/8 transition-colors duration-700 pointer-events-none select-none">
-                                    {romanNumerals[i] || (i + 1).toString()}
-                                </div>
+                                {/* Background Image (The Circular Image from Supabase) */}
+                                <img
+                                    src={col.image}
+                                    alt={col.name}
+                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                />
 
-                                <div className="relative z-10 space-y-5">
-                                    {/* Gold accent dot */}
-                                    <div className="w-5 h-[1px] bg-gold-primary/30 group-hover:w-10 transition-all duration-500" />
+                                {/* Overlay Gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
 
-                                    <div>
-                                        <h3 className="text-[9px] uppercase tracking-[0.35em] text-text-mutedDark/50 mb-3">
-                                            {col.subtitle}
-                                        </h3>
-                                        <h2 className="text-3xl font-serif text-text-headingDark tracking-tight">
-                                            {col.name}
-                                        </h2>
-                                    </div>
-
-                                    <p className="text-[10px] text-text-mutedDark/50 leading-loose uppercase tracking-widest font-light line-clamp-3">
-                                        {col.description}
+                                {/* Text Content */}
+                                <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col items-center text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                    <h3 className="text-2xl font-serif italic text-white tracking-widest uppercase mb-2">
+                                        {col.name}
+                                    </h3>
+                                    <p className="text-xs text-gold-primary uppercase tracking-[0.2em] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                                        {col.slug ? 'Explore Vault' : 'View Collection'} &rarr;
                                     </p>
-
-                                    <div className="flex items-center gap-3 text-gold-primary uppercase text-[9px] tracking-[0.4em] pt-6 group-hover:gap-5 transition-all duration-500">
-                                        {col.slug ? 'Explore Vault' : 'View Collection'}
-                                        <ArrowRight size={12} />
-                                    </div>
                                 </div>
                             </Link>
                         )

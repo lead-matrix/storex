@@ -13,14 +13,14 @@ type VRow = {
     stock: number;
     sku: string | null;
     product_id: string;
-    products: { name: string; base_price: number } | null
+    products: { title: string; base_price: number } | null
 }
 
 export default async function VaultPage() {
     const supabase = await createClient()
     const { data: raw } = await supabase
-        .from('variants')
-        .select('id, name, price_override, stock, sku, product_id, products(name, base_price)')
+        .from('product_variants')
+        .select('id, name, price_override, stock, sku, product_id, products(title, base_price)')
         .order('product_id')
         .limit(300)
 
@@ -99,7 +99,7 @@ export default async function VaultPage() {
                                         <tr key={v.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col">
-                                                    <span className="text-white font-serif text-sm group-hover:text-gold transition-colors">{v.products?.name ?? '—'}</span>
+                                                    <span className="text-white font-serif text-sm group-hover:text-gold transition-colors">{v.products?.title ?? '—'}</span>
                                                     <span className="text-[9px] text-white/20 uppercase tracking-widest mt-1">{v.name}</span>
                                                 </div>
                                             </td>

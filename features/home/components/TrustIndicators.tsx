@@ -4,7 +4,7 @@ const TRUST_ITEMS = [
     {
         icon: Truck,
         title: "Complimentary Delivery",
-        description: "On all orders exceeding $150"
+        description: "On all orders exceeding $100"
     },
     {
         icon: RotateCcw,

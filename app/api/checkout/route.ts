@@ -1,108 +1,114 @@
-import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+import { createClient as createAdminClient } from "@/lib/supabase/admin";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-02-25.clover", // Use standard latest api version
+});
 
 export async function POST(req: Request) {
     try {
-        const { items } = await req.json()
+        const { items } = await req.json();
 
-        // Auth
-        const cookieStore = await cookies()
-        const supabaseAuth = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { cookies: { get: (name) => cookieStore.get(name)?.value } }
-        )
-        const { data: { user } } = await supabaseAuth.auth.getUser()
+        if (!items || items.length === 0) {
+            return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+        }
 
-        // Service-role client for DB reads (bypasses RLS)
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+        // Use service-role admin client so guest (unauthenticated) checkouts
+        // are not blocked by RLS when inserting the pending order.
+        const supabase = await createAdminClient();
 
-        const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = []
-        const metadataItems: { variant_id: string; quantity: number; price: number }[] = []
-        let subtotal = 0
+        // 1. Calculate shipping & tax (for Stripe, we pass them as line items or shipping options)
+        const subtotal = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
+        const FREE_SHIPPING_THRESHOLD = 100;
+        const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 9.99;
 
-        // 1. Validate every item against the database (Variant + Inventory Schema V2)
-        for (const item of items) {
-            const variantId = item.id;
+        // 2. Create pending order in DB first; email is filled by webhook post-payment
+        const { data: order, error: orderError } = await supabase
+            .from("orders")
+            .insert({
+                status: "pending",
+                customer_email: "pending@checkout.local", // Placeholder – webhook replaces this with real Stripe customer email
+                amount_total: subtotal + shipping,
+            })
+            .select("id")
+            .single();
 
-            // Using the new V2 schema logic conceptually
-            // For now, mapping to existing table to keep app functional if V2 isn't applied immediately
-            // But structurally, this endpoint MUST NOT create an order.
+        if (orderError) {
+            console.error("DB Order Error:", orderError);
+            return NextResponse.json({ error: "Could not create order in database" }, { status: 500 });
+        }
 
-            const { data: product } = await supabase
-                .from('products')
-                .select('title, base_price, sale_price, on_sale, stock, images, status')
-                .eq('id', item.productId)
-                .single()
-
-            if (!product || product.status !== 'active')
-                throw new Error(`"${item.name}" is no longer available.`)
-
-            let dbPrice = product.on_sale && product.sale_price ? Number(product.sale_price) : Number(product.base_price)
-            const unitAmount = Math.round(dbPrice * 100)
-            subtotal += dbPrice * item.quantity
-
-            line_items.push({
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: item.variantName ? `${product.title} — ${item.variantName}` : product.title,
-                        images: product.images?.[0] ? [product.images[0]] : [],
+        // 3. Create Stripe line items
+        const lineItems = items.map((item: any) => ({
+            price_data: {
+                currency: "usd",
+                product_data: {
+                    name: item.name,
+                    images: [item.image],
+                    metadata: {
+                        product_id: item.productId,
                     },
-                    unit_amount: unitAmount,
                 },
-                quantity: item.quantity,
-            })
+                unit_amount: Math.round(item.price * 100),
+            },
+            quantity: item.quantity,
+        }));
 
-            metadataItems.push({ variant_id: variantId, quantity: item.quantity, price: dbPrice })
-        }
-
-        const shippingRate = subtotal >= 50 ? 0 : 9.99
-        if (shippingRate > 0) {
-            line_items.push({
-                price_data: {
-                    currency: 'usd',
-                    product_data: { name: 'Standard Shipping' },
-                    unit_amount: Math.round(shippingRate * 100),
+        // Add shipping as a line item for simplicity, or use Stripe shipping_options
+        const shippingOptions = shipping > 0 ? [
+            {
+                shipping_rate_data: {
+                    type: "fixed_amount",
+                    fixed_amount: { amount: Math.round(shipping * 100), currency: "usd" },
+                    display_name: "Standard Shipping",
+                    delivery_estimate: {
+                        minimum: { unit: "business_day", value: 3 },
+                        maximum: { unit: "business_day", value: 5 },
+                    },
                 },
-                quantity: 1,
-            })
-        }
+            }
+        ] : [
+            {
+                shipping_rate_data: {
+                    type: "fixed_amount",
+                    fixed_amount: { amount: 0, currency: "usd" },
+                    display_name: "Free Shipping",
+                    delivery_estimate: {
+                        minimum: { unit: "business_day", value: 3 },
+                        maximum: { unit: "business_day", value: 5 },
+                    },
+                },
+            }
+        ];
 
-        // 2. Create Stripe hosted checkout session
-        // CRITICAL CHANGE: We DO NOT insert into `orders` table here.
-        // Orders are only created by the webhook after successful payment verification.
+        // 4. Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items,
-            mode: 'payment',
-            customer_email: user?.email ?? undefined,
-            billing_address_collection: 'required',
+            payment_method_types: ["card"],
+            line_items: lineItems,
+            mode: "payment",
+            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?success=true`,
+            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
+            billing_address_collection: "required",
             shipping_address_collection: {
-                allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'SE'],
+                allowed_countries: ["US", "CA", "GB"],
             },
-            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/shop`,
+            shipping_options: shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
             metadata: {
-                user_id: user?.id ?? '',
-                items: JSON.stringify(metadataItems),
+                order_id: order.id,
+                // Serialize cart to json so webhook can create order_items easily
+                cart_items: JSON.stringify(items.map((i: any) => ({
+                    product_id: i.productId,
+                    variant_id: i.variantId ?? i.id !== i.productId ? i.id : null,
+                    quantity: i.quantity,
+                    price: i.price,
+                }))),
             },
-            phone_number_collection: { enabled: true },
-            allow_promotion_codes: true,
-        })
+        });
 
-        return NextResponse.json({ url: session.url })
-
-    } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : 'Checkout failed'
-        return NextResponse.json({ error: msg }, { status: 500 })
+        return NextResponse.json({ url: session.url });
+    } catch (err: any) {
+        console.error("Checkout Error:", err);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

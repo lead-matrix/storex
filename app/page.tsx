@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Hero } from "@/components/Hero";
 import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid";
 import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid";
+import { TestimonialSection } from "@/components/TestimonialSection";
 import CMSRenderer from "@/components/cms/CMSRenderer";
 
 export const revalidate = 60;
@@ -35,7 +36,7 @@ async function getHomePageData() {
 
   const { data: categories, error: catErr } = await supabase
     .from("categories")
-    .select("id, name, slug, description")
+    .select("id, name, slug, description, image_url")
     .limit(6);
 
   if (prodErr) console.error("Error fetching products:", prodErr);
@@ -81,6 +82,7 @@ export default async function Home() {
       <Hero />
       <HomeCategoryGrid categories={categories as any} />
       <FeaturedProductsGrid products={products} />
+      <TestimonialSection />
     </div>
   );
 }

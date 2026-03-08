@@ -10,7 +10,7 @@ interface Order {
     status: string;
     order_items: {
         quantity: number;
-        products: { name: string } | { name: string }[];
+        products: { title: string } | { title: string }[];
     }[];
 }
 
@@ -134,8 +134,8 @@ export function AccountDashboard({ user, profile, orders = [] }: AccountDashboar
                                                 </td>
                                                 <td className="px-6 py-5">
                                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] uppercase tracking-widest border ${isPaid
-                                                            ? 'border-gold/30 text-gold bg-gold/5'
-                                                            : 'border-white/10 text-white/50 bg-white/5'
+                                                        ? 'border-gold/30 text-gold bg-gold/5'
+                                                        : 'border-white/10 text-white/50 bg-white/5'
                                                         }`}>
                                                         {order.status}
                                                     </span>

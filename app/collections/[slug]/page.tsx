@@ -37,7 +37,7 @@ export default async function CollectionSlugPage({ params }: Props) {
 
     const { data: products } = await supabase
         .from('products')
-        .select('id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_featured, variants(id, title, price_override, stock)')
+        .select('id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_featured, product_variants(id, name, price_override, stock, status)')
         .eq('status', 'active')
         .eq('category_id', category.id)
         .order('is_featured', { ascending: false })
@@ -99,7 +99,7 @@ export default async function CollectionSlugPage({ params }: Props) {
                             <ProductCard
                                 key={product.id}
                                 product={product as any}
-                                variants={product.variants as any[]}
+                                variants={(product.product_variants as any[]) ?? []}
                             />
                         ))}
                     </div>

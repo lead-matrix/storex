@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import { ProductForm } from '@/components/admin/ProductForm'
 import { ArrowLeft } from 'lucide-react'
@@ -20,14 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditProductPage({ params }: Props) {
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     const { data: product, error } = await supabase
         .from('products')
         .select(`
             id, title, slug, description, images, is_featured, is_bestseller, status, category_id,
-            variants(
-                id, title, sku, price_override, stock
+            product_variants(
+                id, name, sku, price_override, stock
             )
         `)
         .eq('id', id)
@@ -36,9 +37,9 @@ export default async function EditProductPage({ params }: Props) {
     if (error || !product) notFound()
 
     // Normalise variants for the form
-    const variants = (product.variants ?? []).map((v: any) => ({
+    const variants = (product.product_variants ?? []).map((v: any) => ({
         id: v.id,
-        title: v.title,
+        title: v.name,
         sku: v.sku,
         price: Number(v.price_override) || 0,
         compare_price: null,

@@ -54,7 +54,7 @@ export default async function AdminDashboard() {
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('orders').select('id, customer_email, status, amount_total, created_at').order('created_at', { ascending: false }).limit(6),
-        supabase.from('variants').select('id, title, product_id, products(title), stock').lt('stock', 10).order('stock', { ascending: true }).limit(5)
+        supabase.from('product_variants').select('id, name, product_id, products(title), stock').lt('stock', 10).order('stock', { ascending: true }).limit(5)
     ])
 
     const totalRevenue = revenueRes?.reduce((sum, o) => sum + (Number(o.amount_total) || 0), 0) || 0
@@ -161,7 +161,7 @@ export default async function AdminDashboard() {
                             <div key={variant.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-sm hover border-gold/20 transition-all group">
                                 <div className="min-w-0">
                                     <p className="text-[10px] text-white font-medium truncate group-hover:text-gold transition-colors">
-                                        {variant.products?.title} ({variant.title})
+                                        {variant.products?.title} ({variant.name})
                                     </p>
                                     <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">Remaining: {variant.stock ?? 0}</p>
                                 </div>

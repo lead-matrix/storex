@@ -1,55 +1,26 @@
-import React from 'react'
-import Hero from './sections/Hero'
-import ProductGrid from './sections/ProductGrid'
-import Banner from './sections/Banner'
-import CTA from './sections/CTA'
+import React from 'react';
 
-export interface PageSection {
-    id?: string;
-    type: string;
-    [key: string]: any;
-}
+// Stub components
+const Hero = (props: any) => <div><h1>{props.title || "Hero"}</h1></div>;
+const ProductsGrid = (props: any) => <div><h2>Products: {props.collection || "featured"}</h2></div>;
+const TextBlock = (props: any) => <div><p>{props.text || "Text content"}</p></div>;
 
-export interface PageRendererProps {
-    sections: PageSection[];
-}
+export default function PageRenderer({ blocks }: { blocks: any[] }) {
+    if (!blocks || !Array.isArray(blocks)) return null;
 
-export default function PageRenderer({ sections }: PageRendererProps) {
-    if (!sections || !Array.isArray(sections)) {
-        return null;
-    }
+    return blocks.map((block, i) => {
+        switch (block.type) {
+            case "hero":
+                return <Hero key={i} {...block} />
 
-    return (
-        <>
-            {sections.map((section, index) => {
-                // Ensure keys are unique. If the section has an ID, use it, otherwise use index.
-                const key = section.id || `section-${index}`
+            case "products":
+                return <ProductsGrid key={i} {...block} />
 
-                switch (section.type) {
-                    case 'hero':
-                        return <Hero key={key} {...section} />
+            case "text":
+                return <TextBlock key={i} {...block} />
 
-                    case 'product_grid':
-                    case 'productGrid':
-                        return <ProductGrid key={key} {...section} />
-
-                    case 'banner':
-                        return <Banner key={key} {...section} />
-
-                    case 'cta':
-                        return <CTA key={key} {...section} />
-
-                    default:
-                        if (process.env.NODE_ENV === 'development') {
-                            return (
-                                <div key={key} className="p-4 border border-red-500 text-red-500 text-center">
-                                    Unknown section type: {section.type}
-                                </div>
-                            )
-                        }
-                        return null
-                }
-            })}
-        </>
-    )
+            default:
+                return null
+        }
+    })
 }

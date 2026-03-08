@@ -78,7 +78,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
         supabase
             .from('categories')
             .select('id, name, slug')
-            .eq('is_active', true)
+            .eq('status', 'active')
             .order('name')
             .then(({ data }) => {
                 if (data) setCategories(data as Category[])

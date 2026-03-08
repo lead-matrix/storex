@@ -27,28 +27,29 @@ export default function AboutPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                    <div className="relative aspect-square bg-background-secondary border border-gold-primary/10 overflow-hidden group">
+                    <div className="relative aspect-[3/4] bg-background-secondary border border-gold-primary/10 overflow-hidden group">
                         <Image
-                            src="/logo.jpg"
-                            alt="The Genesis"
+                            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1000"
+                            alt="Dina, Founder of DINA COSMETIC"
                             fill
-                            className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                            priority
+                            className="object-cover object-top transition-all duration-1000 group-hover:scale-105 group-hover:brightness-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background-primary to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background-primary to-transparent opacity-80" />
                     </div>
 
                     <div className="space-y-12">
                         <div className="space-y-6">
-                            <h2 className="text-gold-primary font-serif text-3xl italic">Rituals of Illumination</h2>
-                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.3em] leading-relaxed font-light">
-                                DINA COSMETIC was founded not in a laboratory, but in a sanctuary. We believe that true beauty is the illumination of the soul, and our products are merely the vessels to manifest that light.
+                            <h2 className="text-gold-primary font-serif text-3xl italic">A Vision of Elegance</h2>
+                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.2em] leading-relaxed font-light">
+                                Dina, the visionary founder of DINA COSMETIC, established this brand with a steadfast commitment to professional-grade beauty and uncompromising luxury. With deep industry expertise, Dina has crafted formulations that go beyond aesthetics, prioritizing skin health, performance, and purity.
                             </p>
                         </div>
 
                         <div className="space-y-6">
-                            <h2 className="text-gold-primary font-serif text-3xl italic">The Obsidian Standard</h2>
-                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.3em] leading-relaxed font-light">
-                                Every artifact produced within the Palace undergoes a rigorous alchemy of absolute black minerals and liquid gold accents. This is the Obsidian Standard—a promise of weight, luxury, and unmatched performance.
+                            <h2 className="text-gold-primary font-serif text-3xl italic">Earned Devotion</h2>
+                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.2em] leading-relaxed font-light">
+                                Trusted by thousands of women worldwide, our collections have become a staple in the routines of those who demand excellence. Every artifact produced under the Obsidian Standard undergoes rigorous testing, ensuring that you receive unparalleled luxury and flawless results.
                             </p>
                         </div>
                     </div>

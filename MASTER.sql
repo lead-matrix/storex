@@ -5,6 +5,62 @@
 --
 --  SECTIONS
 --  §0   Helper functions
+DO $$ BEGIN -- Drop NOT NULL on legacy 'title' column on product_variants (v1 schema artifact)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
+        AND column_name = 'title'
+) THEN
+ALTER TABLE public.product_variants
+ALTER COLUMN title DROP NOT NULL;
+END IF;
+-- Drop NOT NULL on legacy 'title' column on variants (old table name)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'title'
+) THEN
+ALTER TABLE public.variants
+ALTER COLUMN title DROP NOT NULL;
+END IF;
+-- Drop NOT NULL on legacy 'name' column on products
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'name'
+) THEN
+ALTER TABLE public.products
+ALTER COLUMN name DROP NOT NULL;
+END IF;
+-- Drop NOT NULL on legacy 'price' column on product_variants (v1 schema artifact)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
+        AND column_name = 'price'
+) THEN
+ALTER TABLE public.product_variants
+ALTER COLUMN price DROP NOT NULL;
+END IF;
+-- Drop NOT NULL on legacy 'price' column on variants (old table name)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'price'
+) THEN
+ALTER TABLE public.variants
+ALTER COLUMN price DROP NOT NULL;
+END IF;
+END $$;
 --  §1   Core tables  (profiles, categories, products, variants,
 --                     orders, order_items, stripe_events)
 --  §2   CMS tables   (site_settings, frontend_content,
@@ -265,11 +321,11 @@ DO $$ BEGIN IF EXISTS (
 ) THEN EXECUTE 'UPDATE public.products SET stock = inventory WHERE stock = 0 AND inventory > 0';
 END IF;
 END $$;
--- 1D. variants
-CREATE TABLE IF NOT EXISTS public.variants (
+-- 1D. product_variants
+CREATE TABLE IF NOT EXISTS public.product_variants (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-    title text NOT NULL,
+    name text NOT NULL,
     variant_type text NOT NULL DEFAULT 'shade',
     price_override numeric(10, 2) CHECK (
         price_override IS NULL
@@ -282,39 +338,68 @@ CREATE TABLE IF NOT EXISTS public.variants (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE public.variants
-ADD COLUMN IF NOT EXISTS title text;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
+ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS variant_type text NOT NULL DEFAULT 'shade';
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS price_override numeric(10, 2);
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS stock integer NOT NULL DEFAULT 0;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS sku text;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS color_code text;
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
-ALTER TABLE public.variants
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
--- Rename legacy name → title if present
+-- ensure product_variants table name consistency
 DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_name = 'variants'
+        AND table_schema = 'public'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_name = 'product_variants'
+        AND table_schema = 'public'
+) THEN
+ALTER TABLE public.variants
+    RENAME TO product_variants;
+END IF;
+END $$;
+-- Fix legacy title/name columns for v2
+DO $$ BEGIN -- If title exists but not name, rename it
+IF EXISTS (
     SELECT 1
     FROM information_schema.columns
     WHERE table_schema = 'public'
-        AND table_name = 'variants'
-        AND column_name = 'name'
+        AND table_name = 'product_variants'
+        AND column_name = 'title'
 )
 AND NOT EXISTS (
     SELECT 1
     FROM information_schema.columns
     WHERE table_schema = 'public'
-        AND table_name = 'variants'
+        AND table_name = 'product_variants'
+        AND column_name = 'name'
+) THEN
+ALTER TABLE public.product_variants
+    RENAME COLUMN title TO name;
+END IF;
+-- If title exists and is NOT NULL, make it nullable so inserts without it work
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
         AND column_name = 'title'
 ) THEN
-ALTER TABLE public.variants
-    RENAME COLUMN name TO title;
+ALTER TABLE public.product_variants
+ALTER COLUMN title DROP NOT NULL;
 END IF;
 END $$;
 -- Rename legacy stock_quantity → stock if present
@@ -587,7 +672,7 @@ CREATE TABLE IF NOT EXISTS public.theme_settings (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
@@ -710,22 +795,22 @@ CREATE POLICY "products_delete" ON public.products FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- 5.4  VARIANTS  — public read, admin write
-CREATE POLICY "variants_select" ON public.variants FOR
+-- 5.4  PRODUCT_VARIANTS  — public read, admin write
+CREATE POLICY "product_variants_select" ON public.product_variants FOR
 SELECT USING (true);
-CREATE POLICY "variants_insert" ON public.variants FOR
+CREATE POLICY "product_variants_insert" ON public.product_variants FOR
 INSERT TO authenticated WITH CHECK (
         (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "variants_update" ON public.variants FOR
+CREATE POLICY "product_variants_update" ON public.product_variants FOR
 UPDATE USING (
         (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "variants_delete" ON public.variants FOR DELETE USING (
+CREATE POLICY "product_variants_delete" ON public.product_variants FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
@@ -1022,6 +1107,8 @@ DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
 DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
 DROP TRIGGER IF EXISTS products_updated_at ON public.products;
 DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
+DROP TRIGGER IF EXISTS variants_updated_at ON public.product_variants;
+DROP TRIGGER IF EXISTS product_variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
 DROP TRIGGER IF EXISTS site_settings_updated_at ON public.site_settings;
 DROP TRIGGER IF EXISTS frontend_content_updated_at ON public.frontend_content;
@@ -1035,8 +1122,8 @@ CREATE TRIGGER categories_updated_at BEFORE
 UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER products_updated_at BEFORE
 UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-CREATE TRIGGER variants_updated_at BEFORE
-UPDATE ON public.variants FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER product_variants_updated_at BEFORE
+UPDATE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER orders_updated_at BEFORE
 UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER site_settings_updated_at BEFORE
@@ -1108,7 +1195,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DES
 CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON public.orders(stripe_session_id);
 -- Categories / variants / profiles / newsletter / pages
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
-CREATE INDEX IF NOT EXISTS idx_variants_product_id ON public.variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
 CREATE INDEX IF NOT EXISTS idx_pages_slug ON public.pages(slug);
@@ -1473,6 +1560,110 @@ SET title = EXCLUDED.title,
     is_featured = EXCLUDED.is_featured,
     status = EXCLUDED.status,
     images = EXCLUDED.images;
+-- 9B. VARIANTS (Shades & Editions)
+INSERT INTO public.product_variants (
+        product_id,
+        name,
+        variant_type,
+        price_override,
+        stock,
+        color_code,
+        sku
+    )
+SELECT id,
+    'Crimson Ritual',
+    'shade',
+    NULL::numeric,
+    50,
+    '#800000',
+    'LIP-CRIMSON'
+FROM public.products
+WHERE slug = 'solid-matte-creamy-lipstick'
+UNION ALL
+SELECT id,
+    'Onyx Velvet',
+    'shade',
+    NULL::numeric,
+    30,
+    '#1A1A1A',
+    'LIP-ONYX'
+FROM public.products
+WHERE slug = 'solid-matte-creamy-lipstick'
+UNION ALL
+SELECT id,
+    'Gilded Rose',
+    'shade',
+    NULL::numeric,
+    45,
+    '#DB7093',
+    'LIP-ROSE'
+FROM public.products
+WHERE slug = 'solid-matte-creamy-lipstick'
+UNION ALL
+SELECT id,
+    'Crystal Clear',
+    'shade',
+    NULL::numeric,
+    60,
+    '#FDFDFD',
+    'GLOSS-CLEAR'
+FROM public.products
+WHERE slug = 'liquid-lip-gloss'
+UNION ALL
+SELECT id,
+    'Stardust Gold',
+    'shade',
+    16.00,
+    40,
+    '#D4AF37',
+    'GLOSS-GOLD'
+FROM public.products
+WHERE slug = 'liquid-lip-gloss'
+UNION ALL
+SELECT id,
+    'Porcelain',
+    'shade',
+    NULL::numeric,
+    25,
+    '#F1E9DB',
+    'FND-PORC'
+FROM public.products
+WHERE slug = 'luxurious-foundation'
+UNION ALL
+SELECT id,
+    'Sand',
+    'shade',
+    NULL::numeric,
+    35,
+    '#E4D5B7',
+    'FND-SAND'
+FROM public.products
+WHERE slug = 'luxurious-foundation'
+UNION ALL
+SELECT id,
+    'Honey',
+    'shade',
+    NULL::numeric,
+    20,
+    '#D4B483',
+    'FND-HONY'
+FROM public.products
+WHERE slug = 'luxurious-foundation'
+UNION ALL
+SELECT id,
+    'Cocoa',
+    'shade',
+    NULL::numeric,
+    15,
+    '#3E2723',
+    'FND-COCA'
+FROM public.products
+WHERE slug = 'luxurious-foundation' ON CONFLICT (sku) DO
+UPDATE
+SET name = EXCLUDED.name,
+    stock = EXCLUDED.stock,
+    price_override = EXCLUDED.price_override,
+    color_code = EXCLUDED.color_code;
 END $$;
 -- Ensure stock > 0 and images are set
 UPDATE public.products
@@ -1908,10 +2099,10 @@ VALUES (
 UPDATE public.products
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'product_id')::uuid;
--- c. Deduct variant stock if applicable
+-- c. Deduct product_variant stock if applicable
 IF (item_record->>'variant_id') IS NOT NULL
 AND (item_record->>'variant_id') != '' THEN
-UPDATE public.variants
+UPDATE public.product_variants
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'variant_id')::uuid;
 END IF;
@@ -1940,56 +2131,32 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 -- ================================================================
--- USER REQUESTED TASKS
+-- §13  SYNC PRODUCT STOCK TRIGGER
+--      Keeps the `products.stock` column perfectly in sync with the
+--      aggregate sum of `product_variants.stock`, allowing simple
+--      queries like .gt('stock', 0) to work accurately.
 -- ================================================================
--- Task 3
-alter table products
-add column if not exists status text default 'active';
-alter table profiles
-add column if not exists role text default 'customer';
-create policy "Admins full access" on products for all using (
-    exists (
-        select 1
-        from profiles
-        where profiles.id = auth.uid()
-            and profiles.role = 'admin'
+CREATE OR REPLACE FUNCTION public.sync_product_stock() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN -- Only update products that have variants (prevent overwriting manual base stock for non-variant items)
+    IF EXISTS (
+        SELECT 1
+        FROM public.product_variants
+        WHERE product_id = COALESCE(NEW.product_id, OLD.product_id)
+    ) THEN
+UPDATE public.products
+SET stock = (
+        SELECT COALESCE(SUM(stock), 0)
+        FROM public.product_variants
+        WHERE product_id = COALESCE(NEW.product_id, OLD.product_id)
     )
-);
-create policy "Public can view active products" on products for
-select using (status = 'active');
--- Task 4
-update profiles
-set role = 'admin'
-where email = 'leadmatrix.us@gmail.com';
--- Task 7
-create table if not exists site_pages (
-    id uuid primary key default gen_random_uuid(),
-    slug text unique,
-    title text,
-    created_at timestamptz default now()
-);
-create table if not exists site_sections (
-    id uuid primary key default gen_random_uuid(),
-    page_id uuid references site_pages(id),
-    type text,
-    position int
-);
-create table if not exists content_blocks (
-    id uuid primary key default gen_random_uuid(),
-    section_id uuid references site_sections(id),
-    key text,
-    value jsonb
-);
--- Task 8
-create table if not exists inventory (
-    product_id uuid references products(id),
-    stock int default 0
-);
--- Task 9
-create table if not exists orders (
-    id uuid primary key default gen_random_uuid(),
-    user_id uuid,
-    status text,
-    total numeric,
-    created_at timestamptz default now()
-);
+WHERE id = COALESCE(NEW.product_id, OLD.product_id);
+END IF;
+RETURN COALESCE(NEW, OLD);
+END;
+$$;
+DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
+CREATE TRIGGER tr_sync_product_stock
+AFTER
+INSERT
+    OR
+UPDATE OF stock
+    OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();

@@ -58,7 +58,7 @@ function BentoCard({ product, featured = false, tall = false }: { product: Produ
                 className={`group relative overflow-hidden glass gold-glow-hover flex flex-col h-full transition-all duration-500 ${tall ? "min-h-[500px]" : "min-h-[340px]"}`}>
                 <div className={`relative overflow-hidden flex-shrink-0 ${tall ? "h-72" : "h-48"}`}>
                     <Image src={mainImage} alt={product.title} fill
-                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                        className="object-cover object-center transition-transform duration-1000 group-hover:scale-105"
                         sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,33vw" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                     {featured && (

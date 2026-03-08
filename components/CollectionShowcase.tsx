@@ -70,7 +70,7 @@ export function CollectionShowcase({ collections }: CollectionShowcaseProps) {
                                                 src={col.image_url}
                                                 alt={col.name}
                                                 fill
-                                                className="object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-700"
+                                                className="object-cover object-center opacity-20 group-hover:opacity-30 transition-opacity duration-700"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                                         </div>

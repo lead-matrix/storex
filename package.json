@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": "20.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -39,10 +39,10 @@
     "react-dom": "19.2.3",
     "react-dropzone": "^14.3.5",
     "react-icons": "^5.5.0",
-    "resend": "^6.9.1",
-    "shippo": "^2.17.4",
+    "resend": "^6.9.3",
+    "shippo": "^2.18.0",
     "sonner": "^2.0.7",
-    "stripe": "^20.3.0",
+    "stripe": "^20.4.1",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

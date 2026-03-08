@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 interface Variant {
     id: string;
-    title: string;
+    name: string;
     price_override?: number | null;
     stock?: number;
 }
@@ -45,11 +45,13 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                 // Querying for V2 but including fallback fields if they exist
                 let query = supabase
                     .from("products")
-                    .select("*")
+                    .select("*, product_variants(*)")
                     .eq("status", "active")
                     .order("created_at", { ascending: false });
 
                 if (categoryId && categoryId !== "all") query = query.eq("category_id", categoryId);
+                if (filter === 'sale') query = query.not("sale_price", "is", null).eq("on_sale", true);
+                if (filter === 'bestsellers') query = query.eq("is_bestseller", true);
 
                 const { data, error } = await query;
 
@@ -58,20 +60,24 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                     // Fallback to V1 if V2 schema isn't fully applied to DB yet
                     const { data: v1Data } = await supabase
                         .from("products")
-                        .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_active")
-                        .eq("is_active", true)
+                        .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description")
+                        .eq("status", "active")
                         .limit(50);
 
                     if (v1Data) {
-                        setProducts(v1Data.map((p: any) => ({ ...p, title: p.name || p.title })) as any);
+                        setProducts(v1Data as unknown as Product[]);
                     }
                 } else {
                     // Map V2 data to the UI expected 'Product' interface
                     const mapped = (data ?? []).map((p: any) => ({
                         ...p,
-                        variants: p.product_variants ? p.product_variants.map((v: any) => ({ ...v, title: v.title, price_override: v.price })) : []
+                        variants: p.product_variants ? p.product_variants.map((v: any) => ({
+                            ...v,
+                            title: v.name, // V2 uses name
+                            price_override: v.price_override
+                        })) : []
                     }));
-                    setProducts(mapped as any);
+                    setProducts(mapped as unknown as Product[]);
                 }
             } catch (err) {
                 console.error("CRITICAL VAULT ERROR:", err);
