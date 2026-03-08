@@ -37,7 +37,7 @@
   body {
     background-color: black;
     color: white;
-    @apply antialiased font-sans;
+    @apply antialiased font-sans overflow-x-hidden;
     color-scheme: dark;
   }
 
