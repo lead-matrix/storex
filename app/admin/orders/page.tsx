@@ -35,7 +35,7 @@ export default async function AdminOrdersPage() {
         console.error("Orders Fetch Error:", error);
     }
 
-    const revenue = orders?.filter(o => o.status === "paid" || o.status === "shipped" || o.status === "delivered").reduce((s, o) => s + Number(o.total_amount || 0), 0) || 0;
+    const revenue = orders?.filter(o => o.status === "paid" || o.status === "shipped" || o.status === "delivered").reduce((s, o) => s + Number(o.amount_total || 0), 0) || 0;
     const paidCount = orders?.filter(o => o.status === "paid").length || 0;
     const pendingCount = orders?.filter(o => o.status === "pending").length || 0;
     const shippedCount = orders?.filter(o => o.status === "shipped" || o.status === "delivered").length || 0;

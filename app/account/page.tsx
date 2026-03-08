@@ -48,7 +48,7 @@ export default async function AccountPage() {
             status,
             order_items (
                 quantity,
-                products (name)
+                products (title)
             )
         `)
         .eq("customer_email", user.email)

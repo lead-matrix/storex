@@ -65,7 +65,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                         .limit(50);
 
                     if (v1Data) {
-                        setProducts(v1Data as any);
+                        setProducts(v1Data as unknown as Product[]);
                     }
                 } else {
                     // Map V2 data to the UI expected 'Product' interface
@@ -77,7 +77,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                             price_override: v.price_override
                         })) : []
                     }));
-                    setProducts(mapped as any);
+                    setProducts(mapped as unknown as Product[]);
                 }
             } catch (err) {
                 console.error("CRITICAL VAULT ERROR:", err);

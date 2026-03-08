@@ -145,7 +145,7 @@ export async function generateShippingLabel(orderId: string) {
     const { error: updateError } = await supabase
         .from("orders")
         .update({
-            label_url: labelUrl,
+            shipping_label_url: labelUrl,
             tracking_number: trackingNumber,
             status: "shipped",
         })
