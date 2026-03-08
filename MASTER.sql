@@ -1081,6 +1081,8 @@ CREATE POLICY "theme_delete" ON public.theme_settings FOR DELETE USING (
 DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
 DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
 DROP TRIGGER IF EXISTS products_updated_at ON public.products;
+DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
+DROP TRIGGER IF EXISTS variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS product_variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
 DROP TRIGGER IF EXISTS site_settings_updated_at ON public.site_settings;
@@ -1095,8 +1097,8 @@ CREATE TRIGGER categories_updated_at BEFORE
 UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER products_updated_at BEFORE
 UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-CREATE TRIGGER variants_updated_at BEFORE
-UPDATE ON public.variants FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+CREATE TRIGGER product_variants_updated_at BEFORE
+UPDATE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER orders_updated_at BEFORE
 UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER site_settings_updated_at BEFORE
