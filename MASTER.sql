@@ -5,7 +5,8 @@
 --
 --  SECTIONS
 --  §0   Helper functions
-DO $$ BEGIN IF EXISTS (
+DO $$ BEGIN -- Drop NOT NULL on legacy 'title' column on product_variants (v1 schema artifact)
+IF EXISTS (
     SELECT 1
     FROM information_schema.columns
     WHERE table_schema = 'public'
@@ -15,6 +16,7 @@ DO $$ BEGIN IF EXISTS (
 ALTER TABLE public.product_variants
 ALTER COLUMN title DROP NOT NULL;
 END IF;
+-- Drop NOT NULL on legacy 'title' column on variants (old table name)
 IF EXISTS (
     SELECT 1
     FROM information_schema.columns
@@ -25,6 +27,7 @@ IF EXISTS (
 ALTER TABLE public.variants
 ALTER COLUMN title DROP NOT NULL;
 END IF;
+-- Drop NOT NULL on legacy 'name' column on products
 IF EXISTS (
     SELECT 1
     FROM information_schema.columns
@@ -34,6 +37,28 @@ IF EXISTS (
 ) THEN
 ALTER TABLE public.products
 ALTER COLUMN name DROP NOT NULL;
+END IF;
+-- Drop NOT NULL on legacy 'price' column on product_variants (v1 schema artifact)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
+        AND column_name = 'price'
+) THEN
+ALTER TABLE public.product_variants
+ALTER COLUMN price DROP NOT NULL;
+END IF;
+-- Drop NOT NULL on legacy 'price' column on variants (old table name)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'price'
+) THEN
+ALTER TABLE public.variants
+ALTER COLUMN price DROP NOT NULL;
 END IF;
 END $$;
 --  §1   Core tables  (profiles, categories, products, variants,
