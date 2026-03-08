@@ -1486,42 +1486,42 @@ INSERT INTO public.product_variants (
 SELECT id,
     'Crimson Ritual',
     'shade',
-    NULL,
+    NULL::numeric,
     50,
     '#800000',
     'LIP-CRIMSON'
 FROM public.products
-WHERE slug = 'matte-lipstick'
+WHERE slug = 'solid-matte-creamy-lipstick'
 UNION ALL
 SELECT id,
     'Onyx Velvet',
     'shade',
-    NULL,
+    NULL::numeric,
     30,
     '#1A1A1A',
     'LIP-ONYX'
 FROM public.products
-WHERE slug = 'matte-lipstick'
+WHERE slug = 'solid-matte-creamy-lipstick'
 UNION ALL
 SELECT id,
     'Gilded Rose',
     'shade',
-    NULL,
+    NULL::numeric,
     45,
     '#DB7093',
     'LIP-ROSE'
 FROM public.products
-WHERE slug = 'matte-lipstick'
+WHERE slug = 'solid-matte-creamy-lipstick'
 UNION ALL
 SELECT id,
     'Crystal Clear',
     'shade',
-    NULL,
+    NULL::numeric,
     60,
     '#FDFDFD',
     'GLOSS-CLEAR'
 FROM public.products
-WHERE slug = 'lip-gloss'
+WHERE slug = 'liquid-lip-gloss'
 UNION ALL
 SELECT id,
     'Stardust Gold',
@@ -1531,12 +1531,12 @@ SELECT id,
     '#D4AF37',
     'GLOSS-GOLD'
 FROM public.products
-WHERE slug = 'lip-gloss'
+WHERE slug = 'liquid-lip-gloss'
 UNION ALL
 SELECT id,
     'Porcelain',
     'shade',
-    NULL,
+    NULL::numeric,
     25,
     '#F1E9DB',
     'FND-PORC'
@@ -1546,7 +1546,7 @@ UNION ALL
 SELECT id,
     'Sand',
     'shade',
-    NULL,
+    NULL::numeric,
     35,
     '#E4D5B7',
     'FND-SAND'
@@ -1556,7 +1556,7 @@ UNION ALL
 SELECT id,
     'Honey',
     'shade',
-    NULL,
+    NULL::numeric,
     20,
     '#D4B483',
     'FND-HONY'
@@ -1566,12 +1566,17 @@ UNION ALL
 SELECT id,
     'Cocoa',
     'shade',
-    NULL,
+    NULL::numeric,
     15,
     '#3E2723',
     'FND-COCA'
 FROM public.products
-WHERE slug = 'luxurious-foundation' ON CONFLICT DO NOTHING;
+WHERE slug = 'luxurious-foundation' ON CONFLICT (sku) DO
+UPDATE
+SET name = EXCLUDED.name,
+    stock = EXCLUDED.stock,
+    price_override = EXCLUDED.price_override,
+    color_code = EXCLUDED.color_code;
 END $$;
 -- Ensure stock > 0 and images are set
 UPDATE public.products
