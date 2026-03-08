@@ -76,9 +76,9 @@ export async function POST(req: Request) {
                     for (const item of items) {
                         const variantId = item.variant_id;
                         if (variantId && variantId !== item.product_id) {
-                            const { data: v } = await supabase.from("variants").select("stock").eq("id", variantId).single();
+                            const { data: v } = await supabase.from("product_variants").select("stock").eq("id", variantId).single();
                             if (v && typeof v.stock === 'number') {
-                                await supabase.from("variants").update({ stock: Math.max(0, v.stock - item.quantity) }).eq("id", variantId);
+                                await supabase.from("product_variants").update({ stock: Math.max(0, v.stock - item.quantity) }).eq("id", variantId);
                             }
                         } else {
                             const { data: prod } = await supabase.from("products").select("stock").eq("id", item.product_id).single();

@@ -37,7 +37,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
         .from('products')
         .select(`
             *,
-            variants (
+            product_variants (
                 id,
                 name,
                 variant_type,

@@ -29,7 +29,7 @@ export default function AboutPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     <div className="relative aspect-[3/4] bg-background-secondary border border-gold-primary/10 overflow-hidden group">
                         <Image
-                            src="/dina-owner.png"
+                            src="https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/dina-owner.png"
                             alt="Dina, Founder of DINA COSMETIC"
                             fill
                             className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"

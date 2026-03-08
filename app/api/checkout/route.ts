@@ -23,12 +23,13 @@ export async function POST(req: Request) {
         const FREE_SHIPPING_THRESHOLD = 100;
         const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 9.99;
 
-        // 2. We should ideally create a DB order first, to attach its ID to Stripe metadata
+        // 2. Create pending order in DB first; email is filled by webhook post-payment
         const { data: order, error: orderError } = await supabase
             .from("orders")
             .insert({
                 status: "pending",
-                amount_total: subtotal + shipping, // We let Stripe compute actual tax via Stripe Tax if needed, but for now fixed
+                customer_email: "pending@checkout.local", // Placeholder – webhook replaces this with real Stripe customer email
+                amount_total: subtotal + shipping,
             })
             .select("id")
             .single();

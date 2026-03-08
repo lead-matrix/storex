@@ -54,7 +54,7 @@ export function ProductClient({ product }: ProductClientProps) {
                             base_price: product.base_price,
                             description: product.description || "The quintessence of modern luxury.",
                             images: product.images || ["/placeholder-product.jpg"],
-                            product_variants: product.variants,
+                            product_variants: (product as any).product_variants,
                         }}
                         onVariantImageChange={setVariantImage}
                     />
