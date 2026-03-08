@@ -6,12 +6,14 @@ import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { usePathname } from "next/navigation";
 
 export default function Header({ navItems = [] }: { navItems?: { label: string, href: string, is_active?: boolean }[] }) {
     const { totalItems, setIsCartOpen } = useCart();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [user, setUser] = useState<{ email?: string } | null>(null);
     const supabase = createClient();
+    const pathname = usePathname();
 
     useEffect(() => {
         const getUser = async () => {
@@ -31,6 +33,8 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
         { label: 'About', href: '/about' },
         { label: 'Contact', href: '/contact' }
     ];
+
+    if (pathname?.startsWith('/admin')) return null;
 
     return (
         <header className="w-full fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10 transition-colors duration-500 hover:bg-black/90">
@@ -64,7 +68,7 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
                 </div>
 
                 <Link href="/" className="flex items-center">
-                    <img src="/logo.jpg" alt="DINA COSMETIC" className="h-8 md:h-20 lg:h-24 w-auto object-contain py-2" />
+                    <img src="/logo.jpg" alt="DINA COSMETIC" className="h-12 md:h-20 lg:h-24 xl:h-28 w-auto object-contain py-1" />
                 </Link>
 
                 <nav className="hidden md:flex gap-10 text-sm tracking-widest uppercase font-medium">

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Instagram, Youtube, Twitter, Facebook } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface FooterProps {
     shopLinks?: { label: string, href: string }[];
@@ -7,8 +10,11 @@ interface FooterProps {
     social?: { instagram?: string, tiktok?: string, facebook?: string, pinterest?: string, youtube?: string };
 }
 
-export async function Footer({ shopLinks = [], legalLinks = [], social }: FooterProps) {
+export function Footer({ shopLinks = [], legalLinks = [], social }: FooterProps) {
+    const pathname = usePathname();
     const currentYear = new Date().getFullYear();
+
+    if (pathname?.startsWith('/admin')) return null;
 
     const fallbackLegal = [
         { label: 'Privacy', href: '/privacy' },

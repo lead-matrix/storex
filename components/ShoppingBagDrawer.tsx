@@ -11,12 +11,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Minus, Plus, Trash2, ShoppingBag, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export function ShoppingBagDrawer() {
     const { cart, subtotal, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
+
+    if (pathname?.startsWith('/admin')) return null;
 
     const FREE_SHIPPING_THRESHOLD = 100;
     const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
@@ -54,7 +57,7 @@ export function ShoppingBagDrawer() {
                     </div>
                 </SheetHeader>
 
-                <ScrollArea className="flex-grow">
+                <div className="flex-grow overflow-y-auto min-h-0 block-scrollbar">
                     {cart.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full py-24 text-center px-8">
                             <ShoppingBag className="w-12 h-12 text-textSecondary mb-6" strokeWidth={1} />
@@ -99,7 +102,7 @@ export function ShoppingBagDrawer() {
                             ))}
                         </div>
                     )}
-                </ScrollArea>
+                </div>
 
                 {cart.length > 0 && (
                     <div className="p-8 bg-background border-t border-border space-y-6">

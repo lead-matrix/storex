@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import { ProductForm } from '@/components/admin/ProductForm'
 import { ArrowLeft } from 'lucide-react'
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditProductPage({ params }: Props) {
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     const { data: product, error } = await supabase
         .from('products')

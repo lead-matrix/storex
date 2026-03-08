@@ -21,7 +21,7 @@ export function HeroSection({ content }: HeroSectionProps) {
                     src={content.image_url || "/hero-default.jpg"}
                     alt="Hero background"
                     fill
-                    className="object-cover"
+                    className="object-cover object-center w-full h-full"
                     priority
                 />
                 {/* Subtle dark gradient overlay to ensure text readability */}

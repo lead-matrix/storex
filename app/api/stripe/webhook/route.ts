@@ -64,7 +64,7 @@ export async function POST(req: Request) {
                     // Insert order_items
                     const itemsToInsert = items.map((item: any) => ({
                         order_id: orderId,
-                        variant_id: item.product_id, // assuming productId from checkout was mapped to a variant_id, or simply product_id
+                        variant_id: item.variant_id || item.product_id,
                         quantity: item.quantity,
                         price: item.price
                     }));
@@ -74,11 +74,17 @@ export async function POST(req: Request) {
 
                     // Deduct stock natively in Supabase (or here iteratively)
                     for (const item of items) {
-                        // Assuming variants are primary inventory trackers, or fallback to products
-                        // We will call an RPC or just decrement. For now, fetch and decrement.
-                        const { data: prod } = await supabase.from("products").select("stock").eq("id", item.product_id).single();
-                        if (prod && typeof prod.stock === 'number') {
-                            await supabase.from("products").update({ stock: Math.max(0, prod.stock - item.quantity) }).eq("id", item.product_id);
+                        const variantId = item.variant_id;
+                        if (variantId && variantId !== item.product_id) {
+                            const { data: v } = await supabase.from("variants").select("stock").eq("id", variantId).single();
+                            if (v && typeof v.stock === 'number') {
+                                await supabase.from("variants").update({ stock: Math.max(0, v.stock - item.quantity) }).eq("id", variantId);
+                            }
+                        } else {
+                            const { data: prod } = await supabase.from("products").select("stock").eq("id", item.product_id).single();
+                            if (prod && typeof prod.stock === 'number') {
+                                await supabase.from("products").update({ stock: Math.max(0, prod.stock - item.quantity) }).eq("id", item.product_id);
+                            }
                         }
                     }
 

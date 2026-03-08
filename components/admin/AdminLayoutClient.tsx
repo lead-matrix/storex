@@ -128,7 +128,12 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
             {/* ══ MOBILE BOTTOM NAV ════════════════════════════════════════════════ */}
             <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50 px-2 py-2 pb-safe block shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
                 <div className="flex items-center justify-between">
-                    {NAV_ITEMS.slice(0, 4).map(({ href, icon: Icon, label, exact }) => {
+                    {[
+                        { href: "/admin", icon: LayoutDashboard, label: "Overview", exact: true },
+                        { href: "/admin/products", icon: Package, label: "Products" },
+                        { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
+                        { href: "/admin/settings", icon: Settings, label: "Settings" }
+                    ].map(({ href, icon: Icon, label, exact }) => {
                         const active = exact
                             ? pathname === href
                             : pathname.startsWith(href) && href !== "/admin";
@@ -139,7 +144,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                 className={`flex flex-col items-center gap-1 p-2 flex-1 transition-colors ${active ? "text-gray-900" : "text-gray-500"
                                     }`}
                             >
-                                <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                                <Icon size={20} className={active ? "text-gray-900 drop-shadow-sm" : ""} strokeWidth={active ? 2.5 : 2} />
                                 <span className="text-[10px] font-medium">{label}</span>
                             </Link>
                         );
