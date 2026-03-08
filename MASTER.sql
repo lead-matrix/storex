@@ -5,6 +5,37 @@
 --
 --  SECTIONS
 --  §0   Helper functions
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
+        AND column_name = 'title'
+) THEN
+ALTER TABLE public.product_variants
+ALTER COLUMN title DROP NOT NULL;
+END IF;
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+        AND column_name = 'title'
+) THEN
+ALTER TABLE public.variants
+ALTER COLUMN title DROP NOT NULL;
+END IF;
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+        AND column_name = 'name'
+) THEN
+ALTER TABLE public.products
+ALTER COLUMN name DROP NOT NULL;
+END IF;
+END $$;
 --  §1   Core tables  (profiles, categories, products, variants,
 --                     orders, order_items, stripe_events)
 --  §2   CMS tables   (site_settings, frontend_content,
@@ -298,23 +329,52 @@ ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
 ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
--- Rename legacy name → title if present
+-- ensure product_variants table name consistency
 DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_name = 'variants'
+        AND table_schema = 'public'
+)
+AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_name = 'product_variants'
+        AND table_schema = 'public'
+) THEN
+ALTER TABLE public.variants
+    RENAME TO product_variants;
+END IF;
+END $$;
+-- Fix legacy title/name columns for v2
+DO $$ BEGIN -- If title exists but not name, rename it
+IF EXISTS (
     SELECT 1
     FROM information_schema.columns
     WHERE table_schema = 'public'
-        AND table_name = 'variants'
-        AND column_name = 'name'
+        AND table_name = 'product_variants'
+        AND column_name = 'title'
 )
 AND NOT EXISTS (
     SELECT 1
     FROM information_schema.columns
     WHERE table_schema = 'public'
-        AND table_name = 'variants'
+        AND table_name = 'product_variants'
+        AND column_name = 'name'
+) THEN
+ALTER TABLE public.product_variants
+    RENAME COLUMN title TO name;
+END IF;
+-- If title exists and is NOT NULL, make it nullable so inserts without it work
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
         AND column_name = 'title'
 ) THEN
-ALTER TABLE public.variants
-    RENAME COLUMN name TO title;
+ALTER TABLE public.product_variants
+ALTER COLUMN title DROP NOT NULL;
 END IF;
 END $$;
 -- Rename legacy stock_quantity → stock if present
@@ -587,7 +647,7 @@ CREATE TABLE IF NOT EXISTS public.theme_settings (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
@@ -1021,7 +1081,7 @@ CREATE POLICY "theme_delete" ON public.theme_settings FOR DELETE USING (
 DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
 DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
 DROP TRIGGER IF EXISTS products_updated_at ON public.products;
-DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
+DROP TRIGGER IF EXISTS product_variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
 DROP TRIGGER IF EXISTS site_settings_updated_at ON public.site_settings;
 DROP TRIGGER IF EXISTS frontend_content_updated_at ON public.frontend_content;
@@ -1108,7 +1168,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DES
 CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON public.orders(stripe_session_id);
 -- Categories / variants / profiles / newsletter / pages
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
-CREATE INDEX IF NOT EXISTS idx_variants_product_id ON public.variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
 CREATE INDEX IF NOT EXISTS idx_pages_slug ON public.pages(slug);
