@@ -45,7 +45,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                 // Querying for V2 but including fallback fields if they exist
                 let query = supabase
                     .from("products")
-                    .select("*")
+                    .select("*, product_variants(*)")
                     .eq("status", "active")
                     .order("created_at", { ascending: false });
 
@@ -71,7 +71,11 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                     // Map V2 data to the UI expected 'Product' interface
                     const mapped = (data ?? []).map((p: any) => ({
                         ...p,
-                        variants: p.product_variants ? p.product_variants.map((v: any) => ({ ...v, title: v.title, price_override: v.price })) : []
+                        variants: p.product_variants ? p.product_variants.map((v: any) => ({
+                            ...v,
+                            title: v.name, // V2 uses name
+                            price_override: v.price_override
+                        })) : []
                     }));
                     setProducts(mapped as any);
                 }

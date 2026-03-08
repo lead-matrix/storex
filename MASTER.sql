@@ -1473,6 +1473,105 @@ SET title = EXCLUDED.title,
     is_featured = EXCLUDED.is_featured,
     status = EXCLUDED.status,
     images = EXCLUDED.images;
+-- 9B. VARIANTS (Shades & Editions)
+INSERT INTO public.product_variants (
+        product_id,
+        name,
+        variant_type,
+        price_override,
+        stock,
+        color_code,
+        sku
+    )
+SELECT id,
+    'Crimson Ritual',
+    'shade',
+    NULL,
+    50,
+    '#800000',
+    'LIP-CRIMSON'
+FROM public.products
+WHERE slug = 'matte-lipstick'
+UNION ALL
+SELECT id,
+    'Onyx Velvet',
+    'shade',
+    NULL,
+    30,
+    '#1A1A1A',
+    'LIP-ONYX'
+FROM public.products
+WHERE slug = 'matte-lipstick'
+UNION ALL
+SELECT id,
+    'Gilded Rose',
+    'shade',
+    NULL,
+    45,
+    '#DB7093',
+    'LIP-ROSE'
+FROM public.products
+WHERE slug = 'matte-lipstick'
+UNION ALL
+SELECT id,
+    'Crystal Clear',
+    'shade',
+    NULL,
+    60,
+    '#FDFDFD',
+    'GLOSS-CLEAR'
+FROM public.products
+WHERE slug = 'lip-gloss'
+UNION ALL
+SELECT id,
+    'Stardust Gold',
+    'shade',
+    16.00,
+    40,
+    '#D4AF37',
+    'GLOSS-GOLD'
+FROM public.products
+WHERE slug = 'lip-gloss'
+UNION ALL
+SELECT id,
+    'Porcelain',
+    'shade',
+    NULL,
+    25,
+    '#F1E9DB',
+    'FND-PORC'
+FROM public.products
+WHERE slug = 'luxurious-foundation'
+UNION ALL
+SELECT id,
+    'Sand',
+    'shade',
+    NULL,
+    35,
+    '#E4D5B7',
+    'FND-SAND'
+FROM public.products
+WHERE slug = 'luxurious-foundation'
+UNION ALL
+SELECT id,
+    'Honey',
+    'shade',
+    NULL,
+    20,
+    '#D4B483',
+    'FND-HONY'
+FROM public.products
+WHERE slug = 'luxurious-foundation'
+UNION ALL
+SELECT id,
+    'Cocoa',
+    'shade',
+    NULL,
+    15,
+    '#3E2723',
+    'FND-COCA'
+FROM public.products
+WHERE slug = 'luxurious-foundation' ON CONFLICT DO NOTHING;
 END $$;
 -- Ensure stock > 0 and images are set
 UPDATE public.products
@@ -1908,10 +2007,10 @@ VALUES (
 UPDATE public.products
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'product_id')::uuid;
--- c. Deduct variant stock if applicable
+-- c. Deduct product_variant stock if applicable
 IF (item_record->>'variant_id') IS NOT NULL
 AND (item_record->>'variant_id') != '' THEN
-UPDATE public.variants
+UPDATE public.product_variants
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'variant_id')::uuid;
 END IF;
