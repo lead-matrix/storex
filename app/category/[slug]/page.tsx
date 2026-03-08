@@ -45,7 +45,7 @@ export default async function CategorySlugPage({ params }: Props) {
     // Fetch active products: featured first, then newest
     const { data: products } = await supabase
         .from('products')
-        .select('*, variants(*)')
+        .select('*, product_variants(*)')
         .eq('status', 'active')
         .eq('category_id', category.id)
         .order('is_featured', { ascending: false })
@@ -128,12 +128,11 @@ export default async function CategorySlugPage({ params }: Props) {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {items.map((product) => {
-                            const activeVariants = (product.variants as Array<{
-                                id: string; title: string; price_override: number | null;
+                            const activeVariants = (product.product_variants as Array<{
+                                id: string; name: string; price_override: number | null;
                                 stock: number; status: string
                             }>)?.filter(v => v.status === 'active') ?? []
 
-                            const items = products ?? []
                             const isOnSale = product.on_sale && product.sale_price;
                             const displayPrice = isOnSale
                                 ? Number(product.sale_price)

@@ -96,13 +96,13 @@ export async function createProduct(formData: FormData) {
                     .filter(v => !v._deleted)
                     .map(v => ({
                         product_id: product.id,
-                        title: v.title,
+                        name: v.title || v.name,
                         variant_type: v.variant_type || 'shade',
                         sku: v.sku,
                         price_override: v.price,
                         stock: v.stock,
                     }));
-                await supabase.from('variants').insert(variantsToInsert);
+                await supabase.from('product_variants').insert(variantsToInsert);
             }
         }
 
@@ -157,19 +157,19 @@ export async function updateProduct(formData: FormData) {
         const variants = JSON.parse(variantsJson);
         for (const v of variants) {
             if (v._deleted && v.id) {
-                await supabase.from('variants').delete().eq('id', v.id);
+                await supabase.from('product_variants').delete().eq('id', v.id);
             } else if (v._isNew) {
-                await supabase.from('variants').insert({
+                await supabase.from('product_variants').insert({
                     product_id: id,
-                    title: v.title,
+                    name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
                     price_override: v.price,
                     stock: v.stock,
                 });
             } else if (v.id) {
-                await supabase.from('variants').update({
-                    title: v.title,
+                await supabase.from('product_variants').update({
+                    name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
                     price_override: v.price,

@@ -29,10 +29,11 @@ export default function AboutPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     <div className="relative aspect-[3/4] bg-background-secondary border border-gold-primary/10 overflow-hidden group">
                         <Image
-                            src="https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/dina-owner.png"
+                            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1000"
                             alt="Dina, Founder of DINA COSMETIC"
                             fill
-                            className="object-cover object-top transition-transform duration-1000 group-hover:scale-105"
+                            priority
+                            className="object-cover object-top transition-all duration-1000 group-hover:scale-105 group-hover:brightness-110"
                         />
                         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background-primary to-transparent opacity-80" />
                     </div>
