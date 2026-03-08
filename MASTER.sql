@@ -666,6 +666,34 @@ CREATE TABLE IF NOT EXISTS public.theme_settings (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+-- 2G. builder_pages — visual drag-and-drop page store
+CREATE TABLE IF NOT EXISTS public.builder_pages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug text UNIQUE NOT NULL,
+    title text NOT NULL,
+    blocks jsonb NOT NULL DEFAULT '[]',
+    published boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- 2H. cms_pages — dynamic site pages
+CREATE TABLE IF NOT EXISTS public.cms_pages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug text UNIQUE NOT NULL,
+    title text NOT NULL,
+    is_published boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- 2I. cms_sections — dynamic sections within cms_pages 
+CREATE TABLE IF NOT EXISTS public.cms_sections (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    page_id uuid NOT NULL REFERENCES public.cms_pages(id) ON DELETE CASCADE,
+    type text NOT NULL,
+    sort_order integer NOT NULL DEFAULT 0,
+    props jsonb NOT NULL DEFAULT '{}',
+    created_at timestamptz NOT NULL DEFAULT now()
+);
 -- ───────────────────────────────────────────────────────────────
 -- §3  ENABLE RLS ON EVERY TABLE
 -- ───────────────────────────────────────────────────────────────
@@ -686,6 +714,9 @@ ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.navigation_menus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.theme_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.builder_pages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cms_pages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cms_sections ENABLE ROW LEVEL SECURITY;
 -- ───────────────────────────────────────────────────────────────
 -- §4  NUCLEAR DROP — every public RLS policy
 --     Guarantees zero duplicates and removes all stale/rogue
@@ -1080,22 +1111,107 @@ CREATE POLICY "pages_delete" ON public.pages FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
--- 5.13 THEME_SETTINGS  — public read, admin write
-CREATE POLICY "theme_select" ON public.theme_settings FOR
-SELECT USING (true);
-CREATE POLICY "theme_insert" ON public.theme_settings FOR
+-- 5.17  THEME_SETTINGS  — public read active, admin write
+CREATE POLICY "theme_settings_select" ON public.theme_settings FOR
+SELECT USING (
+        is_active = true
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "theme_settings_insert" ON public.theme_settings FOR
 INSERT TO authenticated WITH CHECK (
         (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "theme_update" ON public.theme_settings FOR
+CREATE POLICY "theme_settings_update" ON public.theme_settings FOR
 UPDATE USING (
         (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "theme_delete" ON public.theme_settings FOR DELETE USING (
+CREATE POLICY "theme_settings_delete" ON public.theme_settings FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
+-- 5.18  BUILDER_PAGES  — public read published, admin write
+CREATE POLICY "builder_pages_select" ON public.builder_pages FOR
+SELECT USING (
+        published = true
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "builder_pages_insert" ON public.builder_pages FOR
+INSERT TO authenticated WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "builder_pages_update" ON public.builder_pages FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "builder_pages_delete" ON public.builder_pages FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
+-- 5.19  CMS_PAGES  — public read published, admin write
+CREATE POLICY "cms_pages_select" ON public.cms_pages FOR
+SELECT USING (
+        is_published = true
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "cms_pages_insert" ON public.cms_pages FOR
+INSERT TO authenticated WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "cms_pages_update" ON public.cms_pages FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "cms_pages_delete" ON public.cms_pages FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
+-- 5.20  CMS_SECTIONS  — public read parent published, admin write
+CREATE POLICY "cms_sections_select" ON public.cms_sections FOR
+SELECT USING (
+        EXISTS (
+            SELECT 1
+            FROM public.cms_pages
+            WHERE id = page_id
+                AND is_published = true
+        )
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "cms_sections_insert" ON public.cms_sections FOR
+INSERT TO authenticated WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "cms_sections_update" ON public.cms_sections FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "cms_sections_delete" ON public.cms_sections FOR DELETE USING (
     (
         SELECT public.is_admin()
     )

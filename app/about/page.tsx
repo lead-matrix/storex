@@ -9,27 +9,27 @@ export const metadata = {
 
 export default function AboutPage() {
     return (
-        <div className="bg-background-primary text-text-bodyDark min-h-screen pt-32 pb-24 overflow-hidden">
+        <div className="bg-background-primary text-text-bodyDark min-h-screen pt-32 pb-24 overflow-hidden max-w-[100vw]">
             {/* Hero Section */}
-            <div className="px-6 max-w-7xl mx-auto space-y-24 mb-32">
+            <div className="px-6 max-w-7xl mx-auto space-y-16 md:space-y-24 mb-32">
                 <div className="text-center space-y-8 animate-in fade-in slide-in-from-top-12 duration-1000">
                     <div className="flex justify-center mb-6">
                         <div className="relative w-24 h-24 opacity-80">
                             <Image src="/logo.jpg" alt="Palace Sigil" fill className="object-contain" />
                         </div>
                     </div>
-                    <p className="text-gold-primary uppercase tracking-[0.5em] text-[10px] md:text-xs font-light">
+                    <p className="text-gold-primary uppercase tracking-[0.2em] md:tracking-[0.5em] text-[10px] md:text-xs font-light">
                         Our Genesis
                     </p>
-                    <h1 className="text-6xl md:text-9xl font-serif italic tracking-tighter uppercase leading-[0.8] text-text-headingDark">
+                    <h1 className="text-4xl md:text-9xl font-serif italic tracking-tighter uppercase leading-[1] md:leading-[0.8] text-text-headingDark break-words">
                         The Obsidian <br /> Palace
                     </h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
                     <div className="relative aspect-[3/4] bg-background-secondary border border-gold-primary/10 overflow-hidden group">
                         <Image
-                            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1000"
+                            src="/images/dina.png"
                             alt="Dina, Founder of DINA COSMETIC"
                             fill
                             priority
@@ -38,17 +38,17 @@ export default function AboutPage() {
                         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background-primary to-transparent opacity-80" />
                     </div>
 
-                    <div className="space-y-12">
+                    <div className="space-y-8 md:space-y-12">
                         <div className="space-y-6">
-                            <h2 className="text-gold-primary font-serif text-3xl italic">A Vision of Elegance</h2>
-                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.2em] leading-relaxed font-light">
+                            <h2 className="text-gold-primary font-serif text-2xl md:text-3xl italic">A Vision of Elegance</h2>
+                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.15em] md:tracking-[0.2em] leading-relaxed font-light">
                                 Dina, the visionary founder of DINA COSMETIC, established this brand with a steadfast commitment to professional-grade beauty and uncompromising luxury. With deep industry expertise, Dina has crafted formulations that go beyond aesthetics, prioritizing skin health, performance, and purity.
                             </p>
                         </div>
 
                         <div className="space-y-6">
-                            <h2 className="text-gold-primary font-serif text-3xl italic">Earned Devotion</h2>
-                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.2em] leading-relaxed font-light">
+                            <h2 className="text-gold-primary font-serif text-2xl md:text-3xl italic">Earned Devotion</h2>
+                            <p className="text-text-mutedDark text-[11px] md:text-sm uppercase tracking-[0.15em] md:tracking-[0.2em] leading-relaxed font-light">
                                 Trusted by thousands of women worldwide, our collections have become a staple in the routines of those who demand excellence. Every artifact produced under the Obsidian Standard undergoes rigorous testing, ensuring that you receive unparalleled luxury and flawless results.
                             </p>
                         </div>
