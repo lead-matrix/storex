@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 interface Variant {
     id: string;
-    title: string;
+    name: string;
     price_override?: number | null;
     stock?: number;
 }
@@ -60,12 +60,12 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                     // Fallback to V1 if V2 schema isn't fully applied to DB yet
                     const { data: v1Data } = await supabase
                         .from("products")
-                        .select("id, name, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, is_active")
-                        .eq("is_active", true)
+                        .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description")
+                        .eq("status", "active")
                         .limit(50);
 
                     if (v1Data) {
-                        setProducts(v1Data.map((p: any) => ({ ...p, title: p.name || p.title })) as any);
+                        setProducts(v1Data as any);
                     }
                 } else {
                     // Map V2 data to the UI expected 'Product' interface

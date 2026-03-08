@@ -19,7 +19,7 @@ interface Product {
 
 interface Variant {
     id: string;
-    title: string;
+    name: string;
     price_override?: number | null;
     stock?: number;
 }

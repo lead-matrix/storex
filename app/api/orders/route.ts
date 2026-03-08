@@ -13,10 +13,8 @@ export async function POST(request: Request) {
         const { data: order, error } = await supabase
             .from('orders')
             .insert({
-                email: email, // Fallback for legacy database NOT NULL constraints
                 customer_email: email,
-                amount_total: total_amount, // New schema standard
-                total_amount: total_amount, // Legacy schema fallback
+                amount_total: total_amount,
                 status: 'pending'
             })
             .select()
@@ -30,7 +28,7 @@ export async function POST(request: Request) {
             email,
             phone,
             address,
-            total_amount: order.total_amount,
+            amount_total: order.amount_total,
             status: order.status,
             created_at: order.created_at
         });

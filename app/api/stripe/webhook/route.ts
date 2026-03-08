@@ -40,8 +40,6 @@ export async function POST(req: Request) {
         const email = session.customer_details?.email || session.customer_email;
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
 
-        console.log(`Order paid: ${orderId} by ${email}`);
-
         if (orderId && email) {
             // 1. Update order status and attach email
             const { error: updateError } = await supabase
