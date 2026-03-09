@@ -2129,16 +2129,17 @@ CREATE OR REPLACE FUNCTION public.process_order_atomic(
         p_amount_total bigint,
         -- in cents
         p_currency text,
-        p_metadata jsonb
+        p_metadata jsonb,
+        p_shipping_address jsonb DEFAULT NULL,
+        p_billing_address jsonb DEFAULT NULL
     ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$
 DECLARE v_order_id uuid;
 v_already_paid boolean;
 item_record jsonb;
 v_items jsonb;
-BEGIN -- 1. Identify existing order (created in checkout route) or matching session
+BEGIN -- 1. Identify existing order (created in checkout route)
 v_order_id := (p_metadata->>'order_id')::uuid;
--- If no order_id in metadata (or malformed), look up by stripe session
 IF v_order_id IS NULL THEN
 SELECT id,
     (status = 'paid') INTO v_order_id,
@@ -2150,25 +2151,29 @@ SELECT (status = 'paid') INTO v_already_paid
 FROM public.orders
 WHERE id = v_order_id;
 END IF;
--- 2. Idempotency Check: if no order exists, or if order is already paid, bail early
+-- 2. Idempotency Check
 IF v_already_paid = true THEN RETURN v_order_id;
 END IF;
--- 3. Transition to 'paid' 
-IF v_order_id IS NOT NULL THEN -- Link session if not yet linked, set status to paid, and capture customer email
+-- 3. Transition to 'paid' and save addresses
+IF v_order_id IS NOT NULL THEN
 UPDATE public.orders
 SET stripe_session_id = p_stripe_session_id,
     customer_email = p_customer_email,
     status = 'paid',
+    shipping_address = COALESCE(p_shipping_address, shipping_address),
+    billing_address = COALESCE(p_billing_address, billing_address),
     updated_at = now()
 WHERE id = v_order_id;
-ELSE -- Fallback: Create new order if it somehow doesn't exist (e.g., deleted)
+ELSE -- Fallback: Create new order
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
         amount_total,
         currency,
         status,
-        fulfillment_status
+        fulfillment_status,
+        shipping_address,
+        billing_address
     )
 VALUES (
         p_stripe_session_id,
@@ -2176,21 +2181,23 @@ VALUES (
         p_amount_total::numeric / 100.0,
         p_currency,
         'paid',
-        'unfulfilled'
+        'unfulfilled',
+        p_shipping_address,
+        p_billing_address
     )
 RETURNING id INTO v_order_id;
 END IF;
--- 4. Re-fetch JSON items from metadata
-BEGIN v_items := (p_metadata->>'items')::jsonb;
-EXCEPTION
-WHEN others THEN -- Items should be in metadata, if not, we can't fulfill
-RETURN v_order_id;
-END;
+-- 4. Process Items
+-- Try to get items as a direct jsonb array first, fallback to text parsing
+v_items := p_metadata->'items';
 IF v_items IS NULL
-OR jsonb_array_length(v_items) = 0 THEN RETURN v_order_id;
+OR jsonb_typeof(v_items) != 'array' THEN BEGIN v_items := (p_metadata->>'items')::jsonb;
+EXCEPTION
+WHEN OTHERS THEN v_items := NULL;
+END;
 END IF;
--- 5. Atomic Fulfillment: order_items + stock deduction
-FOR item_record IN
+IF v_items IS NOT NULL
+AND jsonb_array_length(v_items) > 0 THEN FOR item_record IN
 SELECT *
 FROM jsonb_array_elements(v_items) LOOP -- a. Insert order item
 INSERT INTO public.order_items (
@@ -2211,7 +2218,7 @@ VALUES (
 UPDATE public.products
 SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'product_id')::uuid;
--- c. Deduct product_variant stock if applicable
+-- c. Deduct product_variant stock
 IF (item_record->>'variant_id') IS NOT NULL
 AND (item_record->>'variant_id') != '' THEN
 UPDATE public.product_variants
@@ -2219,8 +2226,10 @@ SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
 WHERE id = (item_record->>'variant_id')::uuid;
 END IF;
 END LOOP;
+END IF;
 RETURN v_order_id;
 END;
+$$;
 $$;
 -- ───────────────────────────────────────────────────────────────
 -- §12  VERIFICATION
