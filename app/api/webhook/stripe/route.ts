@@ -77,7 +77,7 @@ export async function POST(req: Request) {
                     ...session.metadata,
                     items: cartItems
                 },
-                p_shipping_address: session.shipping_details || null,
+                p_shipping_address: (session as any).shipping_details || null,
                 p_billing_address: session.customer_details || null
             });
 
