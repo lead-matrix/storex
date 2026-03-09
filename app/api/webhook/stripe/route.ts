@@ -76,7 +76,9 @@ export async function POST(req: Request) {
                 p_metadata: {
                     ...session.metadata,
                     items: cartItems
-                }
+                },
+                p_shipping_address: session.shipping_details || null,
+                p_billing_address: session.customer_details || null
             });
 
             if (rpcError) {
