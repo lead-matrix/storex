@@ -40,19 +40,17 @@ export async function POST(req: Request) {
         .eq("id", event.id)
         .single();
 
-    if (existingEvent) {
-        return NextResponse.json({ received: true, message: "Duplicate event" });
-    }
+    // 1. Log the event if it doesn't exist yet (for audit trail)
+    if (!existingEvent) {
+        const { error: logError } = await supabase.from("stripe_events").insert({
+            id: event.id,
+            type: event.type,
+            data: event.data.object as any,
+        });
 
-    // Log the event early
-    const { error: logError } = await supabase.from("stripe_events").insert({
-        id: event.id,
-        type: event.type,
-        data: event.data.object as any,
-    });
-
-    if (logError) {
-        console.error("Failed to log stripe event:", logError);
+        if (logError) {
+            console.error("Failed to log stripe event:", logError);
+        }
     }
 
     try {
