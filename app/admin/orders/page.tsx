@@ -20,7 +20,7 @@ export default async function AdminOrdersPage() {
                 quantity,
                 price,
                 product_variants (
-                    title,
+                    name,
                     products (
                         title,
                         images

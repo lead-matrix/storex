@@ -93,5 +93,5 @@ For orders to transition from **Pending** to **Paid**, the webhook must be alive
 
 ---
 
-*Verified & Signed by Antigravity AI Command*  
+*Verified & Signed by MAHMUD R B*  
 *Last updated: 2026-03-08*
