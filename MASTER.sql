@@ -545,7 +545,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
     product_id uuid REFERENCES public.products(id) ON DELETE
     SET NULL,
-        variant_id uuid REFERENCES public.variants(id) ON DELETE
+        variant_id uuid REFERENCES public.product_variants(id) ON DELETE
     SET NULL,
         quantity integer NOT NULL CHECK (quantity > 0),
         price numeric(10, 2) NOT NULL,
@@ -561,7 +561,7 @@ DO $$ BEGIN IF NOT EXISTS (
         AND column_name = 'variant_id'
 ) THEN
 ALTER TABLE public.order_items
-ADD COLUMN variant_id uuid REFERENCES public.variants(id);
+ADD COLUMN variant_id uuid REFERENCES public.product_variants(id);
 END IF;
 END $$;
 -- 1G. stripe_events — idempotency log, service_role only
@@ -585,7 +585,7 @@ CREATE TABLE IF NOT EXISTS public.email_logs (
 CREATE TABLE IF NOT EXISTS public.inventory_reservations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-    variant_id uuid REFERENCES public.variants(id) ON DELETE CASCADE,
+    variant_id uuid REFERENCES public.product_variants(id) ON DELETE CASCADE,
     quantity integer NOT NULL CHECK (quantity > 0),
     session_id text NOT NULL,
     expires_at timestamptz NOT NULL DEFAULT (now() + interval '15 minutes'),
@@ -2165,9 +2165,7 @@ ELSE -- Fallback: Create new order if it somehow doesn't exist (e.g., deleted)
 INSERT INTO public.orders (
         stripe_session_id,
         customer_email,
-        email,
         amount_total,
-        total_amount,
         currency,
         status,
         fulfillment_status
@@ -2175,8 +2173,6 @@ INSERT INTO public.orders (
 VALUES (
         p_stripe_session_id,
         p_customer_email,
-        p_customer_email,
-        p_amount_total::numeric / 100.0,
         p_amount_total::numeric / 100.0,
         p_currency,
         'paid',
