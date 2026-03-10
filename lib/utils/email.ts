@@ -109,7 +109,7 @@ export async function sendOrderConfirmationEmail({
         const { Resend } = await import('resend')
         const resend = new Resend(apiKey)
         await resend.emails.send({
-            from: `${s.brand_name} <concierge@dinacosmetic.store>`,
+            from: `${s.brand_name} <support@dinacosmetic.store>`,
             to: customerEmail,
             subject: s.confirm_subject,
             html: buildHtml(s, body),
@@ -150,7 +150,7 @@ export async function sendShippingNotificationEmail({
         const { Resend } = await import('resend')
         const resend = new Resend(apiKey)
         await resend.emails.send({
-            from: `${s.brand_name} <concierge@dinacosmetic.store>`,
+            from: `${s.brand_name} <support@dinacosmetic.store>`,
             to: customerEmail,
             subject: s.ship_subject,
             html: buildHtml(s, body),

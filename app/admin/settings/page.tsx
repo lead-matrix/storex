@@ -3,6 +3,7 @@ import { Save, ShieldCheck, Globe, CreditCard, Layout, Image as ImageIcon, Plus,
 import { updateStoreSettings, updateHeroContent, updateMenusAndSocials } from '@/lib/actions/admin'
 import HeroSlidesEditor from '@/components/admin/HeroSlidesEditor'
 import MenuEditor from '@/components/admin/MenuEditor'
+import WarehouseEditor from '@/components/admin/WarehouseEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,7 @@ export default async function AdminSettings() {
 
     const [
         { data: storeInfo },
+        { data: warehouseInfo },
         { data: storeStatus },
         { data: heroLegacy },
         { data: heroSlides },
@@ -19,6 +21,7 @@ export default async function AdminSettings() {
         { data: socialMedia },
     ] = await Promise.all([
         supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'warehouse_info').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
         supabase.from('frontend_content').select('*').eq('content_key', 'hero_main').maybeSingle(),
         supabase.from('frontend_content').select('*').eq('content_key', 'hero_slides').maybeSingle(),
@@ -43,10 +46,10 @@ export default async function AdminSettings() {
                 <div className="lg:col-span-1 space-y-2">
                     {[
                         { label: 'General Info', icon: Globe, active: true },
+                        { label: 'Fulfillment', icon: Package },
                         { label: 'Visual Storefront', icon: Layout },
-                        { label: 'Security', icon: ShieldCheck },
-                        { label: 'Payments', icon: CreditCard },
-                    ].map((item) => (
+                        { label: 'Socials', icon: Users },
+                    ].map((item: any) => (
                         <button key={item.label} type="button"
                             className={`w-full flex items-center gap-4 px-6 py-4 rounded-md transition-all ${item.active ? 'bg-pearl text-gold shadow-sm' : 'bg-transparent text-textsoft hover:text-charcoal hover:bg-gold/5'}`}>
                             <item.icon className="w-4 h-4" />
@@ -58,106 +61,76 @@ export default async function AdminSettings() {
                 {/* Content */}
                 <div className="lg:col-span-3 space-y-12">
 
-                    {/* ── Hero Masterpiece ── */}
-                    <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
-                        <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
-                            <div className="flex items-center gap-4">
-                                <ImageIcon className="w-4 h-4 text-gold" />
-                                <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Hero Masterpiece Slides</h2>
-                            </div>
-                            <p className="text-[9px] text-gold uppercase tracking-widest font-bold font-mono animate-pulse">Live Canvas</p>
-                        </div>
-
-                        <form action={updateHeroContent} className="space-y-8">
-                            <div className="bg-pearl/50 rounded-md p-6 border border-charcoal/5 space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Visual Slides Editor</label>
-                                    <div className="relative pt-2">
-                                        <HeroSlidesEditor initialSlides={heroSlides?.content_data?.slides || []} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-6 opacity-40">
-                                <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium line-through">Legacy Title (Hidden)</label>
-                                    <input name="hero_title" defaultValue={heroLegacy?.content_data?.title || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readOnly />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium line-through">Legacy Subtitle (Hidden)</label>
-                                    <input name="hero_subtitle" defaultValue={heroLegacy?.content_data?.subtitle || ''} className="w-full bg-pearl border border-charcoal/5 rounded px-4 py-2 text-xs" readOnly />
-                                </div>
-                            </div>
-
-                            <button type="submit"
-                                className="bg-charcoal text-pearl rounded-full px-12 py-4 text-[11px] font-medium uppercase tracking-luxury hover:bg-gold transition-all shadow-luxury hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3">
-                                <Save className="w-3.5 h-3.5" />
-                                Update Storefront Canvas
-                            </button>
-                        </form>
-                    </section>
-
-                    {/* ── Brand Identity ── */}
+                    {/* ── Brand & Logistics ── */}
                     <form action={updateStoreSettings}>
-                        <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
+                        <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-12">
                             <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
                                 <div className="flex mt-1 items-center gap-4">
                                     <Globe className="w-4 h-4 text-gold" />
-                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Brand Identity</h2>
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Brand & Logistics</h2>
                                 </div>
                                 <button type="submit"
                                     className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
-                                    <Save className="w-3.5 h-3.5" /> Save Brand Details
+                                    <Save className="w-3.5 h-3.5" /> Save Global Configuration
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Signature</label>
+                                        <input
+                                            name="name"
+                                            type="text"
+                                            defaultValue={storeInfo?.setting_value?.name || 'DINA COSMETIC'}
+                                            required
+                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Primary Currency</label>
+                                        <select name="currency" defaultValue={storeInfo?.setting_value?.currency || 'USD'}
+                                            className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="USD">USD ($) — Universal</option>
+                                            <option value="EUR">EUR (€) — Luxury Select</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Signature</label>
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Global Tagline</label>
                                     <input
-                                        name="name"
+                                        name="tagline"
                                         type="text"
-                                        defaultValue={storeInfo?.setting_value?.name || 'DINA COSMETIC'}
-                                        required
+                                        defaultValue={storeInfo?.setting_value?.tagline || 'Luxury Obsidian Skincare'}
                                         className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Primary Currency</label>
-                                    <select name="currency" defaultValue={storeInfo?.setting_value?.currency || 'USD'}
-                                        className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all appearance-none cursor-pointer">
-                                        <option value="USD">USD ($) — Universal</option>
-                                        <option value="EUR">EUR (€) — Luxury Select</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Global Tagline</label>
-                                <input
-                                    name="tagline"
-                                    type="text"
-                                    defaultValue={storeInfo?.setting_value?.tagline || 'Luxury Obsidian Skincare'}
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-between p-8 bg-rose-50 border border-rose-100/50 rounded-xl shadow-inner-soft">
-                                <div className="space-y-1">
-                                    <p className="text-[11px] uppercase tracking-widest text-charcoal font-bold">Vault Active Status</p>
-                                    <p className="text-[9px] text-rose-500 uppercase tracking-luxury font-medium flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
-                                        Emergency Kill Switch (Maintenance Mode)
-                                    </p>
+                                <div className="pt-8 border-t border-charcoal/5">
+                                    <h3 className="text-[10px] uppercase tracking-luxury text-gold font-bold mb-6 flex items-center gap-2">
+                                        <Truck className="w-4 h-4" /> Warehouse & Sender Identity
+                                    </h3>
+                                    <WarehouseEditor initialData={warehouseInfo?.setting_value} />
                                 </div>
-                                <div className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="storeEnabled"
-                                        defaultChecked={isEnabled}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-14 h-7 bg-pearl peer-focus:outline-none rounded-full border border-charcoal/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
+
+                                <div className="flex items-center justify-between p-8 bg-rose-50 border border-rose-100/50 rounded-xl shadow-inner-soft">
+                                    <div className="space-y-1">
+                                        <p className="text-[11px] uppercase tracking-widest text-charcoal font-bold">Vault Active Status</p>
+                                        <p className="text-[9px] text-rose-500 uppercase tracking-luxury font-medium flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
+                                            Emergency Kill Switch (Maintenance Mode)
+                                        </p>
+                                    </div>
+                                    <div className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            name="storeEnabled"
+                                            defaultChecked={isEnabled}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-14 h-7 bg-pearl peer-focus:outline-none rounded-full border border-charcoal/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
+                                    </div>
                                 </div>
                             </div>
                         </section>

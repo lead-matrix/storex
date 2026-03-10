@@ -363,11 +363,20 @@ export async function updateStoreSettings(formData: FormData) {
     const currency = formData.get('currency') as string;
     const storeEnabled = formData.get('storeEnabled') === 'on' || formData.get('storeEnabled') === 'true';
 
+    const warehouseJson = formData.get('warehouse_info') as string;
+
     const { error: infoError } = await supabase
         .from('site_settings')
         .upsert({ setting_key: 'store_info', setting_value: { name, tagline, currency } });
 
     if (infoError) throw infoError;
+
+    if (warehouseJson) {
+        const { error: whError } = await supabase
+            .from('site_settings')
+            .upsert({ setting_key: 'warehouse_info', setting_value: JSON.parse(warehouseJson) });
+        if (whError) throw whError;
+    }
 
     const { error: enabledError } = await supabase
         .from('site_settings')

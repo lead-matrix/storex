@@ -56,7 +56,24 @@ export async function generateShippingLabel(orderId: string) {
     const shippingAddr = order.shipping_address as Record<string, string> | null;
     if (!shippingAddr) throw new Error("No shipping address on this order. Customer must complete checkout first.");
 
-    // 2. Create Shippo shipment to get rates
+    // 2. Fetch Warehouse Info & Create Shippo shipment
+    const { data: settings } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('setting_key', 'warehouse_info')
+        .maybeSingle();
+
+    const warehouse = settings?.setting_value || {
+        name: "Dina Cosmetic",
+        street1: "2417 Galveston Rd",
+        city: "Houston",
+        state: "TX",
+        zip: "77017",
+        country: "US",
+        email: "support@dinacosmetic.store",
+        phone: "+12816877609",
+    };
+
     const shipmentRes = await fetch("https://api.goshippo.com/shipments/", {
         method: "POST",
         headers: {
@@ -64,16 +81,7 @@ export async function generateShippingLabel(orderId: string) {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            address_from: {
-                name: "Dina Cosmetic",
-                street1: "2417 Galveston Rd",
-                city: "Houston",
-                state: "TX",
-                zip: "77017",
-                country: "US",
-                email: "support@dinacosmetic.store",
-                phone: "+12816877609",
-            },
+            address_from: warehouse,
             address_to: {
                 name: shippingAddr.name ?? order.customer_email ?? "Customer",
                 street1: shippingAddr.line1 ?? shippingAddr.street1 ?? "",
@@ -85,11 +93,11 @@ export async function generateShippingLabel(orderId: string) {
             },
             parcels: [
                 {
-                    length: "8",
-                    width: "6",
-                    height: "4",
+                    length: warehouse.parcel_l || "8",
+                    width: warehouse.parcel_w || "6",
+                    height: warehouse.parcel_h || "4",
                     distance_unit: "in",
-                    weight: "0.5",
+                    weight: warehouse.parcel_wt || "1.0",
                     mass_unit: "lb",
                 },
             ],

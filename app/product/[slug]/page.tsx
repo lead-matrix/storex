@@ -45,6 +45,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
                 price_override,
                 stock,
                 color_code,
+                image_url,
                 status
             )
         `)

@@ -24,29 +24,43 @@ export async function createShippingLabel(order: any) {
             throw new Error("Shippo is not a constructor or function");
         }
 
+        // 1. Fetch Warehouse Info from Site Settings
+        const { createClient } = await import('@/lib/supabase/server');
+        const supabase = await createClient();
+        const { data: settings } = await supabase
+            .from('site_settings')
+            .select('setting_value')
+            .eq('setting_key', 'warehouse_info')
+            .maybeSingle();
+
+        const warehouse = settings?.setting_value || {
+            name: "DINA COSMETIC | The Obsidian Palace",
+            street1: "2417 Galveston Rd",
+            city: "Houston",
+            state: "TX",
+            zip: "77017",
+            country: "US",
+            phone: "+12816877609",
+            email: "support@dinacosmetic.store"
+        };
+
         const shipment = await shippo.shipment.create({
-            address_from: {
-                name: "DINA COSMETIC | The Obsidian Palace",
-                street1: "123 Luxury Lane",
-                city: "Beverly Hills",
-                state: "CA",
-                zip: "90210",
-                country: "US",
-            },
+            address_from: warehouse,
             address_to: {
                 name: order.shipping_address?.name || "Valued client",
-                street1: order.shipping_address?.address?.line1,
-                city: order.shipping_address?.address?.city,
-                state: order.shipping_address?.address?.state,
-                zip: order.shipping_address?.address?.postal_code,
-                country: order.shipping_address?.address?.country,
+                street1: order.shipping_address?.address?.line1 || order.shipping_address?.line1,
+                street2: order.shipping_address?.address?.line2 || order.shipping_address?.line2,
+                city: order.shipping_address?.address?.city || order.shipping_address?.city,
+                state: order.shipping_address?.address?.state || order.shipping_address?.state,
+                zip: order.shipping_address?.address?.postal_code || order.shipping_address?.zip,
+                country: order.shipping_address?.address?.country || order.shipping_address?.country || "US",
             },
             parcels: [{
-                length: "10",
-                width: "5",
-                height: "5",
+                length: warehouse.parcel_l || "8",
+                width: warehouse.parcel_w || "6",
+                height: warehouse.parcel_h || "4",
                 distance_unit: "in",
-                weight: "2",
+                weight: warehouse.parcel_wt || "1",
                 mass_unit: "lb",
             }],
             async: false,

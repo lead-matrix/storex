@@ -23,9 +23,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'title'
-) THEN
-ALTER TABLE public.variants
-ALTER COLUMN title DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.variants ALTER COLUMN title DROP NOT NULL;';
 END IF;
 -- Drop NOT NULL on legacy 'name' column on products
 IF EXISTS (
@@ -56,9 +54,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'price'
-) THEN
-ALTER TABLE public.variants
-ALTER COLUMN price DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.variants ALTER COLUMN price DROP NOT NULL;';
 END IF;
 END $$;
 --  §1   Core tables  (profiles, categories, products, variants,
@@ -335,6 +331,8 @@ CREATE TABLE IF NOT EXISTS public.product_variants (
     sku text,
     color_code text,
     status text NOT NULL DEFAULT 'active',
+    title text,
+    image_url text,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -343,11 +341,41 @@ ADD COLUMN IF NOT EXISTS name text;
 ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS variant_type text NOT NULL DEFAULT 'shade';
 ALTER TABLE public.product_variants
+ADD COLUMN IF NOT EXISTS title text;
+ALTER TABLE public.product_variants
+ADD COLUMN IF NOT EXISTS image_url text;
+ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS price_override numeric(10, 2);
 ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS stock integer NOT NULL DEFAULT 0;
 ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS sku text;
+DO $$ BEGIN -- 1. Deduplicate any existing SKUs to avoid unique constraint violations
+WITH duplicates AS (
+    SELECT id,
+        sku,
+        ROW_NUMBER() OVER(
+            PARTITION BY sku
+            ORDER BY created_at ASC
+        ) as rn
+    FROM public.product_variants
+    WHERE sku IS NOT NULL
+)
+UPDATE public.product_variants pv
+SET sku = pv.sku || '-' || d.rn
+FROM duplicates d
+WHERE pv.id = d.id
+    AND d.rn > 1;
+-- 2. Add the unique constraint if it doesn't already exist
+IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'product_variants_sku_key'
+) THEN
+ALTER TABLE public.product_variants
+ADD CONSTRAINT product_variants_sku_key UNIQUE (sku);
+END IF;
+END $$;
 ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS color_code text;
 ALTER TABLE public.product_variants
@@ -366,9 +394,7 @@ AND NOT EXISTS (
     FROM information_schema.tables
     WHERE table_name = 'product_variants'
         AND table_schema = 'public'
-) THEN
-ALTER TABLE public.variants
-    RENAME TO product_variants;
+) THEN EXECUTE 'ALTER TABLE public.variants RENAME TO product_variants;';
 END IF;
 END $$;
 -- Fix legacy title/name columns for v2
@@ -416,9 +442,7 @@ AND NOT EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'stock'
-) THEN
-ALTER TABLE public.variants
-    RENAME COLUMN stock_quantity TO stock;
+) THEN EXECUTE 'ALTER TABLE public.variants RENAME COLUMN stock_quantity TO stock;';
 END IF;
 END $$;
 -- Rename legacy is_active → status if present
@@ -435,9 +459,7 @@ AND NOT EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'status'
-) THEN
-ALTER TABLE public.variants
-    RENAME COLUMN is_active TO status;
+) THEN EXECUTE 'ALTER TABLE public.variants RENAME COLUMN is_active TO status;';
 END IF;
 END $$;
 -- 1E. orders
@@ -1222,7 +1244,14 @@ CREATE POLICY "cms_sections_delete" ON public.cms_sections FOR DELETE USING (
 DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
 DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
 DROP TRIGGER IF EXISTS products_updated_at ON public.products;
-DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM pg_tables
+    WHERE schemaname = 'public'
+        AND tablename = 'variants'
+) THEN EXECUTE 'DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;';
+END IF;
+END $$;
 DROP TRIGGER IF EXISTS variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS product_variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
@@ -1624,6 +1653,7 @@ SET title = EXCLUDED.title,
     images = EXCLUDED.images;
 -- TOOLS & ACCESSORIES
 INSERT INTO public.products (
+        id,
         title,
         slug,
         base_price,
@@ -1635,6 +1665,7 @@ INSERT INTO public.products (
         images
     )
 VALUES (
+        '8ef6feaf-3d98-43cf-9bfe-44487780d439',
         'Grand Master Brush Set (18pcs)',
         'brush-set-18',
         20.00,
@@ -1646,6 +1677,7 @@ VALUES (
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
     ),
     (
+        '93f6c774-1dab-4a69-a82c-cc7c17540e25',
         'Artisan Brush Set (14pcs)',
         'brush-set-14',
         15.00,
@@ -1657,6 +1689,7 @@ VALUES (
         ARRAY ['https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/brushes.png', 'https://zsahskxejgbrvfhobfyp.supabase.co/storage/v1/object/public/product-images/tools.png']
     ),
     (
+        gen_random_uuid(),
         'Pure Ritual Makeup Remover',
         'makeup-remover',
         12.00,
@@ -1897,12 +1930,686 @@ VALUES (
     ),
     (
         'email_settings',
-        '{"from_name":"DINA COSMETIC","from_email":"concierge@dinacosmetic.store","reply_to":"concierge@dinacosmetic.store","order_confirmation":true,"shipping_notification":true,"newsletter_welcome":true}'::jsonb
+        '{"from_name":"DINA COSMETIC","from_email":"support@dinacosmetic.store","reply_to":"support@dinacosmetic.store","order_confirmation":true,"shipping_notification":true,"newsletter_welcome":true}'::jsonb
     ) ON CONFLICT (setting_key) DO
 UPDATE
-SET setting_value = EXCLUDED.setting_value,
+SET setting_value = EXCLUDED.setting_value;
+-- 9I. EXTERNAL VARIANT DATA DUMP
+-- This section integrates the high-precision variant data provided for launch.
+-- Resolve potential SKU conflicts by removing existing variants with these SKUs first.
+DELETE FROM public.product_variants
+WHERE sku IN (
+        'BRUSH-18',
+        'BRUSH-14',
+        'LLC-ROSE',
+        'SMC-ROSE',
+        'BAG-SML',
+        'LLG-BROW',
+        'LML-NUDE',
+        'LLC-GLOSS',
+        'SML-PURPLE',
+        'SMC-MAUV',
+        'SCL-CLASSIC',
+        'LLC-BURG',
+        'LLC-RED',
+        'SML-ROYAL',
+        'BAG-MED',
+        'SMC-BURG',
+        'SL-LPINK',
+        'LLG-ROSE',
+        'LLG-GOLD',
+        'LLG-NATU',
+        'SL-ABRICO',
+        'SMC-RED',
+        'LML-DEEP',
+        'LML-RED',
+        'SMC-ABRI',
+        'SCL-MARRON',
+        'LLC-ABRICO'
+    );
+INSERT INTO public.product_variants (
+        "id",
+        "product_id",
+        "name",
+        "price_override",
+        "stock",
+        "sku",
+        "created_at",
+        "updated_at",
+        "title",
+        "variant_type",
+        "color_code",
+        "status",
+        "image_url"
+    )
+VALUES (
+        '06998bf2-5fc0-4620-801c-47140b1829f3',
+        '13f00bf9-770d-482d-9e52-47b833c22549',
+        'Burgundy',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '0c7643ce-209a-4418-b34d-c55c20d7f62e',
+        '3c420b8d-e7ac-4639-8a71-62d611ffaebe',
+        'Rose Matte',
+        '13.00',
+        '40',
+        'LLC-ROSE',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Rose Matte',
+        'shade',
+        '#C8637A',
+        'draft',
+        '/products/liq-lip-Rose-matte.jpg'
+    ),
+    (
+        '1e68d518-8368-4204-ab28-f93be5ef9d03',
+        '26c3f92d-d50b-46be-b37e-813ecc95a606',
+        'Rose Matte',
+        '15.00',
+        '50',
+        'SMC-ROSE',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Rose Matte',
+        'shade',
+        '#C8637A',
+        'active',
+        '/products/liq-lip-Rose-matte.jpg'
+    ),
+    (
+        '255c93ee-0fb3-4515-9743-d0eaa6ee1c01',
+        '1abe8641-31be-462c-aa9b-d6d8c97f5385',
+        'Small',
+        '18.00',
+        '50',
+        'BAG-SML',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Small',
+        'size',
+        null,
+        'active',
+        '/products/makeup-bag.jpg'
+    ),
+    (
+        '2bae9798-0ada-4daa-af3a-cd7318bce993',
+        'a58b4456-2f4a-4978-b05f-e52d3a845681',
+        'Matte',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '3300fec4-8dfc-457a-b662-796d275838d8',
+        '0c48ed19-7e9e-49b4-99a5-8292a8680fec',
+        '14 Pieces',
+        null,
+        '20',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'size',
+        null,
+        'active',
+        null
+    ),
+    (
+        '3527191d-be0e-4684-a753-b5fa6e8bc3d3',
+        'a58b4456-2f4a-4978-b05f-e52d3a845681',
+        'Rose',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '3a047d3c-6251-4bb4-bfd4-87cdd3d2a6c7',
+        '307ba90d-ec84-4ead-b84a-8bb406e0c6aa',
+        'Brown',
+        '14.00',
+        '40',
+        'LLG-BROW',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Brown',
+        'shade',
+        '#964B00',
+        'active',
+        '/products/brown.jpg'
+    ),
+    (
+        '48a5254b-6422-43ab-b8c3-3b58addbd53a',
+        '8ef6feaf-3d98-43cf-9bfe-44487780d439',
+        '18 Pieces',
+        '20.00',
+        '30',
+        'BRUSH-18',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        '18 Pieces',
+        'size',
+        null,
+        'active',
+        '/products/Brush-set-18pcs.jpg'
+    ),
+    (
+        '496cb694-54e0-430e-b9b1-9196b7b44682',
+        'cab64637-0b7a-4d3c-9727-cec155300c9b',
+        'Matte Nude',
+        '14.00',
+        '40',
+        'LML-NUDE',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Matte Nude',
+        'shade',
+        '#C68B77',
+        'draft',
+        '/products/matte-liquid-lipstick.jpg'
+    ),
+    (
+        '52fa5beb-5e19-4596-995d-a94aceb1096b',
+        '13f00bf9-770d-482d-9e52-47b833c22549',
+        'Apricot',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '53b6aa56-3871-4dfe-b694-95a4c74147cc',
+        '8ef6feaf-3d98-43cf-9bfe-44487780d439',
+        '14 Pieces',
+        '15.00',
+        '45',
+        'BRUSH-14',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        '14 Pieces',
+        'size',
+        null,
+        'active',
+        '/products/Brush-set-14pcs.jpg'
+    ),
+    (
+        '5a436dc6-e66c-4350-b310-e32e1898c71e',
+        '3c420b8d-e7ac-4639-8a71-62d611ffaebe',
+        'Gloss',
+        '14.00',
+        '40',
+        'LLC-GLOSS',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Gloss',
+        'shade',
+        '#FFB6BC',
+        'draft',
+        '/products/liq-lip-gloss.jpg'
+    ),
+    (
+        '5d1861a5-da98-416b-9d80-9f028136b606',
+        '1743b479-340f-40cb-b547-1a2a5bba03a1',
+        'Bold Purple',
+        '12.00',
+        '50',
+        'SML-PURPLE',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Bold Purple',
+        'shade',
+        '#6B238E',
+        'draft',
+        '/products/Solidmatte-lipstick-purple.jpg'
+    ),
+    (
+        '5d6a1e55-6ae7-4902-8ee4-3a2c2fdc93b6',
+        '13f00bf9-770d-482d-9e52-47b833c22549',
+        'Mauve',
+        null,
+        '10',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '616c7021-acb1-4e39-a096-36e4b4ce4ebc',
+        'a58b4456-2f4a-4978-b05f-e52d3a845681',
+        'Nature',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '66c8a400-2367-4d46-a720-1f23018bbf21',
+        '26c3f92d-d50b-46be-b37e-813ecc95a606',
+        'Mauve',
+        '15.00',
+        '50',
+        'SMC-MAUV',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Mauve',
+        'shade',
+        '#B784A7',
+        'active',
+        '/products/Solidcream-lipstick-marron.jpg'
+    ),
+    (
+        '68d340fa-7d90-4dbf-87f8-8a1e96392cc8',
+        '336e4d47-fa7a-49f1-8729-3433cfcb7859',
+        'Classic',
+        '12.00',
+        '60',
+        'SCL-CLASSIC',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Classic',
+        'shade',
+        '#8B1A1A',
+        'draft',
+        '/products/Solidcream-lipstick.jpg'
+    ),
+    (
+        '6a3accd4-dabb-46f1-a1f4-4037332ccb0a',
+        'a58b4456-2f4a-4978-b05f-e52d3a845681',
+        'Gold',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '6a62aeda-bc21-4cdb-8d32-9baa21268e5a',
+        '3c420b8d-e7ac-4639-8a71-62d611ffaebe',
+        'Burgundy',
+        '13.00',
+        '40',
+        'LLC-BURG',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Burgundy',
+        'shade',
+        '#800020',
+        'draft',
+        '/products/Liq-lip-burgundy.jpg'
+    ),
+    (
+        '7080e3a3-84f5-4b84-bdc5-46d0bfba23c3',
+        '13f00bf9-770d-482d-9e52-47b833c22549',
+        'Red',
+        null,
+        '10',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        '74f56339-a051-4b06-a0c4-f0d50d5d5c8c',
+        '3c420b8d-e7ac-4639-8a71-62d611ffaebe',
+        'Red',
+        '13.00',
+        '40',
+        'LLC-RED',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Red',
+        'shade',
+        '#CC0000',
+        'draft',
+        '/products/liq-lip-red.jpg'
+    ),
+    (
+        '82cea697-7028-4934-b1a9-82d80772a689',
+        '0c48ed19-7e9e-49b4-99a5-8292a8680fec',
+        '18 Pieces',
+        '20.00',
+        '20',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'size',
+        null,
+        'active',
+        null
+    ),
+    (
+        '95324414-b0c2-4fa3-a935-e0ffea5b86e6',
+        '1743b479-340f-40cb-b547-1a2a5bba03a1',
+        'Royal',
+        '12.00',
+        '50',
+        'SML-ROYAL',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Royal',
+        'shade',
+        '#4169E1',
+        'draft',
+        '/products/Solidmatte-lipstick-royal.jpg'
+    ),
+    (
+        '9a5c14af-e75b-4023-9057-8c06c7c449b2',
+        '238143a7-16c7-4ec0-a5af-cadd832f764e',
+        'Medium',
+        null,
+        '10',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'size',
+        null,
+        'active',
+        null
+    ),
+    (
+        '9cc1c38a-3fb7-478b-b681-8e512199079a',
+        '1abe8641-31be-462c-aa9b-d6d8c97f5385',
+        'Medium',
+        '25.00',
+        '50',
+        'BAG-MED',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Medium',
+        'size',
+        null,
+        'active',
+        '/products/makeup-bag.jpg'
+    ),
+    (
+        '9ea0e74a-ebe5-4bd5-8069-cef73c85fe5a',
+        '26c3f92d-d50b-46be-b37e-813ecc95a606',
+        'Burgundy',
+        '15.00',
+        '50',
+        'SMC-BURG',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Burgundy',
+        'shade',
+        '#800020',
+        'active',
+        '/products/Liq-lip-burgundy.jpg'
+    ),
+    (
+        'a079f1fa-6034-4e51-bddb-f4f4af0b3e95',
+        'a087a6c7-6141-459e-abe2-f21bf986380a',
+        'Light Pink',
+        '10.00',
+        '60',
+        'SL-LPINK',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Light Pink',
+        'shade',
+        '#FFB6C1',
+        'draft',
+        '/products/Solidlipstick-lightpink.jpg'
+    ),
+    (
+        'a38e9bd5-77bf-4dd8-b751-ee925087ae14',
+        'a58b4456-2f4a-4978-b05f-e52d3a845681',
+        'Brown',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        'a6c0c88d-cdaf-4f38-a349-71086c7fc63a',
+        '307ba90d-ec84-4ead-b84a-8bb406e0c6aa',
+        'Rose',
+        '14.00',
+        '40',
+        'LLG-ROSE',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Rose',
+        'shade',
+        '#FF007F',
+        'active',
+        '/products/rose.jpg'
+    ),
+    (
+        'a741a293-82f2-4c02-b58d-2999f838504c',
+        '3c420b8d-e7ac-4639-8a71-62d611ffaebe',
+        'Abricot',
+        '13.00',
+        '40',
+        'LLC-ABRICO',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Abricot',
+        'shade',
+        '#FFAA70',
+        'draft',
+        '/products/Liq-lip-abrico.jpg'
+    ),
+    (
+        'ae6f5c27-d0c2-48a2-8031-7dc9fefe53cb',
+        '307ba90d-ec84-4ead-b84a-8bb406e0c6aa',
+        'Gold',
+        '14.00',
+        '40',
+        'LLG-GOLD',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Gold',
+        'shade',
+        '#FFD700',
+        'active',
+        '/products/gold.jpg'
+    ),
+    (
+        'c050a323-3549-4d14-9921-87f22f590c5a',
+        '307ba90d-ec84-4ead-b84a-8bb406e0c6aa',
+        'Nature',
+        '14.00',
+        '40',
+        'LLG-NATU',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Nature',
+        'shade',
+        '#EEDC82',
+        'active',
+        '/products/nature.jpg'
+    ),
+    (
+        'd268d10d-cfb3-4d08-9447-2bce34ca59d2',
+        'a087a6c7-6141-459e-abe2-f21bf986380a',
+        'Abricot',
+        '10.00',
+        '60',
+        'SL-ABRICO',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Abricot',
+        'shade',
+        '#FFAA80',
+        'draft',
+        '/products/Solidlipstick-abrico.jpg'
+    ),
+    (
+        'd4328e59-c032-44df-8957-4fcfbf353fc0',
+        '238143a7-16c7-4ec0-a5af-cadd832f764e',
+        'Small',
+        '8.00',
+        '10',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'size',
+        null,
+        'active',
+        null
+    ),
+    (
+        'd9558176-e737-4dfb-b15f-c23f500a70e5',
+        '26c3f92d-d50b-46be-b37e-813ecc95a606',
+        'Red',
+        '15.00',
+        '50',
+        'SMC-RED',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Red',
+        'shade',
+        '#CC0000',
+        'active',
+        '/products/liq-lip-red.jpg'
+    ),
+    (
+        'da2e338f-69f6-4ae8-852b-941529e320d0',
+        'cab64637-0b7a-4d3c-9727-cec155300c9b',
+        'Deep Matte',
+        '14.00',
+        '45',
+        'LML-DEEP',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Deep Matte',
+        'shade',
+        '#8B0000',
+        'draft',
+        '/products/matte-lipstick.jpg'
+    ),
+    (
+        'de5aad35-3e6b-4750-b477-3e0333357d0c',
+        'cab64637-0b7a-4d3c-9727-cec155300c9b',
+        'Classic Red',
+        '14.00',
+        '45',
+        'LML-RED',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Classic Red',
+        'shade',
+        '#CC0000',
+        'draft',
+        '/products/Liquidmatte-lipstick.jpg'
+    ),
+    (
+        'e9ed5575-59a4-4bed-9e61-b85f9ce64d00',
+        '26c3f92d-d50b-46be-b37e-813ecc95a606',
+        'Abrico',
+        '15.00',
+        '50',
+        'SMC-ABRI',
+        '2026-03-08 08:57:14.979357+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Abrico',
+        'shade',
+        '#FFAA70',
+        'active',
+        '/products/Liq-lip-abrico.jpg'
+    ),
+    (
+        'eb9ffc13-7c9f-4e93-bb35-54e88c70cdd6',
+        '13f00bf9-770d-482d-9e52-47b833c22549',
+        'Rose Matte',
+        null,
+        '5',
+        null,
+        '2026-03-08 09:36:12.734525+00',
+        '2026-03-08 09:36:12.734525+00',
+        null,
+        'shade',
+        null,
+        'active',
+        null
+    ),
+    (
+        'f43a74f3-8331-455e-ab0f-a08db05e24bb',
+        '336e4d47-fa7a-49f1-8729-3433cfcb7859',
+        'Marron',
+        '12.00',
+        '60',
+        'SCL-MARRON',
+        '2026-03-07 19:38:44.764083+00',
+        '2026-03-08 08:57:14.979357+00',
+        'Marron',
+        'shade',
+        '#4E2020',
+        'draft',
+        '/products/Solidcream-lipstick-marron.jpg'
+    ) ON CONFLICT (id) DO
+UPDATE
+SET product_id = EXCLUDED.product_id,
+    name = EXCLUDED.name,
+    price_override = EXCLUDED.price_override,
+    stock = EXCLUDED.stock,
+    sku = EXCLUDED.sku,
+    title = EXCLUDED.title,
+    variant_type = EXCLUDED.variant_type,
+    color_code = EXCLUDED.color_code,
+    status = EXCLUDED.status,
+    image_url = EXCLUDED.image_url,
     updated_at = now();
--- 9E. Frontend content — every editable storefront section
+-- 9F. Frontend content — every editable storefront section
 INSERT INTO public.frontend_content (content_key, content_type, content_data)
 VALUES -- Homepage
     (
@@ -2229,7 +2936,6 @@ END LOOP;
 END IF;
 RETURN v_order_id;
 END;
-$$;
 $$;
 -- ───────────────────────────────────────────────────────────────
 -- §12  VERIFICATION
