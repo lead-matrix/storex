@@ -397,6 +397,8 @@ AND NOT EXISTS (
 ) THEN EXECUTE 'ALTER TABLE public.variants RENAME TO product_variants;';
 END IF;
 END $$;
+-- Drop legacy index if it exists in addition to the correct one
+DROP INDEX IF EXISTS public.idx_variants_product_id;
 -- Fix legacy title/name columns for v2
 DO $$ BEGIN -- If title exists but not name, rename it
 IF EXISTS (
