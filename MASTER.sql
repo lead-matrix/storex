@@ -474,13 +474,13 @@ ADD COLUMN IF NOT EXISTS width_cm numeric(10, 2);
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS height_cm numeric(10, 2);
 -- Normalization & Auto-Generation Logic for Variants
-DO $$ BEGIN -- 1. Normalize variant_type to 'shade' or 'size' based on variant title if NULL or empty
+DO $$ BEGIN -- 1. Normalize variant_type to 'shade' or 'size' based on variant name if NULL or empty
 UPDATE public.product_variants
 SET variant_type = CASE
-        WHEN title ILIKE '%piece%'
-        OR title ILIKE '%small%'
-        OR title ILIKE '%medium%'
-        OR title ILIKE '%large%' THEN 'size'
+        WHEN name ILIKE '%piece%'
+        OR name ILIKE '%small%'
+        OR name ILIKE '%medium%'
+        OR name ILIKE '%large%' THEN 'size'
         ELSE 'shade'
     END
 WHERE variant_type IS NULL
@@ -492,25 +492,39 @@ WHERE status IS NULL
     OR trim(status) = '';
 -- 3. Auto-generate SKU where missing
 UPDATE public.product_variants pv
-SET sku = (
-        SELECT CASE
-                WHEN p.title ILIKE '%Solid Cream Lipstick%' THEN 'SMC-'
-                WHEN p.title ILIKE '%Solid Lipstick%' THEN 'SL-'
-                WHEN p.title ILIKE '%Liquid Lip Cream%' THEN 'LLC-'
-                WHEN p.title ILIKE '%Liquid Lip Gloss%' THEN 'LLG-'
-                WHEN p.title ILIKE '%Liquid Matte Lipstick%' THEN 'LML-'
-                WHEN p.title ILIKE '%Brush Set%' THEN 'BRUSH-'
-                WHEN p.title ILIKE '%Makeup Bag%' THEN 'BAG-'
-                ELSE 'VAR-'
-            END || UPPER(
-                SUBSTRING(
-                    REGEXP_REPLACE(pv.title, '[^a-zA-Z0-9]', '', 'g'),
-                    1,
-                    4
+SET sku = COALESCE(
+        (
+            SELECT CASE
+                    WHEN p.title ILIKE '%Solid Cream Lipstick%' THEN 'SMC-'
+                    WHEN p.title ILIKE '%Solid Lipstick%' THEN 'SL-'
+                    WHEN p.title ILIKE '%Liquid Lip Cream%' THEN 'LLC-'
+                    WHEN p.title ILIKE '%Liquid Lip Gloss%' THEN 'LLG-'
+                    WHEN p.title ILIKE '%Liquid Matte Lipstick%' THEN 'LML-'
+                    WHEN p.title ILIKE '%Brush Set%' THEN 'BRUSH-'
+                    WHEN p.title ILIKE '%Makeup Bag%' THEN 'BAG-'
+                    ELSE 'VAR-'
+                END || COALESCE(
+                    NULLIF(
+                        UPPER(
+                            SUBSTRING(
+                                REGEXP_REPLACE(
+                                    COALESCE(pv.name, pv.title, 'VAR'),
+                                    '[^a-zA-Z0-9]',
+                                    '',
+                                    'g'
+                                ),
+                                1,
+                                4
+                            )
+                        ),
+                        ''
+                    ),
+                    UPPER(SUBSTRING(pv.id::text, 1, 4))
                 )
-            )
-        FROM public.products p
-        WHERE p.id = pv.product_id
+            FROM public.products p
+            WHERE p.id = pv.product_id
+        ),
+        'ORPHAN-' || UPPER(SUBSTRING(pv.id::text, 1, 6))
     )
 WHERE pv.sku IS NULL
     OR trim(pv.sku) = '';
