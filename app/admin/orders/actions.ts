@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { sendShippingNotificationEmail } from "@/lib/utils/email";
 
 // Ensure the caller is an authenticated admin
 // Uses the regular server client for cookie-based session resolution,
@@ -152,6 +153,24 @@ export async function generateShippingLabel(orderId: string) {
         .eq("id", orderId);
 
     if (updateError) throw updateError;
+
+    const customerEmail = order.customer_email;
+    if (customerEmail) {
+        // Attempt to send shipping notification via Resend
+        try {
+            await sendShippingNotificationEmail({
+                orderId,
+                customerEmail,
+                customerName: (order.shipping_address as { name?: string })?.name || 'Valued Client',
+                totalAmount: Number(order.amount_total),
+                trackingNumber: trackingNumber,
+                labelUrl: labelUrl
+            });
+        } catch (e) {
+            console.error("Failed to send shipping notification email:", e);
+        }
+    }
+
     revalidatePath("/admin/orders");
     revalidatePath("/admin");
 
