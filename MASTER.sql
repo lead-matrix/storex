@@ -575,17 +575,16 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 );
 ALTER TABLE public.order_items
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
-DO $$ BEGIN IF NOT EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_schema = 'public'
-        AND table_name = 'order_items'
-        AND column_name = 'variant_id'
-) THEN
 ALTER TABLE public.order_items
-ADD COLUMN variant_id uuid REFERENCES public.product_variants(id);
-END IF;
-END $$;
+ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES public.products(id) ON DELETE
+SET NULL;
+ALTER TABLE public.order_items
+ADD COLUMN IF NOT EXISTS quantity integer NOT NULL DEFAULT 1 CHECK (quantity > 0);
+ALTER TABLE public.order_items
+ADD COLUMN IF NOT EXISTS price numeric(10, 2) NOT NULL DEFAULT 0;
+ALTER TABLE public.order_items
+ADD COLUMN IF NOT EXISTS variant_id uuid REFERENCES public.product_variants(id) ON DELETE
+SET NULL;
 -- 1G. stripe_events — idempotency log, service_role only
 CREATE TABLE IF NOT EXISTS public.stripe_events (
     id text PRIMARY KEY,
