@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Box, MapPin, Truck, ExternalLink, ChevronDown, ShoppingBag } from 'lucide-react'
-import { fulfillOrder, updateOrderStatus } from '@/lib/actions/admin'
+import { updateOrderStatus } from '@/lib/actions/admin'
+import { generateShippingLabel } from '@/app/admin/orders/actions'
 import { toast } from 'sonner'
 
 const STATUS_OPTIONS = ['pending', 'paid', 'shipped', 'cancelled', 'refunded']
@@ -35,7 +36,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
     const handleFulfillment = async (orderId: string) => {
         setLoadingMap(prev => ({ ...prev, [orderId]: true }))
         try {
-            await fulfillOrder(orderId)
+            await generateShippingLabel(orderId)
             toast.success('Order fulfilled successfully')
         } catch (err: any) {
             toast.error(err.message || 'Fulfillment failed')
