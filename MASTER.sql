@@ -464,6 +464,62 @@ AND NOT EXISTS (
 ) THEN EXECUTE 'ALTER TABLE public.variants RENAME COLUMN is_active TO status;';
 END IF;
 END $$;
+-- Add optional shipping dimensions to products
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS weight_grams numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS length_cm numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS width_cm numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS height_cm numeric(10, 2);
+-- Normalization & Auto-Generation Logic for Variants
+DO $$ BEGIN -- 1. Normalize variant_type to 'shade' or 'size' based on variant title if NULL or empty
+UPDATE public.product_variants
+SET variant_type = CASE
+        WHEN title ILIKE '%piece%'
+        OR title ILIKE '%small%'
+        OR title ILIKE '%medium%'
+        OR title ILIKE '%large%' THEN 'size'
+        ELSE 'shade'
+    END
+WHERE variant_type IS NULL
+    OR trim(variant_type) = '';
+-- 2. Enforce status defaults to 'active'
+UPDATE public.product_variants
+SET status = 'active'
+WHERE status IS NULL
+    OR trim(status) = '';
+-- 3. Auto-generate SKU where missing
+UPDATE public.product_variants pv
+SET sku = (
+        SELECT CASE
+                WHEN p.title ILIKE '%Solid Cream Lipstick%' THEN 'SMC-'
+                WHEN p.title ILIKE '%Solid Lipstick%' THEN 'SL-'
+                WHEN p.title ILIKE '%Liquid Lip Cream%' THEN 'LLC-'
+                WHEN p.title ILIKE '%Liquid Lip Gloss%' THEN 'LLG-'
+                WHEN p.title ILIKE '%Liquid Matte Lipstick%' THEN 'LML-'
+                WHEN p.title ILIKE '%Brush Set%' THEN 'BRUSH-'
+                WHEN p.title ILIKE '%Makeup Bag%' THEN 'BAG-'
+                ELSE 'VAR-'
+            END || UPPER(
+                SUBSTRING(
+                    REGEXP_REPLACE(pv.title, '[^a-zA-Z0-9]', '', 'g'),
+                    1,
+                    4
+                )
+            )
+        FROM public.products p
+        WHERE p.id = pv.product_id
+    )
+WHERE pv.sku IS NULL
+    OR trim(pv.sku) = '';
+END $$;
+-- 4. Create Performance Indexes if missing
+CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_variants_status ON public.product_variants(status);
+CREATE INDEX IF NOT EXISTS idx_product_variants_variant_type ON public.product_variants(variant_type);
+CREATE INDEX IF NOT EXISTS idx_product_variants_sku ON public.product_variants(sku);
 -- 1E. orders
 CREATE TABLE IF NOT EXISTS public.orders (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -2988,3 +3044,57 @@ INSERT
     OR
 UPDATE OF stock
     OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();
+-- 11. Final Validation Audit
+DO $$
+DECLARE orphan_count integer;
+null_type_count integer;
+null_status_count integer;
+null_stock_count integer;
+null_sku_count integer;
+duplicate_sku_count integer;
+BEGIN
+SELECT COUNT(*) INTO orphan_count
+FROM public.product_variants
+WHERE product_id IS NULL;
+IF orphan_count > 0 THEN RAISE EXCEPTION 'Validation Failed: % orphaned variants found.',
+orphan_count;
+END IF;
+SELECT COUNT(*) INTO null_type_count
+FROM public.product_variants
+WHERE variant_type IS NULL
+    OR trim(variant_type) = '';
+IF null_type_count > 0 THEN RAISE EXCEPTION 'Validation Failed: % variants missing variant_type.',
+null_type_count;
+END IF;
+SELECT COUNT(*) INTO null_status_count
+FROM public.product_variants
+WHERE status IS NULL
+    OR trim(status) = '';
+IF null_status_count > 0 THEN RAISE EXCEPTION 'Validation Failed: % variants missing status.',
+null_status_count;
+END IF;
+SELECT COUNT(*) INTO null_stock_count
+FROM public.product_variants
+WHERE stock IS NULL;
+IF null_stock_count > 0 THEN RAISE EXCEPTION 'Validation Failed: % variants missing stock.',
+null_stock_count;
+END IF;
+SELECT COUNT(*) INTO null_sku_count
+FROM public.product_variants
+WHERE sku IS NULL
+    OR trim(sku) = '';
+IF null_sku_count > 0 THEN RAISE EXCEPTION 'Validation Failed: % variants missing SKU.',
+null_sku_count;
+END IF;
+SELECT COUNT(*) INTO duplicate_sku_count
+FROM (
+        SELECT sku
+        FROM public.product_variants
+        GROUP BY sku
+        HAVING COUNT(*) > 1
+    ) AS duplicates;
+IF duplicate_sku_count > 0 THEN RAISE EXCEPTION 'Validation Failed: % duplicate SKUs found.',
+duplicate_sku_count;
+END IF;
+RAISE NOTICE 'All Product Variant Validations Passed Successfully.';
+END $$;
