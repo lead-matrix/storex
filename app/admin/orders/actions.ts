@@ -65,13 +65,17 @@ export async function generateShippingLabel(orderId: string) {
 
     const warehouse = settings?.setting_value || {
         name: "Dina Cosmetic",
-        street1: "2417 Galveston Rd",
-        city: "Houston",
+        street1: "5430 FM 359 Rd S Ste 400 PMB 1013",
+        city: "Brookshire",
         state: "TX",
-        zip: "77017",
+        zip: "77423",
         country: "US",
-        email: "support@dinacosmetic.store",
+        email: "dinaecosmetic@gmail.com",
         phone: "+12816877609",
+        parcel_l: "10",
+        parcel_w: "7",
+        parcel_h: "5",
+        parcel_wt: "1",
     };
 
     const shipmentRes = await fetch("https://api.goshippo.com/shipments/", {

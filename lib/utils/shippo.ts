@@ -41,7 +41,7 @@ export async function createShippingLabel(order: any) {
             zip: "77423",
             country: "US",
             phone: "+12816877609",
-            email: "admin@dinacosmetic.store"
+            email: "dinaecosmetic@gmail.com"
         };
 
         const shipment = await shippo.shipment.create({
@@ -56,9 +56,9 @@ export async function createShippingLabel(order: any) {
                 country: order.shipping_address?.address?.country || order.shipping_address?.country || "US",
             },
             parcels: [{
-                length: warehouse.parcel_l || "8",
-                width: warehouse.parcel_w || "6",
-                height: warehouse.parcel_h || "4",
+                length: warehouse.parcel_l || "10",
+                width: warehouse.parcel_w || "7",
+                height: warehouse.parcel_h || "5",
                 distance_unit: "in",
                 weight: warehouse.parcel_wt || "1",
                 mass_unit: "lb",

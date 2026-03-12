@@ -27,10 +27,10 @@ export default function WarehouseEditor({ initialData }: { initialData: Warehous
         zip: "77423",
         country: "US",
         phone: "+12816877609",
-        email: "admin@dinacosmetic.store",
-        parcel_l: "8",
-        parcel_w: "6",
-        parcel_h: "4",
+        email: "dinaecosmetic@gmail.com",
+        parcel_l: "10",
+        parcel_w: "7",
+        parcel_h: "5",
         parcel_wt: "1"
     });
 

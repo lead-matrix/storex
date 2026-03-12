@@ -54,6 +54,24 @@ export function Footer({ shopLinks = [], legalLinks = [], social }: FooterProps)
                                 <Facebook size={18} strokeWidth={1.5} />
                             </Link>
                         )}
+                        {social?.tiktok && (
+                            <Link href={social.tiktok} target="_blank" className="text-textSecondary hover:text-primary transition-colors">
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M9 12a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+                                    <path d="M15 8a4 4 0 0 0 4 4" />
+                                    <path d="M15 2v16" />
+                                </svg>
+                            </Link>
+                        )}
                         {social?.youtube && (
                             <Link href={social.youtube} target="_blank" className="text-textSecondary hover:text-primary transition-colors">
                                 <Youtube size={18} strokeWidth={1.5} />

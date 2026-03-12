@@ -1869,7 +1869,7 @@ WHERE content_key = 'hero_main';
 -- 9C. Admin accounts
 UPDATE public.profiles
 SET role = 'admin'
-WHERE email = 'dinaecosmetic@gmail.com';
+WHERE email = 'admin@dinacosmetic.store';
 -- 9D. Site settings
 INSERT INTO public.site_settings (setting_key, setting_value)
 VALUES (
@@ -1878,7 +1878,7 @@ VALUES (
     ),
     (
         'warehouse_info',
-        '{"name":"Dina Cosmetic","street1":"5430 FM 359 Rd S Ste 400 PMB 1013","city":"Brookshire","state":"TX","zip":"77423","country":"US","phone":"+12816877609","email":"admin@dinacosmetic.store","parcel_l":"8","parcel_w":"6","parcel_h":"4","parcel_wt":"1"}'::jsonb
+        '{"name":"Dina Cosmetic","street1":"5430 FM 359 Rd S Ste 400 PMB 1013","city":"Brookshire","state":"TX","zip":"77423","country":"US","phone":"+12816877609","email":"dinaecosmetic@gmail.com","parcel_l":"10","parcel_w":"7","parcel_h":"5","parcel_wt":"1"}'::jsonb
     ),
     ('store_enabled', 'true'::jsonb),
     (
@@ -1899,7 +1899,7 @@ VALUES (
     ),
     (
         'email_settings',
-        '{"from_name":"DINA COSMETIC","from_email":"concierge@dinacosmetic.store","reply_to":"concierge@dinacosmetic.store","order_confirmation":true,"shipping_notification":true,"newsletter_welcome":true}'::jsonb
+        '{"from_name":"DINA COSMETIC","from_email":"support@dinacosmetic.store","reply_to":"support@dinacosmetic.store","order_confirmation":true,"shipping_notification":true,"newsletter_welcome":true}'::jsonb
     ) ON CONFLICT (setting_key) DO
 UPDATE
 SET setting_value = EXCLUDED.setting_value,
