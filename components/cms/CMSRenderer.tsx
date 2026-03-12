@@ -1,3 +1,4 @@
+'use client'
 import HeroSection from "./HeroSection";
 import ProductGridSection from "./ProductGridSection";
 import PhilosophyBlock from "./PhilosophyBlock";
