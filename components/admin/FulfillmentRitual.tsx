@@ -176,7 +176,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                         </Button>
                     )}
                 </DialogFooter>
-            </div >
-        </Dialog >
+            </DialogContent>
+        </Dialog>
     )
 }
