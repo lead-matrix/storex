@@ -1247,8 +1247,6 @@ CREATE TRIGGER frontend_content_updated_at BEFORE
 UPDATE ON public.frontend_content FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER nav_menus_updated_at BEFORE
 UPDATE ON public.navigation_menus FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-CREATE TRIGGER pages_updated_at BEFORE
-UPDATE ON public.pages FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER theme_settings_updated_at BEFORE
 UPDATE ON public.theme_settings FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER on_auth_user_created
@@ -1313,7 +1311,6 @@ CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
-CREATE INDEX IF NOT EXISTS idx_pages_slug ON public.pages(slug);
 -- ───────────────────────────────────────────────────────────────
 -- §9  SEED DATA  (idempotent — ON CONFLICT DO UPDATE)
 -- ───────────────────────────────────────────────────────────────
@@ -2018,53 +2015,6 @@ VALUES (
     ) ON CONFLICT (menu_key) DO
 UPDATE
 SET menu_items = EXCLUDED.menu_items,
-    updated_at = now();
--- 9G. Pages
-INSERT INTO public.pages (
-        slug,
-        title,
-        meta_title,
-        meta_desc,
-        content,
-        is_published
-    )
-VALUES (
-        'about',
-        'About Us',
-        'The Palace | DINA COSMETIC',
-        'The story and philosophy of the Obsidian Palace.',
-        '{"hero":{"badge":"Our Genesis","heading":"The Obsidian Palace"},"story":[{"heading":"Rituals of Illumination","body":"DINA COSMETIC was founded not in a laboratory, but in a sanctuary."},{"heading":"The Obsidian Standard","body":"Every artifact undergoes a rigorous alchemy of absolute black minerals and liquid gold accents."}],"closing_quote":"Step out of the ordinary and into the sanctuary of your own excellence."}'::jsonb,
-        true
-    ),
-    (
-        'contact',
-        'Concierge',
-        'Concierge | DINA COSMETIC',
-        'Contact the Obsidian Palace for inquiries.',
-        '{"heading":"Concierge","subheading":"Our dedicated team is available to assist you.","email":"concierge@dinacosmetic.store","phone":"+1 (800) LUX-DINA","address":"123 Obsidian Tower, Virtual City"}'::jsonb,
-        true
-    ),
-    (
-        'privacy',
-        'Privacy Policy',
-        'Privacy Policy | DINA COSMETIC',
-        'How DINA COSMETIC handles your data.',
-        '{"heading":"Privacy Policy","last_updated":"2026-03-03","sections":[{"title":"Data We Collect","body":"We collect your name, email, and shipping address."},{"title":"How We Use It","body":"Your data is used solely to process orders. We never sell your data."},{"title":"Contact","body":"Email: privacy@dinacosmetic.store"}]}'::jsonb,
-        true
-    ),
-    (
-        'terms',
-        'Terms of Service',
-        'Terms of Service | DINA COSMETIC',
-        'Terms and conditions for using the DINA COSMETIC store.',
-        '{"heading":"Terms of Service","last_updated":"2026-03-03","sections":[{"title":"Acceptance","body":"By using this website you agree to these terms."},{"title":"Pricing","body":"All prices are in USD and subject to change."},{"title":"Returns","body":"30-day returns on unopened products."},{"title":"Contact","body":"Email: legal@dinacosmetic.store"}]}'::jsonb,
-        true
-    ) ON CONFLICT (slug) DO
-UPDATE
-SET title = EXCLUDED.title,
-    meta_title = EXCLUDED.meta_title,
-    meta_desc = EXCLUDED.meta_desc,
-    content = EXCLUDED.content,
     updated_at = now();
 -- 9H. Theme settings
 INSERT INTO public.theme_settings (theme_key, label, is_active, settings)
