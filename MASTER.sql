@@ -13,9 +13,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'product_variants'
         AND column_name = 'title'
-) THEN
-ALTER TABLE public.product_variants
-ALTER COLUMN title DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.product_variants ALTER COLUMN title DROP NOT NULL';
 END IF;
 -- Drop NOT NULL on legacy 'title' column on variants (old table name)
 IF EXISTS (
@@ -24,9 +22,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'title'
-) THEN
-ALTER TABLE public.variants
-ALTER COLUMN title DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.variants ALTER COLUMN title DROP NOT NULL';
 END IF;
 -- Drop NOT NULL on legacy 'name' column on products
 IF EXISTS (
@@ -35,9 +31,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'products'
         AND column_name = 'name'
-) THEN
-ALTER TABLE public.products
-ALTER COLUMN name DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.products ALTER COLUMN name DROP NOT NULL';
 END IF;
 -- Drop NOT NULL on legacy 'price' column on product_variants (v1 schema artifact)
 IF EXISTS (
@@ -46,9 +40,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'product_variants'
         AND column_name = 'price'
-) THEN
-ALTER TABLE public.product_variants
-ALTER COLUMN price DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.product_variants ALTER COLUMN price DROP NOT NULL';
 END IF;
 -- Drop NOT NULL on legacy 'price' column on variants (old table name)
 IF EXISTS (
@@ -57,9 +49,7 @@ IF EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'price'
-) THEN
-ALTER TABLE public.variants
-ALTER COLUMN price DROP NOT NULL;
+) THEN EXECUTE 'ALTER TABLE public.variants ALTER COLUMN price DROP NOT NULL';
 END IF;
 END $$;
 --  §1   Core tables  (profiles, categories, products, variants,
@@ -375,9 +365,7 @@ AND NOT EXISTS (
     FROM information_schema.tables
     WHERE table_name = 'product_variants'
         AND table_schema = 'public'
-) THEN
-ALTER TABLE public.variants
-    RENAME TO product_variants;
+) THEN EXECUTE 'ALTER TABLE public.variants RENAME TO product_variants';
 END IF;
 END $$;
 -- Fix legacy title/name columns for v2
@@ -425,9 +413,7 @@ AND NOT EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'stock'
-) THEN
-ALTER TABLE public.variants
-    RENAME COLUMN stock_quantity TO stock;
+) THEN EXECUTE 'ALTER TABLE public.variants RENAME COLUMN stock_quantity TO stock';
 END IF;
 END $$;
 -- Rename legacy is_active → status if present
@@ -444,9 +430,7 @@ AND NOT EXISTS (
     WHERE table_schema = 'public'
         AND table_name = 'variants'
         AND column_name = 'status'
-) THEN
-ALTER TABLE public.variants
-    RENAME COLUMN is_active TO status;
+) THEN EXECUTE 'ALTER TABLE public.variants RENAME COLUMN is_active TO status';
 END IF;
 END $$;
 -- 1E. orders
@@ -1157,19 +1141,96 @@ CREATE POLICY "cms_sections_delete" ON public.cms_sections FOR DELETE USING (
 -- ───────────────────────────────────────────────────────────────
 -- §6  TRIGGERS  — updated_at + auto-profile on signup
 -- ───────────────────────────────────────────────────────────────
-DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
-DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
-DROP TRIGGER IF EXISTS products_updated_at ON public.products;
-DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
-DROP TRIGGER IF EXISTS variants_updated_at ON public.product_variants;
+-- 6A. DROP EXISTING TRIGGERS SAFELY
+DO $$ BEGIN -- Profiles
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'profiles'
+) THEN DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
+END IF;
+-- Categories
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'categories'
+) THEN DROP TRIGGER IF EXISTS categories_updated_at ON public.categories;
+END IF;
+-- Products
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'products'
+) THEN DROP TRIGGER IF EXISTS products_updated_at ON public.products;
+END IF;
+-- Product Variants (and legacy variants)
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'variants'
+) THEN DROP TRIGGER IF EXISTS variants_updated_at ON public.variants;
+END IF;
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
+) THEN DROP TRIGGER IF EXISTS variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS product_variants_updated_at ON public.product_variants;
-DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
-DROP TRIGGER IF EXISTS site_settings_updated_at ON public.site_settings;
-DROP TRIGGER IF EXISTS frontend_content_updated_at ON public.frontend_content;
-DROP TRIGGER IF EXISTS nav_menus_updated_at ON public.navigation_menus;
-DROP TRIGGER IF EXISTS pages_updated_at ON public.pages;
-DROP TRIGGER IF EXISTS theme_settings_updated_at ON public.theme_settings;
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+END IF;
+-- Orders
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'orders'
+) THEN DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
+END IF;
+-- Site Settings
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'site_settings'
+) THEN DROP TRIGGER IF EXISTS site_settings_updated_at ON public.site_settings;
+END IF;
+-- Frontend Content
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'frontend_content'
+) THEN DROP TRIGGER IF EXISTS frontend_content_updated_at ON public.frontend_content;
+END IF;
+-- Navigation Menus
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'navigation_menus'
+) THEN DROP TRIGGER IF EXISTS nav_menus_updated_at ON public.navigation_menus;
+END IF;
+-- Theme Settings
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'theme_settings'
+) THEN DROP TRIGGER IF EXISTS theme_settings_updated_at ON public.theme_settings;
+END IF;
+-- Auth Trigger
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'auth'
+        AND table_name = 'users'
+) THEN DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+END IF;
+END $$;
 CREATE TRIGGER profiles_updated_at BEFORE
 UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER categories_updated_at BEFORE
@@ -2278,7 +2339,14 @@ END IF;
 RETURN COALESCE(NEW, OLD);
 END;
 $$;
-DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
+DO $$ BEGIN IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+        AND table_name = 'product_variants'
+) THEN DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
+END IF;
+END $$;
 CREATE TRIGGER tr_sync_product_stock
 AFTER
 INSERT
