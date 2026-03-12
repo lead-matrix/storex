@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Box, MapPin, Truck, ExternalLink, ChevronDown, ShoppingBag } from 'lucide-react'
 import { updateOrderStatus } from '@/lib/actions/admin'
-import { generateShippingLabel } from '@/app/admin/orders/actions'
+import { FulfillmentRitual } from '@/components/admin/FulfillmentRitual'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 const STATUS_OPTIONS = ['pending', 'paid', 'shipped', 'cancelled', 'refunded']
 
@@ -22,27 +23,23 @@ interface OrderListProps {
 }
 
 export default function OrderList({ initialOrders }: OrderListProps) {
-    const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({})
+    const router = useRouter()
+    const [selectedOrder, setSelectedOrder] = useState<any>(null)
+    const [isRitualOpen, setIsRitualOpen] = useState(false)
 
     const handleStatusUpdate = async (orderId: string, status: string) => {
         try {
             await updateOrderStatus(orderId, status)
             toast.success('Order status updated')
+            router.refresh()
         } catch (err: any) {
             toast.error(err.message || 'Failed to update order')
         }
     }
 
-    const handleFulfillment = async (orderId: string) => {
-        setLoadingMap(prev => ({ ...prev, [orderId]: true }))
-        try {
-            await generateShippingLabel(orderId)
-            toast.success('Order fulfilled successfully')
-        } catch (err: any) {
-            toast.error(err.message || 'Fulfillment failed')
-        } finally {
-            setLoadingMap(prev => ({ ...prev, [orderId]: false }))
-        }
+    const openFulfillment = (order: any) => {
+        setSelectedOrder(order)
+        setIsRitualOpen(true)
     }
 
     return (
@@ -130,12 +127,11 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                         </a>
                                     ) : (
                                         <button
-                                            onClick={() => handleFulfillment(order.id)}
-                                            disabled={loadingMap[order.id]}
-                                            className="h-9 px-4 flex items-center gap-2 bg-gold text-black rounded text-[10px] uppercase tracking-luxury font-bold hover:bg-gold-light transition-colors shadow-gold disabled:opacity-50"
+                                            onClick={() => openFulfillment(order)}
+                                            className="h-9 px-4 flex items-center gap-2 bg-gold text-black rounded text-[10px] uppercase tracking-luxury font-bold hover:bg-gold-light transition-colors shadow-gold"
                                         >
                                             <Truck className="w-3.5 h-3.5" />
-                                            {loadingMap[order.id] ? 'Drafting...' : 'Fulfill'}
+                                            Fulfill
                                         </button>
                                     )}
                                 </div>
@@ -144,6 +140,17 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                     ))}
                 </tbody>
             </table>
+
+            {selectedOrder && (
+                <FulfillmentRitual
+                    order={selectedOrder}
+                    isOpen={isRitualOpen}
+                    onOpenChange={setIsRitualOpen}
+                    onSuccess={() => {
+                        router.refresh()
+                    }}
+                />
+            )}
         </div>
     )
 }

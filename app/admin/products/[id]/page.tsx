@@ -28,7 +28,7 @@ export default async function EditProductPage({ params }: Props) {
         .select(`
             id, title, slug, description, images, is_featured, is_bestseller, status, category_id,
             product_variants(
-                id, name, sku, price_override, stock
+                id, name, variant_type, sku, price_override, stock, color_code, image_url, weight
             )
         `)
         .eq('id', id)
@@ -40,10 +40,14 @@ export default async function EditProductPage({ params }: Props) {
     const variants = (product.product_variants ?? []).map((v: any) => ({
         id: v.id,
         title: v.name,
+        variant_type: v.variant_type || 'shade',
         sku: v.sku,
         price: Number(v.price_override) || 0,
         compare_price: null,
-        stock: v.stock ?? 0
+        stock: v.stock ?? 0,
+        color_code: v.color_code,
+        image_url: v.image_url,
+        weight: Number(v.weight) || 0.5
     }))
 
     return (

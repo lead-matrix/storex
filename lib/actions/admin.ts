@@ -101,6 +101,9 @@ export async function createProduct(formData: FormData) {
                         sku: v.sku,
                         price_override: v.price,
                         stock: v.stock,
+                        color_code: v.color_code,
+                        image_url: v.image_url,
+                        weight: v.weight,
                     }));
                 await supabase.from('product_variants').insert(variantsToInsert);
             }
@@ -166,6 +169,9 @@ export async function updateProduct(formData: FormData) {
                     sku: v.sku,
                     price_override: v.price,
                     stock: v.stock,
+                    color_code: v.color_code,
+                    image_url: v.image_url,
+                    weight: v.weight,
                 });
             } else if (v.id) {
                 await supabase.from('product_variants').update({
@@ -174,6 +180,9 @@ export async function updateProduct(formData: FormData) {
                     sku: v.sku,
                     price_override: v.price,
                     stock: v.stock,
+                    color_code: v.color_code,
+                    image_url: v.image_url,
+                    weight: v.weight,
                 }).eq('id', v.id);
             }
         }
