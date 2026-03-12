@@ -34,14 +34,14 @@ export async function createShippingLabel(order: any) {
             .maybeSingle();
 
         const warehouse = settings?.setting_value || {
-            name: "DINA COSMETIC | The Obsidian Palace",
-            street1: "2417 Galveston Rd",
-            city: "Houston",
+            name: "Dina Cosmetic",
+            street1: "5430 FM 359 Rd S Ste 400 PMB 1013",
+            city: "Brookshire",
             state: "TX",
-            zip: "77017",
+            zip: "77423",
             country: "US",
             phone: "+12816877609",
-            email: "support@dinacosmetic.store"
+            email: "admin@dinacosmetic.store"
         };
 
         const shipment = await shippo.shipment.create({

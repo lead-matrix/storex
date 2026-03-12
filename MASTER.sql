@@ -113,7 +113,9 @@ $$;
 -- ───────────────────────────────────────────────────────────────
 -- §1  CORE TABLES
 -- ───────────────────────────────────────────────────────────────
--- 1A. profiles — extends Supabase auth.users
+-- 1A. Profiles — extends Supabase auth.users
+DROP TABLE IF EXISTS public.admins CASCADE;
+DROP TABLE IF EXISTS public.customers CASCADE;
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email text UNIQUE NOT NULL,
@@ -1872,7 +1874,11 @@ WHERE email = 'dinaecosmetic@gmail.com';
 INSERT INTO public.site_settings (setting_key, setting_value)
 VALUES (
         'store_info',
-        '{"name":"DINA COSMETIC","tagline":"Luxury Obsidian Skincare","currency":"USD","email":"concierge@dinacosmetic.store","phone":"+1 (800) LUX-DINA","address":"123 Obsidian Tower, Virtual City"}'::jsonb
+        '{"name":"DINA COSMETIC","tagline":"Luxury Obsidian Skincare","currency":"USD","email":"admin@dinacosmetic.store","phone":"+12816877609"}'::jsonb
+    ),
+    (
+        'warehouse_info',
+        '{"name":"Dina Cosmetic","street1":"5430 FM 359 Rd S Ste 400 PMB 1013","city":"Brookshire","state":"TX","zip":"77423","country":"US","phone":"+12816877609","email":"admin@dinacosmetic.store","parcel_l":"8","parcel_w":"6","parcel_h":"4","parcel_wt":"1"}'::jsonb
     ),
     ('store_enabled', 'true'::jsonb),
     (
@@ -2272,7 +2278,8 @@ ORDER BY tablename;
 --      aggregate sum of `product_variants.stock`, allowing simple
 --      queries like .gt('stock', 0) to work accurately.
 -- ================================================================
-CREATE OR REPLACE FUNCTION public.sync_product_stock() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN -- Only update products that have variants (prevent overwriting manual base stock for non-variant items)
+CREATE OR REPLACE FUNCTION public.sync_product_stock() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$ BEGIN -- Only update products that have variants (prevent overwriting manual base stock for non-variant items)
     IF EXISTS (
         SELECT 1
         FROM public.product_variants

@@ -376,20 +376,20 @@ export async function updateStoreSettings(formData: FormData) {
 
     const { error: infoError } = await supabase
         .from('site_settings')
-        .upsert({ setting_key: 'store_info', setting_value: { name, tagline, currency } });
+        .upsert({ setting_key: 'store_info', setting_value: { name, tagline, currency } }, { onConflict: 'setting_key' });
 
     if (infoError) throw infoError;
 
     if (warehouseJson) {
         const { error: whError } = await supabase
             .from('site_settings')
-            .upsert({ setting_key: 'warehouse_info', setting_value: JSON.parse(warehouseJson) });
+            .upsert({ setting_key: 'warehouse_info', setting_value: JSON.parse(warehouseJson) }, { onConflict: 'setting_key' });
         if (whError) throw whError;
     }
 
     const { error: enabledError } = await supabase
         .from('site_settings')
-        .upsert({ setting_key: 'store_enabled', setting_value: storeEnabled });
+        .upsert({ setting_key: 'store_enabled', setting_value: storeEnabled }, { onConflict: 'setting_key' });
 
     if (enabledError) throw enabledError;
 

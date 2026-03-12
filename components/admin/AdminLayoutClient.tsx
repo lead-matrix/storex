@@ -25,7 +25,7 @@ const NAV_ITEMS = [
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/vault", icon: Vault, label: "Vault" },
     { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },
-    { href: "/admin/builder", icon: LayoutPanelLeft, label: "Page Builder" },
+    { href: "/admin/cms", icon: LayoutPanelLeft, label: "Experiences" },
     { href: "/admin/categories", icon: Layers, label: "Categories" },
     { href: "/admin/users", icon: Users, label: "Clientele" },
     { href: "/admin/email", icon: Mail, label: "Email Design" },

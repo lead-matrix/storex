@@ -20,14 +20,14 @@ interface WarehouseInfo {
 
 export default function WarehouseEditor({ initialData }: { initialData: WarehouseInfo }) {
     const [info, setInfo] = useState<WarehouseInfo>(initialData || {
-        name: "DINA COSMETIC",
-        street1: "",
-        city: "",
-        state: "",
-        zip: "",
+        name: "Dina Cosmetic",
+        street1: "5430 FM 359 Rd S Ste 400 PMB 1013",
+        city: "Brookshire",
+        state: "TX",
+        zip: "77423",
         country: "US",
-        phone: "",
-        email: "support@dinacosmetic.store",
+        phone: "+12816877609",
+        email: "admin@dinacosmetic.store",
         parcel_l: "8",
         parcel_w: "6",
         parcel_h: "4",
