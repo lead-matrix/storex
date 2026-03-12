@@ -58,28 +58,35 @@ WHERE email = 'your-professional@email.com';
 
 ### 4. Stripe Webhook Configuration
 1. Go to your **Stripe Dashboard** > **Developers** > **Webhooks**.
-2. Add a new endpoint: `https://your-domain.com/api/stripe/webhook`
+2. Add a new endpoint: `https://your-domain.com/api/webhook/stripe`
 3. Select events: `checkout.session.completed`.
 4. Copy the `Signing Secret` and paste it as `STRIPE_WEBHOOK_SECRET` in your environment variables.
+
+### 5. Authentication Configuration
+1. In the **Supabase Dashboard**, go to **Authentication** > **URL Configuration**.
+2. Set **Site URL** to your production domain: `https://dinacosmetic.store`.
+3. Add to **Redirect URLs**: `https://dinacosmetic.store/auth/callback`.
+4. Ensure `http://localhost:3000/auth/callback` is added for local development.
 
 ---
 
 ## 📁 CORE ARCHITECTURE
 ```
-├── app/                    # Next.js 16 App Router
-│   ├── admin/              # The Obsidian Command Center (Dashboard, CMS, Page Builder)
+├── app/                    # Next.js App Router
+│   ├── [slug]/             # Dynamic CMS Pages (from `cms_pages`)
+│   ├── admin/              # Command Center (Dashboard, CMS)
+│   ├── auth/               # Auth Handlers (Callback for PKCE)
 │   ├── shop/               # Product permutations & storefront
-│   ├── pages/              # dynamically generated builder pages
 │   └── checkout/           # Managed payment flows
 ├── components/             # High-Aesthetic UI Modules
 │   ├── admin/              # Administrative UI
+│   ├── cms/                # CMS Section Registry
 │   └── ui/                 # Tailored React components
 ├── features/               # Modular business logic units
 ├── lib/                    # Core Infrastructure
-│   ├── actions/            # Server Actions (Atomic Operations)
-│   ├── builder/            # Page drag-and-drop mechanics
+│   ├── actions/            # Server Actions
 │   └── supabase/           # Secure DB Clients (Admin/Server/Client)
-├── public/                 # Static assets (Logos/Palettes)
+├── public/                 # Static assets
 ├── MASTER.sql              # Unified Database Source of Truth
 └── GUIDE.md                # Advanced Operational Playbook
 ```
