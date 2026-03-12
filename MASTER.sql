@@ -1,7 +1,8 @@
 -- ================================================================
---  DINA COSMETIC  ·  MASTER DATABASE  ·  v2.0
+--  DINA COSMETIC  ·  MASTER DATABASE  ·  v2.1
 --  Single source of truth — run this once in Supabase SQL Editor.
 --  Safe to re-run (fully idempotent — no data loss).
+--  NOTE: Before first use on a fresh DB, run RESET_DATABASE.sql first.
 --
 --  SECTIONS
 --  §0   Helper functions
@@ -74,7 +75,7 @@ END $$;
 --  §8   Indexes
 --  §9   Seed data     (categories, products, site_settings,
 --                     frontend_content, navigation_menus,
---                     pages, theme_settings)
+--                     cms_pages + sections, theme_settings)
 --  §10  Admin stats view
 --  §11  RPC: process_order_atomic
 --  §12  Verification query
