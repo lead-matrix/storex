@@ -90,9 +90,8 @@ END $$;
 -- §0  HELPER FUNCTIONS
 -- ───────────────────────────────────────────────────────────────
 -- is_admin(): cached per query — no per-row re-evaluation
-CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE
-SET search_path = public AS $$
-SELECT EXISTS (
+CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER STABLE
+SET search_path = public AS $$ BEGIN RETURN EXISTS (
         SELECT 1
         FROM public.profiles
         WHERE id = (
@@ -100,6 +99,7 @@ SELECT EXISTS (
             )
             AND role = 'admin'
     );
+END;
 $$;
 -- handle_updated_at(): auto-stamps updated_at on every update
 CREATE OR REPLACE FUNCTION public.handle_updated_at() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
