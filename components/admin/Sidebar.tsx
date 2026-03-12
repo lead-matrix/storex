@@ -9,7 +9,10 @@ import {
     Layers,
     Settings,
     ExternalLink,
-    ChevronRight
+    ChevronRight,
+    Layout,
+    Mail,
+    BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +21,9 @@ const menuItems = [
     { icon: Package, label: "Products", href: "/admin/products" },
     { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
     { icon: Layers, label: "Categories", href: "/admin/categories" },
+    { icon: Layout, label: "CMS Pages", href: "/admin/cms" },
+    { icon: Mail, label: "Email", href: "/admin/email" },
+    { icon: BarChart2, label: "Analytics", href: "/admin/analytics" },
     { icon: Settings, label: "Site Editor", href: "/admin/settings" },
 ];
 
@@ -28,14 +34,14 @@ export function Sidebar() {
         <aside className="w-72 bg-zinc-950 border-r border-white/5 flex flex-col h-screen sticky top-0">
             <div className="p-8 border-b border-white/5">
                 <h1 className="text-xl font-serif text-gold tracking-[0.2em] uppercase">
-                    LMX Admin
+                    Dina Admin
                 </h1>
                 <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">
                     The Obsidian Palace
                 </p>
             </div>
 
-            <nav className="flex-1 p-6 space-y-2">
+            <nav className="flex-1 p-6 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href));
 
@@ -44,7 +50,7 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center justify-between px-4 py-3 rounded-none transition-all duration-300 group",
+                                "flex items-center justify-between px-4 py-3 transition-all duration-300 group",
                                 isActive
                                     ? "bg-white/5 text-gold border-l-2 border-gold"
                                     : "text-zinc-400 hover:text-white hover:bg-white/5"

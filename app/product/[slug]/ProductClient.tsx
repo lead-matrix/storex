@@ -13,6 +13,7 @@ interface Variant {
     stock: number
     color_code?: string | null
     image_url?: string | null
+    weight?: number | null
     status?: string
 }
 

@@ -1,88 +1,65 @@
-import { createClient } from "@/lib/supabase/server";
-import { Hero } from "@/components/Hero";
-import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid";
-import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid";
-import { TestimonialSection } from "@/components/TestimonialSection";
-import CMSRenderer from "@/components/cms/CMSRenderer";
+import { createClient } from "@/lib/supabase/server"
+import CMSRenderer from "@/components/cms/CMSRenderer"
+import { Hero } from "@/components/Hero"
+import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid"
+import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid"
+import { TestimonialSection } from "@/components/TestimonialSection"
+import type { Metadata } from "next"
 
-export const revalidate = 60;
+export const revalidate = 60
 
-async function getHomePageData() {
-  const supabase = await createClient();
-
-  // 1. Try to fetch CMS driven home page
-  try {
-    const { data: cmsHome, error: cmsError } = await supabase
-      .from("site_pages")
-      .select(`*, site_sections(*, content_blocks(*))`)
-      .eq("slug", "home")
-      .order("position", { foreignTable: "site_sections", ascending: true })
-      .maybeSingle();
-
-    if (cmsHome && !cmsError) {
-      return { cmsHome, products: [], categories: [] };
-    }
-  } catch (err) {
-    console.warn("CMS Home fetch failed:", err);
-  }
-
-  // 2. Fallback to curated legacy layout if no CMS home exists
-  const { data: products, error: prodErr } = await supabase
-    .from("products")
-    .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status")
-    .eq("status", "active")
-    .order("is_featured", { ascending: false })
-    .limit(4);
-
-  const { data: categories, error: catErr } = await supabase
-    .from("categories")
-    .select("id, name, slug, description, image_url")
-    .limit(6);
-
-  if (prodErr) console.error("Error fetching products:", prodErr);
-  if (catErr) console.error("Error fetching categories:", catErr);
-
-  return {
-    products: products?.map(p => ({ ...p, name: p.title })) ?? [],
-    categories: categories ?? [],
-    cmsHome: null
-  };
-}
-
-function transformCMSSessions(siteSections: any[]) {
-  return siteSections.map((section) => {
-    const props: Record<string, any> = {};
-    if (section.content_blocks) {
-      section.content_blocks.forEach((block: any) => {
-        // Assume value is what we want, or key-value pair
-        props[block.key] = block.value;
-      });
-    }
-    return {
-      type: section.type,
-      props,
-    };
-  });
+export const metadata: Metadata = {
+  title: "DINA COSMETIC — The Obsidian Palace",
+  description: "Luxury obsidian cosmetics — discover the curated collection at The Obsidian Palace.",
 }
 
 export default async function Home() {
-  const { products, categories, cmsHome } = await getHomePageData();
+  const supabase = await createClient()
 
-  if (cmsHome) {
-    const sections = transformCMSSessions(cmsHome.site_sections || []);
+  // 1. Try CMS-driven home page first (cms_pages with slug 'home')
+  const { data: homePage } = await supabase
+    .from("cms_pages")
+    .select(`
+            *,
+            cms_sections(*)
+        `)
+    .eq("slug", "home")
+    .eq("is_published", true)
+    .order("sort_order", { foreignTable: "cms_sections", ascending: true })
+    .single()
+
+  if (homePage && homePage.cms_sections && homePage.cms_sections.length > 0) {
+    const sections = (homePage.cms_sections as Array<{ type: string; props: Record<string, unknown> }>)
+      .sort((a, b) => (a as unknown as { sort_order: number }).sort_order - (b as unknown as { sort_order: number }).sort_order)
+      .map((s) => ({ type: s.type, props: s.props }))
+
     return (
       <main className="bg-obsidian">
         <CMSRenderer sections={sections} />
       </main>
-    );
+    )
   }
+
+  // 2. Fallback to curated legacy layout if no CMS home exists yet
+  const [{ data: products }, { data: categories }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status")
+      .eq("status", "active")
+      .order("is_featured", { ascending: false })
+      .limit(4),
+    supabase
+      .from("categories")
+      .select("id, name, slug, description, image_url")
+      .limit(6),
+  ])
 
   return (
     <div className="bg-black">
       <Hero />
-      <HomeCategoryGrid categories={categories as any} />
-      <FeaturedProductsGrid products={products} />
+      <HomeCategoryGrid categories={(categories ?? []) as any} />
+      <FeaturedProductsGrid products={(products ?? []).map((p) => ({ ...p, name: p.title }))} />
       <TestimonialSection />
     </div>
-  );
+  )
 }
