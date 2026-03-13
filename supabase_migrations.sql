@@ -167,14 +167,31 @@ END $$;
 ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins have full access to coupons" ON public.coupons;
 DROP POLICY IF EXISTS "Users can view active coupons" ON public.coupons;
-CREATE POLICY "coupons_select" ON public.coupons FOR
+DROP POLICY IF EXISTS "coupons_select" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_insert" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_update" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_delete" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_admin_all" ON public.coupons;
+CREATE POLICY "coupons_select_unified" ON public.coupons FOR
 SELECT USING (
         (status = 'active')
         OR (
             SELECT public.is_admin()
         )
     );
-CREATE POLICY "coupons_admin_all" ON public.coupons FOR ALL USING (
+CREATE POLICY "coupons_insert_admin" ON public.coupons FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "coupons_update_admin" ON public.coupons FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "coupons_delete_admin" ON public.coupons FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
@@ -196,7 +213,30 @@ CREATE TABLE IF NOT EXISTS public.abandoned_carts (
 -- RLS for Abandoned Carts
 ALTER TABLE public.abandoned_carts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins have full access to abandoned carts" ON public.abandoned_carts;
-CREATE POLICY "abandoned_carts_admin_all" ON public.abandoned_carts FOR ALL USING (
+DROP POLICY IF EXISTS "abandoned_carts_select" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_insert" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_update" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_delete" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_admin_all" ON public.abandoned_carts;
+CREATE POLICY "abandoned_carts_select_admin" ON public.abandoned_carts FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "abandoned_carts_insert_admin" ON public.abandoned_carts FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "abandoned_carts_update_admin" ON public.abandoned_carts FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "abandoned_carts_delete_admin" ON public.abandoned_carts FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
@@ -222,7 +262,30 @@ CREATE TABLE IF NOT EXISTS public.inventory_logs (
 );
 ALTER TABLE public.inventory_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins have full access to inventory logs" ON public.inventory_logs;
-CREATE POLICY "inventory_logs_admin_all" ON public.inventory_logs FOR ALL USING (
+DROP POLICY IF EXISTS "inventory_logs_select" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_insert" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_update" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_delete" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_admin_all" ON public.inventory_logs;
+CREATE POLICY "inventory_logs_select_admin" ON public.inventory_logs FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "inventory_logs_insert_admin" ON public.inventory_logs FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "inventory_logs_update_admin" ON public.inventory_logs FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "inventory_logs_delete_admin" ON public.inventory_logs FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
@@ -268,31 +331,146 @@ END IF;
 END $$;
 -- ── RLS POLICIES FOR SHIPMENT TABLES ──────────────────────────────────
 DROP POLICY IF EXISTS "Admins have full access to shipments" ON public.shipments;
-CREATE POLICY "shipments_admin_all" ON public.shipments FOR ALL USING (
+DROP POLICY IF EXISTS "shipments_select" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_insert" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_update" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_delete" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_admin_all" ON public.shipments;
+CREATE POLICY "shipments_select_admin" ON public.shipments FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipments_insert_admin" ON public.shipments FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipments_update_admin" ON public.shipments FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipments_delete_admin" ON public.shipments FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
 );
 DROP POLICY IF EXISTS "Admins have full access to parcels" ON public.parcels;
-CREATE POLICY "parcels_admin_all" ON public.parcels FOR ALL USING (
+DROP POLICY IF EXISTS "parcels_select" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_insert" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_update" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_delete" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_admin_all" ON public.parcels;
+CREATE POLICY "parcels_select_admin" ON public.parcels FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "parcels_insert_admin" ON public.parcels FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "parcels_update_admin" ON public.parcels FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "parcels_delete_admin" ON public.parcels FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
 );
 DROP POLICY IF EXISTS "Admins have full access to shipping labels" ON public.shipping_labels;
-CREATE POLICY "shipping_labels_admin_all" ON public.shipping_labels FOR ALL USING (
+DROP POLICY IF EXISTS "shipping_labels_select" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_insert" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_update" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_delete" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_admin_all" ON public.shipping_labels;
+CREATE POLICY "shipping_labels_select_admin" ON public.shipping_labels FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipping_labels_insert_admin" ON public.shipping_labels FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipping_labels_update_admin" ON public.shipping_labels FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipping_labels_delete_admin" ON public.shipping_labels FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
 );
 DROP POLICY IF EXISTS "Admins have full access to shipment items" ON public.shipment_items;
-CREATE POLICY "shipment_items_admin_all" ON public.shipment_items FOR ALL USING (
+DROP POLICY IF EXISTS "shipment_items_select" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_insert" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_update" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_delete" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_admin_all" ON public.shipment_items;
+CREATE POLICY "shipment_items_select_admin" ON public.shipment_items FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipment_items_insert_admin" ON public.shipment_items FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipment_items_update_admin" ON public.shipment_items FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "shipment_items_delete_admin" ON public.shipment_items FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
 );
 DROP POLICY IF EXISTS "Admins have full access to tracking" ON public.shipment_tracking;
-CREATE POLICY "tracking_admin_all" ON public.shipment_tracking FOR ALL USING (
+DROP POLICY IF EXISTS "tracking_select" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_insert" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_update" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_delete" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_admin_all" ON public.shipment_tracking;
+CREATE POLICY "tracking_select_admin" ON public.shipment_tracking FOR
+SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "tracking_insert_admin" ON public.shipment_tracking FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "tracking_update_admin" ON public.shipment_tracking FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "tracking_delete_admin" ON public.shipment_tracking FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
@@ -306,9 +484,20 @@ CREATE TABLE IF NOT EXISTS public.stripe_events (
 );
 ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins can view stripe events" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_select" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_insert" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_update" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_delete" ON public.stripe_events;
 DROP POLICY IF EXISTS "stripe_events_admin_select" ON public.stripe_events;
-CREATE POLICY "stripe_events_admin_select" ON public.stripe_events FOR
+DROP POLICY IF EXISTS "stripe_events_admin_insert" ON public.stripe_events;
+CREATE POLICY "stripe_events_select_admin" ON public.stripe_events FOR
 SELECT USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "stripe_events_insert_admin" ON public.stripe_events FOR
+INSERT WITH CHECK (
         (
             SELECT public.is_admin()
         )
@@ -317,8 +506,12 @@ SELECT USING (
 -- (Ensuring users can see their own and admins see all)
 DROP POLICY IF EXISTS "Users can see own orders" ON public.orders;
 DROP POLICY IF EXISTS "orders_select" ON public.orders;
+DROP POLICY IF EXISTS "orders_insert" ON public.orders;
+DROP POLICY IF EXISTS "orders_update" ON public.orders;
+DROP POLICY IF EXISTS "orders_delete" ON public.orders;
 DROP POLICY IF EXISTS "orders_select_own" ON public.orders;
-CREATE POLICY "orders_select_own" ON public.orders FOR
+DROP POLICY IF EXISTS "orders_admin_all" ON public.orders;
+CREATE POLICY "orders_select_unified" ON public.orders FOR
 SELECT USING (
         (
             (
@@ -329,17 +522,35 @@ SELECT USING (
             SELECT public.is_admin()
         )
     );
-DROP POLICY IF EXISTS "Admins have full access to orders" ON public.orders;
-DROP POLICY IF EXISTS "orders_admin_all" ON public.orders;
-CREATE POLICY "orders_admin_all" ON public.orders FOR ALL USING (
+CREATE POLICY "orders_insert_unified" ON public.orders FOR
+INSERT WITH CHECK (
+        (
+            (
+                SELECT auth.uid()
+            ) = user_id
+        )
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "orders_update_admin" ON public.orders FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "orders_delete_admin" ON public.orders FOR DELETE USING (
     (
         SELECT public.is_admin()
     )
 );
 DROP POLICY IF EXISTS "Users can see own order items" ON public.order_items;
 DROP POLICY IF EXISTS "order_items_select" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_insert" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_update" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_delete" ON public.order_items;
 DROP POLICY IF EXISTS "order_items_select_own" ON public.order_items;
-CREATE POLICY "order_items_select_own" ON public.order_items FOR
+CREATE POLICY "order_items_select_unified" ON public.order_items FOR
 SELECT USING (
         EXISTS (
             SELECT 1
@@ -357,6 +568,23 @@ SELECT USING (
                 )
         )
     );
+CREATE POLICY "order_items_insert_admin" ON public.order_items FOR
+INSERT WITH CHECK (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "order_items_update_admin" ON public.order_items FOR
+UPDATE USING (
+        (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "order_items_delete_admin" ON public.order_items FOR DELETE USING (
+    (
+        SELECT public.is_admin()
+    )
+);
 -- ── AUTOMATED INVENTORY LOGGING (Rule 49 & 50) ──────────────────────
 CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER AS $$ BEGIN IF (
         OLD.stock IS DISTINCT
