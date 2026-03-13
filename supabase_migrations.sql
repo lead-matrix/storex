@@ -586,7 +586,8 @@ CREATE POLICY "order_items_delete_admin" ON public.order_items FOR DELETE USING 
     )
 );
 -- ── AUTOMATED INVENTORY LOGGING (Rule 49 & 50) ──────────────────────
-CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER AS $$ BEGIN IF (
+CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$ BEGIN IF (
         OLD.stock IS DISTINCT
         FROM NEW.stock
     ) THEN
@@ -599,7 +600,7 @@ VALUES (
 END IF;
 RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 DROP TRIGGER IF EXISTS trg_log_inventory ON public.product_variants;
 CREATE TRIGGER trg_log_inventory
 AFTER
