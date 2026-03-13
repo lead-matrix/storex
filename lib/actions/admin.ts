@@ -80,7 +80,11 @@ export async function createProduct(formData: FormData) {
                 is_bestseller,
                 is_new,
                 on_sale,
-                sale_price
+                sale_price,
+                weight_grams: parseFloat(formData.get('weight_grams') as string) || null,
+                length_cm: parseFloat(formData.get('length_cm') as string) || null,
+                width_cm: parseFloat(formData.get('width_cm') as string) || null,
+                height_cm: parseFloat(formData.get('height_cm') as string) || null,
             }])
             .select()
             .single();
@@ -148,6 +152,10 @@ export async function updateProduct(formData: FormData) {
             base_price: parseFloat(formData.get('base_price') as string) || 0,
             stock: parseInt(formData.get('stock') as string) || 0,
             category_id: category_id || null,
+            weight_grams: parseFloat(formData.get('weight_grams') as string) || null,
+            length_cm: parseFloat(formData.get('length_cm') as string) || null,
+            width_cm: parseFloat(formData.get('width_cm') as string) || null,
+            height_cm: parseFloat(formData.get('height_cm') as string) || null,
             updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -183,6 +191,7 @@ export async function updateProduct(formData: FormData) {
                     color_code: v.color_code,
                     image_url: v.image_url,
                     weight: v.weight,
+                    status: v.status || 'active'
                 }).eq('id', v.id);
             }
         }

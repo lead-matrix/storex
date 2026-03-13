@@ -15,6 +15,7 @@ interface Product {
     is_bestseller?: boolean;
     images: string[];
     description?: string;
+    is_active?: boolean;
 }
 
 interface Variant {
@@ -52,7 +53,7 @@ export function ProductCard({
 
 
     return (
-        <div className="bg-surface border border-border p-6 group hover:border-primary transition">
+        <div className="bg-surface border border-border p-4 md:p-6 group hover:border-primary transition w-full max-w-full">
             <Link href={`/product/${product.slug}`}>
                 <div className="aspect-square overflow-hidden relative">
                     {/* Badges */}

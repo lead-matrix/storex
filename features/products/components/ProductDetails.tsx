@@ -74,88 +74,99 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
         setIsCartOpen(true)
     }
 
-    // Group variants by type so we can render separate rows if needed
+    // Group variants by type so we can render separate rows
     const variantsByType = activeVariants.reduce<Record<string, Variant[]>>((acc, v) => {
-        const type = v.variant_type ?? "option"
-            ; (acc[type] = acc[type] ?? []).push(v)
+        const type = v.variant_type || "option"
+        if (!acc[type]) acc[type] = []
+        acc[type].push(v)
         return acc
     }, {})
 
-    const isColorVariant = Object.keys(variantsByType).some((t) =>
-        ["shade", "color"].includes(t)
-    )
+    const variantTypes = Object.keys(variantsByType)
 
     return (
         <div className="flex flex-col animate-in fade-in duration-1000">
-            <h1 className="text-4xl md:text-6xl font-serif text-white tracking-tight mb-4 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tight mb-4 leading-tight uppercase font-light">
                 {product.title}
             </h1>
 
-            <p className="text-2xl text-gold font-light mb-8 font-serif italic">
-                ${Number(displayPrice).toFixed(2)}
-            </p>
+            <div className="flex items-center gap-4 mb-8">
+                <p className="text-2xl text-gold font-light font-serif">
+                    ${Number(displayPrice).toFixed(2)}
+                </p>
+                {selectedVariant?.sku && (
+                    <span className="text-[10px] text-luxury-subtext border border-white/10 px-2 py-0.5 rounded tracking-widest uppercase">
+                        SKU: {selectedVariant.sku}
+                    </span>
+                )}
+            </div>
 
-            <div className="text-luxury-subtext text-sm mb-12 leading-relaxed font-light max-w-lg">
+            <div className="text-luxury-subtext text-sm mb-12 leading-relaxed font-light max-w-lg border-l border-gold/20 pl-6 italic">
                 <p>{product.description}</p>
             </div>
 
-            {activeVariants.length > 0 && (
-                <div className="mb-12">
-                    <label className="text-[10px] uppercase tracking-widest text-gold font-bold block mb-6">
-                        {isColorVariant ? "Select Shade" : "Select Edition"}
-                    </label>
+            {variantTypes.length > 0 && (
+                <div className="space-y-10 mb-12">
+                    {variantTypes.map((type) => {
+                        const isColorGroup = ["shade", "color"].includes(type.toLowerCase())
+                        return (
+                            <div key={type} className="animate-in slide-in-from-bottom-2 duration-700">
+                                <label className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold block mb-4">
+                                    {type === 'option' ? 'Selection' : `Select ${type}`}
+                                </label>
 
-                    <div className="flex flex-wrap gap-4">
-                        {activeVariants.map((v) => {
-                            const isSelected = selectedVariantId === v.id
-                            const hasColor = v.color_code && isColorVariant
+                                <div className="flex flex-wrap gap-3">
+                                    {variantsByType[type].map((v) => {
+                                        const isSelected = selectedVariantId === v.id
 
-                            if (hasColor) {
-                                return (
-                                    <button
-                                        key={v.id}
-                                        onClick={() => handleVariantSelect(v)}
-                                        title={v.name}
-                                        className={`relative group flex flex-col items-center gap-2 transition-all duration-300`}
-                                    >
-                                        <span
-                                            className={`w-10 h-10 rounded-full border-2 transition-all duration-300 block
-                                                ${isSelected
-                                                    ? "border-gold scale-110 shadow-[0_0_12px_rgba(212,175,55,0.5)]"
-                                                    : "border-white/10 hover:border-white/40"
-                                                }`}
-                                            style={{ backgroundColor: v.color_code! }}
-                                        />
-                                        <span
-                                            className={`text-[9px] uppercase tracking-widest font-medium transition-colors
-                                                ${isSelected ? "text-gold" : "text-luxury-subtext group-hover:text-white"}`}
-                                        >
-                                            {v.name}
-                                        </span>
-                                    </button>
-                                )
-                            }
+                                        if (isColorGroup && v.color_code) {
+                                            return (
+                                                <button
+                                                    key={v.id}
+                                                    onClick={() => handleVariantSelect(v)}
+                                                    title={v.name}
+                                                    className={`group relative flex flex-col items-center gap-2 transition-all duration-500`}
+                                                >
+                                                    <div
+                                                        className={`w-12 h-12 rounded-full border-2 transition-all duration-500 p-1
+                                                            ${isSelected
+                                                                ? "border-gold scale-110 shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                                                                : "border-white/5 hover:border-white/20"
+                                                            }`}
+                                                    >
+                                                        <div
+                                                            className="w-full h-full rounded-full"
+                                                            style={{ backgroundColor: v.color_code }}
+                                                        />
+                                                    </div>
+                                                    <span
+                                                        className={`text-[8px] uppercase tracking-widest font-medium transition-colors
+                                                            ${isSelected ? "text-gold" : "text-luxury-subtext group-hover:text-white"}`}
+                                                    >
+                                                        {v.name}
+                                                    </span>
+                                                </button>
+                                            )
+                                        }
 
-                            return (
-                                <button
-                                    key={v.id}
-                                    onClick={() => handleVariantSelect(v)}
-                                    className={`px-8 py-3 border text-[10px] tracking-widest uppercase transition-all duration-300 font-medium 
-                                        ${isSelected
-                                            ? "border-gold bg-gold text-black scale-105"
-                                            : "border-white/10 text-luxury-subtext hover:border-white/30"
-                                        }`}
-                                >
-                                    {v.name}
-                                    {v.price_override != null && (
-                                        <span className="ml-2 opacity-60">
-                                            ${Number(v.price_override).toFixed(2)}
-                                        </span>
-                                    )}
-                                </button>
-                            )
-                        })}
-                    </div>
+                                        return (
+                                            <button
+                                                key={v.id}
+                                                onClick={() => handleVariantSelect(v)}
+                                                className={`px-6 py-3 border text-[9px] tracking-[0.2em] uppercase transition-all duration-300 font-bold
+                                                    ${isSelected
+                                                        ? "border-gold bg-gold text-black shadow-luxury-gold"
+                                                        : "border-white/10 text-luxury-subtext hover:border-white/30 hover:bg-white/5"
+                                                    }`}
+                                            >
+                                                {v.name}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
             )}
 

@@ -60,10 +60,13 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
         setUploading(true)
         const newImages: string[] = []
 
+        // Dynamic import to avoid SSR issues if any, though this is a client component
+        const imageCompression = (await import('browser-image-compression')).default
+
         for (const file of acceptedFiles) {
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error(`${file.name} is too large (max 5MB)`)
+            // Validate file size (max 10MB before compression)
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error(`${file.name} is too large (max 10MB)`)
                 continue
             }
 
@@ -75,22 +78,27 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
             setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
 
-            // Simulate progress (Supabase doesn't provide real-time progress)
-            const progressInterval = setInterval(() => {
-                setUploadProgress(prev => ({
-                    ...prev,
-                    [file.name]: Math.min((prev[file.name] || 0) + 10, 90)
-                }))
-            }, 200)
+            // Compression options
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+                onProgress: (progress: number) => {
+                    setUploadProgress(prev => ({ ...prev, [file.name]: progress }))
+                }
+            }
 
-            const url = await uploadToSupabase(file)
+            try {
+                const compressedFile = await imageCompression(file, options)
+                const url = await uploadToSupabase(compressedFile)
 
-            clearInterval(progressInterval)
-            setUploadProgress(prev => ({ ...prev, [file.name]: 100 }))
-
-            if (url) {
-                newImages.push(url)
-                toast.success(`${file.name} uploaded successfully`)
+                if (url) {
+                    newImages.push(url)
+                    toast.success(`${file.name} optimized & uploaded`)
+                }
+            } catch (error) {
+                console.error('Compression error:', error)
+                toast.error(`Failed to process ${file.name}`)
             }
 
             // Clear progress after a delay

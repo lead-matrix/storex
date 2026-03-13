@@ -67,7 +67,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
         .limit(4);
 
     return (
-        <div className="bg-black min-h-screen pt-32 pb-20">
+        <div className="bg-black min-h-screen pt-32 pb-20 overflow-x-hidden">
             <div className="container-luxury space-y-12">
                 <Link
                     href="/shop"

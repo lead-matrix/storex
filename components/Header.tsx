@@ -48,10 +48,8 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
     return (
         <header className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-md border-b border-white/10 
             ${scrolled ? "bg-black/90 py-3" : "bg-black/40 py-6"}`}>
-            <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-white">
-
-                {/* MOBILE MENU */}
-                <div className="md:hidden">
+            <div className="flex items-center justify-between px-4 md:px-8 max-w-[100vw] mx-auto"> {/* Added max-w-[100vw] and mx-auto for safe viewport */}
+                <div className="flex-1 md:hidden">
                     <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                         <SheetTrigger asChild>
                             <button className="text-textSecondary hover:text-primary transition-colors">
@@ -77,16 +75,18 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
                     </Sheet>
                 </div>
 
-                <Link href="/" className="flex items-center group">
-                    <img
-                        src="/logo.jpg"
-                        alt="DINA COSMETIC"
-                        className={`transition-all duration-700 object-contain py-1 group-hover:scale-105
-                            ${scrolled ? "h-8 md:h-10 lg:h-12" : "h-14 md:h-16 lg:h-20"}`}
-                    />
-                </Link>
+                <div className={`flex md:block ${isMenuOpen ? "hidden" : "flex"} justify-center md:justify-start items-center`}>
+                    <Link href="/" className="flex items-center group">
+                        <img
+                            src="/logo.jpg"
+                            alt="DINA COSMETIC"
+                            className={`transition-all duration-700 object-contain py-1 group-hover:scale-105
+                                ${scrolled ? "h-6 md:h-10 lg:h-12" : "h-10 md:h-16 lg:h-20"}`}
+                        />
+                    </Link>
+                </div>
 
-                <nav className="hidden md:flex gap-10 text-[11px] tracking-[0.3em] uppercase font-bold">
+                <nav className="hidden md:flex flex-1 justify-center gap-10 text-[11px] tracking-[0.3em] uppercase font-bold">
                     {links.filter(l => l.is_active !== false).map((link) => (
                         <Link
                             key={link.href}
@@ -101,7 +101,7 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
                     ))}
                 </nav>
 
-                <div className="flex gap-8 items-center text-white/90">
+                <div className="flex flex-1 gap-6 md:gap-8 justify-end items-center text-white/90">
                     <Link href={user ? "/account" : "/login"} className="hidden md:block hover:text-gold transition-colors">
                         <User size={20} strokeWidth={1.5} />
                     </Link>

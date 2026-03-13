@@ -34,7 +34,7 @@ export default function HeroSection({ title, subtitle, imageUrl }: HeroProps) {
                     viewport={{ once: true }}
                     transition={{ duration: 1, ease: "easeOut" }}
                 >
-                    <h1 className="text-6xl md:text-8xl font-serif text-white tracking- luxury leading-tight uppercase text-shadow-gold">
+                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-serif text-white tracking-widest leading-tight uppercase text-shadow-gold italic">
                         {title}
                     </h1>
                 </motion.div>

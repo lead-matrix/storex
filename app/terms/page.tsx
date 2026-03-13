@@ -5,7 +5,7 @@ export default function TermsPage() {
         <div className="bg-black text-white min-h-screen pt-40 pb-20">
             <div className="container-luxury max-w-4xl space-y-16">
                 <div className="space-y-6 text-center">
-                    <h1 className="text-5xl md:text-7xl font-serif tracking-tight text-white uppercase italic">Terms</h1>
+                    <h1 className="text-3xl sm:text-5xl md:text-7xl font-serif tracking-tight text-white uppercase italic">Terms</h1>
                     <p className="text-gold uppercase tracking-[0.5em] text-xs font-bold">Conditions of Engagement</p>
                 </div>
 

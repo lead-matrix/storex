@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createProduct, updateProduct } from '@/lib/actions/admin'
 import { ImageUpload } from './ImageUpload'
+import { SingleImageUpload } from './SingleImageUpload'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,6 +30,7 @@ interface Variant {
     color_code?: string
     image_url?: string
     weight?: number
+    status?: string
     _isNew?: boolean
     _deleted?: boolean
 }
@@ -47,6 +49,10 @@ interface ProductFormProps {
         is_new?: boolean
         category_id?: string
         status?: string
+        weight_grams?: number | null
+        length_cm?: number | null
+        width_cm?: number | null
+        height_cm?: number | null
     }
     variants?: Variant[]
 }
@@ -94,10 +100,11 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             variant_type: 'shade',
             price: 0,
             compare_price: null,
-            stock: 0,
+            stock: 10,
             color_code: '',
             image_url: '',
             weight: 0.5,
+            status: 'active',
             _isNew: true,
         }])
     }
@@ -211,38 +218,62 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         <p className="text-[10px] text-textsoft/50 tracking-luxury">Used in /product/[slug] — auto-generated from name</p>
                     </div>
 
-                    {/* Price */}
-                    <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
-                            Base Price (USD) *
-                        </Label>
-                        <Input
-                            name="base_price"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            defaultValue={product?.base_price}
-                            required
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
-                        />
-                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Variants may override this price</p>
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Price */}
+                        <div className="space-y-2">
+                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                                Base Price (USD) *
+                            </Label>
+                            <Input
+                                name="base_price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                defaultValue={product?.base_price}
+                                required
+                                className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal h-12"
+                            />
+                        </div>
+
+                        {/* Stock (Base) */}
+                        <div className="space-y-2">
+                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                                Initial Stock *
+                            </Label>
+                            <Input
+                                name="stock"
+                                type="number"
+                                min="0"
+                                placeholder="50"
+                                defaultValue={product?.id ? 0 : 50}
+                                required
+                                className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal h-12"
+                            />
+                        </div>
                     </div>
 
-                    {/* Stock (Base) */}
-                    <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
-                            Initial Stock *
-                        </Label>
-                        <Input
-                            name="stock"
-                            type="number"
-                            min="0"
-                            placeholder="50"
-                            defaultValue={0}
-                            required
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
-                        />
+                    {/* Shipping Dimensions (Optional) */}
+                    <div className="p-4 bg-pearl/50 rounded-lg border border-charcoal/5 space-y-4">
+                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping Dimensions (Optional)</Label>
+                        <div className="grid grid-cols-4 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">Weight (g)</Label>
+                                <Input name="weight_grams" type="number" step="0.1" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">L (cm)</Label>
+                                <Input name="length_cm" type="number" step="0.1" defaultValue={product?.length_cm ?? ''} className="h-9 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">W (cm)</Label>
+                                <Input name="width_cm" type="number" step="0.1" defaultValue={product?.width_cm ?? ''} className="h-9 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">H (cm)</Label>
+                                <Input name="height_cm" type="number" step="0.1" defaultValue={product?.height_cm ?? ''} className="h-9 text-xs" />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Category */}
@@ -396,141 +427,122 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             Add shade, size, type, or bundle variants. Variant price overrides the base price when selected.
                         </p>
 
-                        {/* Variant Rows */}
-                        {variants.map((variant, index) => {
-                            if (variant._deleted) return null
-                            return (
-                                <div
-                                    key={index}
-                                    className="space-y-4 p-5 bg-pearl rounded-md border border-charcoal/5"
-                                >
-                                    <div className="grid grid-cols-12 gap-4 items-end">
-                                        {/* Type */}
-                                        <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Type</label>
-                                            <select
-                                                value={variant.variant_type}
-                                                onChange={e => updateVariant(index, 'variant_type', e.target.value)}
-                                                className="w-full h-9 bg-white border border-charcoal/10 rounded px-2 text-xs text-charcoal outline-none focus:border-gold/50"
-                                            >
-                                                {VARIANT_TYPE_OPTIONS.map(opt => (
-                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
+                        {/* Variant Table */}
+                        <div className="overflow-x-auto border border-charcoal/5 rounded-md">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-pearl text-[9px] uppercase tracking-luxury text-textsoft font-bold border-b border-charcoal/10">
+                                    <tr>
+                                        <th className="px-4 py-3 min-w-[120px]">Variant Name</th>
+                                        <th className="px-4 py-3">Type</th>
+                                        <th className="px-4 py-3">SKU</th>
+                                        <th className="px-4 py-3">Price ($)</th>
+                                        <th className="px-4 py-3">Stock</th>
+                                        <th className="px-4 py-3">Status</th>
+                                        <th className="px-4 py-3">Color/Image</th>
+                                        <th className="px-4 py-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-charcoal/5 text-xs text-charcoal">
+                                    {variants.map((v, index) => {
+                                        if (v._deleted) return null
+                                        return (
+                                            <tr key={index} className="hover:bg-pearl/30 transition-colors group">
+                                                <td className="px-4 py-3">
+                                                    <Input
+                                                        value={v.title}
+                                                        onChange={e => updateVariant(index, 'title', e.target.value)}
+                                                        placeholder="e.g. Ruby Red"
+                                                        className="h-8 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <select
+                                                        value={v.variant_type}
+                                                        onChange={e => updateVariant(index, 'variant_type', e.target.value)}
+                                                        className="h-8 text-[10px] uppercase bg-white/50 border border-charcoal/5 rounded px-1 outline-none"
+                                                    >
+                                                        {VARIANT_TYPE_OPTIONS.map(opt => (
+                                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <Input
+                                                        value={v.sku || ''}
+                                                        onChange={e => updateVariant(index, 'sku', e.target.value)}
+                                                        placeholder="Auto"
+                                                        className="h-8 text-[10px] font-mono bg-white/50 border-transparent focus:border-gold/50 uppercase"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={v.price}
+                                                        onChange={e => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
+                                                        className="h-8 w-20 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <Input
+                                                        type="number"
+                                                        value={v.stock}
+                                                        onChange={e => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
+                                                        className="h-8 w-16 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <select
+                                                        value={v.status || 'active'}
+                                                        onChange={e => updateVariant(index, 'status', e.target.value)}
+                                                        className={`h-8 text-[10px] uppercase font-bold border border-charcoal/5 rounded px-1 
+                                                            ${v.status === 'draft' ? 'text-textsoft bg-pearl' : 'text-emerald-600 bg-emerald-50'}`}
+                                                    >
+                                                        <option value="active">Active</option>
+                                                        <option value="draft">Draft</option>
+                                                    </select>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="relative group/swatch">
+                                                            <input
+                                                                type="color"
+                                                                value={v.color_code || '#000000'}
+                                                                onChange={e => updateVariant(index, 'color_code', e.target.value)}
+                                                                className="w-6 h-6 rounded-full border border-charcoal/10 cursor-pointer overflow-hidden p-0 bg-transparent shadow-sm"
+                                                            />
+                                                            <div className="hidden group-hover/swatch:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-charcoal text-white text-[8px] rounded uppercase">Swatch</div>
+                                                        </div>
 
-                                        {/* Title */}
-                                        <div className="col-span-4 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Variant Title (e.g. Shade Name)</label>
-                                            <Input
-                                                value={variant.title}
-                                                onChange={e => updateVariant(index, 'title', e.target.value)}
-                                                placeholder="e.g. Ruby Red"
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
-                                            />
-                                        </div>
-
-                                        {/* SKU */}
-                                        <div className="col-span-3 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">SKU</label>
-                                            <Input
-                                                value={variant.sku || ''}
-                                                onChange={e => updateVariant(index, 'sku', e.target.value)}
-                                                placeholder="SKU-001"
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs font-mono"
-                                            />
-                                        </div>
-
-                                        {/* Delete */}
-                                        <div className="col-span-3 flex items-end justify-end pb-0.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => removeVariant(index)}
-                                                className="flex items-center gap-2 px-3 py-1.5 text-textsoft hover:text-red-500 hover:bg-red-50 rounded-md transition-colors text-[9px] uppercase tracking-widest font-bold"
-                                            >
-                                                <Trash2 className="w-3 h-3" />
-                                                Excise
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-12 gap-4 items-end pt-2 border-t border-charcoal/5">
-                                        {/* Price */}
-                                        <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Price ($)</label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={variant.price}
-                                                onChange={e => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
-                                            />
-                                        </div>
-
-                                        {/* Stock */}
-                                        <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Inventory</label>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                value={variant.stock}
-                                                onChange={e => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
-                                            />
-                                        </div>
-
-                                        {/* Weight */}
-                                        <div className="col-span-2 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Weight (lb)</label>
-                                            <Input
-                                                type="number"
-                                                step="0.1"
-                                                min="0"
-                                                value={variant.weight || 0.5}
-                                                onChange={e => updateVariant(index, 'weight', parseFloat(e.target.value) || 0)}
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
-                                            />
-                                        </div>
-
-                                        {/* Color Code */}
-                                        <div className="col-span-3 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium flex items-center gap-2">
-                                                Swatch Hex
-                                                {variant.color_code && (
-                                                    <div className="w-2 h-2 rounded-full border border-black/10" style={{ backgroundColor: variant.color_code }} />
-                                                )}
-                                            </label>
-                                            <Input
-                                                value={variant.color_code || ''}
-                                                onChange={e => updateVariant(index, 'color_code', e.target.value)}
-                                                placeholder="#FFFFFF"
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs font-mono uppercase"
-                                            />
-                                        </div>
-
-                                        {/* Image URL */}
-                                        <div className="col-span-3 space-y-1.5">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Variant Photo URL</label>
-                                            <Input
-                                                value={variant.image_url || ''}
-                                                onChange={e => updateVariant(index, 'image_url', e.target.value)}
-                                                placeholder="https://..."
-                                                className="h-9 bg-white border-charcoal/10 text-charcoal text-xs"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })}
+                                                        <SingleImageUpload
+                                                            value={v.image_url || ''}
+                                                            onChange={url => updateVariant(index, 'image_url', url)}
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeVariant(index)}
+                                                        className="text-textsoft hover:text-red-500 transition-colors"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
 
                         <button
                             type="button"
                             onClick={addVariant}
-                            className="flex items-center gap-2 text-[10px] uppercase tracking-luxury text-charcoal font-medium border border-dashed border-charcoal/20 rounded-md px-4 py-3 w-full hover:border-gold/50 hover:text-gold hover:bg-gold/5 transition-colors"
+                            className="flex items-center gap-2 text-[10px] uppercase tracking-luxury text-charcoal font-bold border border-charcoal/10 rounded-md px-6 py-4 w-full bg-pearl hover:bg-champagne/30 transition-colors shadow-sm"
                         >
-                            <Plus className="w-3.5 h-3.5" />
-                            Add Variant
+                            <Plus className="w-4 h-4 text-gold" />
+                            Add Variant Row
                         </button>
                     </div>
                 )}

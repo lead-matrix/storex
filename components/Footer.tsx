@@ -34,9 +34,9 @@ export function Footer({ shopLinks = [], legalLinks = [], social }: FooterProps)
                     </h2>
                 </Link>
 
-                <div className="flex items-center gap-8 mb-12">
+                <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mb-12">
                     {legal.map(link => (
-                        <Link key={link.href} href={link.href} className="text-xs uppercase tracking-widest text-textSecondary hover:text-primary transition-colors">
+                        <Link key={link.href} href={link.href} className="text-[10px] md:text-xs uppercase tracking-widest text-textSecondary hover:text-primary transition-colors text-center">
                             {link.label}
                         </Link>
                     ))}

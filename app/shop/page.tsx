@@ -53,7 +53,7 @@ export default async function ShopPage(props: ShopPageProps) {
                             ✦ {selectedCategory ? selectedCategory.name : "The Full Collection"}
                         </p>
 
-                        <h2 className="text-5xl md:text-6xl font-playfair italic mb-8 tracking-[0.1em]">
+                        <h2 className="text-3xl sm:text-5xl md:text-6xl font-playfair italic mb-8 tracking-[0.1em]">
                             {selectedCategory ? selectedCategory.name : "Boutique"}
                         </h2>
 

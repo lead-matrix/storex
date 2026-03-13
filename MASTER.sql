@@ -257,6 +257,14 @@ ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS weight_grams numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS length_cm numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS width_cm numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS height_cm numeric(10, 2);
+ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS title text;
 -- Rename legacy name → title if present
 DO $$ BEGIN IF EXISTS (
@@ -355,6 +363,77 @@ ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
 ALTER TABLE public.product_variants
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+-- 1D.bis Data Normalization and SKU Generation
+DO $$ BEGIN -- Normalize variant_type (only if NULL/empty)
+-- Shade grouping
+UPDATE public.product_variants
+SET variant_type = 'shade'
+WHERE (
+        variant_type IS NULL
+        OR variant_type = ''
+        OR variant_type = 'shade'
+    )
+    AND (
+        name ILIKE ANY (
+            ARRAY ['Burgundy', 'Rose Matte', 'Mauve', 'Red', 'Abrico', 'Brown', 'Gold', 'Nature']
+        )
+        OR color_code IS NOT NULL
+    );
+-- Size grouping
+UPDATE public.product_variants
+SET variant_type = 'size'
+WHERE (
+        variant_type IS NULL
+        OR variant_type = ''
+        OR variant_type = 'size'
+    )
+    AND (
+        name ILIKE ANY (
+            ARRAY ['Small', 'Medium', 'Large', '14 Pieces', '18 Pieces']
+        )
+    );
+-- Default for others if still NULL
+UPDATE public.product_variants
+SET variant_type = 'shade'
+WHERE variant_type IS NULL
+    OR variant_type = '';
+-- Generate missing SKUs: PRODUCTCODE-VARIANTCODE
+-- Using first 3 chars of product title and first 4 chars of variant name
+UPDATE public.product_variants v
+SET sku = UPPER(
+        REGEXP_REPLACE(
+            SUBSTRING(p.title, 1, 3),
+            '[^a-zA-Z0-0]',
+            '',
+            'g'
+        )
+    ) || '-' || UPPER(
+        REGEXP_REPLACE(SUBSTRING(v.name, 1, 4), '[^a-zA-Z0-0]', '', 'g')
+    )
+FROM public.products p
+WHERE v.product_id = p.id
+    AND (
+        v.sku IS NULL
+        OR v.sku = ''
+    );
+-- Final Validation: Ensure required fields are NOT NULL
+-- We do this at the end of the block to ensure data is populated
+ALTER TABLE public.product_variants
+ALTER COLUMN product_id
+SET NOT NULL;
+ALTER TABLE public.product_variants
+ALTER COLUMN variant_type
+SET NOT NULL;
+ALTER TABLE public.product_variants
+ALTER COLUMN sku
+SET NOT NULL;
+ALTER TABLE public.product_variants
+ALTER COLUMN stock
+SET NOT NULL;
+ALTER TABLE public.product_variants
+ALTER COLUMN status
+SET NOT NULL;
+END $$;
 -- ensure product_variants table name consistency
 DO $$ BEGIN IF EXISTS (
     SELECT 1
@@ -1311,6 +1390,9 @@ CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON public.orders(stripe_ses
 -- Categories / variants / profiles / newsletter / pages
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_variants_status ON public.product_variants(status);
+CREATE INDEX IF NOT EXISTS idx_product_variants_variant_type ON public.product_variants(variant_type);
+CREATE INDEX IF NOT EXISTS idx_product_variants_sku ON public.product_variants(sku);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
 -- ───────────────────────────────────────────────────────────────
