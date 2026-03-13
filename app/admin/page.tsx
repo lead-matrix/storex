@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { AlertTriangle, Eye, TrendingUp, Package, DollarSign, Users, ShoppingCart, Activity, RefreshCw, BarChart3, Clock, ChevronRight } from 'lucide-react'
+import { AlertTriangle, Eye, TrendingUp, Package, DollarSign, Users, ShoppingCart, Activity, RefreshCw, BarChart3, Clock, ChevronRight, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
