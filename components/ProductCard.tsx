@@ -36,16 +36,34 @@ export function ProductCard({
 
     const mainImage = product.images?.[0] || "/logo.jpg";
     const isOnSale = product.on_sale && product.sale_price;
-    const currentPrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
+
+    const activeVariants = (variants || []).filter(v => (v as any).status !== 'draft');
+
+    // Calculate the lowest price
+    let minPrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
+
+    if (activeVariants.length > 0) {
+        const variantPrices = activeVariants.map(v => v.price_override != null ? Number(v.price_override) : Number(product.base_price));
+        minPrice = Math.min(minPrice, ...variantPrices);
+    }
+
+    const hasMultiplePrices = activeVariants.length > 1;
 
     const handleQuickAdd = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // If has variants, redirect to product page instead of quick add
+        if (activeVariants.length > 0) {
+            window.location.href = `/product/${product.slug}`;
+            return;
+        }
+
         addToCart({
             id: product.id,
             productId: product.id,
             name: product.title,
-            price: currentPrice,
+            price: minPrice,
             image: mainImage,
             quantity: 1,
         });
@@ -100,7 +118,11 @@ export function ProductCard({
 
                 <div className="pt-2">
                     <div className="flex items-center gap-3 mb-3">
-                        {isOnSale ? (
+                        {hasMultiplePrices ? (
+                            <span className="text-primary font-semibold">
+                                Starting from ${minPrice.toFixed(2)}
+                            </span>
+                        ) : isOnSale ? (
                             <>
                                 <span className="text-red-500 font-semibold">
                                     ${Number(product.sale_price).toFixed(2)}
@@ -111,7 +133,7 @@ export function ProductCard({
                             </>
                         ) : (
                             <span className="text-primary font-semibold">
-                                ${Number(product.base_price).toFixed(2)}
+                                ${minPrice.toFixed(2)}
                             </span>
                         )}
                     </div>
@@ -120,7 +142,7 @@ export function ProductCard({
                         onClick={handleQuickAdd}
                         className="w-full border border-primary px-4 py-3 text-primary text-xs tracking-widest uppercase hover:bg-primary hover:text-black transition"
                     >
-                        Add to Cart
+                        {activeVariants.length > 0 ? 'Select Options' : 'Add to Cart'}
                     </button>
                 </div>
             </div>

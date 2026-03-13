@@ -56,7 +56,10 @@ export default async function Home() {
     const [productsRes, categoriesRes] = await Promise.all([
       supabase
         .from("products")
-        .select("id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status")
+        .select(`
+          id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status,
+          product_variants (id, name, price_override, stock, status)
+        `)
         .eq("status", "active")
         .order("is_featured", { ascending: false })
         .limit(4),

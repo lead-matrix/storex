@@ -60,7 +60,7 @@ export default async function ProductSlugPage({ params }: PageProps) {
 
     const { data: relatedProducts } = await supabase
         .from('products')
-        .select('id, title, slug, base_price, images, description')
+        .select('id, title, slug, base_price, images, description, product_variants(id, name, price_override, stock, status)')
         .eq('status', 'active')
         .eq('category_id', product.category_id)
         .neq('id', product.id)

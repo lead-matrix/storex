@@ -33,7 +33,10 @@ export function FeaturedProductsGrid({
                             className="animate-in fade-in slide-in-from-bottom-12 duration-1000 fill-mode-both"
                             style={{ animationDelay: `${idx * 200}ms` }}
                         >
-                            <ProductCard product={product} />
+                            <ProductCard
+                                product={product}
+                                variants={product.product_variants || []}
+                            />
                         </div>
                     ))}
                 </div>

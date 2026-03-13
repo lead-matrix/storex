@@ -19,7 +19,11 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 w-full stagger-children">
                     {products.slice(0, 4).map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCard
+                            key={product.id}
+                            product={product}
+                            variants={product.product_variants || []}
+                        />
                     ))}
                 </div>
             </div>
