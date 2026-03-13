@@ -5,6 +5,8 @@ import { motion, Reorder, AnimatePresence } from "framer-motion"
 import { GripVertical, Trash2, Plus, Save, Settings2, Image as ImageIcon, Type, LayoutGrid, Palette, Sparkles, Loader2 } from "lucide-react"
 import { saveSections } from "@/lib/actions/cms"
 import { toast } from "sonner"
+import { SingleImageUpload } from "@/components/admin/SingleImageUpload"
+
 
 interface Section {
     id?: string
@@ -173,25 +175,37 @@ export default function CMSEditor({ pageId, initialSections }: { pageId: string,
                                     <p className="text-[8px] text-white/20 font-mono">ID: {sections[activeSection].id || "unsaved_instance"}</p>
                                 </div>
 
-                                {Object.keys(sections[activeSection].props).map((key) => (
-                                    <div key={key} className="space-y-2">
-                                        <label className="text-[9px] uppercase tracking-widest text-white/30 font-bold">{key.replace(/([A-Z])/g, ' $1')}</label>
-                                        {typeof sections[activeSection].props[key] === 'string' ? (
-                                            <textarea
-                                                value={sections[activeSection].props[key]}
-                                                onChange={(e) => updateProp(activeSection, key, e.target.value)}
-                                                className="w-full bg-black/40 border border-white/10 rounded p-3 text-xs text-white focus:border-gold/50 outline-none transition-all min-h-[80px]"
-                                            />
-                                        ) : (
-                                            <input
-                                                type="number"
-                                                value={sections[activeSection].props[key]}
-                                                onChange={(e) => updateProp(activeSection, key, parseInt(e.target.value))}
-                                                className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-gold/50 outline-none transition-all font-mono"
-                                            />
-                                        )}
-                                    </div>
-                                ))}
+                                {Object.keys(sections[activeSection].props).map((key) => {
+                                    const isImageUrl = key.toLowerCase().endsWith('url');
+                                    return (
+                                        <div key={key} className="space-y-2">
+                                            <label className="text-[9px] uppercase tracking-widest text-white/30 font-bold">{key.replace(/([A-Z])/g, ' $1')}</label>
+                                            {isImageUrl ? (
+                                                <div className="bg-black/40 border border-white/10 rounded p-4">
+                                                    <SingleImageUpload
+                                                        value={sections[activeSection].props[key]}
+                                                        onChange={(url) => updateProp(activeSection, key, url)}
+                                                        className="w-full h-32"
+                                                    />
+                                                </div>
+                                            ) : typeof sections[activeSection].props[key] === 'string' ? (
+                                                <textarea
+                                                    value={sections[activeSection].props[key]}
+                                                    onChange={(e) => updateProp(activeSection, key, e.target.value)}
+                                                    className="w-full bg-black/40 border border-white/10 rounded p-3 text-xs text-white focus:border-gold/50 outline-none transition-all min-h-[80px]"
+                                                />
+                                            ) : (
+                                                <input
+                                                    type="number"
+                                                    value={sections[activeSection].props[key]}
+                                                    onChange={(e) => updateProp(activeSection, key, parseInt(e.target.value))}
+                                                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-gold/50 outline-none transition-all font-mono"
+                                                />
+                                            )}
+                                        </div>
+                                    )
+                                })}
+
                             </div>
                         ) : (
                             <div className="py-12 flex flex-col items-center justify-center text-center space-y-3 opacity-20">
