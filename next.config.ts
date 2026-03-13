@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,10 +12,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'zsahskxejgbrvfhobfyp.supabase.co',
+        hostname: 'hsevxangxdfyolgspydl.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'zsahskxejgbrvfhobfyp.supabase.co',
+      }
     ],
   },
+
 };
 
 export default nextConfig;

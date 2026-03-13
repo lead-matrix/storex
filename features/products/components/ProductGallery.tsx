@@ -38,9 +38,11 @@ export function ProductGallery({ images, productName, forcedImage }: ProductGall
                     src={displayImage}
                     alt={`${productName} view`}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                     className="object-contain p-8 md:p-12 transition-all duration-700 ease-in-out group-hover:scale-105"
                     priority
                 />
+
                 <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
             </div>
 

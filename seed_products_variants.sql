@@ -31,7 +31,7 @@ VALUES (
         'makeup-brush-set',
         'Professional grade brush set for flawless application. Includes 14 or 18 pieces for all your makeup needs.',
         tools_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Brush-set-cover.jpg'],
+        ARRAY ['/products/Brush-set-cover.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -56,7 +56,7 @@ VALUES (
         20.00,
         20,
         'BRUSH-18PCS',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Brush-set-18pcs.jpg',
+        '/products/Brush-set-18pcs.jpg',
         0.8,
         'active'
     ),
@@ -67,7 +67,7 @@ VALUES (
         15.00,
         20,
         'BRUSH-14PCS',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Brush-set-14pcs.jpg',
+        '/products/Brush-set-14pcs.jpg',
         0.6,
         'active'
     ) ON CONFLICT (sku) DO
@@ -89,7 +89,7 @@ VALUES (
         'lipsticks',
         'Rich, creamy lipsticks for every occasion. Available in a variety of stunning shades.',
         lips_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Solidcream-lipstick.jpg'],
+        ARRAY ['/products/Solidcream-lipstick.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -115,7 +115,7 @@ VALUES (
         15.00,
         5,
         'LIP-ROUGE',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Solidmatte-lipstick-royal.jpg',
+        '/products/Solidmatte-lipstick-royal.jpg',
         0.1,
         'active',
         '#FF0000'
@@ -127,7 +127,7 @@ VALUES (
         15.00,
         5,
         'LIP-PURPLE',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Solidmatte-lipstick-purple.jpg',
+        '/products/Solidmatte-lipstick-purple.jpg',
         0.1,
         'active',
         '#800080'
@@ -139,7 +139,7 @@ VALUES (
         15.00,
         5,
         'LIP-ABRICOT',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Solidlipstick-abrico.jpg',
+        '/products/Solidlipstick-abrico.jpg',
         0.1,
         'active',
         '#FBCEB1'
@@ -151,7 +151,7 @@ VALUES (
         15.00,
         5,
         'LIP-MAROON',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Solidcream-lipstick-marron.jpg',
+        '/products/Solidcream-lipstick-marron.jpg',
         0.1,
         'active',
         '#800000'
@@ -163,7 +163,7 @@ VALUES (
         15.00,
         5,
         'LIP-LIGHTPINK',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Solidlipstick-lightpink.jpg',
+        '/products/Solidlipstick-lightpink.jpg',
         0.1,
         'active',
         '#FFB6C1'
@@ -187,7 +187,7 @@ VALUES (
         'liquid-matte-lipsticks',
         'Long-lasting liquid matte lipsticks with an ultra-matte finish.',
         lips_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Liquidmatte-lipstick.jpg'],
+        ARRAY ['/products/Liquidmatte-lipstick.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -213,7 +213,7 @@ VALUES (
         15.00,
         10,
         'LML-MAUVE',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/mauve.jpg',
+        '/products/mauve.jpg',
         0.1,
         'active',
         '#E0B0FF'
@@ -225,7 +225,7 @@ VALUES (
         15.00,
         5,
         'LML-BURGUNDY',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Liq-lip-burgundy.jpg',
+        '/products/Liq-lip-burgundy.jpg',
         0.1,
         'active',
         '#800020'
@@ -237,7 +237,7 @@ VALUES (
         15.00,
         5,
         'LML-ROSE',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/liq-lip-Rose-matte.jpg',
+        '/products/liq-lip-Rose-matte.jpg',
         0.1,
         'active',
         '#FF66CC'
@@ -249,7 +249,7 @@ VALUES (
         15.00,
         10,
         'LML-RED',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/liq-lip-red.jpg',
+        '/products/liq-lip-red.jpg',
         0.1,
         'active',
         '#FF0000'
@@ -261,7 +261,7 @@ VALUES (
         15.00,
         5,
         'LML-ABRICOT',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/Liq-lip-abrico.jpg',
+        '/products/Liq-lip-abrico.jpg',
         0.1,
         'active',
         '#FBCEB1'
@@ -285,7 +285,7 @@ VALUES (
         'makeup-bag',
         'Stylish and spacious makeup bags for all your beauty essentials.',
         tools_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/makeup-bag.jpg'],
+        ARRAY ['/products/makeup-bag.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -310,7 +310,7 @@ VALUES (
         10.00,
         10,
         'BAG-MED',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/makeup-bag.jpg',
+        '/products/makeup-bag.jpg',
         0.5,
         'active'
     ),
@@ -321,7 +321,7 @@ VALUES (
         8.00,
         10,
         'BAG-SML',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/makeup-bag.jpg',
+        '/products/makeup-bag.jpg',
         0.3,
         'active'
     ) ON CONFLICT (sku) DO
@@ -343,7 +343,7 @@ VALUES (
         'lip-gloss',
         'High-shine lip gloss for a radiant and luscious look.',
         lips_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/liq-lip-gloss.jpg'],
+        ARRAY ['/products/liq-lip-gloss.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -369,7 +369,7 @@ VALUES (
         12.00,
         5,
         'GLOSS-GOLD',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/gold.jpg',
+        '/products/gold.jpg',
         0.1,
         'active',
         '#FFD700'
@@ -381,7 +381,7 @@ VALUES (
         12.00,
         5,
         'GLOSS-ROSE',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/rose.jpg',
+        '/products/rose.jpg',
         0.1,
         'active',
         '#FF66CC'
@@ -393,7 +393,7 @@ VALUES (
         12.00,
         5,
         'GLOSS-BROWN',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/brown.jpg',
+        '/products/brown.jpg',
         0.1,
         'active',
         '#A52A2A'
@@ -405,7 +405,7 @@ VALUES (
         12.00,
         5,
         'GLOSS-NATURE',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/nature.jpg',
+        '/products/nature.jpg',
         0.1,
         'active',
         '#D2B48C'
@@ -429,7 +429,7 @@ VALUES (
         'matte-lipsticks-single',
         'Classic matte lipstick for a bold statement and comfortable wear.',
         lips_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/matte-lipstick.jpg'],
+        ARRAY ['/products/matte-lipstick.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -454,7 +454,7 @@ VALUES (
         15.00,
         10,
         'MATTE-LIP-SGL',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/matte-lipstick.jpg',
+        '/products/matte-lipstick.jpg',
         0.1,
         'active'
     ) ON CONFLICT (sku) DO
@@ -476,7 +476,7 @@ VALUES (
         'foundations-single',
         'Flawless coverage foundations for a perfect complexion.',
         face_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/foundation.jpg'],
+        ARRAY ['/products/foundation.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -501,7 +501,7 @@ VALUES (
         15.00,
         10,
         'FOUNDATION-SGL',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/foundation.jpg',
+        '/products/foundation.jpg',
         0.4,
         'active'
     ) ON CONFLICT (sku) DO
@@ -523,7 +523,7 @@ VALUES (
         'eyeshadow-primer-single',
         'Long-lasting eyeshadow primer for vibrant and crease-free eye makeup.',
         eyes_id,
-        ARRAY ['https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/eyeshadow-primer.jpg'],
+        ARRAY ['/products/eyeshadow-primer.jpg'],
         'active'
     ) ON CONFLICT (slug) DO
 UPDATE
@@ -548,7 +548,7 @@ VALUES (
         8.99,
         10,
         'ES-PRIMER-SGL',
-        'https://hsevxangxdfyolgspydl.supabase.co/storage/v1/object/public/product-images/eyeshadow-primer.jpg',
+        '/products/eyeshadow-primer.jpg',
         0.2,
         'active'
     ) ON CONFLICT (sku) DO
