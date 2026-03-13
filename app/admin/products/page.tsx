@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, MoreHorizontal, ChevronDown, ChevronUp, Trash2, ToggleLeft, ToggleRight, Edit, Package, Layers, Activity } from "lucide-react";
+import { Plus, Search, Filter, MoreHorizontal, ChevronDown, ChevronUp, Trash2, ToggleLeft, ToggleRight, Edit, Package, Layers, Activity, Download, Upload } from "lucide-react";
 import Link from "next/link";
 import { adjustStock, toggleProductStatus, deleteProduct } from "@/lib/actions/admin";
+import { BulkImportButton } from "@/components/admin/BulkImportButton";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -53,13 +54,25 @@ export default async function AdminProductsPage() {
                     <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Collections</h1>
                     <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Asset Registry · Inventory Management</p>
                 </div>
-                <Link
-                    href="/admin/products/new"
-                    className="flex items-center gap-2 bg-gold text-black px-6 py-3 rounded text-[11px] font-bold uppercase tracking-luxury hover:bg-gold-light transition-all shadow-gold"
-                >
-                    <Plus className="w-4 h-4" />
-                    Archive New Asset
-                </Link>
+                <div className="flex items-center gap-3">
+                    <a
+                        href="/api/admin/products/export"
+                        className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded text-[11px] font-bold uppercase tracking-luxury text-white/50 hover:text-white transition-all"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export CSV
+                    </a>
+
+                    <BulkImportButton />
+
+                    <Link
+                        href="/admin/products/new"
+                        className="flex items-center gap-2 bg-gold text-black px-6 py-3 rounded text-[11px] font-bold uppercase tracking-luxury hover:bg-gold-light transition-all shadow-gold"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Archive New Asset
+                    </Link>
+                </div>
             </div>
 
             {/* KPIs */}

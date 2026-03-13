@@ -63,13 +63,23 @@ export default async function AdminDashboard() {
     return (
         <div className="space-y-12 animate-luxury-fade pb-24">
             {/* ── HEADER ── */}
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Royal Overview</h1>
                     <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Commander Control · Operational Intelligence</p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded text-[10px] uppercase tracking-luxury text-white/50 hover:text-gold transition-all">
+
+                {/* QUICK ACTIONS PANEL */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <Link href="/admin/products/new" className="flex items-center gap-2 bg-gold/10 border border-gold/30 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-gold hover:bg-gold hover:text-black transition-all font-bold">
+                        <Plus size={14} />
+                        New Asset
+                    </Link>
+                    <Link href="/admin/orders" className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/70 hover:border-white/30 transition-all font-bold">
+                        <ShoppingCart size={14} />
+                        Process Orders
+                    </Link>
+                    <button className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/50 hover:text-gold transition-all">
                         <RefreshCw className="w-3 h-3" />
                         Sync Registry
                     </button>
@@ -87,11 +97,12 @@ export default async function AdminDashboard() {
                     sparkData={[40, 60, 50, 80, 70, 95, 100]}
                 />
                 <KPICard
-                    label="Total Orders"
-                    value={ordersCount ?? 0}
-                    subtext={`${activeOrders} Pending Actions`}
+                    label="Active Orders"
+                    value={activeOrders}
+                    subtext={`${ordersCount ?? 0} Total Transactions`}
                     icon={ShoppingCart}
                     colorClass="text-emerald-400"
+                    sparkData={[20, 30, 45, 30, 50, 40, 60]}
                 />
                 <KPICard
                     label="Product Vault"

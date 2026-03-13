@@ -16,6 +16,7 @@ import {
     BarChart2,
     Mail,
     LayoutPanelLeft,
+    Ticket,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
     { href: "/admin", icon: LayoutDashboard, label: "Overview", exact: true },
     { href: "/admin/products", icon: Package, label: "Products" },
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
+    { href: "/admin/marketing", icon: Ticket, label: "Marketing" },
     { href: "/admin/vault", icon: Vault, label: "Vault" },
     { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },
     { href: "/admin/cms", icon: LayoutPanelLeft, label: "Experiences" },
