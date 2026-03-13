@@ -136,13 +136,23 @@ async function runTest() {
     }
 
     // Link Item to Shipment (New Partial Fulfillment Logic)
-    const { data: orderItem } = await supabase.from('order_items').select('id').eq('order_id', order.id).single();
+    const { data: orderItem, error: oiError } = await supabase.from('order_items').select('id').eq('order_id', order.id).single();
 
-    await supabase.from('shipment_items').insert({
+    if (oiError || !orderItem) {
+        console.error('Order item retrieval failed:', oiError?.message);
+        return;
+    }
+
+    const { error: siError } = await supabase.from('shipment_items').insert({
         shipment_id: shipment.id,
         order_item_id: orderItem.id,
         quantity: 1
     });
+
+    if (siError) {
+        console.error('Shipment item link failed:', siError.message);
+        return;
+    }
 
     // Update Order Item status
     await supabase
