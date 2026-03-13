@@ -94,20 +94,27 @@ export async function POST(req: Request) {
         }
 
         // 3. Create Stripe line items
-        const lineItems = validatedItems.map((item: any) => ({
-            price_data: {
-                currency: "usd",
-                product_data: {
-                    name: item.name,
-                    images: [item.image],
-                    metadata: {
-                        product_id: item.productId,
+        const lineItems = validatedItems.map((item: any) => {
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dinacosmetic.store';
+            const imageUrl = item.image
+                ? (item.image.startsWith('http') ? item.image : `${baseUrl}${item.image.startsWith('/') ? '' : '/'}${item.image}`)
+                : undefined;
+
+            return {
+                price_data: {
+                    currency: "usd",
+                    product_data: {
+                        name: item.name,
+                        images: imageUrl ? [imageUrl] : [],
+                        metadata: {
+                            product_id: item.productId,
+                        },
                     },
+                    unit_amount: Math.round(item.price * 100),
                 },
-                unit_amount: Math.round(item.price * 100),
-            },
-            quantity: item.quantity,
-        }));
+                quantity: item.quantity,
+            };
+        });
 
         const shippingOptions = [
             {

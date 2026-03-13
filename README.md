@@ -87,6 +87,7 @@ WHERE email = 'your-professional@email.com';
 │   ├── actions/            # Server Actions
 │   └── supabase/           # Secure DB Clients (Admin/Server/Client)
 ├── public/                 # Static assets
+├── proxy.ts                # Next.js 16+ Edge Proxy (Replaces middleware.ts)
 ├── MASTER.sql              # Unified Database Source of Truth
 └── GUIDE.md                # Advanced Operational Playbook
 ```
@@ -111,8 +112,9 @@ Elite beauty requires elite aesthetics.
 
 ## ⚡ IMAGE OPTIMIZATION & PERFORMANCE
 To ensure lightning-fast load times matching the luxury aesthetic:
-- **Automatic Optimization**: All product and site images use the Next.js `<Image>` component, which automatically serves them in optimized formats (like WebP).
-- **External CDN Priority**: High-res assets (like Dina's portrait) are loaded directly from the Supabase Storage CDN. Because the hostname is registered in `next.config.ts`, Next.js Edge networks instantly cache and optimize the payload globally.
+- **Automatic Optimization**: All product and site images use the Next.js `<Image>` component, which automatically serves them in optimized formats (like WebP) with extreme compression ratios.
+- **Local Vault Storage**: High-res assets are compressed to <0.1MB on upload and saved efficiently in `/public/products`. This creates instant render times without external CDN latency.
+- **Absolute Payment Rendering**: Checkout images flawlessly map local URIs back to `<NEXT_PUBLIC_SITE_URL>` during Stripe payload mapping, preventing silent 400 rejection errors within the checkout flow.
 - **Above-The-Fold**: Critical hero and banner images utilize the `priority` flag to pre-load critical CSS and UI.
 
 ---
