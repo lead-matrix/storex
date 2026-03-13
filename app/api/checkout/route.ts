@@ -26,17 +26,20 @@ export async function POST(req: Request) {
             const apiKey = process.env.SHIPPO_API_KEY;
             if (apiKey) {
                 const ShippoModule = await import('shippo');
-                const Shippo = ShippoModule.default || ShippoModule;
+                const Shippo = ShippoModule.Shippo || (ShippoModule as any).default?.Shippo || ShippoModule.default || ShippoModule;
                 let shippo: any;
                 if (typeof Shippo === 'function') {
-                    try { shippo = new (Shippo as any)(apiKey); } catch (e) { shippo = (Shippo as any)(apiKey); }
+                    shippo = new Shippo({
+                        apiKeyHeader: apiKey,
+                        shippoApiVersion: '2026-03-01'
+                    });
                 }
 
                 try {
-                    const rate = await shippo.rate.retrieve(selectedRateId);
+                    const rate = await shippo.rates.get(selectedRateId);
                     if (rate && rate.amount) {
                         shipping = parseFloat(rate.amount);
-                        shippingDisplayName = `${rate.provider} - ${rate.servicelevel.name}`;
+                        shippingDisplayName = `${rate.provider} - ${rate.servicelevel?.name || 'Standard'}`;
                     }
                 } catch (e) {
                     console.error("Failed to retrieve Shippo rate precisely:", e);
@@ -91,7 +94,9 @@ export async function POST(req: Request) {
         ];
 
         // 4. Create Stripe Checkout Session
-        // We do NOT collect shipping address here because we already collected it.
+        // We pass the wide array of country codes to support worldwide shipping in Stripe
+        const worldwideCountries = ["US", "CA", "GB", "AU", "NZ", "IE", "ZA", "FR", "DE", "ES", "IT", "CH", "SE", "NO", "DK", "FI", "NL", "BE", "AT", "PT", "MX", "BR", "AR", "CL", "JP", "KR", "SG", "MY", "PH", "ID", "IN", "TH", "VN", "CN", "TW", "HK", "AE", "SA", "QA", "IL", "TR", "EG", "MA", "NG", "KE", "ZA", "GR", "PL", "CZ", "HU", "RO", "BG", "HR", "SK", "SI", "EE", "LV", "LT", "IS", "CY", "MT"] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[];
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             line_items: lineItems,
@@ -99,6 +104,9 @@ export async function POST(req: Request) {
             success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?success=true`,
             cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
             billing_address_collection: "auto",
+            shipping_address_collection: {
+                allowed_countries: worldwideCountries,
+            },
             customer_email: address?.email,
             shipping_options: shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
             metadata: {

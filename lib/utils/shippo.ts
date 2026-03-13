@@ -5,9 +5,9 @@ export function getParcelForWeight(totalWeightLb: number) {
             length: "9",
             width: "6",
             height: "1",
-            distance_unit: "in",
+            distanceUnit: "in" as any,
             weight: Math.max(0.1, totalWeightLb).toFixed(2),
-            mass_unit: "lb"
+            massUnit: "lb" as any
         };
     } else if (totalWeightLb <= 2) {
         // Medium poly mailer
@@ -15,9 +15,9 @@ export function getParcelForWeight(totalWeightLb: number) {
             length: "12",
             width: "9",
             height: "2",
-            distance_unit: "in",
+            distanceUnit: "in" as any,
             weight: totalWeightLb.toFixed(2),
-            mass_unit: "lb"
+            massUnit: "lb" as any
         };
     } else {
         // Box template
@@ -25,9 +25,9 @@ export function getParcelForWeight(totalWeightLb: number) {
             length: "12",
             width: "10",
             height: "6",
-            distance_unit: "in",
+            distanceUnit: "in" as any,
             weight: totalWeightLb.toFixed(2),
-            mass_unit: "lb"
+            massUnit: "lb" as any
         };
     }
 }
@@ -41,15 +41,11 @@ export async function createShippingLabel(order: any) {
 
     try {
         const ShippoModule = await import('shippo');
-        // @ts-ignore
-        const Shippo = ShippoModule.default || ShippoModule;
-
-        let shippo: any;
-        if (typeof Shippo === 'function') {
-            try { shippo = new (Shippo as any)(apiKey); } catch (e) { shippo = (Shippo as any)(apiKey); }
-        } else {
-            throw new Error("Shippo is not a constructor or function");
-        }
+        const Shippo = ShippoModule.Shippo || (ShippoModule as any).default?.Shippo || ShippoModule.default || ShippoModule;
+        const shippo = new Shippo({
+            apiKeyHeader: apiKey,
+            shippoApiVersion: "2026-03-01",
+        });
 
         const { createClient } = await import('@/lib/supabase/server');
         const supabase = await createClient();
@@ -95,9 +91,9 @@ export async function createShippingLabel(order: any) {
             email: "dinaecosmetic@gmail.com"
         };
 
-        const shipment = await shippo.shipment.create({
-            address_from: warehouse,
-            address_to: {
+        const shipment = await shippo.shipments.create({
+            addressFrom: warehouse,
+            addressTo: {
                 name: order.shipping_address?.name || "Valued client",
                 street1: order.shipping_address?.address?.line1 || order.shipping_address?.line1,
                 street2: order.shipping_address?.address?.line2 || order.shipping_address?.line2,
@@ -106,20 +102,18 @@ export async function createShippingLabel(order: any) {
                 zip: order.shipping_address?.address?.postal_code || order.shipping_address?.zip,
                 country: order.shipping_address?.address?.country || order.shipping_address?.country || "US",
             },
-            parcels: [parcel],
-            async: false,
+            parcels: [parcel]
         });
 
         const rate = shipment.rates[0];
-        const transaction = await shippo.transaction.create({
-            rate: rate.object_id,
-            label_file_type: "PDF",
-            async: false,
+        const transaction = await shippo.transactions.create({
+            rate: rate.objectId,
+            labelFileType: "PDF"
         });
 
         return {
-            tracking_number: transaction.tracking_number,
-            label_url: transaction.label_url,
+            tracking_number: transaction.trackingNumber,
+            label_url: transaction.labelUrl,
             status: transaction.status,
         };
     } catch (error) {

@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { createClient } from '@/lib/supabase/client'
-import { Upload, X, Loader2, Image as ImageIcon, Check } from 'lucide-react'
+import { Upload, X, Loader2, Image as ImageIcon, Check, ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import Image from 'next/image'
@@ -80,8 +80,11 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
             // Compression options
             const options = {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1920,
+                maxSizeMB: 0.4,
+                maxWidthOrHeight: 2000,
+                fileType: 'image/webp',
+                initialQuality: 0.85,
+                preserveExif: true,
                 useWebWorker: true,
                 onProgress: (progress: number) => {
                     setUploadProgress(prev => ({ ...prev, [file.name]: progress }))
@@ -141,6 +144,16 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
 
         onImagesChange(images.filter(img => img !== url))
         toast.success('Image removed')
+    }
+
+    const moveImage = (index: number, direction: 'left' | 'right') => {
+        const newImages = [...images]
+        if (direction === 'left' && index > 0) {
+            [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]]
+        } else if (direction === 'right' && index < newImages.length - 1) {
+            [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]]
+        }
+        onImagesChange(newImages)
     }
 
     return (
@@ -251,7 +264,21 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                                 {index + 1}
                             </div>
 
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+                            {/* Reorder Buttons */}
+                            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                {index > 0 ? (
+                                    <button onClick={() => moveImage(index, 'left')} className="bg-charcoal/80 text-white p-1.5 rounded hover:bg-gold transition-colors">
+                                        <ArrowLeft size={16} />
+                                    </button>
+                                ) : <div />}
+                                {index < images.length - 1 ? (
+                                    <button onClick={() => moveImage(index, 'right')} className="bg-charcoal/80 text-white p-1.5 rounded hover:bg-gold transition-colors">
+                                        <ArrowRight size={16} />
+                                    </button>
+                                ) : <div />}
+                            </div>
+
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none" />
                         </div>
                     ))}
                 </div>

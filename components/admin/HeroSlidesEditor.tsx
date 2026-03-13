@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Image as ImageIcon, Link as LinkIcon, Type, MousePointer2 } from "lucide-react";
+import { SingleImageUpload } from "@/components/admin/SingleImageUpload";
 
 type Slide = {
     id: number | string;
@@ -50,17 +51,23 @@ export default function HeroSlidesEditor({ initialSlides }: { initialSlides: Sli
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium flex items-center gap-2 text-charcoal/70">
+                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium flex items-center gap-2 text-charcoal/70 mb-2">
                                     <ImageIcon className="w-3 h-3" /> Image URL
                                 </label>
-                                <input
-                                    type="text"
-                                    value={slide.image}
-                                    onChange={(e) => updateSlide(index, "image", e.target.value)}
-                                    placeholder="https://..."
-                                    className="w-full bg-white border border-charcoal/10 rounded-md px-4 py-2 text-xs text-charcoal outline-none focus:border-gold/50 shadow-sm"
-                                    required
-                                />
+                                <div className="flex items-center gap-4">
+                                    <SingleImageUpload
+                                        value={slide.image}
+                                        onChange={(url: string) => updateSlide(index, "image", url)}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={slide.image}
+                                        onChange={(e) => updateSlide(index, "image", e.target.value)}
+                                        placeholder="https://... or upload"
+                                        className="flex-1 bg-white border border-charcoal/10 rounded-md px-4 py-2 text-xs text-charcoal outline-none focus:border-gold/50 shadow-sm"
+                                        required
+                                    />
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium flex items-center gap-2 text-charcoal/70">

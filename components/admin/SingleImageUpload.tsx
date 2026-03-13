@@ -49,7 +49,14 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
 
         try {
             const imageCompression = (await import('browser-image-compression')).default
-            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1024, useWebWorker: true }
+            const options = {
+                maxSizeMB: 0.4,
+                maxWidthOrHeight: 2000,
+                fileType: 'image/webp',
+                initialQuality: 0.85,
+                preserveExif: true,
+                useWebWorker: true
+            }
             const compressedFile = await imageCompression(file, options)
 
             const url = await uploadToSupabase(compressedFile)

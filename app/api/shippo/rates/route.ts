@@ -53,19 +53,12 @@ export async function POST(req: Request) {
             });
         }
 
-        // Initialize shippo dynamically
-        let shippo: any;
         const ShippoModule = await import('shippo');
-        const Shippo = ShippoModule.default || ShippoModule;
-        if (typeof Shippo === 'function') {
-            try {
-                shippo = new (Shippo as any)(apiKey);
-            } catch (e) {
-                shippo = (Shippo as any)(apiKey);
-            }
-        } else {
-            throw new Error("Shippo is not a constructor or function");
-        }
+        const Shippo = ShippoModule.Shippo || (ShippoModule as any).default?.Shippo || ShippoModule.default || ShippoModule;
+        const shippo = new Shippo({
+            apiKeyHeader: apiKey,
+            shippoApiVersion: "2026-03-01",
+        });
 
         // Fetch Warehouse Address
         const { data: settings } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'warehouse_info').maybeSingle();
@@ -91,11 +84,10 @@ export async function POST(req: Request) {
             email: address.email || "customer@example.com"
         };
 
-        const shipment = await shippo.shipment.create({
-            address_from: warehouse,
-            address_to: targetAddress,
-            parcels: [parcel],
-            async: false
+        const shipment = await shippo.shipments.create({
+            addressFrom: warehouse,
+            addressTo: targetAddress,
+            parcels: [parcel]
         });
 
         const rates = shipment.rates;
