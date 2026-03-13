@@ -437,6 +437,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                         <th className="px-4 py-3">SKU</th>
                                         <th className="px-4 py-3">Price ($)</th>
                                         <th className="px-4 py-3">Stock</th>
+                                        <th className="px-4 py-3">Weight (oz)</th>
                                         <th className="px-4 py-3">Status</th>
                                         <th className="px-4 py-3">Color/Image</th>
                                         <th className="px-4 py-3">Action</th>
@@ -488,6 +489,15 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                         type="number"
                                                         value={v.stock}
                                                         onChange={e => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
+                                                        className="h-8 w-16 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={v.weight || 0}
+                                                        onChange={e => updateVariant(index, 'weight', parseFloat(e.target.value) || 0)}
                                                         className="h-8 w-16 text-xs bg-white/50 border-transparent focus:border-gold/50"
                                                     />
                                                 </td>

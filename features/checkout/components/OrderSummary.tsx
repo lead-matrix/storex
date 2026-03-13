@@ -17,9 +17,10 @@ interface OrderSummaryProps {
     shipping: number
     tax: number
     total: number
+    shippingCalculated?: boolean
 }
 
-export function OrderSummary({ cart, subtotal, shipping, tax, total }: OrderSummaryProps) {
+export function OrderSummary({ cart, subtotal, shipping, tax, total, shippingCalculated = true }: OrderSummaryProps) {
     return (
         <div className="bg-[#0f0f0f] p-8 md:p-12 border border-white/10 shadow-2xl">
             <h2 className="text-xl font-serif uppercase tracking-widest text-white mb-8 border-b border-white/10 pb-4">
@@ -51,7 +52,12 @@ export function OrderSummary({ cart, subtotal, shipping, tax, total }: OrderSumm
             <div className="border-t border-white/10 pt-8 space-y-6">
                 {[
                     { label: "Subtotal", value: `$${subtotal.toFixed(2)}` },
-                    { label: "Shipping", value: shipping === 0 ? "Complimentary" : `$${shipping.toFixed(2)}` },
+                    {
+                        label: "Shipping",
+                        value: !shippingCalculated
+                            ? "Calculated at next step"
+                            : (shipping === 0 ? "Complimentary" : `$${shipping.toFixed(2)}`)
+                    },
                     { label: "Estimated Tax", value: `$${tax.toFixed(2)}` },
                 ].map((row) => (
                     <div key={row.label} className="flex justify-between text-[11px] uppercase tracking-[0.3em] text-luxury-subtext">

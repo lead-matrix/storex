@@ -113,14 +113,14 @@ export function ShoppingBagDrawer() {
                             </div>
                             <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-textSecondary">
                                 <span>Shipping</span>
-                                <span className="text-textPrimary font-medium">{subtotal >= FREE_SHIPPING_THRESHOLD ? "FREE" : "$10.00"}</span>
+                                <span className="text-textPrimary font-medium italic">Calculated at checkout</span>
                             </div>
                         </div>
 
                         <div className="flex justify-between items-center py-4 border-t border-border">
-                            <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-textPrimary">Total</span>
+                            <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-textPrimary">Subtotal</span>
                             <span className="text-primary text-2xl font-playfair">
-                                ${(subtotal >= FREE_SHIPPING_THRESHOLD ? subtotal : subtotal + 10).toFixed(2)}
+                                ${subtotal.toFixed(2)}
                             </span>
                         </div>
 

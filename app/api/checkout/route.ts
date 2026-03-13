@@ -3,33 +3,58 @@ import Stripe from "stripe";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2026-02-25.clover", // Use standard latest api version
+    apiVersion: "2026-02-25.clover" as any,
 });
 
 export async function POST(req: Request) {
     try {
-        const { items } = await req.json();
+        const { items, address, selectedRateId } = await req.json();
 
         if (!items || items.length === 0) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
         }
 
-        // Use service-role admin client so guest (unauthenticated) checkouts
-        // are not blocked by RLS when inserting the pending order.
         const supabase = await createAdminClient();
 
-        // 1. Calculate shipping & tax (for Stripe, we pass them as line items or shipping options)
+        // 1. Calculate shipping & tax (Stripe handles tax via its own dashboard if enabled, or passing as line item)
         const subtotal = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
-        const FREE_SHIPPING_THRESHOLD = 100;
-        const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 9.99;
 
-        // 2. Create pending order in DB first; email is filled by webhook post-payment
+        let shipping = 9.99; // Default fallback fallback
+        let shippingDisplayName = "Standard Shipping";
+
+        if (selectedRateId && !selectedRateId.startsWith('mock_')) {
+            const apiKey = process.env.SHIPPO_API_KEY;
+            if (apiKey) {
+                const ShippoModule = await import('shippo');
+                const Shippo = ShippoModule.default || ShippoModule;
+                let shippo: any;
+                if (typeof Shippo === 'function') {
+                    try { shippo = new (Shippo as any)(apiKey); } catch (e) { shippo = (Shippo as any)(apiKey); }
+                }
+
+                try {
+                    const rate = await shippo.rate.retrieve(selectedRateId);
+                    if (rate && rate.amount) {
+                        shipping = parseFloat(rate.amount);
+                        shippingDisplayName = `${rate.provider} - ${rate.servicelevel.name}`;
+                    }
+                } catch (e) {
+                    console.error("Failed to retrieve Shippo rate precisely:", e);
+                }
+            }
+        } else if (selectedRateId?.startsWith('mock_')) {
+            shipping = selectedRateId === 'mock_1' ? 9.99 : 19.99;
+            shippingDisplayName = selectedRateId === 'mock_1' ? 'Standard Shipping' : 'Express Shipping';
+        }
+
+        // 2. Create pending order in DB first
         const { data: order, error: orderError } = await supabase
             .from("orders")
             .insert({
                 status: "pending",
-                customer_email: "pending@checkout.local", // Placeholder – webhook replaces this with real Stripe customer email
+                customer_email: address?.email || "pending@checkout.local",
                 amount_total: subtotal + shipping,
+                shipping_address: address ? address : null
             })
             .select("id")
             .single();
@@ -55,48 +80,29 @@ export async function POST(req: Request) {
             quantity: item.quantity,
         }));
 
-        // Add shipping as a line item for simplicity, or use Stripe shipping_options
-        const shippingOptions = shipping > 0 ? [
+        const shippingOptions = [
             {
                 shipping_rate_data: {
                     type: "fixed_amount",
                     fixed_amount: { amount: Math.round(shipping * 100), currency: "usd" },
-                    display_name: "Standard Shipping",
-                    delivery_estimate: {
-                        minimum: { unit: "business_day", value: 3 },
-                        maximum: { unit: "business_day", value: 5 },
-                    },
-                },
-            }
-        ] : [
-            {
-                shipping_rate_data: {
-                    type: "fixed_amount",
-                    fixed_amount: { amount: 0, currency: "usd" },
-                    display_name: "Free Shipping",
-                    delivery_estimate: {
-                        minimum: { unit: "business_day", value: 3 },
-                        maximum: { unit: "business_day", value: 5 },
-                    },
+                    display_name: shippingDisplayName,
                 },
             }
         ];
 
         // 4. Create Stripe Checkout Session
+        // We do NOT collect shipping address here because we already collected it.
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             line_items: lineItems,
             mode: "payment",
             success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?success=true`,
             cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
-            billing_address_collection: "required",
-            shipping_address_collection: {
-                allowed_countries: ["US", "CA", "GB"],
-            },
+            billing_address_collection: "auto",
+            customer_email: address?.email,
             shipping_options: shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
             metadata: {
                 order_id: order.id,
-                // Serialize cart to json so webhook can call process_order_atomic
                 items: JSON.stringify(items.map((i: any) => ({
                     product_id: i.productId,
                     variant_id: i.variantId || null,

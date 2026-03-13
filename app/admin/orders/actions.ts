@@ -56,7 +56,28 @@ export async function generateShippingLabel(orderId: string) {
     const shippingAddr = order.shipping_address as Record<string, string> | null;
     if (!shippingAddr) throw new Error("No shipping address on this order. Customer must complete checkout first.");
 
-    // 2. Fetch Warehouse Info & Create Shippo shipment
+    // 2. Fetch Warehouse Info & Calculate Weight
+    const { data: orderItems } = await supabase.from('order_items').select('*').eq('order_id', orderId);
+    let totalWeightOz = 0;
+    if (orderItems) {
+        for (const item of orderItems) {
+            let itemWeightOz = 0;
+            if (item.variant_id) {
+                const { data: v } = await supabase.from('product_variants').select('weight').eq('id', item.variant_id).single();
+                if (v?.weight) itemWeightOz = Number(v.weight);
+            }
+            if (!itemWeightOz || itemWeightOz <= 0) {
+                const { data: p } = await supabase.from('products').select('weight_grams').eq('id', item.product_id).single();
+                if (p?.weight_grams) itemWeightOz = Number(p.weight_grams) / 28.3495;
+            }
+            if (!itemWeightOz || itemWeightOz <= 0) itemWeightOz = 2;
+            totalWeightOz += itemWeightOz * (item.quantity || 1);
+        }
+    }
+
+    const { getParcelForWeight } = await import('@/lib/utils/shippo');
+    const parcel = getParcelForWeight(totalWeightOz / 16);
+
     const { data: settings } = await supabase
         .from('site_settings')
         .select('setting_value')
@@ -72,10 +93,6 @@ export async function generateShippingLabel(orderId: string) {
         country: "US",
         email: "dinaecosmetic@gmail.com",
         phone: "+12816877609",
-        parcel_l: "10",
-        parcel_w: "7",
-        parcel_h: "5",
-        parcel_wt: "1",
     };
 
     const shipmentRes = await fetch("https://api.goshippo.com/shipments/", {
@@ -95,16 +112,7 @@ export async function generateShippingLabel(orderId: string) {
                 zip: shippingAddr.postal_code ?? shippingAddr.zip ?? "",
                 country: shippingAddr.country ?? "US",
             },
-            parcels: [
-                {
-                    length: warehouse.parcel_l || "8",
-                    width: warehouse.parcel_w || "6",
-                    height: warehouse.parcel_h || "4",
-                    distance_unit: "in",
-                    weight: warehouse.parcel_wt || "1.0",
-                    mass_unit: "lb",
-                },
-            ],
+            parcels: [parcel],
             async: false,
         }),
     });
