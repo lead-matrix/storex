@@ -2386,9 +2386,125 @@ DO $$ BEGIN IF EXISTS (
 ) THEN DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
 END IF;
 END $$;
-CREATE TRIGGER tr_sync_product_stock
+OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();
+-- ================================================================
+-- §14  LAUNCH-READY EXTENSIONS (SHIPPO, RESEND, INVENTORY)
+--      The following tables and triggers are required for full
+--      operation of shipping, abandoned carts, and inventory logs.
+-- ================================================================
+-- ── 1. SHIPMENT INFRASTRUCTURE ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.shipments (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+    shippo_shipment_id text,
+    carrier text,
+    service text,
+    shipping_cost numeric(10, 2),
+    status text DEFAULT 'pending',
+    created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.shipping_labels (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    shipment_id uuid NOT NULL REFERENCES public.shipments(id) ON DELETE CASCADE,
+    shippo_transaction_id text,
+    tracking_number text,
+    label_url text,
+    carrier text,
+    service text,
+    created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.shipment_tracking (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    shipment_id uuid NOT NULL REFERENCES public.shipments(id) ON DELETE CASCADE,
+    status text,
+    status_details text,
+    location jsonb,
+    event_time timestamptz,
+    raw jsonb,
+    created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.shipment_items (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    shipment_id uuid NOT NULL REFERENCES public.shipments(id) ON DELETE CASCADE,
+    order_item_id uuid NOT NULL,
+    quantity integer NOT NULL CHECK (quantity > 0),
+    created_at timestamptz DEFAULT now()
+);
+-- ── 2. COMMERCE FEATURES (COUPONS, ABANDONED CARTS) ──────────────────
+CREATE TABLE IF NOT EXISTS public.coupons (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    code text UNIQUE NOT NULL,
+    discount_type text NOT NULL CHECK (discount_type IN ('percentage', 'fixed_amount')),
+    discount_value numeric NOT NULL,
+    min_purchase_amount numeric DEFAULT 0,
+    max_uses integer,
+    used_count integer DEFAULT 0,
+    expires_at timestamptz,
+    status text DEFAULT 'active' CHECK (status IN ('active', 'expired', 'disabled')),
+    created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS public.abandoned_carts (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_email text NOT NULL,
+    items jsonb NOT NULL DEFAULT '[]',
+    amount_total numeric NOT NULL,
+    recovery_token text UNIQUE DEFAULT gen_random_uuid()::text,
+    status text DEFAULT 'pending' CHECK (status IN ('pending', 'recovered', 'emailed')),
+    last_active timestamptz DEFAULT now(),
+    created_at timestamptz DEFAULT now()
+);
+-- ── 3. INVENTORY LOGGING (Rule 49) ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.inventory_logs (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    variant_id uuid REFERENCES public.product_variants(id) ON DELETE
+    SET NULL,
+        change_amount integer NOT NULL,
+        reason text NOT NULL,
+        -- 'sale', 'restock', 'return', 'adjustment'
+        order_id uuid REFERENCES public.orders(id) ON DELETE
+    SET NULL,
+        created_at timestamptz DEFAULT now()
+);
+CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN IF (
+        OLD.stock IS DISTINCT
+        FROM NEW.stock
+    ) THEN
+INSERT INTO public.inventory_logs (variant_id, change_amount, reason)
+VALUES (
+        NEW.id,
+        NEW.stock - OLD.stock,
+        'Automated Stock Adjustment'
+    );
+END IF;
+RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_log_inventory ON public.product_variants;
+CREATE TRIGGER trg_log_inventory
 AFTER
-INSERT
-    OR
-UPDATE OF stock
-    OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();
+UPDATE OF stock ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.log_inventory_change();
+-- ── 4. PERFORMANCE INDEXES ──────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_shipping_labels_tracking_number ON public.shipping_labels(tracking_number);
+CREATE INDEX IF NOT EXISTS idx_shipments_order_id ON public.shipments(order_id);
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
+CREATE INDEX IF NOT EXISTS idx_abandoned_carts_email ON public.abandoned_carts(customer_email);
+CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON public.inventory_logs(variant_id);
+CREATE INDEX IF NOT EXISTS idx_products_created_at ON public.products(created_at);
+-- ── 5. RLS UPDATES ──────────────────────────────────────────────────
+ALTER TABLE public.shipments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shipping_labels ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shipment_tracking ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.abandoned_carts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inventory_logs ENABLE ROW LEVEL SECURITY;
+-- Admins full access, Users view own
+DROP POLICY IF EXISTS "admin_shipments" ON public.shipments;
+CREATE POLICY "admin_shipments" ON public.shipments FOR ALL TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "admin_labels" ON public.shipping_labels;
+CREATE POLICY "admin_labels" ON public.shipping_labels FOR ALL TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "admin_coupons" ON public.coupons;
+CREATE POLICY "admin_coupons" ON public.coupons FOR ALL TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "admin_abandoned_carts" ON public.abandoned_carts;
+CREATE POLICY "admin_abandoned_carts" ON public.abandoned_carts FOR ALL TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "admin_inventory_logs" ON public.inventory_logs;
+CREATE POLICY "admin_inventory_logs" ON public.inventory_logs FOR ALL TO authenticated USING (public.is_admin());

@@ -16,8 +16,42 @@ export async function POST(req: Request) {
 
         const supabase = await createAdminClient();
 
-        // 1. Calculate shipping & tax (Stripe handles tax via its own dashboard if enabled, or passing as line item)
-        const subtotal = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
+        // 1. Fetch real prices from database (Rule #15: Never trust client price)
+        const itemIds = items.map((i: any) => i.productId);
+        const { data: dbProducts } = await supabase
+            .from("products")
+            .select("id, base_price, sale_price, on_sale")
+            .in("id", itemIds);
+
+        const variantIds = items.filter((i: any) => i.variantId).map((i: any) => i.variantId);
+        let dbVariants: any[] = [];
+        if (variantIds.length > 0) {
+            const { data } = await supabase
+                .from("product_variants")
+                .select("id, price_override")
+                .in("id", variantIds);
+            dbVariants = data || [];
+        }
+
+        const validatedItems = items.map((item: any) => {
+            const product = dbProducts?.find((p: any) => p.id === item.productId);
+            const variant = dbVariants.find((v: any) => v.id === item.variantId);
+
+            let price = product?.base_price || 0;
+            if (product?.on_sale && product?.sale_price) {
+                price = product.sale_price;
+            }
+            if (variant?.price_override != null) {
+                price = variant.price_override;
+            }
+
+            return {
+                ...item,
+                price: Number(price)
+            };
+        });
+
+        const subtotal = validatedItems.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
 
         let shipping = 9.99; // Default fallback fallback
         let shippingDisplayName = "Standard Shipping";
@@ -60,7 +94,7 @@ export async function POST(req: Request) {
         }
 
         // 3. Create Stripe line items
-        const lineItems = items.map((item: any) => ({
+        const lineItems = validatedItems.map((item: any) => ({
             price_data: {
                 currency: "usd",
                 product_data: {
@@ -103,7 +137,7 @@ export async function POST(req: Request) {
             shipping_options: shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
             metadata: {
                 order_id: order.id,
-                items: JSON.stringify(items.map((i: any) => ({
+                items: JSON.stringify(validatedItems.map((i: any) => ({
                     product_id: i.productId,
                     variant_id: i.variantId || null,
                     quantity: i.quantity,

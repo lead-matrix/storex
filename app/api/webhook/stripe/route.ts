@@ -34,23 +34,27 @@ export async function POST(req: Request) {
     const supabase = await createAdminClient();
 
     // 1. Store Stripe event ID for audit trail & idempotency
-    const { data: existingEvent, error: checkError } = await supabase
+    const { data: existingEvent } = await supabase
         .from("stripe_events")
         .select("id")
         .eq("id", event.id)
         .single();
 
-    // 1. Log the event if it doesn't exist yet (for audit trail)
-    if (!existingEvent) {
-        const { error: logError } = await supabase.from("stripe_events").insert({
-            id: event.id,
-            type: event.type,
-            data: event.data.object as any,
-        });
+    if (existingEvent) {
+        console.log(`Event ${event.id} already processed. Skipping.`);
+        return NextResponse.json({ received: true, duplicate: true });
+    }
 
-        if (logError) {
-            console.error("Failed to log stripe event:", logError);
-        }
+    // 2. Log the event for audit trail
+    const { error: logError } = await supabase.from("stripe_events").insert({
+        id: event.id,
+        type: event.type,
+        data: event.data.object as any,
+    });
+
+    if (logError) {
+        console.error("Failed to log stripe event:", logError);
+        // We continue anyway, but the RPC will also have its own checks
     }
 
     try {
