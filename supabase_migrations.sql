@@ -172,6 +172,10 @@ DROP POLICY IF EXISTS "coupons_insert" ON public.coupons;
 DROP POLICY IF EXISTS "coupons_update" ON public.coupons;
 DROP POLICY IF EXISTS "coupons_delete" ON public.coupons;
 DROP POLICY IF EXISTS "coupons_admin_all" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_select_unified" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_insert_admin" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_update_admin" ON public.coupons;
+DROP POLICY IF EXISTS "coupons_delete_admin" ON public.coupons;
 CREATE POLICY "coupons_select_unified" ON public.coupons FOR
 SELECT USING (
         (status = 'active')
@@ -218,6 +222,10 @@ DROP POLICY IF EXISTS "abandoned_carts_insert" ON public.abandoned_carts;
 DROP POLICY IF EXISTS "abandoned_carts_update" ON public.abandoned_carts;
 DROP POLICY IF EXISTS "abandoned_carts_delete" ON public.abandoned_carts;
 DROP POLICY IF EXISTS "abandoned_carts_admin_all" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_select_admin" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_insert_admin" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_update_admin" ON public.abandoned_carts;
+DROP POLICY IF EXISTS "abandoned_carts_delete_admin" ON public.abandoned_carts;
 CREATE POLICY "abandoned_carts_select_admin" ON public.abandoned_carts FOR
 SELECT USING (
         (
@@ -267,6 +275,10 @@ DROP POLICY IF EXISTS "inventory_logs_insert" ON public.inventory_logs;
 DROP POLICY IF EXISTS "inventory_logs_update" ON public.inventory_logs;
 DROP POLICY IF EXISTS "inventory_logs_delete" ON public.inventory_logs;
 DROP POLICY IF EXISTS "inventory_logs_admin_all" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_select_admin" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_insert_admin" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_update_admin" ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_delete_admin" ON public.inventory_logs;
 CREATE POLICY "inventory_logs_select_admin" ON public.inventory_logs FOR
 SELECT USING (
         (
@@ -336,6 +348,10 @@ DROP POLICY IF EXISTS "shipments_insert" ON public.shipments;
 DROP POLICY IF EXISTS "shipments_update" ON public.shipments;
 DROP POLICY IF EXISTS "shipments_delete" ON public.shipments;
 DROP POLICY IF EXISTS "shipments_admin_all" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_select_admin" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_insert_admin" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_update_admin" ON public.shipments;
+DROP POLICY IF EXISTS "shipments_delete_admin" ON public.shipments;
 CREATE POLICY "shipments_select_admin" ON public.shipments FOR
 SELECT USING (
         (
@@ -365,6 +381,10 @@ DROP POLICY IF EXISTS "parcels_insert" ON public.parcels;
 DROP POLICY IF EXISTS "parcels_update" ON public.parcels;
 DROP POLICY IF EXISTS "parcels_delete" ON public.parcels;
 DROP POLICY IF EXISTS "parcels_admin_all" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_select_admin" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_insert_admin" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_update_admin" ON public.parcels;
+DROP POLICY IF EXISTS "parcels_delete_admin" ON public.parcels;
 CREATE POLICY "parcels_select_admin" ON public.parcels FOR
 SELECT USING (
         (
@@ -394,6 +414,10 @@ DROP POLICY IF EXISTS "shipping_labels_insert" ON public.shipping_labels;
 DROP POLICY IF EXISTS "shipping_labels_update" ON public.shipping_labels;
 DROP POLICY IF EXISTS "shipping_labels_delete" ON public.shipping_labels;
 DROP POLICY IF EXISTS "shipping_labels_admin_all" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_select_admin" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_insert_admin" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_update_admin" ON public.shipping_labels;
+DROP POLICY IF EXISTS "shipping_labels_delete_admin" ON public.shipping_labels;
 CREATE POLICY "shipping_labels_select_admin" ON public.shipping_labels FOR
 SELECT USING (
         (
@@ -423,6 +447,10 @@ DROP POLICY IF EXISTS "shipment_items_insert" ON public.shipment_items;
 DROP POLICY IF EXISTS "shipment_items_update" ON public.shipment_items;
 DROP POLICY IF EXISTS "shipment_items_delete" ON public.shipment_items;
 DROP POLICY IF EXISTS "shipment_items_admin_all" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_select_admin" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_insert_admin" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_update_admin" ON public.shipment_items;
+DROP POLICY IF EXISTS "shipment_items_delete_admin" ON public.shipment_items;
 CREATE POLICY "shipment_items_select_admin" ON public.shipment_items FOR
 SELECT USING (
         (
@@ -452,6 +480,10 @@ DROP POLICY IF EXISTS "tracking_insert" ON public.shipment_tracking;
 DROP POLICY IF EXISTS "tracking_update" ON public.shipment_tracking;
 DROP POLICY IF EXISTS "tracking_delete" ON public.shipment_tracking;
 DROP POLICY IF EXISTS "tracking_admin_all" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_select_admin" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_insert_admin" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_update_admin" ON public.shipment_tracking;
+DROP POLICY IF EXISTS "tracking_delete_admin" ON public.shipment_tracking;
 CREATE POLICY "tracking_select_admin" ON public.shipment_tracking FOR
 SELECT USING (
         (
@@ -490,6 +522,8 @@ DROP POLICY IF EXISTS "stripe_events_update" ON public.stripe_events;
 DROP POLICY IF EXISTS "stripe_events_delete" ON public.stripe_events;
 DROP POLICY IF EXISTS "stripe_events_admin_select" ON public.stripe_events;
 DROP POLICY IF EXISTS "stripe_events_admin_insert" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_select_admin" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_insert_admin" ON public.stripe_events;
 CREATE POLICY "stripe_events_select_admin" ON public.stripe_events FOR
 SELECT USING (
         (
@@ -511,6 +545,10 @@ DROP POLICY IF EXISTS "orders_update" ON public.orders;
 DROP POLICY IF EXISTS "orders_delete" ON public.orders;
 DROP POLICY IF EXISTS "orders_select_own" ON public.orders;
 DROP POLICY IF EXISTS "orders_admin_all" ON public.orders;
+DROP POLICY IF EXISTS "orders_select_unified" ON public.orders;
+DROP POLICY IF EXISTS "orders_insert_unified" ON public.orders;
+DROP POLICY IF EXISTS "orders_update_admin" ON public.orders;
+DROP POLICY IF EXISTS "orders_delete_admin" ON public.orders;
 CREATE POLICY "orders_select_unified" ON public.orders FOR
 SELECT USING (
         (
@@ -550,6 +588,10 @@ DROP POLICY IF EXISTS "order_items_insert" ON public.order_items;
 DROP POLICY IF EXISTS "order_items_update" ON public.order_items;
 DROP POLICY IF EXISTS "order_items_delete" ON public.order_items;
 DROP POLICY IF EXISTS "order_items_select_own" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_select_unified" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_insert_admin" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_update_admin" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_delete_admin" ON public.order_items;
 CREATE POLICY "order_items_select_unified" ON public.order_items FOR
 SELECT USING (
         EXISTS (
