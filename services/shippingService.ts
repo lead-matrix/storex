@@ -30,7 +30,7 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
 
         const parcelData: any = {
             length: '10', width: '8', height: '4',
-            distance_unit: 'in', weight: totalWeight.toString() || '1', mass_unit: 'lb',
+            distanceUnit: 'in', weight: totalWeight.toString() || '1', massUnit: 'lb',
         };
 
         const addressFrom: any = {

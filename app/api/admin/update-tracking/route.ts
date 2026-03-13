@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         }
 
         // Force register tracking webhook / get status
-        const tracking = await shippo.tracks.get(label.carrier, label.tracking_number);
+        const tracking = await shippo.trackingStatus.get(label.tracking_number, label.carrier);
 
         // Update status based on current tracked state
         if (tracking && tracking.trackingStatus) {
