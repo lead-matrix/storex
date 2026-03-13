@@ -2386,7 +2386,12 @@ DO $$ BEGIN IF EXISTS (
 ) THEN DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
 END IF;
 END $$;
-OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();
+CREATE TRIGGER tr_sync_product_stock
+AFTER
+INSERT
+    OR
+UPDATE
+    OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();
 -- ================================================================
 -- §14  LAUNCH-READY EXTENSIONS (SHIPPO, RESEND, INVENTORY)
 --      The following tables and triggers are required for full

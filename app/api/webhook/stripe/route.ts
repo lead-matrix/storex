@@ -103,6 +103,7 @@ export async function POST(req: Request) {
                         customerEmail: email,
                         customerName: session.customer_details?.name || 'Valued Client',
                         totalAmount: amountTotal,
+                        items: cartItems
                     });
                     console.log(`Order confirmation email sent to: ${email}`);
                 } catch (emailErr: any) {

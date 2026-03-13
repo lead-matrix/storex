@@ -1,7 +1,7 @@
 import { stripe } from '@/lib/stripe';
 import { createOrder } from '@/lib/db/orders';
 import { createOrderItems } from '@/lib/db/orderItems';
-import { sendOrderConfirmation } from '@/lib/resend';
+import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 import { createShipmentAndLabel } from '@/services/shippingService';
 
 export async function processPaymentSuccess(session: any) {
@@ -62,7 +62,13 @@ export async function processPaymentSuccess(session: any) {
         }
 
         // 5. Send confirmation email
-        await sendOrderConfirmation(customer_email, order.id, parsedItems, amount_total);
+        await sendOrderConfirmationEmail({
+            customerEmail: customer_email,
+            orderId: order.id,
+            customerName: customer_name || 'Valued Client',
+            totalAmount: amount_total,
+            items: parsedItems
+        });
 
         // 6. Mark abandoned cart as recovered
         await supabaseAdmin

@@ -3,7 +3,7 @@ import { getOrderById, updateOrderStatus } from '@/lib/db/orders';
 import { getItemsByOrder } from '@/lib/db/orderItems';
 import { createShipment, getShipmentByOrder } from '@/lib/db/shipments';
 import { createShippingLabel } from '@/lib/db/labels';
-import { sendShippingNotification } from '@/lib/resend';
+import { sendShippingNotificationEmail } from '@/lib/utils/email';
 import { createTrackingEvent } from '@/lib/db/tracking';
 import { updateFulfilledQuantity } from '@/lib/db/orderItems';
 import { createShipmentItems } from '@/lib/db/shipmentItems';
@@ -130,8 +130,14 @@ export async function purchaseLabelForRate(orderId: string, rateId: string, carr
             fulfillment_status: isFullyFulfilled ? 'fulfilled' : 'partial'
         });
 
-        if (transaction.trackingUrlProvider) {
-            await sendShippingNotification(order.customer_email || '', order.id, transaction.trackingUrlProvider);
+        if (transaction.trackingNumber) {
+            await sendShippingNotificationEmail({
+                customerEmail: order.customer_email || '',
+                customerName: order.customer_name || 'Valued Client',
+                orderId: order.id,
+                trackingNumber: transaction.trackingNumber,
+                totalAmount: order.amount_total || 0
+            });
         }
 
         return {

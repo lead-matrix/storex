@@ -11,6 +11,11 @@ const secondaryVars = [
     "STRIPE_WEBHOOK_SECRET",
     "RESEND_API_KEY",
     "SHIPPO_API_KEY",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASS",
+    "SMTP_FROM",
 ];
 
 export function validateEnv() {

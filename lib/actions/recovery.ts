@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server";
-import { sendAbandonedCartRecovery } from "@/lib/resend";
+import { sendAbandonedCartEmail } from "@/lib/utils/email";
 import { revalidatePath } from "next/cache";
 
 async function ensureAdmin() {
@@ -34,12 +34,14 @@ export async function triggerRecoveryEmail(cartId: string) {
 
     const recoveryLink = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?recovery_token=${cart.recovery_token}`;
 
-    await sendAbandonedCartRecovery(
-        cart.customer_email,
-        cart.items,
-        cart.amount_total,
-        recoveryLink
-    );
+    await sendAbandonedCartEmail({
+        customerEmail: cart.customer_email,
+        customerName: 'Guest',
+        totalAmount: cart.amount_total,
+        recoveryLink,
+        items: cart.items,
+        orderId: '' // Not applicable
+    });
 
     await supabase
         .from('abandoned_carts')

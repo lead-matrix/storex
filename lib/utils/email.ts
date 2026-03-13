@@ -11,6 +11,8 @@ interface OrderEmailProps {
     totalAmount: number
     trackingNumber?: string
     labelUrl?: string
+    items?: any[]
+    recoveryLink?: string
 }
 
 const EMAIL_DEFAULTS = {
@@ -75,29 +77,83 @@ function buildHtml(s: EmailSettings, body: string) {
 </html>`
 }
 
+import nodemailer from 'nodemailer'
+
+const transporter = process.env.SMTP_HOST ? nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+}) : null
+
+async function sendMail({ to, subject, html, fromName }: { to: string, subject: string, html: string, fromName: string }) {
+    if (transporter) {
+        try {
+            await transporter.sendMail({
+                from: `"${fromName}" <${process.env.SMTP_FROM || 'support@dinacosmetic.store'}>`,
+                to,
+                subject,
+                html,
+            })
+            return true
+        } catch (error) {
+            console.error('SMTP Error:', error)
+        }
+    }
+
+    const resendApiKey = process.env.RESEND_API_KEY
+    if (resendApiKey) {
+        try {
+            const { Resend } = await import('resend')
+            const resend = new Resend(resendApiKey)
+            await resend.emails.send({
+                from: `${fromName} <${process.env.SMTP_FROM || 'support@dinacosmetic.store'}>`,
+                to,
+                subject,
+                html,
+            })
+            return true
+        } catch (error) {
+            console.error('Resend Error:', error)
+        }
+    }
+
+    console.warn('No email provider configured (SMTP or Resend).')
+    return false
+}
+
 export async function sendOrderConfirmationEmail({
     orderId,
     customerEmail,
     customerName,
     totalAmount,
+    items = []
 }: OrderEmailProps) {
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) {
-        console.warn('RESEND_API_KEY is missing — skipping order confirmation email.')
-        return
-    }
-
     const s = await getEmailSettings()
     const greeting = s.confirm_greeting.replace('{{name}}', customerName)
+
+    const itemsHtml = items.length > 0 ? `
+    <div style="margin:20px 40px; border-bottom:1px solid ${s.accent_color}20; padding-bottom:10px;">
+        ${items.map(item => `
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
+                <span>${item.name || item.title || 'Artifact'} x ${item.quantity}</span>
+                <span>$${parseFloat(item.price).toFixed(2)}</span>
+            </div>
+        `).join('')}
+    </div>` : ''
 
     const body = `
     <div style="padding:24px 40px 0;">
         <p style="text-transform:uppercase;letter-spacing:3px;font-size:10px;color:${s.accent_color}80;margin:0;">${s.confirm_label}</p>
     </div>
-    <div style="padding:20px 40px 30px;">
+    <div style="padding:20px 40px 10px;">
         <h2 style="font-weight:normal;font-size:20px;margin:0 0 16px;">${greeting}</h2>
         <p style="line-height:1.7;color:${s.text_color}cc;margin:0;">${s.confirm_body}</p>
     </div>
+    ${itemsHtml}
     <div style="margin:0 40px 30px;background:${s.accent_color}10;border:1px solid ${s.accent_color}30;padding:20px;">
         <p style="margin:0;font-size:10px;color:${s.accent_color};text-transform:uppercase;letter-spacing:1px;">Reference ID</p>
         <p style="margin:6px 0 16px;font-family:monospace;">${orderId}</p>
@@ -105,18 +161,12 @@ export async function sendOrderConfirmationEmail({
         <p style="margin:6px 0 0;font-size:18px;">$${totalAmount.toFixed(2)}</p>
     </div>`
 
-    try {
-        const { Resend } = await import('resend')
-        const resend = new Resend(apiKey)
-        await resend.emails.send({
-            from: `${s.brand_name} <support@dinacosmetic.store>`,
-            to: customerEmail,
-            subject: s.confirm_subject,
-            html: buildHtml(s, body),
-        })
-    } catch (error) {
-        console.error('Failed to send order confirmation email:', error)
-    }
+    await sendMail({
+        to: customerEmail,
+        subject: s.confirm_subject,
+        html: buildHtml(s, body),
+        fromName: s.brand_name
+    })
 }
 
 export async function sendShippingNotificationEmail({
@@ -124,12 +174,6 @@ export async function sendShippingNotificationEmail({
     customerName,
     trackingNumber,
 }: OrderEmailProps) {
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) {
-        console.warn('RESEND_API_KEY is missing — skipping shipping notification email.')
-        return
-    }
-
     const s = await getEmailSettings()
     const greeting = s.ship_greeting.replace('{{name}}', customerName)
 
@@ -146,16 +190,81 @@ export async function sendShippingNotificationEmail({
         <p style="margin:6px 0 0;font-family:monospace;font-size:18px;">${trackingNumber ?? 'N/A'}</p>
     </div>`
 
-    try {
-        const { Resend } = await import('resend')
-        const resend = new Resend(apiKey)
-        await resend.emails.send({
-            from: `${s.brand_name} <support@dinacosmetic.store>`,
-            to: customerEmail,
-            subject: s.ship_subject,
-            html: buildHtml(s, body),
-        })
-    } catch (error) {
-        console.error('Failed to send shipping notification email:', error)
-    }
+    await sendMail({
+        to: customerEmail,
+        subject: s.ship_subject,
+        html: buildHtml(s, body),
+        fromName: s.brand_name
+    })
 }
+
+export async function sendDeliveryNotificationEmail({
+    customerEmail,
+    customerName,
+    orderId,
+}: OrderEmailProps) {
+    const s = await getEmailSettings()
+    const greeting = `Received in Full — ${customerName}`
+
+    const body = `
+    <div style="padding:24px 40px 0;">
+        <p style="text-transform:uppercase;letter-spacing:3px;font-size:10px;color:${s.accent_color}80;margin:0;">Delivery Confirmed</p>
+    </div>
+    <div style="padding:20px 40px 30px;">
+        <h2 style="font-weight:normal;font-size:20px;margin:0 0 16px;">${greeting}</h2>
+        <p style="line-height:1.7;color:${s.text_color}cc;margin:0;">Your artifacts from The Obsidian Palace have reached their destination. We trust they meet your absolute requirements for excellence.</p>
+    </div>
+    <div style="margin:0 40px 30px;background:${s.accent_color}10;border:1px solid ${s.accent_color}30;padding:20px;">
+        <p style="margin:0;font-size:10px;color:${s.accent_color};text-transform:uppercase;letter-spacing:1px;">Reference ID</p>
+        <p style="margin:6px 0 0;font-family:monospace;font-size:18px;">${orderId}</p>
+    </div>`
+
+    await sendMail({
+        to: customerEmail,
+        subject: `Artifacts Delivered — Order ${orderId.slice(0, 8)}`,
+        html: buildHtml(s, body),
+        fromName: s.brand_name
+    })
+}
+
+export async function sendAbandonedCartEmail({
+    customerEmail,
+    customerName,
+    totalAmount,
+    recoveryLink,
+    items = []
+}: OrderEmailProps) {
+    const s = await getEmailSettings()
+
+    const itemsHtml = items.length > 0 ? `
+    <div style="margin:20px 40px; border-bottom:1px solid ${s.accent_color}20; padding-bottom:10px;">
+        ${items.map(item => `
+            <div style="font-size:12px; margin-bottom:8px;">
+                <span>${item.name || item.title || 'Artifact'} x ${item.quantity}</span>
+            </div>
+        `).join('')}
+    </div>` : ''
+
+    const body = `
+    <div style="padding:24px 40px 0;">
+        <p style="text-transform:uppercase;letter-spacing:3px;font-size:10px;color:${s.accent_color}80;margin:0;">Unfinished Ritual</p>
+    </div>
+    <div style="padding:20px 40px 10px;">
+        <h2 style="font-weight:normal;font-size:20px;margin:0 0 16px;">Your Selection Awaits, ${customerName}</h2>
+        <p style="line-height:1.7;color:${s.text_color}cc;margin:0;">The Obsidian Palace remains open for you to finalize your selection before these artifacts are reclaimed by the collection.</p>
+    </div>
+    ${itemsHtml}
+    <div style="padding:20px 40px 30px; text-align:center;">
+        <a href="${recoveryLink}" style="background-color:${s.accent_color}; color:#000; padding:12px 24px; text-decoration:none; font-size:12px; text-transform:uppercase; letter-spacing:2px; display:inline-block; font-weight:bold;">
+            Complete Your Order
+        </a>
+    </div>`
+
+    await sendMail({
+        to: customerEmail,
+        subject: 'Your Dina Cosmetic Masterpiece Awaits',
+        html: buildHtml(s, body),
+        fromName: s.brand_name
+    })
+}
+
