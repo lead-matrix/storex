@@ -2360,38 +2360,57 @@ ORDER BY tablename;
 --      aggregate sum of `product_variants.stock`, allowing simple
 --      queries like .gt('stock', 0) to work accurately.
 -- ================================================================
-CREATE OR REPLACE FUNCTION public.sync_product_stock() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public AS $$ BEGIN -- Only update products that have variants (prevent overwriting manual base stock for non-variant items)
-    IF EXISTS (
-        SELECT 1
-        FROM public.product_variants
-        WHERE product_id = COALESCE(NEW.product_id, OLD.product_id)
-    ) THEN
+CREATE OR REPLACE FUNCTION public.sync_product_manifest() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
+DECLARE target_id uuid;
+BEGIN target_id := COALESCE(NEW.product_id, OLD.product_id);
+-- Only sync if variants exist
+IF EXISTS (
+    SELECT 1
+    FROM public.product_variants
+    WHERE product_id = target_id
+) THEN
 UPDATE public.products
 SET stock = (
         SELECT COALESCE(SUM(stock), 0)
         FROM public.product_variants
-        WHERE product_id = COALESCE(NEW.product_id, OLD.product_id)
-    )
-WHERE id = COALESCE(NEW.product_id, OLD.product_id);
+        WHERE product_id = target_id
+    ),
+    base_price = (
+        SELECT COALESCE(MIN(price_override), 0)
+        FROM public.product_variants
+        WHERE product_id = target_id
+    ),
+    -- If parent has no images, pull the first variant image as a fallback
+    images = CASE
+        WHEN (
+            images = '{}'
+            OR images IS NULL
+            OR images = ARRAY ['/placeholder-product.jpg']
+        ) THEN ARRAY(
+            SELECT image_url
+            FROM public.product_variants
+            WHERE product_id = target_id
+                AND image_url IS NOT NULL
+                AND image_url != ''
+            LIMIT 1
+        )
+        ELSE images
+    END
+WHERE id = target_id;
 END IF;
 RETURN COALESCE(NEW, OLD);
 END;
 $$;
-DO $$ BEGIN IF EXISTS (
-    SELECT 1
-    FROM information_schema.tables
-    WHERE table_schema = 'public'
-        AND table_name = 'product_variants'
-) THEN DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
-END IF;
+DO $$ BEGIN DROP TRIGGER IF EXISTS tr_sync_product_stock ON public.product_variants;
+DROP TRIGGER IF EXISTS tr_sync_product_manifest ON public.product_variants;
 END $$;
-CREATE TRIGGER tr_sync_product_stock
+CREATE TRIGGER tr_sync_product_manifest
 AFTER
 INSERT
     OR
 UPDATE
-    OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_stock();
+    OR DELETE ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.sync_product_manifest();
 -- ================================================================
 -- §14  LAUNCH-READY EXTENSIONS (SHIPPO, RESEND, INVENTORY)
 --      The following tables and triggers are required for full
@@ -2513,3 +2532,39 @@ DROP POLICY IF EXISTS "admin_abandoned_carts" ON public.abandoned_carts;
 CREATE POLICY "admin_abandoned_carts" ON public.abandoned_carts FOR ALL TO authenticated USING (public.is_admin());
 DROP POLICY IF EXISTS "admin_inventory_logs" ON public.inventory_logs;
 CREATE POLICY "admin_inventory_logs" ON public.inventory_logs FOR ALL TO authenticated USING (public.is_admin());
+-- ── 6. DATA CONSOLIDATION (ONE-TIME BACKFILL) ──────────────────────
+-- Automatically fix 0.00 prices and missing images for existing listings 
+-- by pulling data from their variants.
+UPDATE public.products p
+SET base_price = (
+        SELECT COALESCE(MIN(price_override), 0)
+        FROM public.product_variants
+        WHERE product_id = p.id
+            AND status = 'active'
+    ),
+    images = CASE
+        WHEN (
+            p.images = '{}'
+            OR p.images IS NULL
+            OR p.images = ARRAY ['/placeholder-product.jpg']
+        ) THEN ARRAY(
+            SELECT image_url
+            FROM public.product_variants
+            WHERE product_id = p.id
+                AND image_url IS NOT NULL
+                AND image_url != ''
+            LIMIT 1
+        )
+        ELSE p.images
+    END
+WHERE (
+        p.base_price = 0
+        OR p.images = '{}'
+        OR p.images IS NULL
+    )
+    AND EXISTS (
+        SELECT 1
+        FROM public.product_variants
+        WHERE product_id = p.id
+            AND status = 'active'
+    );

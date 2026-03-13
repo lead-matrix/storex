@@ -34,18 +34,30 @@ export function ProductCard({
 }) {
     const { addToCart } = useCart();
 
-    const mainImage = product.images?.[0] || "/logo.jpg";
-    const isOnSale = product.on_sale && product.sale_price;
-
     const activeVariants = (variants || []).filter(v => (v as any).status !== 'draft');
+    const mainImage = (product.images && product.images.length > 0)
+        ? product.images[0]
+        : ((activeVariants.find(v => (v as any).image_url) as any)?.image_url || "/logo.jpg");
+
+    const isOnSale = product.on_sale && product.sale_price;
 
     // Calculate the lowest price
     let minPrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
 
     if (activeVariants.length > 0) {
-        const variantPrices = activeVariants.map(v => v.price_override != null ? Number(v.price_override) : Number(product.base_price));
-        minPrice = Math.min(minPrice, ...variantPrices);
+        const prices = activeVariants
+            .map(v => v.price_override != null ? Number(v.price_override) : null)
+            .filter((p): p is number => p !== null);
+
+        if (prices.length > 0) {
+            const minVarPrice = Math.min(...prices);
+            // If base_price is 0 or uninitialized, use the minimum variant price
+            if (minPrice <= 0 || minVarPrice < minPrice) {
+                minPrice = minVarPrice;
+            }
+        }
     }
+
 
     const hasMultiplePrices = activeVariants.length > 1;
 

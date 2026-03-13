@@ -54,11 +54,12 @@ export function ProductClient({ product }: ProductClientProps) {
                             title: product.title,
                             base_price: product.base_price,
                             description: product.description || "The quintessence of modern luxury.",
-                            images: product.images || ["/placeholder-product.jpg"],
+                            images: (product.images && product.images.length > 0) ? product.images : ["/logo.jpg"],
                             product_variants: product.product_variants,
                         }}
                         onVariantImageChange={setVariantImage}
                     />
+
                 </div>
 
                 {/* PRODUCT ACCOLADES */}
