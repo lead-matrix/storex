@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         const itemIds = items.map((i: any) => i.productId);
         const { data: dbProducts } = await supabase
             .from("products")
-            .select("id, base_price, sale_price, on_sale")
+            .select("id, title, base_price, sale_price, on_sale")
             .in("id", itemIds);
 
         const variantIds = items.filter((i: any) => i.variantId).map((i: any) => i.variantId);
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         if (variantIds.length > 0) {
             const { data } = await supabase
                 .from("product_variants")
-                .select("id, price_override")
+                .select("id, name, price_override")
                 .in("id", variantIds);
             dbVariants = data || [];
         }
@@ -45,8 +45,13 @@ export async function POST(req: Request) {
                 price = variant.price_override;
             }
 
+            const serverName = variant && variant.name
+                ? `${product?.title || 'Product'} - ${variant.name}`
+                : (product?.title || item.name || 'Unknown Product');
+
             return {
                 ...item,
+                name: serverName,
                 price: Number(price)
             };
         });
