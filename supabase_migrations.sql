@@ -165,16 +165,20 @@ END IF;
 END $$;
 -- RLS for Coupons
 ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins have full access to coupons" ON public.coupons FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to coupons" ON public.coupons;
+DROP POLICY IF EXISTS "Users can view active coupons" ON public.coupons;
+CREATE POLICY "coupons_select" ON public.coupons FOR
+SELECT USING (
+        (status = 'active')
+        OR (
+            SELECT public.is_admin()
+        )
+    );
+CREATE POLICY "coupons_admin_all" ON public.coupons FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
-CREATE POLICY "Users can view active coupons" ON public.coupons FOR
-SELECT USING (status = 'active');
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
 CREATE INDEX IF NOT EXISTS idx_coupons_status ON public.coupons(status);
@@ -191,12 +195,10 @@ CREATE TABLE IF NOT EXISTS public.abandoned_carts (
 );
 -- RLS for Abandoned Carts
 ALTER TABLE public.abandoned_carts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins have full access to abandoned carts" ON public.abandoned_carts FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to abandoned carts" ON public.abandoned_carts;
+CREATE POLICY "abandoned_carts_admin_all" ON public.abandoned_carts FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
 -- Index for performance
@@ -219,12 +221,10 @@ CREATE TABLE IF NOT EXISTS public.inventory_logs (
         created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.inventory_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins have full access to inventory logs" ON public.inventory_logs FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to inventory logs" ON public.inventory_logs;
+CREATE POLICY "inventory_logs_admin_all" ON public.inventory_logs FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
 -- ── UNIFY ORDERS SCHEMA (Reconcile MASTER.sql and Migrations) ─────────
@@ -267,44 +267,34 @@ ADD COLUMN tracking_number TEXT;
 END IF;
 END $$;
 -- ── RLS POLICIES FOR SHIPMENT TABLES ──────────────────────────────────
-CREATE POLICY "Admins have full access to shipments" ON public.shipments FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to shipments" ON public.shipments;
+CREATE POLICY "shipments_admin_all" ON public.shipments FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
-CREATE POLICY "Admins have full access to parcels" ON public.parcels FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to parcels" ON public.parcels;
+CREATE POLICY "parcels_admin_all" ON public.parcels FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
-CREATE POLICY "Admins have full access to shipping labels" ON public.shipping_labels FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to shipping labels" ON public.shipping_labels;
+CREATE POLICY "shipping_labels_admin_all" ON public.shipping_labels FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
-CREATE POLICY "Admins have full access to shipment items" ON public.shipment_items FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to shipment items" ON public.shipment_items;
+CREATE POLICY "shipment_items_admin_all" ON public.shipment_items FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
-CREATE POLICY "Admins have full access to tracking" ON public.shipment_tracking FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "Admins have full access to tracking" ON public.shipment_tracking;
+CREATE POLICY "tracking_admin_all" ON public.shipment_tracking FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
 -- ── STRIPE EVENTS (Rule 25) ──────────────────────────────────────────
@@ -315,51 +305,54 @@ CREATE TABLE IF NOT EXISTS public.stripe_events (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.stripe_events ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins can view stripe events" ON public.stripe_events FOR
+DROP POLICY IF EXISTS "Admins can view stripe events" ON public.stripe_events;
+DROP POLICY IF EXISTS "stripe_events_admin_select" ON public.stripe_events;
+CREATE POLICY "stripe_events_admin_select" ON public.stripe_events FOR
 SELECT USING (
-        EXISTS (
-            SELECT 1
-            FROM profiles
-            WHERE id = auth.uid()
-                AND role = 'admin'
+        (
+            SELECT public.is_admin()
         )
     );
 -- ── ORDERS & ITEMS POLICIES (Rule 18) ────────────────────────────────
 -- (Ensuring users can see their own and admins see all)
 DROP POLICY IF EXISTS "Users can see own orders" ON public.orders;
-CREATE POLICY "Users can see own orders" ON public.orders FOR
+DROP POLICY IF EXISTS "orders_select" ON public.orders;
+DROP POLICY IF EXISTS "orders_select_own" ON public.orders;
+CREATE POLICY "orders_select_own" ON public.orders FOR
 SELECT USING (
-        auth.uid() = user_id
-        OR EXISTS (
-            SELECT 1
-            FROM profiles
-            WHERE id = auth.uid()
-                AND role = 'admin'
+        (
+            (
+                SELECT auth.uid()
+            ) = user_id
+        )
+        OR (
+            SELECT public.is_admin()
         )
     );
 DROP POLICY IF EXISTS "Admins have full access to orders" ON public.orders;
-CREATE POLICY "Admins have full access to orders" ON public.orders FOR ALL USING (
-    EXISTS (
-        SELECT 1
-        FROM profiles
-        WHERE id = auth.uid()
-            AND role = 'admin'
+DROP POLICY IF EXISTS "orders_admin_all" ON public.orders;
+CREATE POLICY "orders_admin_all" ON public.orders FOR ALL USING (
+    (
+        SELECT public.is_admin()
     )
 );
 DROP POLICY IF EXISTS "Users can see own order items" ON public.order_items;
-CREATE POLICY "Users can see own order items" ON public.order_items FOR
+DROP POLICY IF EXISTS "order_items_select" ON public.order_items;
+DROP POLICY IF EXISTS "order_items_select_own" ON public.order_items;
+CREATE POLICY "order_items_select_own" ON public.order_items FOR
 SELECT USING (
         EXISTS (
             SELECT 1
             FROM public.orders o
             WHERE o.id = order_items.order_id
                 AND (
-                    o.user_id = auth.uid()
-                    OR EXISTS (
-                        SELECT 1
-                        FROM profiles
-                        WHERE id = auth.uid()
-                            AND role = 'admin'
+                    (
+                        o.user_id = (
+                            SELECT auth.uid()
+                        )
+                    )
+                    OR (
+                        SELECT public.is_admin()
                     )
                 )
         )
