@@ -53,12 +53,7 @@ export async function POST(req: Request) {
             });
         }
 
-        const ShippoModule = await import('shippo');
-        const Shippo = ShippoModule.Shippo || (ShippoModule as any).default?.Shippo || ShippoModule.default || ShippoModule;
-        const shippo = new Shippo({
-            apiKeyHeader: apiKey,
-            shippoApiVersion: "2026-03-01",
-        });
+        const { shippo } = await import('@/lib/shippo');
 
         // Fetch Warehouse Address
         const { data: settings } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'warehouse_info').maybeSingle();

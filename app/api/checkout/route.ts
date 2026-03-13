@@ -25,15 +25,7 @@ export async function POST(req: Request) {
         if (selectedRateId && !selectedRateId.startsWith('mock_')) {
             const apiKey = process.env.SHIPPO_API_KEY;
             if (apiKey) {
-                const ShippoModule = await import('shippo');
-                const Shippo = ShippoModule.Shippo || (ShippoModule as any).default?.Shippo || ShippoModule.default || ShippoModule;
-                let shippo: any;
-                if (typeof Shippo === 'function') {
-                    shippo = new Shippo({
-                        apiKeyHeader: apiKey,
-                        shippoApiVersion: '2026-03-01'
-                    });
-                }
+                const { shippo } = await import('@/lib/shippo');
 
                 try {
                     const rate = await shippo.rates.get(selectedRateId);
