@@ -121,17 +121,7 @@ export async function POST(req: Request) {
             };
         });
 
-        const shippingOptions = [
-            {
-                shipping_rate_data: {
-                    type: "fixed_amount",
-                    fixed_amount: { amount: Math.round(shipping * 100), currency: "usd" },
-                    display_name: shippingDisplayName,
-                },
-            }
-        ];
-
-        // 4. Create Stripe Checkout Session
+        // 3. Create Stripe Checkout Session
         // We pass the wide array of country codes to support worldwide shipping in Stripe
         const worldwideCountries = ["US", "CA", "GB", "AU", "NZ", "IE", "ZA", "FR", "DE", "ES", "IT", "CH", "SE", "NO", "DK", "FI", "NL", "BE", "AT", "PT", "MX", "BR", "AR", "CL", "JP", "KR", "SG", "MY", "PH", "ID", "IN", "TH", "VN", "CN", "TW", "HK", "AE", "SA", "QA", "IL", "TR", "EG", "MA", "NG", "KE", "ZA", "GR", "PL", "CZ", "HU", "RO", "BG", "HR", "SK", "SI", "EE", "LV", "LT", "IS", "CY", "MT"] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[];
 
@@ -139,14 +129,34 @@ export async function POST(req: Request) {
             payment_method_types: ["card"],
             line_items: lineItems,
             mode: "payment",
-            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?success=true`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?canceled=true`,
+            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/shop`,
             billing_address_collection: "auto",
             shipping_address_collection: {
                 allowed_countries: worldwideCountries,
             },
-            customer_email: address?.email,
-            shipping_options: shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
+            shipping_options: [
+                {
+                    shipping_rate_data: {
+                        type: 'fixed_amount',
+                        fixed_amount: {
+                            amount: 999,
+                            currency: 'usd',
+                        },
+                        display_name: 'Standard Flat Rate Shipping',
+                        delivery_estimate: {
+                            minimum: {
+                                unit: 'business_day',
+                                value: 3,
+                            },
+                            maximum: {
+                                unit: 'business_day',
+                                value: 5,
+                            },
+                        },
+                    },
+                },
+            ],
             metadata: {
                 order_id: order.id,
                 items: JSON.stringify(validatedItems.map((i: any) => ({

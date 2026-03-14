@@ -25,11 +25,24 @@ export function ShoppingBagDrawer() {
     const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
     const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         setIsCheckingOut(true);
-        router.push("/checkout");
-        setIsCartOpen(false);
-        setIsCheckingOut(false);
+        try {
+            const res = await fetch("/api/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items: cart }),
+            });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error("Could not initialize Stripe.");
+            }
+        } catch (error) {
+            console.error("Checkout failed:", error);
+            setIsCheckingOut(false);
+        }
     };
 
     return (
