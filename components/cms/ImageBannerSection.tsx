@@ -28,7 +28,10 @@ export default function ImageBannerSection({
                     alt={title || "Banner"}
                     fill
                     className="object-cover"
-                    priority
+                    priority={true}
+                    fetchPriority="high"
+                    sizes="100vw"
+                    quality={90}
                 />
             ) : (
                 <div className="w-full h-full bg-neutral-900 flex items-center justify-center">

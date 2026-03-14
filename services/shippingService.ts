@@ -14,18 +14,51 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
         if (!order) throw new Error('Order not found');
 
         const address = order.shipping_address as any;
-        if (!address || !address.line1) throw new Error('Incomplete shipping address');
+
+        // Defensive check: If address is missing or severely incomplete, try fallback
+        if (!address || (!address.line1 && !address.street1)) {
+            console.warn(`[shippingService] Order ${orderId} has incomplete shipping_address. Checking billing fallback.`);
+        }
+
+        const addressTo: any = {
+            name: order.customer_name || address?.name || address?.recipient || 'Valued Client',
+            // Support both flat and Stripe-nested address structures
+            street1: address?.address?.line1 || address?.line1 || address?.street1 || order.billing_address?.address?.line1 || order.billing_address?.line1 || '',
+            street2: address?.address?.line2 || address?.line2 || address?.street2 || order.billing_address?.address?.line2 || order.billing_address?.line2 || '',
+            city: address?.address?.city || address?.city || order.billing_address?.address?.city || order.billing_address?.city || '',
+            state: address?.address?.state || address?.state || order.billing_address?.address?.state || order.billing_address?.state || '',
+            zip: address?.address?.postal_code || address?.address?.zip || address?.postal_code || address?.zip || order.billing_address?.address?.postal_code || order.billing_address?.postal_code || '',
+            country: address?.address?.country || address?.country || order.billing_address?.address?.country || order.billing_address?.country || 'US',
+            email: order.customer_email || address?.email || '',
+        };
+
+        if (!addressTo.street1) {
+            throw new Error('Incomplete shipping address: Street address (line1) is missing from both shipping and billing data.');
+        }
 
         const allItems = await getItemsByOrder(orderId);
         let totalWeight = 0;
 
+        const calculateWeight = (item: any) => {
+            // Priority 1: Variant specific weight (in lbs)
+            if (item.product_variants?.weight && Number(item.product_variants.weight) > 0) {
+                return Number(item.product_variants.weight);
+            }
+            // Priority 2: Product base weight_grams (convert to lbs)
+            if (item.products?.weight_grams && Number(item.products.weight_grams) > 0) {
+                return Number(item.products.weight_grams) / 453.592;
+            }
+            // Fallback
+            return 1;
+        };
+
         if (itemsToFulfill && itemsToFulfill.length > 0) {
             itemsToFulfill.forEach(f => {
                 const match = allItems.find(i => i.id === f.id);
-                if (match) totalWeight += (match.weight || 1) * f.quantity;
+                if (match) totalWeight += calculateWeight(match) * f.quantity;
             });
         } else {
-            totalWeight = allItems.reduce((acc: number, item: any) => acc + (item.weight || 1) * item.quantity, 0);
+            totalWeight = allItems.reduce((acc: number, item: any) => acc + calculateWeight(item) * item.quantity, 0);
         }
 
         const parcelData: any = {
@@ -41,14 +74,6 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
             zip: process.env.WAREHOUSE_ZIP || '94105',
             country: process.env.WAREHOUSE_COUNTRY || 'US',
             phone: process.env.WAREHOUSE_PHONE || '+1 555 341 9393',
-        };
-
-        const addressTo: any = {
-            name: order.customer_name || address.name,
-            street1: address.line1, street2: address.line2 || '',
-            city: address.city, state: address.state,
-            zip: address.postal_code, country: address.country,
-            email: order.customer_email || '',
         };
 
         const shippoShipment = await shippo.shipments.create({

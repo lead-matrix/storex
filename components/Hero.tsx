@@ -17,7 +17,7 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: 1,
-        image: "https://images.unsplash.com/photo-1571781526291-c477eb311df6?q=80&w=2000&auto=format&fit=crop",
+        image: "/products/Banner-1.jpg",
         title: "THE OBSIDIAN COLLECTION",
         subtitle: "ELEVATE YOUR BEAUTY RITUAL.",
         buttonText: "SHOP NOW",
@@ -31,22 +31,6 @@ const DEFAULT_SLIDES: Slide[] = [
         buttonText: "SHOP NOW",
         link: "/collections"
     },
-    {
-        id: 3,
-        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=2000&auto=format&fit=crop",
-        title: "LUMINOUS GLOW",
-        subtitle: "High-performance skincare for radiant results.",
-        buttonText: "SHOP NOW",
-        link: "/collections"
-    },
-    {
-        id: 4,
-        image: "https://images.unsplash.com/photo-1583001809873-10a3ee46a9e8?q=80&w=2000&auto=format&fit=crop",
-        title: "TIMELESS ELEGANCE",
-        subtitle: "Signature palettes for the bold.",
-        buttonText: "SHOP NOW",
-        link: "/collections"
-    }
 ];
 
 export function Hero() {
@@ -61,7 +45,7 @@ export function Hero() {
                 .from('frontend_content')
                 .select('content_data')
                 .eq('content_key', 'hero_slides')
-                .single();
+                .maybeSingle();
 
             if (data?.content_data?.slides) {
                 setSlides(data.content_data.slides);
@@ -97,6 +81,8 @@ export function Hero() {
                         fill
                         className="object-cover object-center"
                         priority={index === 0}
+                        quality={90}
+                        sizes="100vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
 

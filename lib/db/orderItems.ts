@@ -27,7 +27,11 @@ export async function getItemsByOrder(orderId: string) {
       *,
       products (
         title,
-        images
+        images,
+        weight_grams
+      ),
+      product_variants (
+        weight
       )
     `)
         .eq('order_id', orderId);

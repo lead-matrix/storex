@@ -82,7 +82,8 @@ import nodemailer from 'nodemailer'
 const transporter = process.env.SMTP_HOST ? nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    // Automatically use SSL for port 465 even if SMTP_SECURE is missing/false
+    secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -90,17 +91,31 @@ const transporter = process.env.SMTP_HOST ? nodemailer.createTransport({
 }) : null
 
 async function sendMail({ to, subject, html, fromName }: { to: string, subject: string, html: string, fromName: string }) {
+    // 1. Construct From Address correctly
+    // If SMTP_FROM already contains "<", it might already be in "Name <email>" format.
+    const envFrom = process.env.SMTP_FROM || 'support@dinacosmetic.store';
+    let finalFrom = envFrom;
+
+    // If it doesn't have the <tag>, wrap it with the provided fromName
+    if (!envFrom.includes('<')) {
+        finalFrom = `"${fromName}" <${envFrom}>`;
+    }
+
+    console.log(`[Email] Attempting to send to ${to} using ${transporter ? 'SMTP' : 'Resend'}`);
+
     if (transporter) {
         try {
             await transporter.sendMail({
-                from: `"${fromName}" <${process.env.SMTP_FROM || 'support@dinacosmetic.store'}>`,
+                from: finalFrom,
                 to,
                 subject,
                 html,
             })
+            console.log(`[Email] SMTP success for ${to}`);
             return true
         } catch (error) {
-            console.error('SMTP Error:', error)
+            console.error('[Email] SMTP Error (falling back to Resend SDK):', error)
+            // Continue to fallback
         }
     }
 
@@ -109,19 +124,39 @@ async function sendMail({ to, subject, html, fromName }: { to: string, subject: 
         try {
             const { Resend } = await import('resend')
             const resend = new Resend(resendApiKey)
-            await resend.emails.send({
-                from: `${fromName} <${process.env.SMTP_FROM || 'support@dinacosmetic.store'}>`,
+
+            // Note: Resend is picky about 'from' field if domain isn't verified.
+            // If the user's domain isn't verified, this will still fail.
+            const { error } = await resend.emails.send({
+                from: finalFrom,
                 to,
                 subject,
                 html,
             })
+
+            if (error) {
+                console.error('[Email] Resend SDK error:', error);
+
+                // Final fallback if custom domain fails: use Resend's default dev address
+                if (envFrom.includes('dinacosmetic.store')) {
+                    console.warn('[Email] Retrying with Resend onboarding default address...');
+                    await resend.emails.send({
+                        from: `${fromName} <onboarding@resend.dev>`,
+                        to,
+                        subject,
+                        html,
+                    });
+                }
+            } else {
+                console.log(`[Email] Resend success for ${to}`);
+            }
             return true
         } catch (error) {
-            console.error('Resend Error:', error)
+            console.error('[Email] Resend SDK Exception:', error)
         }
     }
 
-    console.warn('No email provider configured (SMTP or Resend).')
+    console.warn('[Email] Critical: No email provider configured or all failed.')
     return false
 }
 

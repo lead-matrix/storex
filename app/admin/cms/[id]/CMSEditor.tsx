@@ -19,7 +19,7 @@ const COMPONENT_TYPES = [
     { type: "hero", label: "Hero Banner", icon: Sparkles, color: "text-amber-400", defaultProps: { title: "New Experience", subtitle: "Crafted for Excellence", imageUrl: "" } },
     { type: "productGrid", label: "Product Gallery", icon: LayoutGrid, color: "text-emerald-400", defaultProps: { category: "all", limit: 4 } },
     { type: "richText", label: "Philosophy Block", icon: Type, color: "text-blue-400", defaultProps: { content: "Add your storytelling here..." } },
-    { type: "imageBanner", label: "Visual Vibe", icon: ImageIcon, color: "text-purple-400", defaultProps: { imageUrl: "", text: "" } },
+    { type: "imageBanner", label: "Visual Vibe", icon: ImageIcon, color: "text-purple-400", defaultProps: { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaLink: "", overlayOpacity: 0.4, height: "70vh" } },
 ]
 
 export default function CMSEditor({ pageId, initialSections }: { pageId: string, initialSections: any[] }) {

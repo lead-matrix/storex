@@ -33,11 +33,17 @@ export async function getOrderById(id: string) {
 
 export async function updateOrderStatus(
     id: string,
-    updates: { payment_status?: string; fulfillment_status?: string }
+    updates: { status?: string; payment_status?: string; fulfillment_status?: string }
 ) {
+    const dbUpdates: any = { ...updates };
+    if (dbUpdates.payment_status && !dbUpdates.status) {
+        dbUpdates.status = dbUpdates.payment_status;
+        delete dbUpdates.payment_status;
+    }
+
     const { data: order, error } = await supabaseAdmin
         .from('orders')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
