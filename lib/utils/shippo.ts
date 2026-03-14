@@ -1,8 +1,8 @@
 export function getParcelForWeight(totalWeightLb: number) {
     if (totalWeightLb < 0.5) {
-        // Small poly mailer
+        // Small package(9.5*6in) 
         return {
-            length: "9",
+            length: "9.5",
             width: "6",
             height: "1",
             distanceUnit: "in" as any,
@@ -10,9 +10,9 @@ export function getParcelForWeight(totalWeightLb: number) {
             massUnit: "lb" as any
         };
     } else if (totalWeightLb <= 2) {
-        // Medium poly mailer
+        // Medium(11*9in)
         return {
-            length: "12",
+            length: "11",
             width: "9",
             height: "2",
             distanceUnit: "in" as any,
@@ -20,11 +20,11 @@ export function getParcelForWeight(totalWeightLb: number) {
             massUnit: "lb" as any
         };
     } else {
-        // Box template
+        // standard(boxes 10*7*5in)
         return {
-            length: "12",
-            width: "10",
-            height: "6",
+            length: "10",
+            width: "7",
+            height: "5",
             distanceUnit: "in" as any,
             weight: totalWeightLb.toFixed(2),
             massUnit: "lb" as any

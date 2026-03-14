@@ -16,11 +16,11 @@ export async function POST(req: Request) {
 
         const supabase = await createAdminClient();
 
-        // 1. Fetch real prices from database (Rule #15: Never trust client price)
+        // 1. Fetch real prices & weights from database (Rule #15: Never trust client price)
         const itemIds = items.map((i: any) => i.productId);
         const { data: dbProducts } = await supabase
             .from("products")
-            .select("id, title, base_price, sale_price, on_sale")
+            .select("id, title, base_price, sale_price, on_sale, weight_grams")
             .in("id", itemIds);
 
         const variantIds = items.filter((i: any) => i.variantId).map((i: any) => i.variantId);
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         if (variantIds.length > 0) {
             const { data } = await supabase
                 .from("product_variants")
-                .select("id, name, price_override")
+                .select("id, name, price_override, weight")
                 .in("id", variantIds);
             dbVariants = data || [];
         }
@@ -45,6 +45,14 @@ export async function POST(req: Request) {
                 price = variant.price_override;
             }
 
+            // Default all logic to pounds for weight metrics
+            let weightLb = 1; // Default to 1 LB if missing
+            if (variant?.weight && Number(variant.weight) > 0) {
+                weightLb = Number(variant.weight);
+            } else if (product?.weight_grams && Number(product.weight_grams) > 0) {
+                weightLb = Number(product.weight_grams) / 453.592; // Grams to LBs
+            }
+
             const serverName = variant && variant.name
                 ? `${product?.title || 'Product'} - ${variant.name}`
                 : (product?.title || item.name || 'Unknown Product');
@@ -52,34 +60,32 @@ export async function POST(req: Request) {
             return {
                 ...item,
                 name: serverName,
-                price: Number(price)
+                price: Number(price),
+                weightLb: Number(weightLb)
             };
         });
 
         const subtotal = validatedItems.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
+        const totalWeightLb = validatedItems.reduce((acc: number, item: any) => acc + item.weightLb * item.quantity, 0);
 
-        let shipping = 9.99; // Default fallback fallback
-        let shippingDisplayName = "Standard Shipping";
+        let shippingCost = 9.99;
+        let shippingDisplayName = "Standard Flat Rate Shipping (3-5 Days)";
 
-        if (selectedRateId && !selectedRateId.startsWith('mock_')) {
-            const apiKey = process.env.SHIPPO_API_KEY;
-            if (apiKey) {
-                const { shippo } = await import('@/lib/shippo');
-
-                try {
-                    const rate = await shippo.rates.get(selectedRateId);
-                    if (rate && rate.amount) {
-                        shipping = parseFloat(rate.amount);
-                        shippingDisplayName = `${rate.provider} - ${rate.servicelevel?.name || 'Standard'}`;
-                    }
-                } catch (e) {
-                    console.error("Failed to retrieve Shippo rate precisely:", e);
-                }
-            }
-        } else if (selectedRateId?.startsWith('mock_')) {
-            shipping = selectedRateId === 'mock_1' ? 9.99 : 19.99;
-            shippingDisplayName = selectedRateId === 'mock_1' ? 'Standard Shipping' : 'Express Shipping';
+        if (subtotal >= 99.99) {
+            shippingCost = 0;
+            shippingDisplayName = "Free Shipping (Standard)";
+        } else if (totalWeightLb < 0.5) {
+            shippingCost = 5.00;
+            shippingDisplayName = "Small Package Shipping (3-5 Days)";
+        } else if (totalWeightLb <= 2.0) {
+            shippingCost = 8.00;
+            shippingDisplayName = "Medium Package Shipping (3-5 Days)";
+        } else {
+            shippingCost = 9.99;
+            shippingDisplayName = "Standard Package Shipping (3-5 Days)";
         }
+
+        // Removed deprecated client rate selections since Stripe handles UI now
 
         // 2. Create pending order in DB first
         const { data: order, error: orderError } = await supabase
@@ -87,7 +93,7 @@ export async function POST(req: Request) {
             .insert({
                 status: "pending",
                 customer_email: address?.email || "pending@checkout.local",
-                amount_total: subtotal + shipping,
+                amount_total: subtotal + shippingCost,
                 shipping_address: address ? address : null
             })
             .select("id")
@@ -140,10 +146,10 @@ export async function POST(req: Request) {
                     shipping_rate_data: {
                         type: 'fixed_amount',
                         fixed_amount: {
-                            amount: 999,
+                            amount: Math.round(shippingCost * 100),
                             currency: 'usd',
                         },
-                        display_name: 'Standard Flat Rate Shipping',
+                        display_name: shippingDisplayName,
                         delivery_estimate: {
                             minimum: {
                                 unit: 'business_day',
