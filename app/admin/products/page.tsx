@@ -28,14 +28,29 @@ export default async function AdminProductsPage() {
         products = adminProducts;
     }
 
-    const processedProducts = products?.map(p => ({
+    // Fetch first variant for each product to correctly adjust stock
+    const productIds = (products ?? []).map((p: any) => p.id);
+    let variantMap: Record<string, string> = {};
+    if (productIds.length > 0) {
+        const { data: firstVariants } = await supabase
+            .from("product_variants")
+            .select("id, product_id")
+            .in("product_id", productIds)
+            .order("created_at", { ascending: true });
+        // Keep only the first variant per product
+        firstVariants?.forEach((v: any) => {
+            if (!variantMap[v.product_id]) variantMap[v.product_id] = v.id;
+        });
+    }
+
+    const processedProducts = products?.map((p: any) => ({
         ...p,
         name: p.title || p.name,
         stock: p.stock ?? 0,
         display_price: p.base_price || 0,
         display_compare: p.sale_price || null,
         is_active: p.status === 'active',
-        first_variant_id: p.id
+        first_variant_id: variantMap[p.id] || null   // null = no variants → adjustStock falls back to products table
     })) || [];
 
     const { data: categories } = await supabase.from("categories").select("id, name");

@@ -1,125 +1,230 @@
-# DINA COSMETIC - THE OBSIDIAN PALACE
-A high-performance, ultra-luxury e-commerce engine designed for the elite professional beauty industry. Built using the "Obsidian Standard" architecture for uncompromising performance, security, and aesthetics.
+# DINA COSMETIC — The Obsidian Palace
 
-## 🏗️ THE TECHNOLOGY STACK
-- **Framework**: [Next.js 16.1.6](https://nextjs.org/) (Full App Router Architecture)
-- **Database**: [Supabase](https://supabase.com/) (PostgreSQL with Fine-Grained RLS)
-- **Payment Infrastructure**: [Stripe](https://stripe.com/) (Service-Side Logic with Webhook Guards)
-- **Logistics**: [Shippo](https://goshippo.com/) (Server-Side Rate Calculation)
-- **Communications**: [Resend](https://resend.com/) (Automated Order Rituals)
-- **Content Management**: Interactive Drag-and-Drop Page Builder & CMS
-- **Styling**: [Tailwind CSS 4.0](https://tailwindcss.com/)
-- **Core Engine**: TypeScript (Strict Mode)
+> **Live store**: [dinacosmetic.store](https://dinacosmetic.store)  
+> **Stack**: Next.js 16 · Supabase · Stripe · Shippo · Resend · Vercel  
+> **Version**: 2.0.0 — Admin Ownership Release
+
+A full-stack, headless e-commerce platform purpose-built for **Dina Cosmetic** — a professional beauty brand. Zero SaaS lock-in. 100% admin-owned infrastructure with an immersive luxury storefront and a fully-featured command portal.
 
 ---
 
-## 🚀 THE LAUNCH RITUAL (DEPLOYMENT GUIDE)
+## 🏗️ Technology Stack
 
-Follow these steps with precision to go live with the Obsidian Palace.
+| Layer | Technology |
+|---|---|
+| **Framework** | [Next.js 16.1.6](https://nextjs.org/) — App Router, Server Actions, Server Components |
+| **Database** | [Supabase](https://supabase.com/) — PostgreSQL · Row Level Security · Storage |
+| **Payments** | [Stripe](https://stripe.com/) — Hosted Checkout · Webhooks · Idempotent Events |
+| **Shipping** | [Shippo](https://goshippo.com/) v2.18 — Label Generation · Live Rate Calculation |
+| **Email** | [Resend](https://resend.com/) — Order Confirmations · Shipping Notifications |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) — Design system with luxury tokens |
+| **Language** | TypeScript (strict) |
+| **Deployment** | [Vercel](https://vercel.com/) — Preview (dev) + Production (main) pipelines |
 
-### 1. Environment Orchestration
-Create a `.env.local` (local) and mirror these variables to your Vercel/Production dashboard:
+---
 
+## ✨ Feature Overview
+
+### Storefront
+- Dynamic CMS-driven pages rendered from `cms_pages` database table
+- Full product catalog with variant support (shades, sizes, colors)
+- Shopping bag drawer with live stock checks
+- Stripe Hosted Checkout with worldwide shipping address collection
+- Guest checkout + authenticated account orders
+- Order history and tracking in customer account dashboard
+- Free shipping threshold logic ($99.99+)
+
+### Admin Portal (`/admin`)
+- **Dashboard** — Real-time KPIs: gross revenue, active orders, low-stock alerts
+- **Products** — Full CRUD with drag-and-drop image upload, variant management, status toggle
+- **Orders** — Status management, single + batch fulfillment via Shippo, tracking integration
+- **Media Library** — Centralized image vault with upload, copy URL, delete, grid/list view, and text content editor
+- **Inventory Vault** — Variant-level stock ledger with security indicators
+- **Analytics** — 7-day and 30-day revenue charts, top-selling products
+- **Marketing** — Coupon/discount code engine (% and fixed), expiry + usage limits
+- **CMS / Experiences** — Drag-and-drop page builder for landing pages
+- **Categories** — Taxonomy management
+- **Clientele** — Customer directory with VIP/Repeat/Lead segmentation
+- **Email Design** — Transactional email template preview
+- **Settings** — Store info, warehouse address, social links, nav menus, hero slides, kill switch (maintenance mode)
+
+---
+
+## 🚀 Launch Checklist
+
+### 1. Clone the Repository
 ```bash
-# SUPABASE COMMAND & CONTROL
-NEXT_PUBLIC_SUPABASE_URL=your_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key # CRITICAL: KEEP PRIVATE
-
-# THE PAYMENT VAULT (STRIPE)
-STRIPE_SECRET_KEY=sk_live_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_... # Verified after creating Webhook in Stripe Dashboard
-
-# LOGISTICS & COMMUNICATION
-RESEND_API_KEY=re_...
-SHIPPO_API_KEY=shippo_live_...
-
-# PRODUCTION URL
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
+git clone https://github.com/lead-matrix/storex.git
+cd storex
+npm install
 ```
 
-### 2. Database Initialization
-1. Navigate to the **Supabase SQL Editor**.
-2. Run the **`MASTER.sql`** script found in the root directory.
-    - This creates the schema, establishes the strict RLS (Row Level Security), fixes performance bottlenecks, creates the builder tables, and seeds the initial luxury items.
-3. **Idempotency**: This script is safe to rerun at any point; it will non-destructively sync the schema.
-
-### 3. Activating The Admin Portal
-To gain access to the secure administrative command center:
-1. Sign up/Login to the frontend of your application.
-2. In the Supabase SQL Editor, promote your profile to 'admin':
-```sql
-UPDATE public.profiles 
-SET role = 'admin' 
-WHERE email = 'your-professional@email.com';
+### 2. Environment Variables
+```bash
+cp .env.example .env.local
 ```
-3. Navigate to `/admin` to manage inventory, fulfill orders, design new landing pages, and monitor KPIs.
+Fill in every value. See the table below for where to find each one.
 
-### 4. Stripe Webhook Configuration
-1. Go to your **Stripe Dashboard** > **Developers** > **Webhooks**.
-2. Add a new endpoint: `https://your-domain.com/api/webhook/stripe`
-3. Select events: `checkout.session.completed`.
-4. Copy the `Signing Secret` and paste it as `STRIPE_WEBHOOK_SECRET` in your environment variables.
+| Variable | Source |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API *(server-side only)* |
+| `STRIPE_SECRET_KEY` | Stripe → Developers → API Keys |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe → Developers → API Keys |
+| `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → Signing Secret |
+| `RESEND_API_KEY` | resend.com → API Keys |
+| `SHIPPO_API_KEY` | goshippo.com → API Keys |
+| `WAREHOUSE_*` | Your physical sender address for shipping labels |
+| `NEXT_PUBLIC_SITE_URL` | Your domain, e.g. `https://dinacosmetic.store` |
 
-### 5. Authentication Configuration
-1. In the **Supabase Dashboard**, go to **Authentication** > **URL Configuration**.
-2. Set **Site URL** to your production domain: `https://dinacosmetic.store`.
-3. Add to **Redirect URLs**: `https://dinacosmetic.store/auth/callback`.
-4. Ensure `http://localhost:3000/auth/callback` is added for local development.
+### 3. Database Setup
+1. Open **Supabase SQL Editor**
+2. Paste and run the full contents of **`MASTER.sql`** (project root)
+3. The script is **idempotent** — safe to re-run without data loss
 
----
-
-## 📁 CORE ARCHITECTURE
+### 4. Create Your Admin Account
+```bash
+# After signing up on the storefront, run in Supabase SQL Editor:
+UPDATE public.profiles
+SET role = 'admin'
+WHERE email = 'your@email.com';
 ```
-├── app/                    # Next.js App Router
-│   ├── [slug]/             # Dynamic CMS Pages (from `cms_pages`)
-│   ├── admin/              # Command Center (Dashboard, CMS)
-│   ├── auth/               # Auth Handlers (Callback for PKCE)
-│   ├── shop/               # Product permutations & storefront
-│   └── checkout/           # Managed payment flows
-├── components/             # High-Aesthetic UI Modules
-│   ├── admin/              # Administrative UI
-│   ├── cms/                # CMS Section Registry
-│   └── ui/                 # Tailored React components
-├── features/               # Modular business logic units
-├── lib/                    # Core Infrastructure
-│   ├── actions/            # Server Actions
-│   └── supabase/           # Secure DB Clients (Admin/Server/Client)
-├── public/                 # Static assets
-├── proxy.ts                # Next.js 16+ Edge Proxy (Replaces middleware.ts)
-├── MASTER.sql              # Unified Database Source of Truth
-└── GUIDE.md                # Advanced Operational Playbook
+Then visit `/admin`.
+
+### 5. Configure Stripe Webhook
+1. Stripe Dashboard → Developers → Webhooks → **Add Endpoint**
+2. URL: `https://your-domain.com/api/webhook/stripe`
+3. Events: `checkout.session.completed`
+4. Copy the **Signing Secret** → paste as `STRIPE_WEBHOOK_SECRET` in Vercel
+
+### 6. Configure Supabase Auth
+1. Supabase → Authentication → URL Configuration
+2. **Site URL**: `https://dinacosmetic.store`
+3. **Redirect URLs**: `https://dinacosmetic.store/auth/callback`
+
+### 7. Storage Bucket
+1. Supabase → Storage → create bucket named **`product-images`**
+2. Set bucket to **Public**
+3. RLS policies: allow authenticated uploads, allow public reads
+
+### 8. Run Locally
+```bash
+npm run dev
+# Visit http://localhost:3000
+```
+
+### 9. Deploy to Vercel
+```bash
+# Pushing to `dev` branch → Vercel Preview deployment
+# Merging to `main` → Vercel Production deployment
+git push origin dev
+```
+Ensure all environment variables from step 2 are set in **Vercel → Project → Settings → Environment Variables** for the Production environment.
+
+---
+
+## 📁 Project Structure
+
+```
+├── app/                        # Next.js App Router
+│   ├── [slug]/                 # Dynamic CMS pages (from cms_pages table)
+│   ├── admin/                  # Admin Portal
+│   │   ├── analytics/          # Revenue charts & KPIs
+│   │   ├── categories/         # Product taxonomy
+│   │   ├── cms/                # Page builder
+│   │   ├── email/              # Email template editor
+│   │   ├── marketing/          # Coupons & abandoned carts
+│   │   ├── media/              # 🆕 Media library & content editor
+│   │   ├── orders/             # Order fulfillment
+│   │   ├── products/           # Product catalog management
+│   │   ├── settings/           # Store configuration
+│   │   ├── users/              # Customer directory
+│   │   └── vault/              # Inventory ledger
+│   ├── api/                    # API Routes
+│   │   ├── admin/              # Admin-authenticated API endpoints
+│   │   ├── checkout/           # Stripe session creation
+│   │   ├── shippo/             # Shipping rate calculation
+│   │   └── webhook/stripe/     # Stripe payment confirmation webhook
+│   ├── auth/                   # Auth handlers (PKCE callback)
+│   ├── checkout/               # Checkout success/cancel pages
+│   ├── product/                # Product detail pages
+│   └── shop/                   # Store listing page
+├── components/                 # UI Components
+│   ├── admin/                  # Admin layout, forms, modals
+│   ├── cms/                    # CMS section renderers
+│   └── ui/                     # Shared design system components
+├── features/                   # Feature-scoped logic
+│   ├── cart/                   # Shopping bag context & drawer
+│   ├── checkout/               # Checkout flow components
+│   ├── home/                   # Homepage sections
+│   └── products/               # Product display components
+├── lib/                        # Core infrastructure
+│   ├── actions/                # Server Actions (admin.ts, cms.ts, coupons.ts)
+│   ├── supabase/               # DB clients (server, client, admin)
+│   └── utils/                  # Helpers (email, shippo, etc.)
+├── emails/                     # React Email templates
+├── public/                     # Static assets
+├── proxy.ts                    # Next.js 16 edge middleware proxy
+├── MASTER.sql                  # 🗄️ Single source of truth for DB schema
+└── .env.example                # Environment variable template
 ```
 
 ---
 
-## 🔐 SECURITY & INTEGRITY
-- **Atomic Operations**: Inventory is deducted within database transactions during Stripe confirmation.
-- **Server-Only Logic**: Pricing, finance, and stock calculation never happen on the client.
-- **RLS Enforced**: Every table is locked behind Supabase Row Level Security.
-- **Guest Checkout**: Seamless, secure guest flow with placeholder state management.
+## 🔐 Security Architecture
+
+| Rule | Implementation |
+|---|---|
+| Server-side pricing | Prices always fetched from DB in checkout route — client values ignored |
+| Stripe webhooks | Orders only confirmed via verified `checkout.session.completed` events |
+| Idempotent events | `stripe_events` table prevents duplicate order processing |
+| Row Level Security | All Supabase tables use RLS with role-based policies |
+| Admin middleware | `/admin` routes require `role = 'admin'` enforced server-side |
+| Atomic inventory | Stock deducted inside DB transaction (`process_order_atomic` RPC) |
+| Service role isolation | Admin Supabase client never exposed to client bundles |
 
 ---
 
-## 🎨 THE DESIGN CODE
-Elite beauty requires elite aesthetics.
-- **Background**: Obsidian Black (#000000 / #0B0B0D)
-- **Primary Accent**: Liquid Gold (#D4AF37)
-- **Typography**: Playfair Display (Luxury Serif), Inter (Modern Sans-Serif)
+## 🎨 Design System
+
+| Token | Value |
+|---|---|
+| **Obsidian** | `#0B0B0D` (page background) |
+| **Gold** | `#D4AF37` (primary accent) |
+| **Pearl** | `#F5F4F0` (light surface) |
+| **Charcoal** | `#1A1A1A` (headings) |
+| **Heading font** | Playfair Display (luxury serif) |
+| **Body font** | Inter (modern sans-serif) |
 
 ---
 
-## ⚡ IMAGE OPTIMIZATION & PERFORMANCE
-To ensure lightning-fast load times matching the luxury aesthetic:
-- **Automatic Optimization**: All product and site images use the Next.js `<Image>` component, which automatically serves them in optimized formats (like WebP) with extreme compression ratios.
-- **Local Vault Storage**: High-res assets are compressed to <0.1MB on upload and saved efficiently in `/public/products`. This creates instant render times without external CDN latency.
-- **Absolute Payment Rendering**: Checkout images flawlessly map local URIs back to `<NEXT_PUBLIC_SITE_URL>` during Stripe payload mapping, preventing silent 400 rejection errors within the checkout flow.
-- **Above-The-Fold**: Critical hero and banner images utilize the `priority` flag to pre-load critical CSS and UI.
+## 🔄 CI/CD Pipeline
+
+| Branch | Deployment |
+|---|---|
+| `dev` | Vercel **Preview** — for testing changes before production |
+| `main` | Vercel **Production** — live at `dinacosmetic.store` |
 
 ---
 
-## 🚢 CONTINUOUS INTEGRATION
-Pushing code to the `dev` branch triggers a Vercel Preview deployment. Merging to `main` executes a production environment update.
+## 📋 Admin Panel Quick Reference
 
-**Current Version 1.0.0 - The Obsidian Standard**
+| URL | Purpose |
+|---|---|
+| `/admin` | Dashboard — live KPIs |
+| `/admin/products` | Manage products & variants |
+| `/admin/orders` | Fulfill orders, generate shipping labels |
+| `/admin/media` | Upload/manage images, edit content blocks |
+| `/admin/vault` | View all variant stock levels |
+| `/admin/analytics` | Revenue & sales charts |
+| `/admin/marketing` | Coupon codes & abandoned carts |
+| `/admin/cms` | Build custom landing pages |
+| `/admin/categories` | Manage product categories |
+| `/admin/users` | Customer directory & role management |
+| `/admin/settings` | Store config, hero slides, menus, warehouse |
+
+---
+
+*Built and maintained by **Mahmud R B** — Version 2.0.0*  
+*Last updated: March 2026*

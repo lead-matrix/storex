@@ -6,9 +6,10 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Clientele | Admin" };
 
-export default async function AdminUsersPage({ searchParams }: { searchParams: { segment?: string } }) {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ segment?: string }> }) {
     const supabase = await createAdminClient();
-    const segment = searchParams.segment || 'all';
+    const { segment: segmentParam } = await searchParams;
+    const segment = segmentParam || 'all';
 
     // Fetch profiles with their order counts and total spent
     const { data: users, error } = await supabase

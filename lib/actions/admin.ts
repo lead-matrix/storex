@@ -509,3 +509,36 @@ function revalidatePaths(productId?: string, slug?: string) {
         console.error("Revalidation failed:", err);
     }
 }
+
+// ─────────────────────────────────────────────────
+// MEDIA LIBRARY ACTIONS
+// ─────────────────────────────────────────────────
+
+export async function deleteStorageFile(filePath: string) {
+    const supabase = await ensureAdmin();
+    const { createClient: createAdminSupabase } = await import('@/lib/supabase/admin');
+    const adminSupabase = await createAdminSupabase();
+
+    const { error } = await adminSupabase.storage
+        .from('product-images')
+        .remove([filePath]);
+
+    if (error) throw new Error(`Failed to delete file: ${error.message}`);
+    revalidatePath('/admin/media');
+}
+
+export async function updateFrontendContent(contentId: string, contentData: Record<string, string>) {
+    const supabase = await ensureAdmin();
+
+    const { error } = await supabase
+        .from('frontend_content')
+        .update({ content_data: contentData, updated_at: new Date().toISOString() })
+        .eq('id', contentId);
+
+    if (error) throw new Error(`Failed to update content: ${error.message}`);
+
+    revalidatePath('/');
+    revalidatePath('/admin/media');
+    revalidatePath('/admin/settings');
+}
+

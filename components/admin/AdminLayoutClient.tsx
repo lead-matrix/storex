@@ -17,6 +17,7 @@ import {
     Mail,
     LayoutPanelLeft,
     Ticket,
+    Image as ImageIcon,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
     { href: "/admin/marketing", icon: Ticket, label: "Marketing" },
     { href: "/admin/vault", icon: Vault, label: "Vault" },
     { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },
+    { href: "/admin/media", icon: ImageIcon, label: "Media Library" },
     { href: "/admin/cms", icon: LayoutPanelLeft, label: "Experiences" },
     { href: "/admin/categories", icon: Layers, label: "Categories" },
     { href: "/admin/users", icon: Users, label: "Clientele" },

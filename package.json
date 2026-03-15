@@ -1,6 +1,6 @@
 {
-  "name": "lmt",
-  "version": "0.1.0",
+  "name": "dina-cosmetic",
+  "version": "2.0.0",
   "private": true,
   "engines": {
     "node": "20.x"
