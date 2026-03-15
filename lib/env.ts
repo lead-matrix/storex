@@ -17,6 +17,7 @@ const secondaryVars = [
     "SMTP_PASS",
     "SMTP_FROM",
     "NEXT_PUBLIC_CHATBOT_ID",
+    "NEXT_PUBLIC_CHATBASE_HOST",
 ];
 
 export function validateEnv() {
