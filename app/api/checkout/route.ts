@@ -48,7 +48,7 @@ export async function POST(req: Request) {
             // Default all logic to pounds for weight metrics
             let weightLb = 1; // Default to 1 LB if missing
             if (variant?.weight && Number(variant.weight) > 0) {
-                weightLb = Number(variant.weight);
+                weightLb = Number(variant.weight) / 16; // OZ to LBs
             } else if (product?.weight_grams && Number(product.weight_grams) > 0) {
                 weightLb = Number(product.weight_grams) / 453.592; // Grams to LBs
             }

@@ -44,6 +44,7 @@ export async function fetchShippingRatesAction(orderId: string, itemsToFulfill?:
     const result = await getShippingRates(orderId, itemsToFulfill);
     return {
         shipmentId: result.shipmentId,
+        parcelName: (result as any).parcelName,
         rates: result.rates.map((r: any) => ({
             id: r.objectId,
             provider: r.provider,

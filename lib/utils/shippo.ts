@@ -2,6 +2,7 @@ export function getParcelForWeight(totalWeightLb: number) {
     if (totalWeightLb < 0.5) {
         // Small package(9.5*6in) 
         return {
+            name: "Small Package",
             length: "9.5",
             width: "6",
             height: "1",
@@ -12,6 +13,7 @@ export function getParcelForWeight(totalWeightLb: number) {
     } else if (totalWeightLb <= 2) {
         // Medium(11*9in)
         return {
+            name: "Medium Package",
             length: "11",
             width: "9",
             height: "2",
@@ -22,6 +24,7 @@ export function getParcelForWeight(totalWeightLb: number) {
     } else {
         // standard(boxes 10*7*5in)
         return {
+            name: "Standard Box",
             length: "10",
             width: "7",
             height: "5",

@@ -37,6 +37,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
     const [loading, setLoading] = useState(false)
     const [rates, setRates] = useState<Rate[]>([])
     const [selectedRate, setSelectedRate] = useState<Rate | null>(null)
+    const [parcelName, setParcelName] = useState<string>('')
     const [result, setResult] = useState<{ labelUrl: string, trackingNumber: string } | null>(null)
 
     // Partial Fulfillment State: { order_item_id: quantity_to_ship_now }
@@ -77,6 +78,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
         try {
             const data = await fetchShippingRatesAction(order.id, itemsToShipArray)
             setRates(data.rates)
+            setParcelName(data.parcelName || 'Standard Box')
             setStep('rates')
             toast.success('Logistics matrix synchronized')
         } catch (err: any) {
@@ -226,7 +228,13 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
 
                     {step === 'rates' && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-5 duration-500">
-                            <h4 className="text-[10px] uppercase tracking-luxury text-gold font-bold mb-2">Select Logistics Stream</h4>
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-[10px] uppercase tracking-luxury text-gold font-bold">Select Logistics Stream</h4>
+                                <div className="flex items-center gap-2 px-3 py-1 bg-gold/10 border border-gold/20 rounded-full">
+                                    <Package className="w-3 h-3 text-gold" />
+                                    <span className="text-[9px] uppercase tracking-widest text-gold font-bold">{parcelName} Selected</span>
+                                </div>
+                            </div>
                             <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 {rates.map((rate) => (
                                     <button

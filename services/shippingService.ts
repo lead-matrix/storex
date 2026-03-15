@@ -40,9 +40,9 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
         let totalWeight = 0;
 
         const calculateWeight = (item: any) => {
-            // Priority 1: Variant specific weight (in lbs)
+            // Priority 1: Variant specific weight (stored in OZ as per ProductForm)
             if (item.product_variants?.weight && Number(item.product_variants.weight) > 0) {
-                return Number(item.product_variants.weight);
+                return Number(item.product_variants.weight) / 16;
             }
             // Priority 2: Product base weight_grams (convert to lbs)
             if (item.products?.weight_grams && Number(item.products.weight_grams) > 0) {
@@ -61,10 +61,8 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
             totalWeight = allItems.reduce((acc: number, item: any) => acc + calculateWeight(item) * item.quantity, 0);
         }
 
-        const parcelData: any = {
-            length: '10', width: '8', height: '4',
-            distanceUnit: 'in', weight: totalWeight.toString() || '1', massUnit: 'lb',
-        };
+        const { getParcelForWeight } = await import('@/lib/utils/shippo');
+        const parcelData = getParcelForWeight(totalWeight);
 
         const addressFrom: any = {
             name: process.env.WAREHOUSE_NAME || 'Warehouse',
@@ -82,7 +80,8 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
 
         return {
             shipmentId: shippoShipment.objectId || '',
-            rates: (shippoShipment.rates || []) as any[]
+            rates: (shippoShipment.rates || []) as any[],
+            parcelName: (parcelData as any).name || 'Standard Parcel'
         };
     } catch (error) {
         console.error('getShippingRates error:', error);
