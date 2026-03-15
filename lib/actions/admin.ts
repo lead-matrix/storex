@@ -136,6 +136,14 @@ export async function updateProduct(formData: FormData) {
         ? (imagesRaw.startsWith('[') ? JSON.parse(imagesRaw) : imagesRaw.split(',').map(img => img.trim()).filter(Boolean))
         : [];
 
+    const is_featured = formData.get('is_featured') === 'on' || formData.get('is_featured') === 'true';
+    const is_bestseller = formData.get('is_bestseller') === 'on' || formData.get('is_bestseller') === 'true';
+    const is_new = formData.get('is_new') === 'on' || formData.get('is_new') === 'true';
+    const on_sale = formData.get('on_sale') === 'on' || formData.get('on_sale') === 'true';
+
+    const salePriceRaw = formData.get('sale_price') as string;
+    let sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
+
     let slug = (formData.get('slug') as string)?.trim();
     if (!slug) slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
@@ -152,6 +160,11 @@ export async function updateProduct(formData: FormData) {
             base_price: parseFloat(formData.get('base_price') as string) || 0,
             stock: parseInt(formData.get('stock') as string) || 0,
             category_id: category_id || null,
+            is_featured,
+            is_bestseller,
+            is_new,
+            on_sale,
+            sale_price,
             weight_grams: parseFloat(formData.get('weight_grams') as string) || null,
             length_cm: parseFloat(formData.get('length_cm') as string) || null,
             width_cm: parseFloat(formData.get('width_cm') as string) || null,
@@ -175,7 +188,7 @@ export async function updateProduct(formData: FormData) {
                     name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
-                    price_override: v.price,
+                    price_override: v.price || v.price_override,
                     stock: v.stock,
                     color_code: v.color_code,
                     image_url: v.image_url,
@@ -186,7 +199,7 @@ export async function updateProduct(formData: FormData) {
                     name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
-                    price_override: v.price,
+                    price_override: v.price || v.price_override,
                     stock: v.stock,
                     color_code: v.color_code,
                     image_url: v.image_url,

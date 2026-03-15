@@ -45,8 +45,12 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                             name: v.name,
                             sku: v.sku,
                             price: v.price_override ?? p.base_price,
+                            sale_price: p.sale_price,
+                            on_sale: p.on_sale,
                             stock: v.stock,
                             status: v.status || p.status,
+                            weight: v.weight,
+                            category: p.categories?.name,
                             image: v.image_url || p.images?.[0]
                         })
                     }
@@ -60,8 +64,12 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                         name: 'Base Product',
                         sku: p.slug,
                         price: p.base_price,
+                        sale_price: p.sale_price,
+                        on_sale: p.on_sale,
                         stock: p.stock,
                         status: p.status,
+                        weight: p.weight_grams,
+                        category: p.categories?.name,
                         image: p.images?.[0]
                     })
                 }
@@ -199,24 +207,53 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Valuation ($)</label>
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Base Valuation ($)</label>
                                 <input
                                     type="number"
                                     step="0.01"
-                                    value={dirtyRows[row.id]?.updates.price ?? (dirtyRows[row.id]?.updates.price_override ?? row.price)}
+                                    value={dirtyRows[row.id]?.updates.price ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.price_override ?? row.price) : (dirtyRows[row.id]?.updates.base_price ?? row.price))}
                                     onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'price_override' : 'base_price', parseFloat(e.target.value))}
-                                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-sm font-serif text-white focus:border-gold outline-none transition-all"
+                                    className="w-full bg-transparent border-none p-0 text-sm font-serif text-white focus:ring-0 outline-none transition-all"
                                 />
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Reserve (Stock)</label>
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Sale Price ($)</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="—"
+                                        value={dirtyRows[row.id === row.parentId ? row.id : (row.parentId || row.id)]?.updates.sale_price ?? row.sale_price ?? ''}
+                                        onChange={(e) => handleUpdate(row.parentId || row.id, 'product', 'sale_price', parseFloat(e.target.value))}
+                                        className="w-full bg-transparent border-none p-0 text-sm font-serif text-gold focus:ring-0 outline-none transition-all"
+                                    />
+                                    <button
+                                        onClick={() => handleUpdate(row.parentId || row.id, 'product', 'on_sale', !(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale))}
+                                        className={`px-1.5 py-0.5 rounded-[2px] text-[7px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black' : 'bg-white/10 text-white/20'}`}
+                                    >
+                                        SALE
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Reserve</label>
                                 <input
                                     type="number"
                                     value={dirtyRows[row.id]?.updates.stock ?? row.stock}
                                     onChange={(e) => handleUpdate(row.id, row.type, 'stock', parseInt(e.target.value))}
-                                    className={`w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-sm font-mono focus:border-gold outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
+                                    className={`w-full bg-transparent border-none p-0 text-sm font-mono focus:ring-0 outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
+                                />
+                            </div>
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Weight</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={dirtyRows[row.id]?.updates.weight ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.weight ?? row.weight) : (dirtyRows[row.id]?.updates.weight_grams ?? row.weight))}
+                                    onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'weight' : 'weight_grams', parseFloat(e.target.value))}
+                                    className="w-full bg-transparent border-none p-0 text-sm font-mono text-white/40 focus:ring-0 outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -231,9 +268,12 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                         <thead className="sticky top-0 z-10">
                             <tr className="border-b border-white/5 bg-black/80 backdrop-blur-md text-[10px] uppercase tracking-luxury text-gold font-bold">
                                 <th className="px-6 py-4 border-r border-white/5">Asset</th>
+                                <th className="px-6 py-4 border-r border-white/5">Category</th>
                                 <th className="px-6 py-4 border-r border-white/5">Identifier (SKU)</th>
-                                <th className="px-6 py-4 border-r border-white/5 text-center">Valuation ($)</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center">Base ($)</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center whitespace-nowrap">Sale ($)</th>
                                 <th className="px-6 py-4 border-r border-white/5 text-center">Reserve</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center">Weight</th>
                                 <th className="px-6 py-4 text-center">State</th>
                             </tr>
                         </thead>
@@ -251,18 +291,44 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 border-r border-white/5 font-mono text-[10px] text-white/40 group-hover:text-gold transition-colors">
-                                        {row.sku || 'UNASSIGNED'}
+                                    <td className="px-6 py-4 border-r border-white/5 text-[9px] uppercase tracking-widest text-gold/40">
+                                        {row.category || '—'}
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <input
+                                            type="text"
+                                            value={dirtyRows[row.id]?.updates.sku ?? row.sku}
+                                            onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'sku' : 'slug', e.target.value)}
+                                            className="w-full bg-transparent border-none p-0 font-mono text-[10px] text-white/40 focus:text-gold outline-none transition-all uppercase"
+                                        />
                                     </td>
                                     <td className="px-6 py-4 border-r border-white/5">
                                         <div className="flex justify-center">
                                             <input
                                                 type="number"
                                                 step="0.01"
-                                                value={dirtyRows[row.id]?.updates.price ?? (dirtyRows[row.id]?.updates.price_override ?? row.price)}
+                                                value={dirtyRows[row.id]?.updates.price ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.price_override ?? row.price) : (dirtyRows[row.id]?.updates.base_price ?? row.price))}
                                                 onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'price_override' : 'base_price', parseFloat(e.target.value))}
                                                 className="w-24 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-serif text-white hover:border-gold/30 focus:border-gold outline-none transition-all"
                                             />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="—"
+                                                value={dirtyRows[row.id === row.parentId ? row.id : (row.parentId || row.id)]?.updates.sale_price ?? row.sale_price ?? ''}
+                                                onChange={(e) => handleUpdate(row.parentId || row.id, 'product', 'sale_price', parseFloat(e.target.value))}
+                                                className="w-20 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-serif text-gold hover:border-gold/30 focus:border-gold outline-none transition-all"
+                                            />
+                                            <button
+                                                onClick={() => handleUpdate(row.parentId || row.id, 'product', 'on_sale', !(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale))}
+                                                className={`px-2 py-0.5 rounded-[2px] text-[8px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black shadow-gold' : 'bg-white/5 text-white/20 border border-white/10'}`}
+                                            >
+                                                {(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'On Sale' : 'Off Sale'}
+                                            </button>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 border-r border-white/5">
@@ -272,6 +338,17 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                                 value={dirtyRows[row.id]?.updates.stock ?? row.stock}
                                                 onChange={(e) => handleUpdate(row.id, row.type, 'stock', parseInt(e.target.value))}
                                                 className={`w-20 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-mono hover:border-gold/30 focus:border-gold outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex justify-center">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={dirtyRows[row.id]?.updates.weight ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.weight ?? row.weight) : (dirtyRows[row.id]?.updates.weight_grams ?? row.weight))}
+                                                onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'weight' : 'weight_grams', parseFloat(e.target.value))}
+                                                className="w-16 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-mono text-white/40 hover:border-gold/30 focus:border-gold outline-none transition-all"
                                             />
                                         </div>
                                     </td>
