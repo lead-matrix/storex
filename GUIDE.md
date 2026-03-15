@@ -106,6 +106,13 @@ Required for orders to transition from **Pending → Paid**.
 | Email | `/admin/email` | Transactional email template designer |
 | Settings | `/admin/settings` | Store config, warehouse, hero slides, navigation menus, kill switch |
 
+### ⚡ Global Search (Cmd + K)
+Access the **Admin Command Palette** from any page in the portal using `Cmd+K` (or `Ctrl+K` on Windows). 
+- Search **Products** by name or category
+- Search **Orders** by ID or customer email
+- Search **Users** by name or email
+- Instant navigation with keyboard shortcuts.
+
 ---
 
 ## 🔐 6. SECURITY RULES (ENFORCED IN CODE)
