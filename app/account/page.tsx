@@ -46,6 +46,7 @@ export default async function AccountPage() {
             created_at,
             amount_total,
             status,
+            tracking_number,
             order_items (
                 quantity,
                 products (title)

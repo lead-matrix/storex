@@ -12,6 +12,7 @@ interface Order {
         quantity: number;
         products: { title: string } | { title: string }[];
     }[];
+    tracking_number?: string;
 }
 
 interface AccountDashboardProps {
@@ -141,7 +142,20 @@ export function AccountDashboard({ user, profile, orders = [] }: AccountDashboar
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-5 text-right font-medium text-white group-hover:text-gold transition-colors">
-                                                    ${Number(order.amount_total).toFixed(2)}
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span>${Number(order.amount_total).toFixed(2)}</span>
+                                                        {order.tracking_number && (
+                                                            <a
+                                                                href={`https://goshippo.com/tracking/${order.tracking_number}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-[9px] text-gold/60 hover:text-gold underline decoration-gold/20 flex items-center gap-1 transition-colors uppercase tracking-widest"
+                                                            >
+                                                                Track Manifest
+                                                                <ChevronRight size={10} />
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
