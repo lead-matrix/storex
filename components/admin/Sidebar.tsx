@@ -13,12 +13,14 @@ import {
     Layout,
     Mail,
     BarChart2,
+    Grid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin" },
     { icon: Package, label: "Products", href: "/admin/products" },
+    { icon: Grid, label: "Catalog Mode", href: "/admin/products/catalog" },
     { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
     { icon: Layers, label: "Categories", href: "/admin/categories" },
     { icon: Layout, label: "CMS Pages", href: "/admin/cms" },

@@ -563,3 +563,39 @@ export async function updateFrontendContent(contentId: string, contentData: Reco
     revalidatePath('/admin/settings');
 }
 
+export async function bulkUpdateCatalog(updates: {
+    products?: { id: string, updates: any }[],
+    variants?: { id: string, updates: any }[]
+}) {
+    const supabase = await ensureAdmin();
+
+    try {
+        if (updates.products && updates.products.length > 0) {
+            for (const item of updates.products) {
+                const { error } = await supabase
+                    .from('products')
+                    .update(item.updates)
+                    .eq('id', item.id);
+                if (error) throw error;
+            }
+        }
+
+        if (updates.variants && updates.variants.length > 0) {
+            for (const item of updates.variants) {
+                const { error } = await supabase
+                    .from('product_variants')
+                    .update(item.updates)
+                    .eq('id', item.id);
+                if (error) throw error;
+            }
+        }
+
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/products/catalog');
+        return { success: true };
+    } catch (err: any) {
+        console.error("Bulk Update Error:", err);
+        throw new Error(`Failed to apply batch updates: ${err.message}`);
+    }
+}
+

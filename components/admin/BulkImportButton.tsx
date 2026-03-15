@@ -14,13 +14,14 @@ export function BulkImportButton() {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (!file.name.endsWith('.csv')) {
-            toast.error("Please upload a CSV file")
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
+        if (!['csv', 'xlsx', 'xls'].includes(fileExt || '')) {
+            toast.error("Please upload a CSV or Excel file")
             return
         }
 
         setIsUploading(true)
-        const toastId = toast.loading("Processing bulk asset ingestion...")
+        const toastId = toast.loading("Ingesting master data artifacts...")
 
         try {
             const formData = new FormData()
