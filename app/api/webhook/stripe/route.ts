@@ -5,7 +5,7 @@ import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderConfirmationEmail } from "@/lib/utils/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2026-02-25.clover" as any,
+    apiVersion: "2026-02-25.clover",
 });
 
 export async function POST(req: Request) {

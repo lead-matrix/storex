@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2026-02-25.clover" as any,
+    apiVersion: "2026-02-25.clover",
 });
 
 export async function POST(req: Request) {
@@ -39,10 +39,16 @@ export async function POST(req: Request) {
 
             let price = product?.base_price || 0;
             if (product?.on_sale && product?.sale_price) {
+                // Use sale price as the primary if it exists
                 price = product.sale_price;
             }
+
+            // If variants exist, they can override the price.
+            // If the specific variant selected has an override, use it.
             if (variant?.price_override != null) {
                 price = variant.price_override;
+            } else if (item.variantId) {
+                // If variant is selected but has no override, we still use the product price (already set above)
             }
 
             // Default all logic to pounds for weight metrics
@@ -71,7 +77,7 @@ export async function POST(req: Request) {
         let shippingCost = 9.99;
         let shippingDisplayName = "Standard Flat Rate Shipping (3-5 Days)";
 
-        if (subtotal >= 99.99) {
+        if (subtotal >= 100) {
             shippingCost = 0;
             shippingDisplayName = "Free Shipping (Standard)";
         } else if (totalWeightLb < 0.5) {

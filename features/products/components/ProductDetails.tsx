@@ -40,10 +40,23 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
 
     const selectedVariant = activeVariants.find((v) => v.id === selectedVariantId)
 
-    const displayPrice =
-        selectedVariant?.price_override != null
-            ? selectedVariant.price_override
-            : product.base_price ?? 0
+    // Calculate display price
+    // If a variant is selected, use its override.
+    // If no override, use base_price.
+    // If base_price is 0/null, use the minimum among all variants.
+    const getInitialPrice = () => {
+        if (selectedVariant?.price_override != null) return selectedVariant.price_override
+        if (product.base_price && product.base_price > 0) return product.base_price
+
+        // Fallback: find any variant with a price
+        const prices = activeVariants
+            .map(v => v.price_override)
+            .filter((p): p is number => p != null && p > 0)
+
+        return prices.length > 0 ? Math.min(...prices) : (product.base_price || 0)
+    }
+
+    const displayPrice = getInitialPrice()
 
     const currentStock = selectedVariant?.stock ?? 0
     const isOutOfStock = currentStock <= 0

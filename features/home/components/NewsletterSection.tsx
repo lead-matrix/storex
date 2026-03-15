@@ -7,15 +7,28 @@ export function NewsletterSection() {
     const [email, setEmail] = useState("")
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!email) return
+
         setStatus("loading")
-        // Simulate API call
-        setTimeout(() => {
-            setStatus("success")
-            setEmail("")
-        }, 1000)
+        try {
+            const response = await fetch("/api/newsletter", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+
+            if (response.ok) {
+                setStatus("success")
+                setEmail("")
+            } else {
+                setStatus("error")
+            }
+        } catch (error) {
+            console.error("Newsletter submission failed:", error);
+            setStatus("error")
+        }
     }
 
     return (
