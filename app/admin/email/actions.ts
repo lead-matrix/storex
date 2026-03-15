@@ -71,8 +71,10 @@ export async function sendTestEmail(toEmail: string, settings: EmailSettings): P
         </div>
         `
 
+        const fromAddress = process.env.SMTP_FROM || `${settings.brand_name} <onboarding@resend.dev>`
+
         await resend.emails.send({
-            from: `${settings.brand_name} <onboarding@resend.dev>`,
+            from: fromAddress,
             to: toEmail,
             subject: `[TEST] ${settings.confirm_subject}`,
             html,

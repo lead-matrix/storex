@@ -93,7 +93,7 @@ const transporter = process.env.SMTP_HOST ? nodemailer.createTransport({
 async function sendMail({ to, subject, html, fromName }: { to: string, subject: string, html: string, fromName: string }) {
     // 1. Construct From Address correctly
     // If SMTP_FROM already contains "<", it might already be in "Name <email>" format.
-    const envFrom = process.env.SMTP_FROM || 'support@dinacosmetic.store';
+    const envFrom = process.env.SMTP_FROM || 'orders@dinacosmetic.store';
     let finalFrom = envFrom;
 
     // If it doesn't have the <tag>, wrap it with the provided fromName
