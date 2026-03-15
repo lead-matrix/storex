@@ -129,24 +129,24 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-obsidian/50 p-6 rounded-luxury border border-luxury-border">
-                <div className="flex flex-1 items-center gap-4 max-w-2xl">
-                    <div className="relative flex-1">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-obsidian/50 p-4 md:p-6 rounded-luxury border border-luxury-border sticky top-4 md:static z-20 backdrop-blur-md md:backdrop-blur-none">
+                <div className="flex flex-col sm:flex-row flex-1 items-center gap-4 w-full md:max-w-2xl">
+                    <div className="relative flex-1 w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                         <input
                             type="text"
-                            placeholder="Search assets, SKUs, or identifiers..."
+                            placeholder="Find assets..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-sm py-2 pl-10 pr-4 text-[11px] uppercase tracking-luxury text-white placeholder:text-white/20 focus:border-gold/50 transition-all outline-none"
+                            className="w-full bg-black/40 border border-white/10 rounded-sm py-2.5 md:py-2 pl-10 pr-4 text-[11px] uppercase tracking-luxury text-white placeholder:text-white/20 focus:border-gold/50 transition-all outline-none"
                         />
                     </div>
-                    <div className="relative w-48">
+                    <div className="relative w-full sm:w-48">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gold/40" />
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-sm py-2 pl-9 pr-4 text-[10px] uppercase tracking-luxury text-white/60 appearance-none outline-none focus:border-gold/30"
+                            className="w-full bg-black/40 border border-white/10 rounded-sm py-2.5 md:py-2 pl-9 pr-4 text-[10px] uppercase tracking-luxury text-white/60 appearance-none outline-none focus:border-gold/30"
                         >
                             {categories.map(cat => (
                                 <option key={cat} value={cat}>{cat.toUpperCase()}</option>
@@ -159,7 +159,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                     onClick={handleSave}
                     disabled={!hasChanges || isSaving}
                     className={`
-                        flex items-center gap-2 px-8 py-3 rounded text-[11px] font-bold uppercase tracking-luxury transition-all
+                        w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 md:py-3 rounded text-[11px] font-bold uppercase tracking-luxury transition-all
                         ${hasChanges
                             ? "bg-gold text-black shadow-gold hover:bg-gold-light"
                             : "bg-white/5 text-white/20 border border-white/10 cursor-not-allowed"}
@@ -170,7 +170,62 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                 </button>
             </div>
 
-            <div className="bg-obsidian border border-luxury-border rounded-luxury overflow-hidden shadow-luxury">
+            {/* Mobile Card View */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {rows.map((row) => (
+                    <div key={row.id} className={`bg-obsidian border border-luxury-border rounded-luxury p-5 space-y-4 transition-all ${dirtyRows[row.id] ? 'ring-1 ring-gold/30 bg-gold/5' : ''}`}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded bg-black/40 border border-white/5 overflow-hidden flex-shrink-0">
+                                <img src={row.image} alt="" className="w-full h-full object-cover opacity-60" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-white text-sm font-medium truncate">{row.productTitle}</p>
+                                <p className="text-[10px] text-white/30 uppercase tracking-widest truncate">{row.name}</p>
+                                <p className="text-[9px] font-mono text-gold/40 mt-0.5">{row.sku || 'NO SKU'}</p>
+                            </div>
+                            <div className="text-right">
+                                <select
+                                    value={dirtyRows[row.id]?.updates.status ?? row.status}
+                                    onChange={(e) => handleUpdate(row.id, row.type, 'status', e.target.value)}
+                                    className={`
+                                        bg-black/40 border border-white/5 rounded-full px-3 py-1 text-[9px] uppercase tracking-luxury outline-none
+                                        ${(dirtyRows[row.id]?.updates.status ?? row.status) === 'active' ? 'text-emerald-400 border-emerald-400/20' : 'text-white/30'}
+                                    `}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                            <div className="space-y-1.5">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Valuation ($)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={dirtyRows[row.id]?.updates.price ?? (dirtyRows[row.id]?.updates.price_override ?? row.price)}
+                                    onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'price_override' : 'base_price', parseFloat(e.target.value))}
+                                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-sm font-serif text-white focus:border-gold outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Reserve (Stock)</label>
+                                <input
+                                    type="number"
+                                    value={dirtyRows[row.id]?.updates.stock ?? row.stock}
+                                    onChange={(e) => handleUpdate(row.id, row.type, 'stock', parseInt(e.target.value))}
+                                    className={`w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-sm font-mono focus:border-gold outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-obsidian border border-luxury-border rounded-luxury overflow-hidden shadow-luxury">
                 <div className="overflow-x-auto max-h-[70vh]">
                     <table className="w-full text-left border-collapse">
                         <thead className="sticky top-0 z-10">
@@ -191,7 +246,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                                 <img src={row.image} alt="" className="w-full h-full object-cover opacity-60" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-white truncate max-w-[150px]">{row.productTitle}</p>
+                                                <p className="text-white truncate max-w-[150px] group-hover:text-gold transition-colors">{row.productTitle}</p>
                                                 <p className="text-[9px] text-white/30 uppercase tracking-widest truncate max-w-[150px]">{row.name}</p>
                                             </div>
                                         </div>
