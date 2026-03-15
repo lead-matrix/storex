@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Box, MapPin, Truck, ExternalLink, ChevronDown, ShoppingBag, CheckSquare, Square, Zap } from 'lucide-react'
 import { updateOrderStatus } from '@/lib/actions/admin'
+import { generateShippingLabel } from '@/app/admin/orders/actions'
 import { FulfillmentRitual } from '@/components/admin/FulfillmentRitual'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -61,19 +62,16 @@ export default function OrderList({ initialOrders }: OrderListProps) {
     const handleBatchFulfill = async () => {
         const ordersToFulfill = initialOrders.filter(o => selectedOrderIds.includes(o.id) && !o.shipping_label_url)
         if (ordersToFulfill.length === 0) {
-            toast.info("No eligible orders selected for fulfillment")
+            toast.info("No unfulfilled orders selected")
             return
         }
 
         toast.promise(
-            Promise.all(ordersToFulfill.map(o => {
-                const { generateShippingLabel } = require('@/app/admin/orders/actions')
-                return generateShippingLabel(o.id)
-            })),
+            Promise.all(ordersToFulfill.map(o => generateShippingLabel(o.id))),
             {
-                loading: `Processing batch of ${ordersToFulfill.length} fulfillments...`,
-                success: 'Batch fulfillment completed',
-                error: 'Some fulfillments failed'
+                loading: `Synchronizing with Logistics Matrix for ${ordersToFulfill.length} fulfillments...`,
+                success: 'Batch fulfillment rituals complete',
+                error: (err) => `Ritual failed: ${err.message}`
             }
         )
         setSelectedOrderIds([])
@@ -83,32 +81,42 @@ export default function OrderList({ initialOrders }: OrderListProps) {
     return (
         <div className="space-y-4">
             {/* Batch Action Bar */}
-            {selectedOrderIds.length > 0 && (
-                <div className="bg-white/5 border border-gold/20 p-4 rounded-luxury flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] uppercase tracking-luxury text-gold font-bold">
-                            {selectedOrderIds.length} Selections in Vault
-                        </span>
-                        <div className="h-4 w-px bg-white/10" />
-                        <button
-                            onClick={() => setSelectedOrderIds([])}
-                            className="text-[9px] uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-                        >
-                            Deselect All
-                        </button>
-                    </div>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => window.location.href = '/api/admin/orders/export'}
+                        className="flex items-center gap-2 bg-white/5 border border-white/10 text-white/60 px-4 py-2 rounded-luxury text-[9px] font-bold uppercase tracking-luxury hover:bg-white/10 transition-all"
+                    >
+                        <Box size={12} className="text-gold/50" />
+                        Download Registry (CSV)
+                    </button>
+                </div>
 
-                    <div className="flex items-center gap-4">
+                {selectedOrderIds.length > 0 && (
+                    <div className="bg-white/5 border border-gold/20 p-2 px-4 rounded-luxury flex items-center gap-6 animate-in slide-in-from-right-2 duration-300">
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] uppercase tracking-luxury text-gold font-bold">
+                                {selectedOrderIds.length} Selections
+                            </span>
+                            <div className="h-4 w-px bg-white/10" />
+                            <button
+                                onClick={() => setSelectedOrderIds([])}
+                                className="text-[9px] uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+                            >
+                                Deselect
+                            </button>
+                        </div>
+
                         <button
                             onClick={handleBatchFulfill}
                             className="flex items-center gap-2 bg-gold text-black px-6 py-2 rounded-luxury text-[10px] font-bold uppercase tracking-luxury hover:bg-gold-light transition-all shadow-gold"
                         >
                             <Zap size={12} />
-                            Batch Fulfillment
+                            Fulfill Batch
                         </button>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             <div className="overflow-x-auto bg-white/5 rounded-luxury border border-white/5 shadow-soft">
                 <table className="w-full text-left">
@@ -152,9 +160,16 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                         <div className="w-10 h-10 bg-black/40 border border-white/10 rounded flex items-center justify-center text-gold group-hover:border-gold/30 transition-colors shrink-0 shadow-soft">
                                             <Box className="w-4 h-4" />
                                         </div>
-                                        <div className="space-y-1">
-                                            <p className="font-mono text-white font-semibold text-[11px] group-hover:text-gold transition-colors">
+                                        <div
+                                            className="space-y-1 cursor-pointer group/id"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(order.id);
+                                                toast.success("Order ID copied to clipboard");
+                                            }}
+                                        >
+                                            <p className="font-mono text-white font-semibold text-[11px] group-hover:text-gold transition-colors flex items-center gap-2">
                                                 #{order.id.slice(0, 8).toUpperCase()}
+                                                <span className="opacity-0 group-hover/id:opacity-100 text-[8px] text-gold/60 uppercase">Copy</span>
                                             </p>
                                             <p className="text-[10px] text-white/30 uppercase tracking-luxury">
                                                 {new Date(order.created_at).toLocaleDateString()}

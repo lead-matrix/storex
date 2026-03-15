@@ -222,6 +222,15 @@ export async function adjustStock(variantId: string, delta: number) {
         const newStock = Math.max(0, (variant.stock ?? 0) + delta);
         await supabase.from('product_variants').update({ stock: newStock }).eq('id', variantId);
 
+        // Rule 49: Log movement
+        await supabase.from('inventory_movements').insert({
+            variant_id: variantId,
+            change_amount: delta,
+            new_stock: newStock,
+            reason: 'Manual Admin Adjustment',
+            admin_id: (await supabase.auth.getUser()).data.user?.id
+        });
+
         // Also fire off a reval for the product
         const { data: prod } = await supabase.from('products').select('slug').eq('id', variant.product_id).single();
         if (prod?.slug) revalidatePath(`/product/${prod.slug}`);
@@ -232,6 +241,18 @@ export async function adjustStock(variantId: string, delta: number) {
 
         const newStock = Math.max(0, (prod.stock ?? 0) + delta);
         const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', variantId);
+
+        if (!error) {
+            // Rule 49: Log movement (approximate for v1)
+            await supabase.from('inventory_movements').insert({
+                product_id: variantId,
+                change_amount: delta,
+                new_stock: newStock,
+                reason: 'Manual Admin Adjustment (Legacy Product)',
+                admin_id: (await supabase.auth.getUser()).data.user?.id
+            });
+        }
+
         if (error) throw new Error(error.message);
 
         if (prod.slug) revalidatePath(`/product/${prod.slug}`);

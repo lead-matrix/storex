@@ -1,24 +1,29 @@
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
-import { Shield, User, Mail, Calendar, TrendingUp, ShoppingBag, Filter } from "lucide-react";
+import { Shield, User, Mail, Calendar, TrendingUp, ShoppingBag, Search } from "lucide-react";
 import { updateUserRole } from "@/lib/actions/admin";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Clientele | Admin" };
 
-export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ segment?: string }> }) {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ segment?: string, q?: string }> }) {
     const supabase = await createAdminClient();
-    const { segment: segmentParam } = await searchParams;
+    const { segment: segmentParam, q: query } = await searchParams;
     const segment = segmentParam || 'all';
 
     // Fetch profiles with their order counts and total spent
-    const { data: users, error } = await supabase
+    let queryBuilder = supabase
         .from("profiles")
         .select(`
             *,
             orders:orders(amount_total, status)
-        `)
-        .order("created_at", { ascending: false });
+        `);
+
+    if (query) {
+        queryBuilder = queryBuilder.or(`email.ilike.%${query}%,full_name.ilike.%${query}%`);
+    }
+
+    const { data: users, error } = await queryBuilder.order("created_at", { ascending: false });
 
     if (error) console.error("Clientele Fetch Error:", error);
 
@@ -61,36 +66,49 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                     <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Exclusive Member Directory · Behavioral Intelligence</p>
                 </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-                    {segments.map(s => (
-                        <a
-                            key={s.id}
-                            href={`?segment=${s.id}`}
-                            className={`px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all whitespace-nowrap border ${segment === s.id
-                                ? 'bg-charcoal text-pearl border-charcoal shadow-soft'
-                                : 'bg-white text-textsoft border-charcoal/10 hover:border-gold/50'
-                                }`}
-                        >
-                            {s.label} ({s.count})
-                        </a>
-                    ))}
+                <div className="flex flex-col gap-4">
+                    <form action="" className="relative w-full md:w-80 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-textsoft/30 group-focus-within:text-gold transition-colors" />
+                        <input
+                            name="q"
+                            defaultValue={query}
+                            placeholder="Identify member by name or email..."
+                            className="w-full bg-pearl border border-charcoal/5 rounded-luxury pl-11 pr-4 py-3 text-[11px] uppercase tracking-luxury text-charcoal outline-none focus:border-gold/30 focus:bg-white transition-all shadow-sm"
+                        />
+                        {segment !== 'all' && <input type="hidden" name="segment" value={segment} />}
+                    </form>
+
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                        {segments.map(s => (
+                            <a
+                                key={s.id}
+                                href={`?segment=${s.id}${query ? `&q=${query}` : ''}`}
+                                className={`px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all whitespace-nowrap border ${segment === s.id
+                                    ? 'bg-charcoal text-pearl border-charcoal shadow-soft'
+                                    : 'bg-white text-textsoft border-charcoal/10 hover:border-gold/50'
+                                    }`}
+                            >
+                                {s.label} ({s.count})
+                            </a>
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* SEGMENTATION KPIs */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                    { label: "Total Clientele", value: processedUsers.length, icon: User, color: "text-charcoal" },
+                    { label: "Total Result Set", value: processedUsers.length, icon: User, color: "text-charcoal" },
                     { label: "VIP Assets", value: segments.find(s => s.id === 'vip')?.count || 0, icon: TrendingUp, color: "text-gold" },
                     { label: "Active Retention", value: segments.find(s => s.id === 'repeat')?.count || 0, icon: ShoppingBag, color: "text-emerald-400" },
                     { label: "Potential Growth", value: segments.find(s => s.id === 'lead')?.count || 0, icon: Mail, color: "text-blue-400" },
-                ].map((s) => (
-                    <div key={s.label} className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-6 group transition-all hover:border-gold/30">
+                ].map((k) => (
+                    <div key={k.label} className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-6 group transition-all hover:border-gold/30">
                         <div className="flex items-center justify-between mb-4">
-                            <p className="text-[9px] uppercase tracking-luxury font-bold text-textsoft/50">{s.label}</p>
-                            <s.icon className={`w-4 h-4 ${s.color} opacity-40 group-hover:opacity-100 transition-opacity`} />
+                            <p className="text-[9px] uppercase tracking-luxury font-bold text-textsoft/50">{k.label}</p>
+                            <k.icon className={`w-4 h-4 ${k.color} opacity-40 group-hover:opacity-100 transition-opacity`} />
                         </div>
-                        <p className={`text-4xl font-serif ${s.color}`}>{s.value}</p>
+                        <p className={`text-4xl font-serif ${k.color}`}>{k.value}</p>
                     </div>
                 ))}
             </div>
@@ -167,7 +185,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                             {filteredUsers.length === 0 && (
                                 <tr>
                                     <td colSpan={4} className="px-8 py-24 text-center text-textsoft uppercase text-[10px] tracking-luxury">
-                                        No clients match this segment
+                                        No clients match this identity check
                                     </td>
                                 </tr>
                             )}

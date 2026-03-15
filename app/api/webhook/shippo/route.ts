@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
             // Logic could be more complex here to prevent duplicates
         }
 
-        console.log(`Successfully updated order ${order.id} to ${newFulfillmentStatus} via Shippo webhook.`);
+
         return NextResponse.json({ success: true, orderId: order.id, status: newFulfillmentStatus });
 
     } catch (error: unknown) {

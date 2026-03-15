@@ -101,7 +101,7 @@ async function sendMail({ to, subject, html, fromName }: { to: string, subject: 
         finalFrom = `"${fromName}" <${envFrom}>`;
     }
 
-    console.log(`[Email] Attempting to send to ${to} using ${transporter ? 'SMTP' : 'Resend'}`);
+
 
     if (transporter) {
         try {
@@ -111,7 +111,7 @@ async function sendMail({ to, subject, html, fromName }: { to: string, subject: 
                 subject,
                 html,
             })
-            console.log(`[Email] SMTP success for ${to}`);
+
             return true
         } catch (error) {
             console.error('[Email] SMTP Error (falling back to Resend SDK):', error)
@@ -148,7 +148,7 @@ async function sendMail({ to, subject, html, fromName }: { to: string, subject: 
                     });
                 }
             } else {
-                console.log(`[Email] Resend success for ${to}`);
+
             }
             return true
         } catch (error) {

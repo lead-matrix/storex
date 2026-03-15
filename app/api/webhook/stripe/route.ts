@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         .single();
 
     if (existingEvent) {
-        console.log(`Event ${event.id} already processed. Skipping.`);
+
         return NextResponse.json({ received: true, duplicate: true });
     }
 
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
 
-            console.log(`Processing checkout session completion: ${session.id}`);
+
 
             // Parse metadata items if they were stringified in the checkout route
             let cartItems = [];
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
                 throw new Error(`RPC Processing Error: ${rpcError.message}`);
             }
 
-            console.log(`Order processed successfully. Order ID: ${orderId}`);
+
 
             const email = session.customer_details?.email || session.customer_email;
             const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
                         totalAmount: amountTotal,
                         items: cartItems
                     });
-                    console.log(`Order confirmation email sent to: ${email}`);
+
                 } catch (emailErr: any) {
                     console.error("Failed to send order confirmation email:", emailErr);
                     // Don't throw here - we don't want to tell Stripe it failed if the order is already paid in DB
