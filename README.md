@@ -76,7 +76,7 @@ Fill in every value. See the table below for where to find each one.
 | `RESEND_API_KEY` | resend.com → API Keys |
 | `SHIPPO_API_KEY` | goshippo.com → API Keys |
 | `WAREHOUSE_*` | Your physical sender address for shipping labels |
-| `NEXT_PUBLIC_SITE_URL` | Your domain, e.g. `https://dinacosmetic.store` |
+| `NEXT_PUBLIC_SITE_URL` | Your domain, e.g. `https://localhost:3000` |
 
 ### 3. Database Setup
 1. Open **Supabase SQL Editor**
