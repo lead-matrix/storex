@@ -4,6 +4,7 @@ import { updateStoreSettings, updateHeroContent, updateMenusAndSocials, updateSh
 import HeroSlidesEditor from '@/components/admin/HeroSlidesEditor'
 import MenuEditor from '@/components/admin/MenuEditor'
 import { SettingsForm } from '@/components/admin/SettingsForm'
+import { BrandSettings } from '@/components/admin/BrandSettings'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,50 +63,17 @@ export default async function AdminSettings() {
                 <div className="lg:col-span-3 space-y-12">
 
                     {/* ── Brand & General ── */}
-                    <SettingsForm action={updateStoreSettings} title="Brand & General Info" iconName="globe">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Name</label>
-                                <input
-                                    name="name"
-                                    type="text"
-                                    defaultValue={storeInfo?.setting_value?.name || 'Dina Cosmetic'}
-                                    required
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Currency</label>
-                                <select name="currency" defaultValue={storeInfo?.setting_value?.currency || 'USD'}
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="USD">USD ($)</option>
-                                    <option value="EUR">EUR (€)</option>
-                                </select>
-                            </div>
-                        </div>
+                    {/* ── Brand & General ── */}
+                    <BrandSettings 
+                        initialData={{
+                            name: storeInfo?.setting_value?.name || 'Dina Cosmetic',
+                            tagline: storeInfo?.setting_value?.tagline || 'Premium Beauty Products',
+                            currency: storeInfo?.setting_value?.currency || 'USD',
+                            logo_url: storeInfo?.setting_value?.logo_url
+                        }} 
+                    />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Tagline</label>
-                                <input
-                                    name="tagline"
-                                    type="text"
-                                    defaultValue={storeInfo?.setting_value?.tagline || 'Premium Beauty Products'}
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Logo URL</label>
-                                <input
-                                    name="logo_url"
-                                    type="text"
-                                    defaultValue={storeInfo?.setting_value?.logo_url || '/logo.jpg'}
-                                    placeholder="/logo.jpg or https://..."
-                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
-                                />
-                            </div>
-                        </div>
-
+                    <SettingsForm action={updateStoreSettings} title="Operational Status" iconName="globe">
                         <div className="flex items-center justify-between p-8 bg-rose-50 border border-rose-100/50 rounded-xl shadow-inner-soft">
                             <div className="space-y-1">
                                 <p className="text-[11px] uppercase tracking-widest text-charcoal font-bold">Store Status</p>

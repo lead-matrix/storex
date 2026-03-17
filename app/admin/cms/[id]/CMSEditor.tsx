@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, Reorder, AnimatePresence } from "framer-motion"
-import { GripVertical, Trash2, Plus, Save, Settings2, Image as ImageIcon, Type, LayoutGrid, Palette, Sparkles, Loader2 } from "lucide-react"
+import { GripVertical, Trash2, Plus, Save, Settings2, Image as ImageIcon, Type, LayoutGrid, Palette, Sparkles, Loader2, Mail } from "lucide-react"
 import { saveSections } from "@/lib/actions/cms"
 import { toast } from "sonner"
 import { SingleImageUpload } from "@/components/admin/SingleImageUpload"
@@ -19,7 +19,9 @@ const COMPONENT_TYPES = [
     { type: "hero", label: "Hero Banner", icon: Sparkles, color: "text-amber-400", defaultProps: { title: "New Experience", subtitle: "Crafted for Excellence", imageUrl: "" } },
     { type: "productGrid", label: "Product Gallery", icon: LayoutGrid, color: "text-emerald-400", defaultProps: { category: "all", limit: 4 } },
     { type: "richText", label: "Philosophy Block", icon: Type, color: "text-blue-400", defaultProps: { content: "Add your storytelling here..." } },
+    { type: "philosophyGrid", label: "Philosophy Grid", icon: LayoutGrid, color: "text-amber-500/80", defaultProps: {} },
     { type: "imageBanner", label: "Visual Vibe", icon: ImageIcon, color: "text-purple-400", defaultProps: { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaLink: "", overlayOpacity: 0.4, height: "70vh" } },
+    { type: "contactForm", label: "Concierge Link", icon: Mail, color: "text-gold", defaultProps: {} },
 ]
 
 export default function CMSEditor({ pageId, initialSections }: { pageId: string, initialSections: any[] }) {
@@ -175,29 +177,38 @@ export default function CMSEditor({ pageId, initialSections }: { pageId: string,
                                     <p className="text-[8px] text-white/20 font-mono">ID: {sections[activeSection].id || "unsaved_instance"}</p>
                                 </div>
 
-                                {Object.keys(sections[activeSection].props).map((key) => {
+                                {Object.keys({
+                                    ...(COMPONENT_TYPES.find(c => c.type === sections[activeSection].type)?.defaultProps || {}), 
+                                    ...sections[activeSection].props
+                                }).map((key) => {
                                     const isImageUrl = key.toLowerCase().endsWith('url');
+                                    // Make sure we read from the merged props to avoid undefined value warnings
+                                    const defaultProps = (COMPONENT_TYPES.find(c => c.type === sections[activeSection].type) as any)?.defaultProps || {};
+                                    const currentValue = sections[activeSection].props[key] !== undefined 
+                                        ? sections[activeSection].props[key] 
+                                        : defaultProps[key] || '';
+                                        
                                     return (
                                         <div key={key} className="space-y-2">
                                             <label className="text-[9px] uppercase tracking-widest text-white/30 font-bold">{key.replace(/([A-Z])/g, ' $1')}</label>
                                             {isImageUrl ? (
                                                 <div className="bg-black/40 border border-white/10 rounded p-4">
                                                     <SingleImageUpload
-                                                        value={sections[activeSection].props[key]}
+                                                        value={currentValue}
                                                         onChange={(url) => updateProp(activeSection, key, url)}
                                                         className="w-full h-32"
                                                     />
                                                 </div>
-                                            ) : typeof sections[activeSection].props[key] === 'string' ? (
+                                            ) : typeof currentValue === 'string' ? (
                                                 <textarea
-                                                    value={sections[activeSection].props[key]}
+                                                    value={currentValue}
                                                     onChange={(e) => updateProp(activeSection, key, e.target.value)}
                                                     className="w-full bg-black/40 border border-white/10 rounded p-3 text-xs text-white focus:border-gold/50 outline-none transition-all min-h-[80px]"
                                                 />
                                             ) : (
                                                 <input
                                                     type="number"
-                                                    value={sections[activeSection].props[key]}
+                                                    value={currentValue}
                                                     onChange={(e) => updateProp(activeSection, key, parseInt(e.target.value))}
                                                     className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-gold/50 outline-none transition-all font-mono"
                                                 />

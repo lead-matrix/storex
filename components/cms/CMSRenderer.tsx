@@ -3,6 +3,8 @@ import HeroSection from "./HeroSection";
 import ProductGridSection from "./ProductGridSection";
 import PhilosophyBlock from "./PhilosophyBlock";
 import ImageBannerSection from "./ImageBannerSection";
+import PhilosophyGrid from "./PhilosophyGrid";
+import ContactSection from "./ContactSection";
 
 interface Section {
     type: string
@@ -14,6 +16,8 @@ const COMPONENT_MAP: Record<string, React.FC<any>> = {
     productGrid: ProductGridSection,
     richText: PhilosophyBlock,
     imageBanner: ImageBannerSection,
+    philosophyGrid: PhilosophyGrid,
+    contactForm: ContactSection,
 };
 
 export default function CMSRenderer({ sections }: { sections: Section[] }) {

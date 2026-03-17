@@ -15,15 +15,15 @@ export default function HeroSection({ title, subtitle, imageUrl }: HeroProps) {
     // For now, let's treat the CMS props as an override if they are present and non-default.
     const hasOverride = title && title !== "New Experience";
     
-    const singleSlide = imageUrl ? [{
+    const singleSlide = hasOverride ? [{
         id: 'cms-hero',
-        image: imageUrl,
+        image: imageUrl || "/products/Banner-1.jpg", 
         title: title,
         subtitle: subtitle,
         buttonText: "Discover Collection",
         link: "/shop"
     }] : undefined;
 
-    return <MasterpieceHero initialSlides={hasOverride ? singleSlide : undefined} />;
+    return <MasterpieceHero initialSlides={singleSlide} />;
 }
 
