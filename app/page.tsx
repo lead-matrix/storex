@@ -11,8 +11,8 @@ import type { Metadata } from "next"
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: "DINA COSMETIC — The Obsidian Palace",
-  description: "Luxury obsidian cosmetics — discover the curated collection at The Obsidian Palace.",
+  title: "DINA COSMETIC | The Radiant Atelier",
+  description: "Exquisite beauty rituals curated for the modern aesthetic. Explore the Radiant Atelier collections.",
 }
 
 export default async function Home() {
@@ -60,7 +60,7 @@ export default async function Home() {
       supabase
         .from("products")
         .select(`
-          id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status,
+          id, title, slug, base_price, sale_price, on_sale, is_new, is_besteller, images, description, status,
           product_variants (id, name, price_override, stock, status)
         `)
         .eq("status", "active")

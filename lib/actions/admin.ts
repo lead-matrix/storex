@@ -438,6 +438,7 @@ export async function updateStoreSettings(formData: FormData) {
     if (enabledError) throw enabledError;
 
     revalidatePath('/admin/settings');
+    revalidatePath('/collections');
     revalidatePath('/', 'layout');
     return { success: true };
 }
@@ -473,6 +474,7 @@ export async function updateHeroContent(formData: FormData) {
 
     revalidatePath('/', 'page');
     revalidatePath('/', 'layout');
+    revalidatePath('/collections');
     revalidatePath('/admin/settings');
     return { success: true };
 }
