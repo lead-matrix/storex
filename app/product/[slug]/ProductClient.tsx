@@ -21,6 +21,8 @@ interface Product {
     id: string
     title: string
     base_price: number
+    sale_price?: number | null
+    on_sale?: boolean
     description: string
     images: string[]
     product_variants?: Variant[]
@@ -53,6 +55,8 @@ export function ProductClient({ product }: ProductClientProps) {
                             id: product.id,
                             title: product.title,
                             base_price: product.base_price,
+                            sale_price: product.sale_price,
+                            on_sale: product.on_sale,
                             description: product.description || "The quintessence of modern luxury.",
                             images: (product.images && product.images.length > 0) ? product.images : ["/logo.jpg"],
                             product_variants: product.product_variants,

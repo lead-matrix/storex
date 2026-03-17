@@ -38,17 +38,15 @@ export async function POST(req: Request) {
             const variant = dbVariants.find((v: any) => v.id === item.variantId);
 
             let price = product?.base_price || 0;
-            if (product?.on_sale && product?.sale_price) {
-                // Use sale price as the primary if it exists
-                price = product.sale_price;
-            }
 
-            // If variants exist, they can override the price.
-            // If the specific variant selected has an override, use it.
+            // If variants exist, they override the base price.
             if (variant?.price_override != null) {
                 price = variant.price_override;
-            } else if (item.variantId) {
-                // If variant is selected but has no override, we still use the product price (already set above)
+            }
+
+            // However, SALE overrides EVERYTHING according to the new rule
+            if (product?.on_sale && product?.sale_price != null) {
+                price = product.sale_price;
             }
 
             // Default all logic to pounds for weight metrics

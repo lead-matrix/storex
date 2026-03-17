@@ -20,6 +20,8 @@ interface ProductDetailsProps {
         id: string
         title: string
         base_price?: number
+        sale_price?: number | null
+        on_sale?: boolean
         description: string
         images: string[]
         product_variants?: Variant[]
@@ -45,6 +47,11 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
     // If no override, use base_price.
     // If base_price is 0/null, use the minimum among all variants.
     const getInitialPrice = () => {
+        // If the product is on sale, sale price absolutely overrides everything
+        if (product.on_sale && product.sale_price != null) {
+            return product.sale_price;
+        }
+
         if (selectedVariant?.price_override != null) return selectedVariant.price_override
         if (product.base_price && product.base_price > 0) return product.base_price
 
@@ -56,7 +63,20 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
         return prices.length > 0 ? Math.min(...prices) : (product.base_price || 0)
     }
 
+    // Original price without the sale applied (for strikethrough)
+    const getOriginalPrice = () => {
+        if (selectedVariant?.price_override != null) return selectedVariant.price_override
+        if (product.base_price && product.base_price > 0) return product.base_price
+        
+        const prices = activeVariants
+            .map(v => v.price_override)
+            .filter((p): p is number => p != null && p > 0)
+
+        return prices.length > 0 ? Math.min(...prices) : (product.base_price || 0)
+    }
+
     const displayPrice = getInitialPrice()
+    const originalPrice = getOriginalPrice()
 
     const currentStock = selectedVariant?.stock ?? 0
     const isOutOfStock = currentStock <= 0
@@ -104,11 +124,24 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
             </h1>
 
             <div className="flex items-center gap-4 mb-8">
-                <p className="text-2xl text-gold font-light font-serif">
-                    ${Number(displayPrice).toFixed(2)}
-                </p>
+                {product.on_sale && product.sale_price != null ? (
+                    <div className="flex items-center gap-3">
+                        <p className="text-lg text-white/40 line-through decoration-gold/50 font-serif">
+                            ${Number(originalPrice).toFixed(2)}
+                        </p>
+                        <p className="text-3xl text-gold font-bold font-serif shadow-gold">
+                            ${Number(displayPrice).toFixed(2)}
+                        </p>
+                        <span className="text-[9px] uppercase tracking-widest bg-red-500/10 text-red-500 px-2 py-1 rounded-sm border border-red-500/20 font-bold ml-2">Sale</span>
+                    </div>
+                ) : (
+                    <p className="text-2xl text-gold font-light font-serif">
+                        ${Number(displayPrice).toFixed(2)}
+                    </p>
+                )}
+                
                 {selectedVariant?.sku && (
-                    <span className="text-[10px] text-luxury-subtext border border-white/10 px-2 py-0.5 rounded tracking-widest uppercase">
+                    <span className="text-[10px] text-luxury-subtext border border-white/10 px-2 py-0.5 rounded tracking-widest uppercase ml-auto">
                         SKU: {selectedVariant.sku}
                     </span>
                 )}

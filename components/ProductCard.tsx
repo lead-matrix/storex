@@ -42,23 +42,24 @@ export function ProductCard({
     const isOnSale = product.on_sale && product.sale_price;
 
     // Calculate the lowest price
-    const basePrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
-    let minPrice = basePrice;
+    let minPrice = Number(product.base_price);
+    let originalMinPrice = Number(product.base_price);
 
     if (activeVariants.length > 0) {
         const variantPrices = activeVariants
-            .map(v => v.price_override != null ? Number(v.price_override) : basePrice)
+            .map(v => v.price_override != null ? Number(v.price_override) : Number(product.base_price))
             .filter((p): p is number => !isNaN(p) && p > 0);
 
         if (variantPrices.length > 0) {
-            const minVarPrice = Math.min(...variantPrices);
-            // If basePrice is 0 or if variant price is lower, use variant price
-            if (minPrice <= 0 || minVarPrice < minPrice) {
-                minPrice = minVarPrice;
-            }
+            minPrice = Math.min(...variantPrices);
+            originalMinPrice = minPrice;
         }
     }
 
+    // SALE RULE: If on sale, it overrides the variant's price completely
+    if (isOnSale && product.sale_price != null) {
+        minPrice = Number(product.sale_price);
+    }
 
     const hasMultiplePrices = activeVariants.length > 1;
 
@@ -131,19 +132,20 @@ export function ProductCard({
 
                 <div className="pt-2">
                     <div className="flex items-center gap-3 mb-3">
-                        {hasMultiplePrices ? (
+                        {isOnSale ? (
+                            <>
+                                <span className="text-red-500 font-semibold">
+                                    ${minPrice.toFixed(2)}
+                                </span>
+                                <span className="text-textSecondary text-sm line-through opacity-50">
+                                    ${originalMinPrice.toFixed(2)}
+                                </span>
+                                <span className="text-[9px] uppercase tracking-widest bg-red-500/10 text-red-500 px-1 py-0.5 rounded-sm ml-1 font-bold">Sale</span>
+                            </>
+                        ) : hasMultiplePrices ? (
                             <span className="text-primary font-semibold">
                                 Starting from ${minPrice.toFixed(2)}
                             </span>
-                        ) : isOnSale ? (
-                            <>
-                                <span className="text-red-500 font-semibold">
-                                    ${Number(product.sale_price).toFixed(2)}
-                                </span>
-                                <span className="text-textSecondary text-sm line-through opacity-50">
-                                    ${Number(product.base_price).toFixed(2)}
-                                </span>
-                            </>
                         ) : (
                             <span className="text-primary font-semibold">
                                 ${minPrice.toFixed(2)}
