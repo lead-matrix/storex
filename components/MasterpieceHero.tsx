@@ -20,7 +20,7 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: "default-1",
-        image: "/products/Banner-1.jpg",
+        image: "",
         title: "Where Radiance Meets Absolute Black",
         subtitle: "The Obsidian Palace Collection",
         badge: "Limited Edition Release",
@@ -81,7 +81,7 @@ export function MasterpieceHero({ initialSlides }: { initialSlides?: Slide[] }) 
     const currentSlide = slides[currentIndex] || DEFAULT_SLIDES[0];
 
     return (
-        <section className="relative min-h-[95vh] w-full overflow-hidden bg-[#050505] flex items-center pt-24 lg:pt-0">
+        <section className="relative min-h-[100svh] w-full overflow-hidden bg-[#050505] flex items-center">
             {/* Background Images with AnimatePresence for smooth transitions */}
             <div className="absolute inset-0 z-0">
                 <AnimatePresence mode="wait">
@@ -93,15 +93,17 @@ export function MasterpieceHero({ initialSlides }: { initialSlides?: Slide[] }) 
                         transition={{ duration: 1.5, ease: "easeInOut" }}
                         className="relative h-full w-full"
                     >
-                        <Image
-                            src={currentSlide.image}
-                            alt={currentSlide.title}
-                            fill
-                            className="object-cover object-center grayscale-[0.2] brightness-75"
-                            priority
-                            quality={90}
-                            sizes="100vw"
-                        />
+                        {currentSlide.image && (
+                            <Image
+                                src={currentSlide.image}
+                                alt={currentSlide.title}
+                                fill
+                                className="object-cover object-center grayscale-[0.2] brightness-75"
+                                priority
+                                quality={90}
+                                sizes="100vw"
+                            />
+                        )}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -116,7 +118,7 @@ export function MasterpieceHero({ initialSlides }: { initialSlides?: Slide[] }) 
             </div>
 
             {/* Main layout */}
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-32 lg:py-0 flex flex-col items-center justify-center text-center">
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-32 pb-20 lg:py-28 flex flex-col items-center justify-center text-center">
                 <div className="space-y-10 max-w-5xl w-full">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -137,7 +139,7 @@ export function MasterpieceHero({ initialSlides }: { initialSlides?: Slide[] }) 
                             </motion.span>
 
                             <div className="space-y-4">
-                                <h1 className="text-4xl xs:text-5xl sm:text-7xl lg:text-[6.5rem] font-serif text-white leading-[1.05] tracking-tight max-w-5xl mx-auto">
+                                <h1 className="text-3xl xs:text-4xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-serif text-white leading-[1.1] tracking-tight max-w-5xl mx-auto">
                                     {currentSlide.title}
                                 </h1>
                                 <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-white/40 font-light max-w-2xl mx-auto italic">

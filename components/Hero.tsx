@@ -17,7 +17,7 @@ interface Slide {
 const DEFAULT_SLIDES: Slide[] = [
     {
         id: 1,
-        image: "/products/Banner-1.jpg",
+        image: "https://images.unsplash.com/photo-1596462502278-27bf85033e5a?q=80&w=2000&auto=format&fit=crop",
         title: "THE OBSIDIAN COLLECTION",
         subtitle: "ELEVATE YOUR BEAUTY RITUAL.",
         buttonText: "SHOP NOW",
