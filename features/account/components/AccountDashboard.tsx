@@ -8,11 +8,17 @@ interface Order {
     created_at: string;
     amount_total: number;
     status: string;
+    tracking_number?: string;
     order_items: {
         quantity: number;
-        products: { title: string } | { title: string }[];
+        products: {
+            title: string;
+            images: string[];
+        } | null;
+        product_variants: {
+            image_url: string;
+        } | null;
     }[];
-    tracking_number?: string;
 }
 
 interface AccountDashboardProps {
@@ -107,13 +113,13 @@ export function AccountDashboard({ user, profile, orders = [] }: AccountDashboar
                 ) : (
                     <div className="bg-[#0f0f0f] border border-white/10 rounded-xl overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm text-luxury-subtext font-light">
+                            <table className="w-full text-left text-sm text-luxury-subtext font-light border-collapse">
                                 <thead className="bg-black/50 text-[10px] uppercase tracking-widest text-white/50 border-b border-white/10">
                                     <tr>
-                                        <th className="px-6 py-4 font-normal">Order Ref</th>
-                                        <th className="px-6 py-4 font-normal">Date</th>
-                                        <th className="px-6 py-4 font-normal">Status</th>
-                                        <th className="px-6 py-4 font-normal text-right">Total</th>
+                                        <th className="px-6 py-4 font-normal">Order Artifact</th>
+                                        <th className="px-6 py-4 font-normal">History</th>
+                                        <th className="px-6 py-4 font-normal">Manifest</th>
+                                        <th className="px-6 py-4 font-normal text-right">Value</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
@@ -122,11 +128,23 @@ export function AccountDashboard({ user, profile, orders = [] }: AccountDashboar
                                         return (
                                             <tr key={order.id} className="hover:bg-white/5 transition-colors group">
                                                 <td className="px-6 py-5">
-                                                    <span className="text-white font-medium uppercase tracking-wider text-[11px]">
-                                                        #{order.id.split('-')[0]}
-                                                    </span>
+                                                    <div className="space-y-3">
+                                                        <span className="text-white font-medium uppercase tracking-wider text-[11px]">
+                                                            Ref: #{order.id.split('-')[0]}
+                                                        </span>
+                                                        <div className="flex -space-x-2">
+                                                            {order.order_items.map((item, idx) => {
+                                                                const displayImg = item.product_variants?.image_url || item.products?.images?.[0] || "/logo.jpg";
+                                                                return (
+                                                                    <div key={idx} className="w-8 h-8 rounded-full border border-black bg-zinc-900 overflow-hidden relative" title={item.products?.title}>
+                                                                        <img src={displayImg} alt="" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
                                                 </td>
-                                                <td className="px-6 py-5 whitespace-nowrap">
+                                                <td className="px-6 py-5 whitespace-nowrap text-[11px] uppercase tracking-widest opacity-60">
                                                     {new Date(order.created_at).toLocaleDateString('en-US', {
                                                         year: 'numeric',
                                                         month: 'short',
@@ -134,16 +152,16 @@ export function AccountDashboard({ user, profile, orders = [] }: AccountDashboar
                                                     })}
                                                 </td>
                                                 <td className="px-6 py-5">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] uppercase tracking-widest border ${isPaid
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-sm text-[9px] uppercase tracking-widest border ${isPaid
                                                         ? 'border-gold/30 text-gold bg-gold/5'
-                                                        : 'border-white/10 text-white/50 bg-white/5'
+                                                        : 'border-white/10 text-white/40 bg-white/5'
                                                         }`}>
                                                         {order.status}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-5 text-right font-medium text-white group-hover:text-gold transition-colors">
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <span>${Number(order.amount_total).toFixed(2)}</span>
+                                                    <div className="flex flex-col items-end gap-2">
+                                                        <span className="text-sm tracking-widest">${Number(order.amount_total).toFixed(2)}</span>
                                                         {order.tracking_number && (
                                                             <a
                                                                 href={`https://goshippo.com/tracking/${order.tracking_number}`}

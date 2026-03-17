@@ -62,7 +62,7 @@ export default async function AdminSettings() {
                 <div className="lg:col-span-3 space-y-12">
 
                     {/* ── Brand & General ── */}
-                    <SettingsForm action={updateStoreSettings} title="Brand & General Info" icon={Globe}>
+                    <SettingsForm action={updateStoreSettings} title="Brand & General Info" iconName="globe">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Name</label>
@@ -115,7 +115,7 @@ export default async function AdminSettings() {
                     </SettingsForm>
 
                     {/* ── Shipping Rate Settings ── */}
-                    <SettingsForm action={updateShippingSettings} title="Shipping Rate Configuration" icon={Truck}>
+                    <SettingsForm action={updateShippingSettings} title="Shipping Rate Configuration" iconName="truck">
                         <p className="text-[11px] text-textsoft/70 leading-relaxed">
                             Configure flat-rate fallback prices for Standard and Express shipping. These are used when live Shippo rates are unavailable.
                         </p>
@@ -162,12 +162,12 @@ export default async function AdminSettings() {
                     </SettingsForm>
 
                     {/* ── Hero Slides ── */}
-                    <SettingsForm action={updateHeroContent} title="Hero Slides & Banners" icon={Layout}>
+                    <SettingsForm action={updateHeroContent} title="Hero Slides & Banners" iconName="layout">
                         <HeroSlidesEditor initialSlides={heroSlides?.content_data?.slides || []} />
                     </SettingsForm>
 
                     {/* ── Menus & Socials ── */}
-                    <SettingsForm action={updateMenusAndSocials} title="Navigation & Social Links" icon={Layout}>
+                    <SettingsForm action={updateMenusAndSocials} title="Navigation & Social Links" iconName="layout">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-2">
                                 <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Navigation</label>

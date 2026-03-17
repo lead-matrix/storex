@@ -2,16 +2,24 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, Globe, Truck, Layout, Users } from "lucide-react";
 
 interface SettingsFormProps {
     action: (formData: FormData) => Promise<any>;
     children: React.ReactNode;
     title: string;
-    icon: any;
+    iconName: "globe" | "truck" | "layout" | "users";
 }
 
-export function SettingsForm({ action, children, title, icon: Icon }: SettingsFormProps) {
+const ICON_MAP = {
+    globe: Globe,
+    truck: Truck,
+    layout: Layout,
+    users: Users,
+};
+
+export function SettingsForm({ action, children, title, iconName }: SettingsFormProps) {
+    const Icon = ICON_MAP[iconName] || Globe;
     const [isPending, startTransition] = useTransition();
 
     async function handleSubmit(formData: FormData) {

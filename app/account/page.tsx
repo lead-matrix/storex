@@ -49,7 +49,8 @@ export default async function AccountPage() {
             tracking_number,
             order_items (
                 quantity,
-                products (title)
+                products (title, images),
+                product_variants (image_url)
             )
         `)
         .eq("customer_email", user.email)
@@ -59,9 +60,9 @@ export default async function AccountPage() {
         <div className="min-h-screen bg-black text-white pt-32 pb-24 px-6">
             <div className="max-w-6xl mx-auto space-y-16">
                 <AccountDashboard
-                    user={{ email: user.email, created_at: user.created_at }}
+                    user={{ email: user.email || "", created_at: user.created_at }}
                     profile={{ full_name: profile?.full_name, role: profile?.role }}
-                    orders={orders || []}
+                    orders={(orders as any) || []}
                 />
 
                 {/* Sign Out Action */}
