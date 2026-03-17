@@ -256,25 +256,26 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
 
                     {/* Shipping Dimensions (Optional) */}
                     <div className="p-4 bg-pearl/50 rounded-lg border border-charcoal/5 space-y-4">
-                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping Dimensions (Optional)</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping Details (Optional)</Label>
                         <div className="grid grid-cols-4 gap-3">
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">Weight (g)</Label>
-                                <Input name="weight_grams" type="number" step="0.1" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">Weight (oz)</Label>
+                                <Input name="weight_grams" type="number" step="0.01" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" placeholder="oz" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">L (cm)</Label>
-                                <Input name="length_cm" type="number" step="0.1" defaultValue={product?.length_cm ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">L (in)</Label>
+                                <Input name="length_cm" type="number" step="0.1" defaultValue={product?.length_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">W (cm)</Label>
-                                <Input name="width_cm" type="number" step="0.1" defaultValue={product?.width_cm ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">W (in)</Label>
+                                <Input name="width_cm" type="number" step="0.1" defaultValue={product?.width_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">H (cm)</Label>
-                                <Input name="height_cm" type="number" step="0.1" defaultValue={product?.height_cm ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">H (in)</Label>
+                                <Input name="height_cm" type="number" step="0.1" defaultValue={product?.height_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                         </div>
+                        <p className="text-[9px] text-textsoft/50 tracking-luxury">Weight in oz is used for shipping rate calculations. Dimensions in inches.</p>
                     </div>
 
                     {/* Category */}

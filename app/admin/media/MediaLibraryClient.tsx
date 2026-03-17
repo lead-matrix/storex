@@ -257,7 +257,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                 <div>
                     <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Media Library</h1>
                     <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">
-                        Asset Vault · Image & Content Command Center
+                        Image & Content Command Center
                     </p>
                 </div>
 
@@ -298,8 +298,8 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                     {/* Stats Row */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
-                            { label: 'Total Assets', value: files.length, color: 'text-charcoal' },
-                            { label: 'Vault Size', value: formatBytes(totalSize), color: 'text-gold' },
+                            { label: 'Total Media', value: files.length, color: 'text-charcoal' },
+                            { label: 'Library Size', value: formatBytes(totalSize), color: 'text-gold' },
                             { label: 'Selected', value: selectedFiles.size, color: 'text-blue-500' },
                             { label: 'Filtered', value: filteredFiles.length, color: 'text-emerald-500' },
                         ].map(s => (
@@ -410,7 +410,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                         <div className="py-32 text-center border border-dashed border-charcoal/10 rounded-xl bg-pearl/20">
                             <FolderOpen className="w-12 h-12 text-charcoal/10 mx-auto mb-4" />
                             <p className="text-textsoft text-[10px] uppercase tracking-widest">
-                                {searchQuery ? 'No assets match your search' : 'No assets in vault. Upload your first image above.'}
+                                {searchQuery ? 'No media match your search' : 'No media in library. Upload your first image above.'}
                             </p>
                         </div>
                     ) : viewMode === 'grid' ? (
@@ -490,7 +490,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                                 {selectedFiles.size === filteredFiles.length ? '✓' : '○'}
                                             </button>
                                         </th>
-                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Asset</th>
+                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Media</th>
                                         <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Size</th>
                                         <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Date</th>
                                         <th className="text-right p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Actions</th>

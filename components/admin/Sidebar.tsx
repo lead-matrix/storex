@@ -14,6 +14,7 @@ import {
     Mail,
     BarChart2,
     Grid,
+    Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ const menuItems = [
     { icon: Layout, label: "CMS Pages", href: "/admin/cms" },
     { icon: Mail, label: "Email", href: "/admin/email" },
     { icon: BarChart2, label: "Analytics", href: "/admin/analytics" },
-    { icon: Settings, label: "Site Editor", href: "/admin/settings" },
+    { icon: Settings, label: "Site Settings", href: "/admin/settings" },
 ];
 
 export function Sidebar() {
@@ -36,10 +37,10 @@ export function Sidebar() {
         <aside className="w-72 bg-zinc-950 border-r border-white/5 flex flex-col h-screen sticky top-0">
             <div className="p-8 border-b border-white/5">
                 <h1 className="text-xl font-serif text-gold tracking-[0.2em] uppercase">
-                    Dina Admin
+                    Dina Cosmetic
                 </h1>
                 <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">
-                    The Obsidian Palace
+                    Admin Panel
                 </p>
             </div>
 

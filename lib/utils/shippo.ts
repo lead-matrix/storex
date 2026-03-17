@@ -57,15 +57,15 @@ export async function createShippingLabel(order: any) {
                 let itemWeightOz = 0;
                 if (item.variant_id) {
                     const { data: v } = await supabase.from('product_variants').select('weight').eq('id', item.variant_id).single();
-                    if (v?.weight) itemWeightOz = Number(v.weight);
+                    if (v?.weight) itemWeightOz = Number(v.weight); // always oz
                 }
 
                 if (!itemWeightOz || itemWeightOz <= 0) {
                     const { data: p } = await supabase.from('products').select('weight_grams').eq('id', item.product_id).single();
-                    if (p?.weight_grams) itemWeightOz = Number(p.weight_grams) / 28.3495;
+                    if (p?.weight_grams) itemWeightOz = Number(p.weight_grams); // stored as oz
                 }
 
-                if (!itemWeightOz || itemWeightOz <= 0) itemWeightOz = 2; // default
+                if (!itemWeightOz || itemWeightOz <= 0) itemWeightOz = 2; // default 2oz
                 totalWeightOz += itemWeightOz * (item.quantity || 1);
             }
         }

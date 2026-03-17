@@ -69,9 +69,9 @@ export default function OrderList({ initialOrders }: OrderListProps) {
         toast.promise(
             Promise.all(ordersToFulfill.map(o => generateShippingLabel(o.id))),
             {
-                loading: `Synchronizing with Logistics Matrix for ${ordersToFulfill.length} fulfillments...`,
-                success: 'Batch fulfillment rituals complete',
-                error: (err) => `Ritual failed: ${err.message}`
+                loading: `Processing fulfillment for ${ordersToFulfill.length} orders...`,
+                success: 'Batch fulfillment complete',
+                error: (err) => `Fulfillment failed: ${err.message}`
             }
         )
         setSelectedOrderIds([])
@@ -272,7 +272,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                         <p className="text-sm font-serif text-white">${Number(order.amount_total || 0).toFixed(2)}</p>
                                         <p className="text-[10px] text-white/30 uppercase tracking-luxury flex items-center gap-1.5">
                                             <ShoppingBag className="w-3 h-3" />
-                                            {order.order_items?.length || 0} Assets
+                                            {order.order_items?.length || 0} Items
                                         </p>
                                     </div>
                                 </td>

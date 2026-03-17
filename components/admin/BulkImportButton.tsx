@@ -21,7 +21,7 @@ export function BulkImportButton() {
         }
 
         setIsUploading(true)
-        const toastId = toast.loading("Ingesting master data artifacts...")
+        const toastId = toast.loading("Importing products...")
 
         try {
             const formData = new FormData()
@@ -35,10 +35,10 @@ export function BulkImportButton() {
             const result = await res.json()
 
             if (res.ok) {
-                toast.success(`Successfully processed ${result.processed} artifacts`, { id: toastId })
+                toast.success(`Successfully processed ${result.processed} products`, { id: toastId })
                 router.refresh()
             } else {
-                toast.error(result.error || "Failed to import assets", { id: toastId })
+                toast.error(result.error || "Failed to import products", { id: toastId })
             }
         } catch (error) {
             console.error("Import error:", error)

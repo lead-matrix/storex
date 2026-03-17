@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { Save, ShieldCheck, Globe, CreditCard, Layout, Image as ImageIcon, Plus, Trash2, Package, Users, Truck } from 'lucide-react'
-import { updateStoreSettings, updateHeroContent, updateMenusAndSocials } from '@/lib/actions/admin'
+import { Save, Globe, Layout, Users, Truck, DollarSign, Package } from 'lucide-react'
+import { updateStoreSettings, updateHeroContent, updateMenusAndSocials, updateShippingSettings } from '@/lib/actions/admin'
 import HeroSlidesEditor from '@/components/admin/HeroSlidesEditor'
 import MenuEditor from '@/components/admin/MenuEditor'
-import WarehouseEditor from '@/components/admin/WarehouseEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,41 +11,41 @@ export default async function AdminSettings() {
 
     const [
         { data: storeInfo },
-        { data: warehouseInfo },
         { data: storeStatus },
-        { data: heroLegacy },
         { data: heroSlides },
         { data: headerNav },
         { data: footerNav },
         { data: socialMedia },
+        { data: shippingSettings },
     ] = await Promise.all([
         supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
-        supabase.from('site_settings').select('*').eq('setting_key', 'warehouse_info').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
-        supabase.from('frontend_content').select('*').eq('content_key', 'hero_main').maybeSingle(),
         supabase.from('frontend_content').select('*').eq('content_key', 'hero_slides').maybeSingle(),
         supabase.from('navigation_menus').select('*').eq('menu_key', 'header_main').maybeSingle(),
         supabase.from('navigation_menus').select('*').eq('menu_key', 'footer_legal').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'social_media').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'shipping_settings').maybeSingle(),
     ])
 
     const isEnabled = storeStatus?.setting_value ?? true
+    const shipping = shippingSettings?.setting_value || {}
 
     return (
         <div className="space-y-12 pb-24 animate-luxury-fade">
+            {/* Page Header */}
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Site Vault & Editor</h1>
-                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Design the Obsidian Experience</p>
+                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Site Settings</h1>
+                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Store Configuration &amp; Content Management</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-                {/* Sidebar nav (decorative) */}
+                {/* Sidebar nav */}
                 <div className="lg:col-span-1 space-y-2">
                     {[
                         { label: 'General Info', icon: Globe, active: true },
-                        { label: 'Fulfillment', icon: Package },
+                        { label: 'Shipping Rates', icon: Truck },
                         { label: 'Visual Storefront', icon: Layout },
                         { label: 'Socials', icon: Users },
                     ].map((item: any) => (
@@ -61,65 +60,59 @@ export default async function AdminSettings() {
                 {/* Content */}
                 <div className="lg:col-span-3 space-y-12">
 
-                    {/* ── Brand & Logistics ── */}
+                    {/* ── Brand & General ── */}
                     <form action={updateStoreSettings}>
                         <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-12">
                             <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
                                 <div className="flex mt-1 items-center gap-4">
                                     <Globe className="w-4 h-4 text-gold" />
-                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Brand & Logistics</h2>
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Brand &amp; General Info</h2>
                                 </div>
                                 <button type="submit"
                                     className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
-                                    <Save className="w-3.5 h-3.5" /> Save Global Configuration
+                                    <Save className="w-3.5 h-3.5" /> Save Changes
                                 </button>
                             </div>
 
                             <div className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Signature</label>
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Name</label>
                                         <input
                                             name="name"
                                             type="text"
-                                            defaultValue={storeInfo?.setting_value?.name || 'DINA COSMETIC'}
+                                            defaultValue={storeInfo?.setting_value?.name || 'Dina Cosmetic'}
                                             required
                                             className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Primary Currency</label>
+                                        <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Currency</label>
                                         <select name="currency" defaultValue={storeInfo?.setting_value?.currency || 'USD'}
                                             className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all appearance-none cursor-pointer">
-                                            <option value="USD">USD ($) — Universal</option>
-                                            <option value="EUR">EUR (€) — Luxury Select</option>
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Global Tagline</label>
+                                    <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Tagline</label>
                                     <input
                                         name="tagline"
                                         type="text"
-                                        defaultValue={storeInfo?.setting_value?.tagline || 'Luxury Obsidian Skincare'}
+                                        defaultValue={storeInfo?.setting_value?.tagline || 'Premium Beauty Products'}
                                         className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
                                     />
                                 </div>
 
-                                <div className="pt-8 border-t border-charcoal/5">
-                                    <h3 className="text-[10px] uppercase tracking-luxury text-gold font-bold mb-6 flex items-center gap-2">
-                                        <Truck className="w-4 h-4" /> Warehouse & Sender Identity
-                                    </h3>
-                                    <WarehouseEditor initialData={warehouseInfo?.setting_value} />
-                                </div>
-
+                                {/* Store Status Toggle */}
                                 <div className="flex items-center justify-between p-8 bg-rose-50 border border-rose-100/50 rounded-xl shadow-inner-soft">
                                     <div className="space-y-1">
-                                        <p className="text-[11px] uppercase tracking-widest text-charcoal font-bold">Vault Active Status</p>
+                                        <p className="text-[11px] uppercase tracking-widest text-charcoal font-bold">Store Status</p>
                                         <p className="text-[9px] text-rose-500 uppercase tracking-luxury font-medium flex items-center gap-2">
                                             <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
-                                            Emergency Kill Switch (Maintenance Mode)
+                                            Maintenance Mode Kill Switch
                                         </p>
                                     </div>
                                     <div className="relative inline-flex items-center cursor-pointer">
@@ -136,17 +129,154 @@ export default async function AdminSettings() {
                         </section>
                     </form>
 
+                    {/* ── Shipping Rate Settings ── */}
+                    <form action={updateShippingSettings}>
+                        <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
+                            <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
+                                <div className="flex mt-1 items-center gap-4">
+                                    <Truck className="w-4 h-4 text-gold" />
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Shipping Rate Configuration</h2>
+                                </div>
+                                <button type="submit"
+                                    className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+                                    <Save className="w-3.5 h-3.5" /> Save Shipping
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <p className="text-[11px] text-textsoft/70 leading-relaxed">
+                                    Configure flat-rate fallback prices for Standard and Express shipping. These are used when live Shippo rates are unavailable.
+                                    Live rates from Shippo are automatically calculated at checkout using product weights.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Standard Shipping */}
+                                    <div className="p-6 bg-pearl/60 rounded-xl border border-charcoal/10 space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-white border border-charcoal/10 rounded-full flex items-center justify-center">
+                                                <Package className="w-4 h-4 text-charcoal" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[11px] uppercase tracking-luxury font-bold text-charcoal">Standard Shipping</p>
+                                                <p className="text-[9px] text-textsoft uppercase tracking-widest">3–7 Business Days</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Flat Rate Price (USD)</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-textsoft text-sm">$</span>
+                                                    <input
+                                                        name="standard_rate"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        defaultValue={shipping.standard_rate ?? '7.99'}
+                                                        className="w-full bg-white border border-charcoal/10 rounded-md pl-8 pr-4 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Free Shipping Threshold (USD)</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-textsoft text-sm">$</span>
+                                                    <input
+                                                        name="free_shipping_threshold"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        defaultValue={shipping.free_shipping_threshold ?? '100'}
+                                                        className="w-full bg-white border border-charcoal/10 rounded-md pl-8 pr-4 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <p className="text-[9px] text-textsoft/60 tracking-luxury">Orders above this amount receive free standard shipping</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Express Shipping */}
+                                    <div className="p-6 bg-pearl/60 rounded-xl border border-charcoal/10 space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-gold/10 border border-gold/30 rounded-full flex items-center justify-center">
+                                                <Truck className="w-4 h-4 text-gold" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[11px] uppercase tracking-luxury font-bold text-charcoal">Express Shipping</p>
+                                                <p className="text-[9px] text-textsoft uppercase tracking-widest">1–3 Business Days</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Flat Rate Price (USD)</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-textsoft text-sm">$</span>
+                                                    <input
+                                                        name="express_rate"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        defaultValue={shipping.express_rate ?? '19.99'}
+                                                        className="w-full bg-white border border-charcoal/10 rounded-md pl-8 pr-4 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Express Label</label>
+                                                <input
+                                                    name="express_label"
+                                                    type="text"
+                                                    defaultValue={shipping.express_label ?? 'Express Shipping'}
+                                                    className="w-full bg-white border border-charcoal/10 rounded-md px-4 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all"
+                                                    placeholder="Express Shipping"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Live Rates Note */}
+                                <div className="flex items-start gap-3 p-5 bg-emerald-50 border border-emerald-100 rounded-xl">
+                                    <DollarSign className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-luxury text-emerald-700 font-bold mb-1">Live Shippo Rates Active</p>
+                                        <p className="text-[11px] text-emerald-600/80 leading-relaxed">
+                                            When Shippo is configured, customers see live carrier rates (USPS, UPS, FedEx) calculated by product weight in real-time.
+                                            The flat rates above are used as fallback only.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </form>
+
+                    {/* ── Hero Slides ── */}
+                    <form action={updateHeroContent}>
+                        <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
+                            <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
+                                <div className="flex mt-1 items-center gap-4">
+                                    <Layout className="w-4 h-4 text-gold" />
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Hero Slides &amp; Banners</h2>
+                                </div>
+                                <button type="submit"
+                                    className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+                                    <Save className="w-3.5 h-3.5" /> Save Hero Content
+                                </button>
+                            </div>
+                            <HeroSlidesEditor initialSlides={heroSlides?.content_data?.slides || []} />
+                        </section>
+                    </form>
+
                     {/* ── Menus & Socials ── */}
                     <form action={updateMenusAndSocials}>
                         <section className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-8">
                             <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
                                 <div className="flex mt-1 items-center gap-4">
                                     <Layout className="w-4 h-4 text-gold" />
-                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Navigations & Socials</h2>
+                                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Navigation &amp; Social Links</h2>
                                 </div>
                                 <button type="submit"
                                     className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
-                                    <Save className="w-3.5 h-3.5" /> Synchronize Menus
+                                    <Save className="w-3.5 h-3.5" /> Save Navigation
                                 </button>
                             </div>
 
@@ -154,8 +284,8 @@ export default async function AdminSettings() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between pb-2">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Links</label>
-                                            <span className="text-[8px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded border border-emerald-100 font-bold tracking-widest uppercase">Live Link</span>
+                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Header Navigation</label>
+                                            <span className="text-[8px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded border border-emerald-100 font-bold tracking-widest uppercase">Live</span>
                                         </div>
                                         <MenuEditor
                                             name="header_nav"
@@ -165,8 +295,8 @@ export default async function AdminSettings() {
 
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between pb-2">
-                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Legal Terms</label>
-                                            <span className="text-[8px] bg-pearl text-textsoft/50 px-2 py-0.5 rounded border border-charcoal/10 font-bold tracking-widest uppercase">Footer Stack</span>
+                                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Footer Legal Links</label>
+                                            <span className="text-[8px] bg-pearl text-textsoft/50 px-2 py-0.5 rounded border border-charcoal/10 font-bold tracking-widest uppercase">Footer</span>
                                         </div>
                                         <MenuEditor
                                             name="footer_legal"
@@ -210,4 +340,3 @@ export default async function AdminSettings() {
         </div>
     )
 }
-

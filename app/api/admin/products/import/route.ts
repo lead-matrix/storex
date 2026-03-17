@@ -59,10 +59,11 @@ export async function POST(req: Request) {
                     status: row.product_status || 'active',
                     images: row.images ? row.images.split(',').map((img: string) => img.trim()).filter(Boolean) : [],
                     category_id: row.category_id || null,
-                    weight_grams: parseFloat(row.weight_grams) || null,
-                    length_cm: parseFloat(row.length_cm) || null,
-                    width_cm: parseFloat(row.width_cm) || null,
-                    height_cm: parseFloat(row.height_cm) || null,
+                    // weight_grams column stores oz (updated unit system)
+                    weight_grams: parseFloat(row.weight_oz || row.weight_grams) || null,
+                    length_cm: parseFloat(row.length_in || row.length_cm) || null,
+                    width_cm: parseFloat(row.width_in || row.width_cm) || null,
+                    height_cm: parseFloat(row.height_in || row.height_cm) || null,
                     variants: []
                 };
             }

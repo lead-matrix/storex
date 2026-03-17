@@ -67,8 +67,8 @@ export default async function AdminProductsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Collections</h1>
-                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Asset Registry · Inventory Management</p>
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Products</h1>
+                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Product Catalog · Inventory Management</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -95,7 +95,7 @@ export default async function AdminProductsPage() {
                         className="flex items-center gap-2 bg-gold text-black px-6 py-3 rounded text-[11px] font-bold uppercase tracking-luxury hover:bg-gold-light transition-all shadow-gold"
                     >
                         <Plus className="w-4 h-4" />
-                        Archive New Asset
+                        Add New Product
                     </Link>
                 </div>
             </div>
@@ -103,10 +103,10 @@ export default async function AdminProductsPage() {
             {/* KPIs */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                    { label: "Total Assets", value: totalCount, icon: Package, color: "text-white" },
-                    { label: "Live Display", value: activeCount, icon: Layers, color: "text-emerald-400" },
-                    { label: "Low Reserve", value: lowStockCount, icon: Activity, color: "text-amber-400" },
-                    { label: "Depleted", value: outOfStockCount, icon: Trash2, color: "text-red-400" },
+                    { label: "Total Products", value: totalCount, icon: Package, color: "text-white" },
+                    { label: "Active", value: activeCount, icon: Layers, color: "text-emerald-400" },
+                    { label: "Low Stock", value: lowStockCount, icon: Activity, color: "text-amber-400" },
+                    { label: "Out of Stock", value: outOfStockCount, icon: Trash2, color: "text-red-400" },
                 ].map((s) => (
                     <div key={s.label} className="bg-obsidian rounded-luxury shadow-luxury border border-luxury-border p-6 group transition-all hover:border-gold/30">
                         <div className="flex items-center justify-between mb-4">

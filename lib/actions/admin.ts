@@ -512,6 +512,33 @@ export async function updateMenusAndSocials(formData: FormData) {
     revalidatePath('/admin/settings');
 }
 
+export async function updateShippingSettings(formData: FormData) {
+    const supabase = await ensureAdmin();
+
+    const standard_rate = parseFloat(formData.get('standard_rate') as string) || 7.99;
+    const express_rate = parseFloat(formData.get('express_rate') as string) || 19.99;
+    const free_shipping_threshold = parseFloat(formData.get('free_shipping_threshold') as string) || 100;
+    const express_label = (formData.get('express_label') as string) || 'Express Shipping';
+
+    const { error } = await supabase
+        .from('site_settings')
+        .upsert({
+            setting_key: 'shipping_settings',
+            setting_value: {
+                standard_rate,
+                express_rate,
+                free_shipping_threshold,
+                express_label,
+                standard_label: 'Standard Shipping',
+            },
+        }, { onConflict: 'setting_key' });
+
+    if (error) throw error;
+
+    revalidatePath('/admin/settings');
+    revalidatePath('/checkout');
+}
+
 // ─────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────

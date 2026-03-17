@@ -33,7 +33,7 @@ export default async function AdminCatalogPage() {
                         </Link>
                         <h1 className="text-4xl font-heading text-white tracking-luxury font-serif uppercase text-shadow-gold">Catalog Mode</h1>
                     </div>
-                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold pl-12">Bulk Asset Synchronizer · Absolute Zero Lag</p>
+                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold pl-12">Bulk Product Synchronizer · Absolute Zero Lag</p>
                 </div>
 
                 <div className="flex items-center gap-3">
