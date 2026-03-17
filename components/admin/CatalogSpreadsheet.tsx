@@ -264,7 +264,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
             {/* Desktop Table View */}
             <div className="hidden md:block bg-obsidian border border-luxury-border rounded-luxury overflow-hidden shadow-luxury">
                 <div className="overflow-x-auto max-h-[70vh]">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse whitespace-nowrap">
                         <thead className="sticky top-0 z-10">
                             <tr className="border-b border-white/5 bg-black/80 backdrop-blur-md text-[10px] uppercase tracking-luxury text-gold font-bold">
                                 <th className="px-6 py-4 border-r border-white/5">Asset</th>

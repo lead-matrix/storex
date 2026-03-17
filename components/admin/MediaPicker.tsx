@@ -179,7 +179,7 @@ export function MediaPicker({ onSelect, trigger, multiSelect = false, onSelectMu
                         {selected.size} Artifacts Prepared
                     </p>
                     <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="text-[10px] uppercase tracking-widest font-bold">
+                        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="text-charcoal hover:bg-black/5 text-[10px] uppercase tracking-widest font-bold">
                             Cancel
                         </Button>
                         {multiSelect && (

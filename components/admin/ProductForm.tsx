@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 interface Category {
     id: string
@@ -147,8 +148,10 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             if (product?.id) {
                 formData.set('id', product.id)
                 await updateProduct(formData)
+                toast.success('Product updated successfully!')
             } else {
                 await createProduct(formData)
+                toast.success('Product created successfully!')
             }
             router.push('/admin/products')
             router.refresh()

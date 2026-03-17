@@ -39,6 +39,9 @@ export async function POST(req: Request) {
             shipping_address_collection: {
                 allowed_countries: ['US', 'CA', 'GB', 'AU', 'FR', 'DE'],
             },
+            phone_number_collection: {
+                enabled: true,
+            },
             metadata: {
                 customer_email,
                 cart_id: cart_id || '',
