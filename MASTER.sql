@@ -2612,6 +2612,78 @@ SET image_url = REPLACE(
     )
 WHERE image_url LIKE '%supabase.co%';
 -- Fix hero default extension (jpg in public, was png in seed)
-UPDATE public.cms_sections
-SET props = props || '{"imageUrl": "/products/hero-default.jpg"}'::jsonb
-WHERE props->>'imageUrl' LIKE '%hero-default.png%';
+-- ───────────────────────────────────────────────────────────────
+-- §15  FINAL DATABASE OPTIMIZATION (March 2026)
+--      Clears all 'Multiple Permissive Policies' warnings.
+--      Ensures 100% Admin Sovereignty with zero performance overlap.
+-- ───────────────────────────────────────────────────────────────
+
+-- 1. WIPE ALL EXISTING POLICIES FOR A CLEAN REBUILD
+DO $$ 
+DECLARE 
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public') LOOP
+        EXECUTE 'DROP POLICY IF EXISTS ' || quote_ident(r.policyname) || ' ON public.' || quote_ident(r.tablename);
+    END LOOP;
+END $$;
+
+-- 2. THE SOVEREIGN SYSTEM (Single Policy per Table)
+-- PRODUCTS
+CREATE POLICY "authenticated_products_master" ON public.products FOR ALL TO authenticated 
+USING (public.is_admin() OR status = 'active') WITH CHECK (public.is_admin());
+CREATE POLICY "anon_products_read" ON public.products FOR SELECT TO anon USING (status = 'active');
+
+-- VARIANTS
+CREATE POLICY "authenticated_variants_master" ON public.product_variants FOR ALL TO authenticated 
+USING (public.is_admin() OR status = 'active') WITH CHECK (public.is_admin());
+CREATE POLICY "anon_variants_read" ON public.product_variants FOR SELECT TO anon USING (status = 'active');
+
+-- CATEGORIES
+CREATE POLICY "authenticated_categories_master" ON public.categories FOR ALL TO authenticated 
+USING (public.is_admin() OR status = 'active') WITH CHECK (public.is_admin());
+CREATE POLICY "anon_categories_read" ON public.categories FOR SELECT TO anon USING (status = 'active');
+
+-- IMAGES
+CREATE POLICY "authenticated_images_master" ON public.product_images FOR ALL TO authenticated 
+USING (public.is_admin() OR true) WITH CHECK (public.is_admin());
+CREATE POLICY "anon_images_read" ON public.product_images FOR SELECT TO anon USING (true);
+
+-- CMS PAGES
+CREATE POLICY "authenticated_cms_pages_master" ON public.cms_pages FOR ALL TO authenticated 
+USING (public.is_admin() OR is_published = true) WITH CHECK (public.is_admin());
+CREATE POLICY "anon_cms_pages_read" ON public.cms_pages FOR SELECT TO anon USING (is_published = true);
+
+-- CMS SECTIONS
+CREATE POLICY "authenticated_cms_sections_master" ON public.cms_sections FOR ALL TO authenticated 
+USING (public.is_admin() OR true) WITH CHECK (public.is_admin());
+CREATE POLICY "anon_cms_sections_read" ON public.cms_sections FOR SELECT TO anon USING (true);
+
+-- NAVIGATION
+CREATE POLICY "authenticated_nav_master" ON public.navigation_menus FOR ALL TO authenticated 
+USING (public.is_admin() OR true) WITH CHECK (public.is_admin());
+CREATE POLICY "anon_nav_read" ON public.navigation_menus FOR SELECT TO anon USING (true);
+
+-- SITE SETTINGS
+CREATE POLICY "authenticated_settings_master" ON public.site_settings FOR ALL TO authenticated 
+USING (public.is_admin() OR true) WITH CHECK (public.is_admin());
+CREATE POLICY "anon_settings_read" ON public.site_settings FOR SELECT TO anon USING (true);
+
+-- INVENTORY RESERVATIONS
+CREATE POLICY "admin_only_reservations" ON public.inventory_reservations FOR ALL TO authenticated 
+USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- 3. UNIVERSAL RULE (Everything else)
+DO $$ 
+DECLARE
+    tbl NAME;
+BEGIN
+    FOR tbl IN (
+        SELECT tablename FROM pg_tables 
+        WHERE schemaname = 'public' 
+        AND tablename NOT IN ('products', 'product_variants', 'categories', 'product_images', 'cms_pages', 'cms_sections', 'navigation_menus', 'site_settings', 'inventory_reservations')
+    ) 
+    LOOP
+        EXECUTE format('CREATE POLICY "%I_admin_master" ON public.%I FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin())', tbl, tbl);
+    END LOOP;
+END $$;
