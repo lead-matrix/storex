@@ -25,25 +25,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 1,
         },
         {
-            url: \`\${baseUrl}/shop\`,
+            url: `${baseUrl}/shop`,
             lastModified: new Date(),
             changeFrequency: 'daily',
             priority: 0.9,
         },
         {
-            url: \`\${baseUrl}/collections\`,
+            url: `${baseUrl}/collections`,
             lastModified: new Date(),
             changeFrequency: 'weekly',
             priority: 0.8,
         },
         {
-            url: \`\${baseUrl}/about\`,
+            url: `${baseUrl}/about`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
             priority: 0.5,
         },
         {
-            url: \`\${baseUrl}/contact\`,
+            url: `${baseUrl}/contact`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
             priority: 0.5,
@@ -54,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (products) {
         products.forEach((product) => {
             sitemap.push({
-                url: \`\${baseUrl}/product/\${product.slug}\`,
+                url: `${baseUrl}/product/${product.slug}`,
                 lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
                 changeFrequency: 'weekly',
                 priority: 0.7,
@@ -66,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (categories) {
         categories.forEach((category) => {
             sitemap.push({
-                url: \`\${baseUrl}/collections/\${category.slug}\`,
+                url: `${baseUrl}/collections/${category.slug}`,
                 lastModified: new Date(),
                 changeFrequency: 'weekly',
                 priority: 0.6,
