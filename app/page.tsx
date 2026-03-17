@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import CMSRenderer from "@/components/cms/CMSRenderer"
-import { MasterpieceHero } from "@/components/MasterpieceHero"
+import { SaleHeroSlider } from "@/components/SaleHeroSlider"
 import { BentoFeaturedGrid } from "@/components/BentoFeaturedGrid"
 import { CollectionShowcase } from "@/components/CollectionShowcase"
 import { NewsletterSection } from "@/features/home/components/NewsletterSection"
@@ -53,9 +53,10 @@ export default async function Home() {
   // 2. Fallback to curated legacy layout if no CMS home exists yet
   let products: any[] = []
   let categories: any[] = []
+  let saleProducts: any[] = []
 
   try {
-    const [productsRes, categoriesRes] = await Promise.all([
+    const [productsRes, categoriesRes, saleRes] = await Promise.all([
       supabase
         .from("products")
         .select(`
@@ -69,10 +70,22 @@ export default async function Home() {
         .from("categories")
         .select("id, name, slug, description, image_url, product_count:products(count)")
         .limit(6),
+      supabase
+        .from("products")
+        .select(`
+          id, title, slug, base_price, sale_price, on_sale, images, description, status
+        `)
+        .eq("status", "active")
+        .eq("on_sale", true)
+        .order("created_at", { ascending: false })
+        .limit(5),
     ])
 
     products = productsRes.data || []
     categories = categoriesRes.data || []
+    
+    // Ensure we only include products with a valid sale price
+    saleProducts = (saleRes.data || []).filter(p => typeof p.sale_price === 'number' && p.sale_price > 0)
   } catch (err) {
     console.error("Legacy Layout Fetch Error:", err)
   }
@@ -85,8 +98,8 @@ export default async function Home() {
 
   return (
     <div className="bg-black">
-      {/* Hero — client-fetches hero_slides from frontend_content table */}
-      <MasterpieceHero />
+      {/* Hero — custom auto sliding sale slider */}
+      <SaleHeroSlider products={saleProducts} />
 
       {/* Category navigation grid */}
       <HomeCategoryGrid categories={categories} />
