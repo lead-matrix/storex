@@ -12,12 +12,12 @@ export default function NewProductPage() {
                 className="flex items-center gap-2 text-[10px] uppercase tracking-luxury text-textsoft hover:text-gold transition-colors font-medium"
             >
                 <ArrowLeft size={12} />
-                Back to Vault
+                Back to Products
             </Link>
 
             <div>
-                <h2 className="text-3xl font-heading text-charcoal mb-1 tracking-luxury">Forge New Item</h2>
-                <p className="text-textsoft text-sm tracking-luxury uppercase font-medium">Add a new masterpiece to the Obsidian collection</p>
+                <h2 className="text-3xl font-heading text-charcoal mb-1 tracking-luxury">Create New Product</h2>
+                <p className="text-textsoft text-sm tracking-luxury uppercase font-medium">Add a new product to your store catalog</p>
             </div>
 
             <div className="bg-white rounded-luxury border border-charcoal/10 p-8 shadow-luxury">

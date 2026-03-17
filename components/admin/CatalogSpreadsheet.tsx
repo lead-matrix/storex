@@ -1,0 +1,397 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { Save, Search, Filter, Loader2, AlertCircle } from 'lucide-react'
+import { bulkUpdateCatalog } from '@/lib/actions/admin'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
+
+interface CatalogSpreadsheetProps {
+    initialProducts: any[]
+}
+
+export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps) {
+    const [products, setProducts] = useState(initialProducts)
+    const [search, setSearch] = useState('')
+    const [selectedCategory, setSelectedCategory] = useState('all')
+    const [isSaving, setIsSaving] = useState(false)
+    const [dirtyRows, setDirtyRows] = useState<Record<string, { type: 'product' | 'variant', updates: any }>>({})
+    const router = useRouter()
+
+    const categories = useMemo(() => {
+        const cats = new Set(initialProducts.map(p => p.categories?.name).filter(Boolean))
+        return ['all', ...Array.from(cats)]
+    }, [initialProducts])
+
+    // Flatten for spreadsheet view
+    const rows = useMemo(() => {
+        const allRows: any[] = []
+        products.forEach(p => {
+            const productMatch =
+                p.title.toLowerCase().includes(search.toLowerCase()) ||
+                p.slug.toLowerCase().includes(search.toLowerCase())
+
+            const categoryMatch = selectedCategory === 'all' || p.categories?.name === selectedCategory
+
+            if (p.variants && p.variants.length > 0) {
+                p.variants.forEach((v: any) => {
+                    const variantMatch = v.name?.toLowerCase().includes(search.toLowerCase()) || v.sku?.toLowerCase().includes(search.toLowerCase())
+                    if ((productMatch || variantMatch) && categoryMatch) {
+                        allRows.push({
+                            id: v.id,
+                            parentId: p.id,
+                            type: 'variant',
+                            productTitle: p.title,
+                            name: v.name,
+                            sku: v.sku,
+                            price: v.price_override ?? p.base_price,
+                            sale_price: p.sale_price,
+                            on_sale: p.on_sale,
+                            stock: v.stock,
+                            status: v.status || p.status,
+                            weight: v.weight,
+                            category: p.categories?.name,
+                            image: v.image_url || p.images?.[0]
+                        })
+                    }
+                })
+            } else {
+                if (productMatch && categoryMatch) {
+                    allRows.push({
+                        id: p.id,
+                        type: 'product',
+                        productTitle: p.title,
+                        name: 'Base Product',
+                        sku: p.slug,
+                        price: p.base_price,
+                        sale_price: p.sale_price,
+                        on_sale: p.on_sale,
+                        stock: p.stock,
+                        status: p.status,
+                        weight: p.weight_grams,
+                        category: p.categories?.name,
+                        image: p.images?.[0]
+                    })
+                }
+            }
+        })
+        return allRows
+    }, [products, search, selectedCategory])
+
+    const handleUpdate = (id: string, type: 'product' | 'variant', field: string, value: any) => {
+        setDirtyRows(prev => {
+            const row = prev[id] || { type, updates: {} }
+            return {
+                ...prev,
+                [id]: {
+                    ...row,
+                    updates: { ...row.updates, [field]: value }
+                }
+            }
+        })
+
+        // Update local state for immediate feedback
+        setProducts(prev => {
+            return prev.map(p => {
+                if (type === 'product' && p.id === id) {
+                    return { ...p, [field]: value }
+                }
+                if (type === 'variant' && p.variants) {
+                    return {
+                        ...p,
+                        variants: p.variants.map((v: any) => v.id === id ? { ...v, [field === 'price' ? 'price_override' : field]: value } : v)
+                    }
+                }
+                return p
+            })
+        })
+    }
+
+    const hasChanges = Object.keys(dirtyRows).length > 0
+
+    const handleSave = async () => {
+        if (!hasChanges) return
+        setIsSaving(true)
+        const toastId = toast.loading("Syncing master catalog...")
+
+        try {
+            const updates = {
+                products: Object.entries(dirtyRows)
+                    .filter(([_, data]) => data.type === 'product')
+                    .map(([id, data]) => ({ id, updates: data.updates })),
+                variants: Object.entries(dirtyRows)
+                    .filter(([_, data]) => data.type === 'variant')
+                    .map(([id, data]) => ({ id, updates: data.updates }))
+            }
+
+            await bulkUpdateCatalog(updates)
+            setDirtyRows({})
+            toast.success("Catalog synced successfully", { id: toastId })
+            router.refresh()
+        } catch (err: any) {
+            toast.error(err.message, { id: toastId })
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-obsidian/50 p-4 md:p-6 rounded-luxury border border-luxury-border sticky top-4 md:static z-20 backdrop-blur-md md:backdrop-blur-none">
+                <div className="flex flex-col sm:flex-row flex-1 items-center gap-4 w-full md:max-w-2xl">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                        <input
+                            type="text"
+                            placeholder="Find assets..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-black/40 border border-white/10 rounded-sm py-2.5 md:py-2 pl-10 pr-4 text-[11px] uppercase tracking-luxury text-white placeholder:text-white/20 focus:border-gold/50 transition-all outline-none"
+                        />
+                    </div>
+                    <div className="relative w-full sm:w-48">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gold/40" />
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="w-full bg-black/40 border border-white/10 rounded-sm py-2.5 md:py-2 pl-9 pr-4 text-[10px] uppercase tracking-luxury text-white/60 appearance-none outline-none focus:border-gold/30"
+                        >
+                            {categories.map(cat => (
+                                <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <button
+                    onClick={handleSave}
+                    disabled={!hasChanges || isSaving}
+                    className={`
+                        w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 md:py-3 rounded text-[11px] font-bold uppercase tracking-luxury transition-all
+                        ${hasChanges
+                            ? "bg-gold text-black shadow-gold hover:bg-gold-light"
+                            : "bg-white/5 text-white/20 border border-white/10 cursor-not-allowed"}
+                    `}
+                >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {isSaving ? "Syncing..." : "Commit Changes"}
+                </button>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {rows.map((row) => (
+                    <div key={row.id} className={`bg-obsidian border border-luxury-border rounded-luxury p-5 space-y-4 transition-all ${dirtyRows[row.id] ? 'ring-1 ring-gold/30 bg-gold/5' : ''}`}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded bg-black/40 border border-white/5 overflow-hidden flex-shrink-0">
+                                <img src={row.image} alt="" className="w-full h-full object-cover opacity-60" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-white text-sm font-medium truncate">{row.productTitle}</p>
+                                <p className="text-[10px] text-white/30 uppercase tracking-widest truncate">{row.name}</p>
+                                <p className="text-[9px] font-mono text-gold/40 mt-0.5">{row.sku || 'NO SKU'}</p>
+                            </div>
+                            <div className="text-right">
+                                <select
+                                    value={dirtyRows[row.id]?.updates.status ?? row.status}
+                                    onChange={(e) => handleUpdate(row.id, row.type, 'status', e.target.value)}
+                                    className={`
+                                        bg-black/40 border border-white/5 rounded-full px-3 py-1 text-[9px] uppercase tracking-luxury outline-none
+                                        ${(dirtyRows[row.id]?.updates.status ?? row.status) === 'active' ? 'text-emerald-400 border-emerald-400/20' : 'text-white/30'}
+                                    `}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Base Valuation ($)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={dirtyRows[row.id]?.updates.price ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.price_override ?? row.price) : (dirtyRows[row.id]?.updates.base_price ?? row.price))}
+                                    onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'price_override' : 'base_price', parseFloat(e.target.value))}
+                                    className="w-full bg-transparent border-none p-0 text-sm font-serif text-white focus:ring-0 outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Sale Price ($)</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="—"
+                                        value={dirtyRows[row.id === row.parentId ? row.id : (row.parentId || row.id)]?.updates.sale_price ?? row.sale_price ?? ''}
+                                        onChange={(e) => handleUpdate(row.parentId || row.id, 'product', 'sale_price', parseFloat(e.target.value))}
+                                        className="w-full bg-transparent border-none p-0 text-sm font-serif text-gold focus:ring-0 outline-none transition-all"
+                                    />
+                                    <button
+                                        onClick={() => handleUpdate(row.parentId || row.id, 'product', 'on_sale', !(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale))}
+                                        className={`px-1.5 py-0.5 rounded-[2px] text-[7px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black' : 'bg-white/10 text-white/20'}`}
+                                    >
+                                        SALE
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Reserve</label>
+                                <input
+                                    type="number"
+                                    value={dirtyRows[row.id]?.updates.stock ?? row.stock}
+                                    onChange={(e) => handleUpdate(row.id, row.type, 'stock', parseInt(e.target.value))}
+                                    className={`w-full bg-transparent border-none p-0 text-sm font-mono focus:ring-0 outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
+                                />
+                            </div>
+                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                                <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Weight</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={dirtyRows[row.id]?.updates.weight ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.weight ?? row.weight) : (dirtyRows[row.id]?.updates.weight_grams ?? row.weight))}
+                                    onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'weight' : 'weight_grams', parseFloat(e.target.value))}
+                                    className="w-full bg-transparent border-none p-0 text-sm font-mono text-white/40 focus:ring-0 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-obsidian border border-luxury-border rounded-luxury overflow-hidden shadow-luxury">
+                <div className="overflow-x-auto max-h-[70vh]">
+                    <table className="w-full text-left border-collapse whitespace-nowrap">
+                        <thead className="sticky top-0 z-10">
+                            <tr className="border-b border-white/5 bg-black/80 backdrop-blur-md text-[10px] uppercase tracking-luxury text-gold font-bold">
+                                <th className="px-6 py-4 border-r border-white/5">Asset</th>
+                                <th className="px-6 py-4 border-r border-white/5">Category</th>
+                                <th className="px-6 py-4 border-r border-white/5">Identifier (SKU)</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center">Base ($)</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center whitespace-nowrap">Sale ($)</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center">Reserve</th>
+                                <th className="px-6 py-4 border-r border-white/5 text-center">Weight</th>
+                                <th className="px-6 py-4 text-center">State</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-[11px] text-white/60 font-medium divide-y divide-white/5">
+                            {rows.map((row) => (
+                                <tr key={row.id} className={`hover:bg-white/5 transition-colors group ${dirtyRows[row.id] ? 'bg-gold/5' : ''}`}>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded bg-black/40 border border-white/5 overflow-hidden flex-shrink-0">
+                                                <img src={row.image} alt="" className="w-full h-full object-cover opacity-60" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-white truncate max-w-[150px] group-hover:text-gold transition-colors">{row.productTitle}</p>
+                                                <p className="text-[9px] text-white/30 uppercase tracking-widest truncate max-w-[150px]">{row.name}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5 text-[9px] uppercase tracking-widest text-gold/40">
+                                        {row.category || '—'}
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <input
+                                            type="text"
+                                            value={dirtyRows[row.id]?.updates.sku ?? row.sku}
+                                            onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'sku' : 'slug', e.target.value)}
+                                            className="w-full bg-transparent border-none p-0 font-mono text-[10px] text-white/40 focus:text-gold outline-none transition-all uppercase"
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex justify-center">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={dirtyRows[row.id]?.updates.price ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.price_override ?? row.price) : (dirtyRows[row.id]?.updates.base_price ?? row.price))}
+                                                onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'price_override' : 'base_price', parseFloat(e.target.value))}
+                                                className="w-24 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-serif text-white hover:border-gold/30 focus:border-gold outline-none transition-all"
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="—"
+                                                value={dirtyRows[row.id === row.parentId ? row.id : (row.parentId || row.id)]?.updates.sale_price ?? row.sale_price ?? ''}
+                                                onChange={(e) => handleUpdate(row.parentId || row.id, 'product', 'sale_price', parseFloat(e.target.value))}
+                                                className="w-20 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-serif text-gold hover:border-gold/30 focus:border-gold outline-none transition-all"
+                                            />
+                                            <button
+                                                onClick={() => handleUpdate(row.parentId || row.id, 'product', 'on_sale', !(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale))}
+                                                className={`px-2 py-0.5 rounded-[2px] text-[8px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black shadow-gold' : 'bg-white/5 text-white/20 border border-white/10'}`}
+                                            >
+                                                {(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'On Sale' : 'Off Sale'}
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex justify-center">
+                                            <input
+                                                type="number"
+                                                value={dirtyRows[row.id]?.updates.stock ?? row.stock}
+                                                onChange={(e) => handleUpdate(row.id, row.type, 'stock', parseInt(e.target.value))}
+                                                className={`w-20 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-mono hover:border-gold/30 focus:border-gold outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-r border-white/5">
+                                        <div className="flex justify-center">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={dirtyRows[row.id]?.updates.weight ?? (row.type === 'variant' ? (dirtyRows[row.id]?.updates.weight ?? row.weight) : (dirtyRows[row.id]?.updates.weight_grams ?? row.weight))}
+                                                onChange={(e) => handleUpdate(row.id, row.type, row.type === 'variant' ? 'weight' : 'weight_grams', parseFloat(e.target.value))}
+                                                className="w-16 bg-black/20 border border-white/5 rounded px-2 py-1 text-center font-mono text-white/40 hover:border-gold/30 focus:border-gold outline-none transition-all"
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-center">
+                                            <select
+                                                value={dirtyRows[row.id]?.updates.status ?? row.status}
+                                                onChange={(e) => handleUpdate(row.id, row.type, 'status', e.target.value)}
+                                                className={`
+                                                    bg-black/20 border border-white/5 rounded px-3 py-1 text-[9px] uppercase tracking-luxury transition-all outline-none
+                                                    ${(dirtyRows[row.id]?.updates.status ?? row.status) === 'active' ? 'text-emerald-400 border-emerald-400/20' : 'text-white/30'}
+                                                `}
+                                            >
+                                                <option value="active">Active</option>
+                                                <option value="draft">Draft</option>
+                                                <option value="archived">Archived</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+
+                            {rows.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-8 py-20 text-center">
+                                        <div className="flex flex-col items-center gap-4 text-white/20">
+                                            <AlertCircle size={40} strokeWidth={1} />
+                                            <p className="uppercase tracking-widest text-[11px] font-bold">No assets match your current filter</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-white/20 px-2">
+                <p>Showing {rows.length} artifacts in master catalog</p>
+                {hasChanges && (
+                    <p className="text-gold animate-pulse">You have {Object.keys(dirtyRows).length} unsynced changes in the buffer</p>
+                )}
+            </div>
+        </div>
+    )
+}

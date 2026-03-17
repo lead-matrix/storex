@@ -6,7 +6,8 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function PageArchitect({ params }: { params: { id: string } }) {
+export default async function PageArchitect({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const supabase = await createClient();
 
     const { data: page } = await supabase
@@ -15,7 +16,7 @@ export default async function PageArchitect({ params }: { params: { id: string }
             *,
             cms_sections(*)
         `)
-        .eq("id", params.id)
+        .eq("id", id)
         .order("sort_order", { foreignTable: "cms_sections", ascending: true })
         .single();
 

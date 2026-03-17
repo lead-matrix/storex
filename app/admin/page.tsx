@@ -65,23 +65,23 @@ export default async function AdminDashboard() {
             {/* ── HEADER ── */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Royal Overview</h1>
-                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Commander Control · Operational Intelligence</p>
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Dashboard</h1>
+                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Operations Overview · Real-Time Intelligence</p>
                 </div>
 
                 {/* QUICK ACTIONS PANEL */}
                 <div className="flex flex-wrap items-center gap-3">
                     <Link href="/admin/products/new" className="flex items-center gap-2 bg-gold/10 border border-gold/30 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-gold hover:bg-gold hover:text-black transition-all font-bold">
                         <Plus size={14} />
-                        New Asset
+                        New Product
                     </Link>
                     <Link href="/admin/orders" className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/70 hover:border-white/30 transition-all font-bold">
                         <ShoppingCart size={14} />
-                        Process Orders
+                        View Orders
                     </Link>
                     <button className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/50 hover:text-gold transition-all">
                         <RefreshCw className="w-3 h-3" />
-                        Sync Registry
+                        Refresh Data
                     </button>
                 </div>
             </div>

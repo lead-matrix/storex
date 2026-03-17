@@ -113,12 +113,12 @@ export default function CheckoutPage() {
                 <div className="w-16 h-16 border border-gold/30 rounded-full flex items-center justify-center mx-auto mb-8 shadow-gold">
                     <span className="text-gold text-2xl">✓</span>
                 </div>
-                <h1 className="font-serif text-3xl text-white mb-6 uppercase tracking-widest">Masterpiece Confirmed</h1>
+                <h1 className="font-serif text-3xl text-white mb-6 uppercase tracking-widest">Order Confirmed</h1>
                 <p className="text-sm tracking-wide text-luxury-subtext mb-10 leading-relaxed font-light font-serif italic text-gold">
-                    "Your selection from the Obsidian collection is being prepared for the ritual."
+                    Thank you for your order! We&apos;re preparing your Dina Cosmetic products and will notify you when they ship.
                 </p>
                 <Link href="/shop" className="btn-gold w-full text-center">
-                    Return to Boutique
+                    Continue Shopping
                 </Link>
             </div>
         </div>
@@ -129,11 +129,11 @@ export default function CheckoutPage() {
             <div className="container-luxury">
                 <div className="mb-20 flex flex-col md:flex-row items-center justify-between gap-8 border-b border-white/5 pb-12">
                     <Link href="/shop" className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-luxury-subtext hover:text-white transition-all group">
-                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Return to Boutique
+                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Return to Shop
                     </Link>
                     <div className="text-center">
-                        <h1 className="font-serif text-4xl tracking-tight text-white uppercase">Checkout Process</h1>
-                        <p className="text-[9px] uppercase tracking-[0.5em] text-gold mt-4">The Obsidian Palace Collection</p>
+                        <h1 className="font-serif text-4xl tracking-tight text-white uppercase">Checkout</h1>
+                        <p className="text-[9px] uppercase tracking-[0.5em] text-gold mt-4">Dina Cosmetic</p>
                     </div>
                     <div className="w-32 hidden md:block" />
                 </div>

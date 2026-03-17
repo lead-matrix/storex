@@ -144,7 +144,7 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Tagline</label>
-                            <input className={FIELD_CLASS} value={settings.brand_tagline} onChange={e => set('brand_tagline', e.target.value)} placeholder="The Obsidian Palace" />
+                            <input className={FIELD_CLASS} value={settings.brand_tagline} onChange={e => set('brand_tagline', e.target.value)} placeholder="Premium Beauty & Skincare" />
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div>
@@ -194,7 +194,7 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Greeting <span className="normal-case text-gray-400 font-normal">— use {"{{name}}"} for customer name</span></label>
-                            <input className={FIELD_CLASS} value={settings.confirm_greeting} onChange={e => set('confirm_greeting', e.target.value)} placeholder="Salutations, {{name}}" />
+                            <input className={FIELD_CLASS} value={settings.confirm_greeting} onChange={e => set('confirm_greeting', e.target.value)} placeholder="Hello, {{name}}" />
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Body Text</label>
@@ -221,7 +221,7 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Greeting <span className="normal-case text-gray-400 font-normal">— use {"{{name}}"} for customer name</span></label>
-                            <input className={FIELD_CLASS} value={settings.ship_greeting} onChange={e => set('ship_greeting', e.target.value)} placeholder="Your Artifacts are En Route, {{name}}" />
+                            <input className={FIELD_CLASS} value={settings.ship_greeting} onChange={e => set('ship_greeting', e.target.value)} placeholder="Your order has shipped, {{name}}" />
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Body Text</label>

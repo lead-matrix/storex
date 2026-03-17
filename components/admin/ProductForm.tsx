@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 interface Category {
     id: string
@@ -43,6 +44,7 @@ interface ProductFormProps {
         description?: string
         base_price?: number
         sale_price?: number | null
+        on_sale?: boolean
         images?: string[]
         is_featured?: boolean
         is_bestseller?: boolean
@@ -146,8 +148,10 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             if (product?.id) {
                 formData.set('id', product.id)
                 await updateProduct(formData)
+                toast.success('Product updated successfully!')
             } else {
                 await createProduct(formData)
+                toast.success('Product created successfully!')
             }
             router.push('/admin/products')
             router.refresh()
@@ -255,25 +259,26 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
 
                     {/* Shipping Dimensions (Optional) */}
                     <div className="p-4 bg-pearl/50 rounded-lg border border-charcoal/5 space-y-4">
-                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping Dimensions (Optional)</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping Details (Optional)</Label>
                         <div className="grid grid-cols-4 gap-3">
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">Weight (g)</Label>
-                                <Input name="weight_grams" type="number" step="0.1" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">Weight (oz)</Label>
+                                <Input name="weight_grams" type="number" step="0.01" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" placeholder="oz" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">L (cm)</Label>
-                                <Input name="length_cm" type="number" step="0.1" defaultValue={product?.length_cm ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">L (in)</Label>
+                                <Input name="length_cm" type="number" step="0.1" defaultValue={product?.length_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">W (cm)</Label>
-                                <Input name="width_cm" type="number" step="0.1" defaultValue={product?.width_cm ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">W (in)</Label>
+                                <Input name="width_cm" type="number" step="0.1" defaultValue={product?.width_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">H (cm)</Label>
-                                <Input name="height_cm" type="number" step="0.1" defaultValue={product?.height_cm ?? ''} className="h-9 text-xs" />
+                                <Label className="text-[9px] uppercase text-textsoft">H (in)</Label>
+                                <Input name="height_cm" type="number" step="0.1" defaultValue={product?.height_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                         </div>
+                        <p className="text-[9px] text-textsoft/50 tracking-luxury">Weight in oz is used for shipping rate calculations. Dimensions in inches.</p>
                     </div>
 
                     {/* Category */}
@@ -304,10 +309,22 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     </div>
 
                     {/* Sale Price */}
-                    <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
-                            Sale Price (USD) — leave blank if not on sale
-                        </Label>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                                Sale Price (USD)
+                            </Label>
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="on_sale"
+                                    name="on_sale"
+                                    defaultChecked={product?.on_sale}
+                                />
+                                <Label htmlFor="on_sale" className="text-[9px] uppercase tracking-widest text-gold cursor-pointer font-bold">
+                                    Activate Discount
+                                </Label>
+                            </div>
+                        </div>
                         <Input
                             name="sale_price"
                             type="number"
@@ -317,7 +334,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             defaultValue={product?.sale_price ?? ''}
                             className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
                         />
-                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Set a sale price and toggle On Sale to activate the discount</p>
+                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Setting a price and toggling 'On Sale' will highlight this item as a special offer.</p>
                     </div>
 
                     {/* Toggles */}
@@ -352,19 +369,19 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 ✨ Mark as New Arrival
                             </Label>
                         </div>
-                        <div className="flex items-center space-x-3">
-                            <select
-                                name="status"
-                                defaultValue={product?.status || 'active'}
-                                className="bg-pearl border border-charcoal/10 rounded px-2 py-1 text-[10px] uppercase tracking-luxury font-bold outline-none"
-                            >
-                                <option value="active">Active</option>
-                                <option value="draft">Draft</option>
-                                <option value="archived">Archived</option>
-                            </select>
-                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">
-                                Visibility Status
-                            </Label>
+                        <div className="flex items-center space-x-3 pt-2">
+                            <div className="flex flex-col gap-1.5 flex-1">
+                                <Label className="text-[9px] uppercase tracking-luxury text-textsoft/40">Visibility Status</Label>
+                                <select
+                                    name="status"
+                                    defaultValue={product?.status || 'active'}
+                                    className="bg-pearl border border-charcoal/10 rounded px-3 py-2 text-[10px] uppercase tracking-luxury font-bold outline-none h-10 w-full"
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>

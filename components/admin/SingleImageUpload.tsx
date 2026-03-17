@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import { createClient } from '@/lib/supabase/client'
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { MediaPicker } from '@/components/admin/MediaPicker'
 
 interface SingleImageUploadProps {
     value: string
@@ -89,18 +90,33 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
     const displayImage = optimisticPreview || value
 
     return (
-        <div className={`relative ${className}`}>
+        <div className={`relative flex flex-col gap-2 ${className}`}>
             {displayImage ? (
                 <div className={`relative w-full h-full min-h-[40px] rounded border border-charcoal/10 overflow-hidden shadow-sm group ${optimisticPreview ? 'opacity-50' : ''}`}>
                     <img src={displayImage} alt="Preview" className="object-cover w-full h-full" />
                     {!uploading && (
-                        <button
-                            type="button"
-                            onClick={() => onChange('')}
-                            className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <X size={16} />
-                        </button>
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                type="button"
+                                onClick={() => onChange('')}
+                                className="p-1 hover:text-red-400 transition-colors"
+                                title="Remove"
+                            >
+                                <X size={16} />
+                            </button>
+                            <MediaPicker
+                                onSelect={onChange}
+                                trigger={
+                                    <button
+                                        type="button"
+                                        className="p-1 hover:text-gold transition-colors"
+                                        title="Pick from Vault"
+                                    >
+                                        <ImageIcon size={16} />
+                                    </button>
+                                }
+                            />
+                        </div>
                     )}
                     {uploading && (
                         <div className="absolute inset-0 bg-white/20 backdrop-blur-sm flex flex-col items-center justify-center gap-1">
@@ -110,24 +126,39 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
                     )}
                 </div>
             ) : (
-                <div
-                    {...getRootProps()}
-                    className={`
-                        w-full h-full min-h-[40px] rounded border border-dashed flex flex-col items-center justify-center bg-pearl cursor-pointer transition-all gap-2
-                        ${isDragActive ? 'border-gold bg-gold/5 scale-[0.98]' : 'border-charcoal/20 hover:border-gold/40'}
-                        ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                >
-                    <input {...getInputProps()} />
-                    {uploading ? (
-                        <Loader2 size={16} className="animate-spin text-gold" />
-                    ) : (
-                        <>
-                            <Upload size={16} className="text-textsoft/40" />
-                            {className.includes('h-32') && (
-                                <span className="text-[8px] uppercase tracking-luxury text-textsoft/60">Drop Asset</span>
-                            )}
-                        </>
+                <div className="flex flex-col gap-1 h-full">
+                    <div
+                        {...getRootProps()}
+                        className={`
+                            w-full h-full min-h-[40px] flex-grow rounded border border-dashed flex flex-col items-center justify-center bg-pearl cursor-pointer transition-all gap-2
+                            ${isDragActive ? 'border-gold bg-gold/5 scale-[0.98]' : 'border-charcoal/20 hover:border-gold/40'}
+                            ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
+                        `}
+                    >
+                        <input {...getInputProps()} />
+                        {uploading ? (
+                            <Loader2 size={16} className="animate-spin text-gold" />
+                        ) : (
+                            <>
+                                <Upload size={16} className="text-textsoft/40" />
+                                {className.includes('h-32') && (
+                                    <span className="text-[8px] uppercase tracking-luxury text-textsoft/60">Drop Asset</span>
+                                )}
+                            </>
+                        )}
+                    </div>
+                    {!uploading && (
+                        <MediaPicker
+                            onSelect={onChange}
+                            trigger={
+                                <button
+                                    type="button"
+                                    className="text-[8px] uppercase tracking-luxury text-textsoft/60 hover:text-gold transition-colors text-center"
+                                >
+                                    Vault
+                                </button>
+                            }
+                        />
                     )}
                 </div>
             )}

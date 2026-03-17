@@ -17,21 +17,21 @@ export default async function AdminEmailPage() {
 
     const defaults = {
         brand_name: 'DINA COSMETIC',
-        brand_tagline: 'The Obsidian Palace',
+        brand_tagline: 'Premium Beauty & Skincare',
         accent_color: '#D4AF37',
         background_color: '#000000',
         text_color: '#ffffff',
-        footer_note: 'This is an automated transmission from The Obsidian Palace.',
+        footer_note: 'This is an automated transmission from Dina Cosmetic.',
         // Order Confirmation
-        confirm_subject: 'Your Ritual Has Begun — Order Confirmation',
-        confirm_greeting: 'Salutations, {{name}}',
-        confirm_body: 'Your selection has been registered at The Obsidian Palace. Our artisans are now preparing your artifacts for manifestation.',
+        confirm_subject: 'Order Confirmed - Thank You',
+        confirm_greeting: 'Hello, {{name}}',
+        confirm_body: 'Your order has been received at Dina Cosmetic. We are now preparing your products for shipment.',
         confirm_label: 'Order Confirmation',
         // Shipping Notification
-        ship_subject: 'Artifacts Manifested — Your Order is En Route',
-        ship_greeting: 'Your Artifacts are En Route, {{name}}',
-        ship_body: 'Your selection has completed its preparation and has been dispatched from The Obsidian Palace.',
-        ship_label: 'Shipping Manifest',
+        ship_subject: 'Your Order is En Route',
+        ship_greeting: 'Your order has shipped, {{name}}',
+        ship_body: 'Your products have completed their preparation and have been dispatched from Dina Cosmetic.',
+        ship_label: 'Shipping Confirmation',
     }
 
     const saved = (row?.setting_value ?? {}) as Record<string, string>

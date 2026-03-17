@@ -69,9 +69,9 @@ export default function OrderList({ initialOrders }: OrderListProps) {
         toast.promise(
             Promise.all(ordersToFulfill.map(o => generateShippingLabel(o.id))),
             {
-                loading: `Synchronizing with Logistics Matrix for ${ordersToFulfill.length} fulfillments...`,
-                success: 'Batch fulfillment rituals complete',
-                error: (err) => `Ritual failed: ${err.message}`
+                loading: `Processing fulfillment for ${ordersToFulfill.length} orders...`,
+                success: 'Batch fulfillment complete',
+                error: (err) => `Fulfillment failed: ${err.message}`
             }
         )
         setSelectedOrderIds([])
@@ -118,7 +118,84 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                 )}
             </div>
 
-            <div className="overflow-x-auto bg-white/5 rounded-luxury border border-white/5 shadow-soft">
+            {/* Mobile Card View */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {initialOrders.map((order) => (
+                    <div key={order.id} className={`bg-white/5 border border-white/5 rounded-luxury p-5 space-y-4 transition-all ${selectedOrderIds.includes(order.id) ? 'border-gold/30 bg-gold/5' : ''}`}>
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => toggleSelection(order.id)}
+                                    className={`transition-colors h-10 w-10 border border-white/10 rounded flex items-center justify-center ${selectedOrderIds.includes(order.id) ? 'text-gold border-gold/30' : 'text-white/20'}`}
+                                >
+                                    {selectedOrderIds.includes(order.id) ? (
+                                        <CheckSquare className="w-5 h-5" />
+                                    ) : (
+                                        <Square className="w-5 h-5" />
+                                    )}
+                                </button>
+                                <div>
+                                    <p className="font-mono text-white text-[11px] font-bold">#{order.id.slice(0, 8).toUpperCase()}</p>
+                                    <p className="text-[10px] text-white/30 uppercase tracking-widest">{new Date(order.created_at).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-serif text-white">${Number(order.amount_total || 0).toFixed(2)}</p>
+                                <p className="text-[9px] text-white/30 uppercase tracking-widest">{order.order_items?.length || 0} pieces</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 py-3 border-y border-white/5">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <p className="text-white text-[11px]">{order.customer_email || 'Guest'}</p>
+                                    <div className="flex items-center gap-1.5 text-[9px] text-white/30 uppercase tracking-widest">
+                                        <MapPin size={10} className="text-gold/40" />
+                                        {order.shipping_address?.city || 'Remote'}
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <select
+                                        value={order.status}
+                                        onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
+                                        className={`appearance-none text-[9px] font-bold uppercase tracking-luxury rounded-full border px-4 py-1.5 pr-8 outline-none bg-black/40 transition-all ${STATUS_COLORS[order.status] || 'bg-white/5 border-white/10'}`}
+                                    >
+                                        {STATUS_OPTIONS.map(opt => (
+                                            <option key={opt} value={opt} className="bg-obsidian text-white">{opt}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-50" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-1">
+                            {order.shipping_label_url ? (
+                                <a
+                                    href={order.shipping_label_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 border border-gold/25 text-gold py-3 rounded text-[10px] uppercase tracking-luxury font-bold hover:bg-gold/10 transition-colors"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    Review Documents
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={() => openFulfillment(order)}
+                                    className="w-full flex items-center justify-center gap-2 bg-gold text-black py-3 rounded text-[10px] uppercase tracking-luxury font-bold hover:bg-gold-light transition-colors shadow-gold"
+                                >
+                                    <Truck className="w-3.5 h-3.5" />
+                                    Begin Fulfillment
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto bg-white/5 rounded-luxury border border-white/5 shadow-soft">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="border-b border-white/5 bg-white/5 text-[10px] uppercase tracking-luxury text-gold font-bold">
@@ -195,7 +272,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                         <p className="text-sm font-serif text-white">${Number(order.amount_total || 0).toFixed(2)}</p>
                                         <p className="text-[10px] text-white/30 uppercase tracking-luxury flex items-center gap-1.5">
                                             <ShoppingBag className="w-3 h-3" />
-                                            {order.order_items?.length || 0} Assets
+                                            {order.order_items?.length || 0} Items
                                         </p>
                                     </div>
                                 </td>

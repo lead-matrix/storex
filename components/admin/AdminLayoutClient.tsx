@@ -12,7 +12,6 @@ import {
     Layers,
     LogOut,
     Store,
-    Vault,
     BarChart2,
     Mail,
     LayoutPanelLeft,
@@ -27,7 +26,6 @@ const NAV_ITEMS = [
     { href: "/admin/products", icon: Package, label: "Products" },
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/marketing", icon: Ticket, label: "Marketing" },
-    { href: "/admin/vault", icon: Vault, label: "Vault" },
     { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },
     { href: "/admin/media", icon: ImageIcon, label: "Media Library" },
     { href: "/admin/cms", icon: LayoutPanelLeft, label: "Experiences" },
@@ -72,7 +70,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                             <span className="font-bold text-lg tracking-wide text-charcoal">
                                 DINA <span className="text-gold">ADMIN</span>
                             </span>
-                            <span className="text-[9px] uppercase tracking-widest text-textsoft font-bold">The Obsidian Palace</span>
+                            <span className="text-[9px] uppercase tracking-widest text-textsoft font-bold">Admin Portal</span>
                         </Link>
                     </div>
 
@@ -130,7 +128,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                 <div className="flex items-center justify-between">
                     {[
                         { href: "/admin", icon: LayoutDashboard, label: "Home", exact: true },
-                        { href: "/admin/products", icon: Package, label: "Vault" },
+                        { href: "/admin/products", icon: Package, label: "Products" },
                         { href: "/admin/orders", icon: ShoppingCart, label: "Cart" },
                         { href: "/admin/media", icon: ImageIcon, label: "Media" },
                         { href: "/admin/settings", icon: Settings, label: "Config" }

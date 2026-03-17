@@ -76,13 +76,21 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
                 </div>
 
                 <div className={`flex md:block ${isMenuOpen ? "hidden" : "flex"} justify-center md:justify-start items-center`}>
-                    <Link href="/" className="flex items-center group">
+                    <Link href="/" className="flex items-center gap-3 group">
                         <img
                             src="/logo.jpg"
                             alt="DINA COSMETIC"
                             className={`transition-all duration-700 object-contain py-1 group-hover:scale-105
                                 ${scrolled ? "h-6 md:h-10 lg:h-12" : "h-10 md:h-16 lg:h-20"}`}
                         />
+                        <div className="flex flex-col">
+                            <span className={`font-playfair tracking-[0.2em] transition-all duration-500 ${scrolled ? 'text-sm' : 'text-xl'} text-white group-hover:text-gold`}>
+                                DINA <span className="font-light">COSMETIC</span>
+                            </span>
+                            <span className={`text-[8px] uppercase tracking-[0.4em] text-gold/60 transition-all duration-500 ${scrolled ? 'hidden' : 'block'}`}>
+                                Excellence in Beauty
+                            </span>
+                        </div>
                     </Link>
                 </div>
 

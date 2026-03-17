@@ -64,19 +64,29 @@ export default async function AdminProductsPage() {
     return (
         <div className="space-y-12 animate-luxury-fade pb-24">
             {/* Header */}
-            <div className="flex items-end justify-between">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Collections</h1>
-                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Asset Registry · Inventory Management</p>
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase text-shadow-gold">Products</h1>
+                    <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Product Catalog · Inventory Management</p>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex flex-wrap items-center gap-3">
                     <a
                         href="/api/admin/products/export"
-                        className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded text-[11px] font-bold uppercase tracking-luxury text-white/50 hover:text-white transition-all"
+                        className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded text-[11px] font-bold uppercase tracking-luxury text-white/50 hover:text-white transition-all shadow-soft"
                     >
                         <Download className="w-4 h-4" />
-                        Export CSV
+                        Export
                     </a>
+
+                    <Link
+                        href="/admin/products/catalog"
+                        className="flex items-center gap-2 bg-obsidian-light border border-gold/20 px-4 py-3 rounded text-[11px] font-bold uppercase tracking-luxury text-gold hover:bg-gold/10 transition-all shadow-luxury"
+                    >
+                        <Activity className="w-4 h-4" />
+                        Catalog Mode
+                    </Link>
 
                     <BulkImportButton />
 
@@ -85,7 +95,7 @@ export default async function AdminProductsPage() {
                         className="flex items-center gap-2 bg-gold text-black px-6 py-3 rounded text-[11px] font-bold uppercase tracking-luxury hover:bg-gold-light transition-all shadow-gold"
                     >
                         <Plus className="w-4 h-4" />
-                        Archive New Asset
+                        Add New Product
                     </Link>
                 </div>
             </div>
@@ -93,10 +103,10 @@ export default async function AdminProductsPage() {
             {/* KPIs */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                    { label: "Total Assets", value: totalCount, icon: Package, color: "text-white" },
-                    { label: "Live Display", value: activeCount, icon: Layers, color: "text-emerald-400" },
-                    { label: "Low Reserve", value: lowStockCount, icon: Activity, color: "text-amber-400" },
-                    { label: "Depleted", value: outOfStockCount, icon: Trash2, color: "text-red-400" },
+                    { label: "Total Products", value: totalCount, icon: Package, color: "text-white" },
+                    { label: "Active", value: activeCount, icon: Layers, color: "text-emerald-400" },
+                    { label: "Low Stock", value: lowStockCount, icon: Activity, color: "text-amber-400" },
+                    { label: "Out of Stock", value: outOfStockCount, icon: Trash2, color: "text-red-400" },
                 ].map((s) => (
                     <div key={s.label} className="bg-obsidian rounded-luxury shadow-luxury border border-luxury-border p-6 group transition-all hover:border-gold/30">
                         <div className="flex items-center justify-between mb-4">
@@ -108,8 +118,82 @@ export default async function AdminProductsPage() {
                 ))}
             </div>
 
-            {/* Products Table */}
-            <div className="bg-obsidian border border-luxury-border rounded-luxury overflow-hidden">
+            {/* Mobile Card View */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {processedProducts.map((product) => (
+                    <div key={product.id} className="bg-obsidian border border-luxury-border rounded-luxury p-5 space-y-4 shadow-luxury transition-all hover:border-gold/20">
+                        <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 bg-black/40 border border-white/10 rounded overflow-hidden shadow-soft flex-shrink-0">
+                                {product.images?.[0] ? (
+                                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover opacity-80" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white/10 bg-white/5">
+                                        <Package size={20} />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-white text-sm font-serif truncate">{product.title}</p>
+                                <p className="text-[9px] text-gold/60 uppercase tracking-widest mt-0.5">{product.categories?.name || 'Unfiltered'}</p>
+                                <div className="flex items-center justify-between mt-3">
+                                    <div className="space-y-0.5">
+                                        <p className="text-white font-serif text-sm">${Number(product.display_price).toFixed(2)}</p>
+                                        {product.display_compare && (
+                                            <p className="text-gold text-[8px] font-bold tracking-luxury uppercase underline decoration-red-500/50">Was ${Number(product.display_compare).toFixed(2)}</p>
+                                        )}
+                                    </div>
+                                    <form action={async () => { "use server"; await toggleProductStatus(product.id, product.status); }}>
+                                        <button className={`transition-all ${product.is_active ? "text-emerald-400" : "text-white/20"}`}>
+                                            {product.is_active ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Reserve:</span>
+                                <div className="flex items-center gap-2">
+                                    {product.first_variant_id ? (
+                                        <>
+                                            <form action={async () => { "use server"; await adjustStock(product.first_variant_id, -1); }}>
+                                                <button className="w-7 h-7 bg-white/5 border border-white/10 flex items-center justify-center rounded-full hover:border-gold/30 hover:text-gold transition-all text-white/30">
+                                                    <ChevronDown className="w-4 h-4" />
+                                                </button>
+                                            </form>
+                                            <span className={`font-mono text-sm min-w-[20px] text-center ${product.stock === 0 ? "text-red-500 font-bold" : product.stock < 10 ? "text-amber-400 font-bold" : "text-white"}`}>
+                                                {product.stock}
+                                            </span>
+                                            <form action={async () => { "use server"; await adjustStock(product.first_variant_id, 1); }}>
+                                                <button className="w-7 h-7 bg-white/5 border border-white/10 flex items-center justify-center rounded-full hover:border-gold/30 hover:text-gold transition-all text-white/30">
+                                                    <ChevronUp className="w-4 h-4" />
+                                                </button>
+                                            </form>
+                                        </>
+                                    ) : (
+                                        <span className="text-white/10 italic text-[9px]">Static</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-end gap-3">
+                                <Link href={`/admin/products/${product.id}`} className="h-9 px-4 flex items-center gap-2 border border-white/5 hover:border-gold/30 hover:text-gold transition-all text-white/30 rounded text-[9px] uppercase font-bold tracking-luxury">
+                                    <Edit size={12} />
+                                    Edit
+                                </Link>
+                                <form action={async () => { "use server"; await deleteProduct(product.id); }}>
+                                    <button className="h-9 w-9 flex items-center justify-center border border-white/5 hover:border-red-500/30 hover:text-red-400 transition-all text-white/30 rounded">
+                                        <Trash2 size={12} />
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-obsidian border border-luxury-border rounded-luxury overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -161,7 +245,7 @@ export default async function AdminProductsPage() {
                                                 <>
                                                     <form action={async () => { "use server"; await adjustStock(product.first_variant_id, -1); }}>
                                                         <button className="w-6 h-6 border border-white/10 flex items-center justify-center rounded-sm hover:border-gold/30 hover:text-gold transition-all text-white/20">
-                                                            <ChevronUp className="w-3 h-3 rotate-180" />
+                                                            <ChevronDown className="w-3 h-3" />
                                                         </button>
                                                     </form>
                                                     <span className={`font-mono text-sm min-w-[28px] ${product.stock === 0 ? "text-red-500 font-bold" : product.stock < 10 ? "text-amber-400 font-bold" : "text-white"}`}>
@@ -203,6 +287,6 @@ export default async function AdminProductsPage() {
                     </table>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

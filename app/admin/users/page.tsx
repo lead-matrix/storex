@@ -99,7 +99,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                     { label: "Total Result Set", value: processedUsers.length, icon: User, color: "text-charcoal" },
-                    { label: "VIP Assets", value: segments.find(s => s.id === 'vip')?.count || 0, icon: TrendingUp, color: "text-gold" },
+                    { label: "VIP Clients", value: segments.find(s => s.id === 'vip')?.count || 0, icon: TrendingUp, color: "text-gold" },
                     { label: "Active Retention", value: segments.find(s => s.id === 'repeat')?.count || 0, icon: ShoppingBag, color: "text-emerald-400" },
                     { label: "Potential Growth", value: segments.find(s => s.id === 'lead')?.count || 0, icon: Mail, color: "text-blue-400" },
                 ].map((k) => (

@@ -14,13 +14,14 @@ export function BulkImportButton() {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (!file.name.endsWith('.csv')) {
-            toast.error("Please upload a CSV file")
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
+        if (!['csv', 'xlsx', 'xls'].includes(fileExt || '')) {
+            toast.error("Please upload a CSV or Excel file")
             return
         }
 
         setIsUploading(true)
-        const toastId = toast.loading("Processing bulk asset ingestion...")
+        const toastId = toast.loading("Importing products...")
 
         try {
             const formData = new FormData()
@@ -34,10 +35,10 @@ export function BulkImportButton() {
             const result = await res.json()
 
             if (res.ok) {
-                toast.success(`Successfully processed ${result.processed} artifacts`, { id: toastId })
+                toast.success(`Successfully processed ${result.processed} products`, { id: toastId })
                 router.refresh()
             } else {
-                toast.error(result.error || "Failed to import assets", { id: toastId })
+                toast.error(result.error || "Failed to import products", { id: toastId })
             }
         } catch (error) {
             console.error("Import error:", error)

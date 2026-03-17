@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import Papa from "papaparse";
+import * as xlsx from "xlsx";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +15,29 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
         }
 
-        const csvString = await file.text();
-        const { data: rows, errors } = Papa.parse(csvString, {
-            header: true,
-            skipEmptyLines: true,
-            dynamicTyping: true,
-        });
+        let rows: any[] = [];
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
 
-        if (errors.length > 0) {
-            console.error("CSV Parse Errors:", errors);
-            return NextResponse.json({ error: "Invalid CSV format", details: errors }, { status: 400 });
+        if (fileExt === 'csv') {
+            const csvString = await file.text();
+            const { data, errors } = Papa.parse(csvString, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: true,
+            });
+            if (errors.length > 0) {
+                console.error("CSV Parse Errors:", errors);
+                return NextResponse.json({ error: "Invalid CSV format", details: errors }, { status: 400 });
+            }
+            rows = data;
+        } else if (fileExt === 'xlsx' || fileExt === 'xls') {
+            const buffer = await file.arrayBuffer();
+            const workbook = xlsx.read(buffer, { type: 'buffer' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            rows = xlsx.utils.sheet_to_json(worksheet);
+        } else {
+            return NextResponse.json({ error: "Unsupported file format. Please upload .csv or .xlsx" }, { status: 400 });
         }
 
         // Group rows by product (slug or product_id)
@@ -45,10 +59,11 @@ export async function POST(req: Request) {
                     status: row.product_status || 'active',
                     images: row.images ? row.images.split(',').map((img: string) => img.trim()).filter(Boolean) : [],
                     category_id: row.category_id || null,
-                    weight_grams: parseFloat(row.weight_grams) || null,
-                    length_cm: parseFloat(row.length_cm) || null,
-                    width_cm: parseFloat(row.width_cm) || null,
-                    height_cm: parseFloat(row.height_cm) || null,
+                    // weight_grams column stores oz (updated unit system)
+                    weight_grams: parseFloat(row.weight_oz || row.weight_grams) || null,
+                    length_cm: parseFloat(row.length_in || row.length_cm) || null,
+                    width_cm: parseFloat(row.width_in || row.width_cm) || null,
+                    height_cm: parseFloat(row.height_in || row.height_cm) || null,
                     variants: []
                 };
             }

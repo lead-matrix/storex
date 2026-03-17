@@ -42,16 +42,17 @@ export function ProductCard({
     const isOnSale = product.on_sale && product.sale_price;
 
     // Calculate the lowest price
-    let minPrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
+    const basePrice = isOnSale ? Number(product.sale_price) : Number(product.base_price);
+    let minPrice = basePrice;
 
     if (activeVariants.length > 0) {
-        const prices = activeVariants
-            .map(v => v.price_override != null ? Number(v.price_override) : null)
-            .filter((p): p is number => p !== null);
+        const variantPrices = activeVariants
+            .map(v => v.price_override != null ? Number(v.price_override) : basePrice)
+            .filter((p): p is number => !isNaN(p) && p > 0);
 
-        if (prices.length > 0) {
-            const minVarPrice = Math.min(...prices);
-            // If base_price is 0 or uninitialized, use the minimum variant price
+        if (variantPrices.length > 0) {
+            const minVarPrice = Math.min(...variantPrices);
+            // If basePrice is 0 or if variant price is lower, use variant price
             if (minPrice <= 0 || minVarPrice < minPrice) {
                 minPrice = minVarPrice;
             }

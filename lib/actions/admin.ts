@@ -136,6 +136,14 @@ export async function updateProduct(formData: FormData) {
         ? (imagesRaw.startsWith('[') ? JSON.parse(imagesRaw) : imagesRaw.split(',').map(img => img.trim()).filter(Boolean))
         : [];
 
+    const is_featured = formData.get('is_featured') === 'on' || formData.get('is_featured') === 'true';
+    const is_bestseller = formData.get('is_bestseller') === 'on' || formData.get('is_bestseller') === 'true';
+    const is_new = formData.get('is_new') === 'on' || formData.get('is_new') === 'true';
+    const on_sale = formData.get('on_sale') === 'on' || formData.get('on_sale') === 'true';
+
+    const salePriceRaw = formData.get('sale_price') as string;
+    let sale_price = salePriceRaw && salePriceRaw.trim() !== '' ? parseFloat(salePriceRaw) : null;
+
     let slug = (formData.get('slug') as string)?.trim();
     if (!slug) slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
@@ -152,6 +160,11 @@ export async function updateProduct(formData: FormData) {
             base_price: parseFloat(formData.get('base_price') as string) || 0,
             stock: parseInt(formData.get('stock') as string) || 0,
             category_id: category_id || null,
+            is_featured,
+            is_bestseller,
+            is_new,
+            on_sale,
+            sale_price,
             weight_grams: parseFloat(formData.get('weight_grams') as string) || null,
             length_cm: parseFloat(formData.get('length_cm') as string) || null,
             width_cm: parseFloat(formData.get('width_cm') as string) || null,
@@ -175,7 +188,7 @@ export async function updateProduct(formData: FormData) {
                     name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
-                    price_override: v.price,
+                    price_override: v.price || v.price_override,
                     stock: v.stock,
                     color_code: v.color_code,
                     image_url: v.image_url,
@@ -186,7 +199,7 @@ export async function updateProduct(formData: FormData) {
                     name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
                     sku: v.sku,
-                    price_override: v.price,
+                    price_override: v.price || v.price_override,
                     stock: v.stock,
                     color_code: v.color_code,
                     image_url: v.image_url,
@@ -425,6 +438,7 @@ export async function updateStoreSettings(formData: FormData) {
 
     revalidatePath('/admin/settings');
     revalidatePath('/', 'layout');
+    return { success: true };
 }
 
 export async function updateHeroContent(formData: FormData) {
@@ -458,6 +472,7 @@ export async function updateHeroContent(formData: FormData) {
 
     revalidatePath('/');
     revalidatePath('/admin/settings');
+    return { success: true };
 }
 
 export async function updateMenusAndSocials(formData: FormData) {
@@ -497,6 +512,35 @@ export async function updateMenusAndSocials(formData: FormData) {
 
     revalidatePath('/', 'layout');
     revalidatePath('/admin/settings');
+    return { success: true };
+}
+
+export async function updateShippingSettings(formData: FormData) {
+    const supabase = await ensureAdmin();
+
+    const standard_rate = parseFloat(formData.get('standard_rate') as string) || 7.99;
+    const express_rate = parseFloat(formData.get('express_rate') as string) || 19.99;
+    const free_shipping_threshold = parseFloat(formData.get('free_shipping_threshold') as string) || 100;
+    const express_label = (formData.get('express_label') as string) || 'Express Shipping';
+
+    const { error } = await supabase
+        .from('site_settings')
+        .upsert({
+            setting_key: 'shipping_settings',
+            setting_value: {
+                standard_rate,
+                express_rate,
+                free_shipping_threshold,
+                express_label,
+                standard_label: 'Standard Shipping',
+            },
+        }, { onConflict: 'setting_key' });
+
+    if (error) throw error;
+
+    revalidatePath('/admin/settings');
+    revalidatePath('/checkout');
+    return { success: true };
 }
 
 // ─────────────────────────────────────────────────
@@ -561,5 +605,41 @@ export async function updateFrontendContent(contentId: string, contentData: Reco
     revalidatePath('/');
     revalidatePath('/admin/media');
     revalidatePath('/admin/settings');
+}
+
+export async function bulkUpdateCatalog(updates: {
+    products?: { id: string, updates: any }[],
+    variants?: { id: string, updates: any }[]
+}) {
+    const supabase = await ensureAdmin();
+
+    try {
+        if (updates.products && updates.products.length > 0) {
+            for (const item of updates.products) {
+                const { error } = await supabase
+                    .from('products')
+                    .update(item.updates)
+                    .eq('id', item.id);
+                if (error) throw error;
+            }
+        }
+
+        if (updates.variants && updates.variants.length > 0) {
+            for (const item of updates.variants) {
+                const { error } = await supabase
+                    .from('product_variants')
+                    .update(item.updates)
+                    .eq('id', item.id);
+                if (error) throw error;
+            }
+        }
+
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/products/catalog');
+        return { success: true };
+    } catch (err: any) {
+        console.error("Bulk Update Error:", err);
+        throw new Error(`Failed to apply batch updates: ${err.message}`);
+    }
 }
 

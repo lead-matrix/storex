@@ -7,6 +7,7 @@ import { Upload, X, Loader2, Image as ImageIcon, Check, GripVertical } from 'luc
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import { MediaPicker } from './MediaPicker'
 import {
     DndContext,
     closestCenter,
@@ -242,30 +243,57 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
     return (
         <div className="space-y-4">
             {images.length < maxImages && (
-                <div
-                    {...getRootProps()}
-                    className={`
-                        border-2 border-dashed rounded-luxury p-12 text-center cursor-pointer transition-all duration-300
-                        ${isDragActive
-                            ? 'border-gold bg-gold/10 scale-[0.99] shadow-inner font-bold'
-                            : 'border-charcoal/20 hover:border-gold/40 bg-white shadow-soft hover:shadow-luxury'
-                        }
-                        ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                >
-                    <input {...getInputProps()} />
-                    <div className="flex flex-col items-center gap-4">
-                        <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-pearl text-textsoft/40 shadow-inner'}`}>
-                            <Upload className={`w-10 h-10 ${isDragActive ? 'animate-bounce' : ''}`} />
+                <div className="flex flex-col gap-4">
+                    <div
+                        {...getRootProps()}
+                        className={`
+                            border-2 border-dashed rounded-luxury p-12 text-center cursor-pointer transition-all duration-300
+                            ${isDragActive
+                                ? 'border-gold bg-gold/10 scale-[0.99] shadow-inner font-bold'
+                                : 'border-charcoal/20 hover:border-gold/40 bg-white shadow-soft hover:shadow-luxury'
+                            }
+                            ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
+                        `}
+                    >
+                        <input {...getInputProps()} />
+                        <div className="flex flex-col items-center gap-4">
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-pearl text-textsoft/40 shadow-inner'}`}>
+                                <Upload className={`w-10 h-10 ${isDragActive ? 'animate-bounce' : ''}`} />
+                            </div>
+                            <div>
+                                <p className="text-lg text-charcoal font-heading tracking-luxury mb-1">
+                                    {isDragActive ? 'Release to Instant Sync' : 'Deposit Global Assets'}
+                                </p>
+                                <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
+                                    drag & drop or click for 0.0001s optimized upload
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-lg text-charcoal font-heading tracking-luxury mb-1">
-                                {isDragActive ? 'Release to Instant Sync' : 'Deposit Global Assets'}
-                            </p>
-                            <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
-                                drag & drop or click for 0.0001s optimized upload
-                            </p>
-                        </div>
+                    </div>
+
+                    <div className="flex justify-center">
+                        <MediaPicker
+                            onSelect={() => { }}
+                            multiSelect
+                            onSelectMultiple={(urls) => {
+                                const newImages = urls.filter(url => !images.includes(url))
+                                if (images.length + newImages.length > maxImages) {
+                                    toast.error(`Maximum ${maxImages} images allowed`)
+                                    onImagesChange([...images, ...newImages.slice(0, maxImages - images.length)])
+                                } else {
+                                    onImagesChange([...images, ...newImages])
+                                }
+                            }}
+                            trigger={
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-2 px-6 py-3 border border-charcoal/10 rounded-full text-[10px] uppercase tracking-widest font-bold text-textsoft hover:text-gold hover:border-gold/40 hover:bg-pearl/50 transition-all shadow-sm"
+                                >
+                                    <ImageIcon size={14} className="text-gold" />
+                                    Import from Vault
+                                </button>
+                            }
+                        />
                     </div>
                 </div>
             )}
