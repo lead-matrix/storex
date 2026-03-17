@@ -24,72 +24,77 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://dinacosmetic.store'),
-  title: {
-    default: "DINA COSMETIC | The Obsidian Palace - Luxury Beauty & Cosmetics",
-    template: "%s | DINA COSMETIC"
-  },
-  description: "Discover premium beauty products and cosmetics at DINA COSMETIC - The Obsidian Palace. Shop luxury skincare, makeup, and beauty essentials with ultra-minimalist, high-end design.",
-  keywords: [
-    "DINA COSMETIC",
-    "luxury cosmetics",
-    "premium beauty products",
-    "high-end skincare",
-    "luxury makeup",
-    "beauty essentials",
-    "The Obsidian Palace",
-    "luxury beauty store",
-    "premium cosmetics online",
-    "designer beauty products"
-  ],
-  authors: [{ name: "DINA COSMETIC", url: "https://dinacosmetic.store" }],
-  creator: "DINA COSMETIC",
-  publisher: "DINA COSMETIC",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://dinacosmetic.store",
-    siteName: "DINA COSMETIC - The Obsidian Palace",
-    title: "DINA COSMETIC | Luxury Beauty & Cosmetics",
-    description: "Discover premium beauty products and cosmetics at The Obsidian Palace. Shop luxury skincare, makeup, and beauty essentials.",
-    images: [
-      {
-        url: "/logo.jpg",
-        width: 1200,
-        height: 630,
-        alt: "DINA COSMETIC - The Obsidian Palace",
-      },
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient();
+  const { data: storeInfo } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'store_info').maybeSingle();
+  const logoUrl = (storeInfo?.setting_value as any)?.logo_url || "/logo.jpg";
+
+  return {
+    metadataBase: new URL('https://dinacosmetic.store'),
+    title: {
+      default: "DINA COSMETIC | The Obsidian Palace - Luxury Beauty & Cosmetics",
+      template: "%s | DINA COSMETIC"
+    },
+    description: "Discover premium beauty products and cosmetics at DINA COSMETIC - The Obsidian Palace. Shop luxury skincare, makeup, and beauty essentials with ultra-minimalist, high-end design.",
+    keywords: [
+      "DINA COSMETIC",
+      "luxury cosmetics",
+      "premium beauty products",
+      "high-end skincare",
+      "luxury makeup",
+      "beauty essentials",
+      "The Obsidian Palace",
+      "luxury beauty store",
+      "premium cosmetics online",
+      "designer beauty products"
     ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "DINA COSMETIC | Luxury Beauty & Cosmetics",
-    description: "Discover premium beauty products at The Obsidian Palace",
-    images: ["/logo.jpg"],
-    creator: "@dinacosmetic",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    authors: [{ name: "DINA COSMETIC", url: "https://dinacosmetic.store" }],
+    creator: "DINA COSMETIC",
+    publisher: "DINA COSMETIC",
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: "https://dinacosmetic.store",
+      siteName: "DINA COSMETIC - The Obsidian Palace",
+      title: "DINA COSMETIC | Luxury Beauty & Cosmetics",
+      description: "Discover premium beauty products and cosmetics at The Obsidian Palace. Shop luxury skincare, makeup, and beauty essentials.",
+      images: [
+        {
+          url: logoUrl,
+          width: 1200,
+          height: 630,
+          alt: "DINA COSMETIC - The Obsidian Palace",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "DINA COSMETIC | Luxury Beauty & Cosmetics",
+      description: "Discover premium beauty products at The Obsidian Palace",
+      images: [logoUrl],
+      creator: "@dinacosmetic",
+    },
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
-  },
-  verification: {
-    google: "your-google-verification-code",
-    // Add other verification codes as needed
-  },
-};
+    verification: {
+      google: "your-google-verification-code",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -103,13 +108,15 @@ export default async function RootLayout({
   let footerShopItems = [];
   let footerLegalItems = [];
   let socialLinks = null;
+  let logoUrl = null;
 
   try {
-    const [headerRes, shopLinksRes, legalLinksRes, socialRes] = await Promise.allSettled([
+    const [headerRes, shopLinksRes, legalLinksRes, socialRes, storeInfoRes] = await Promise.allSettled([
       supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'header_main').maybeSingle(),
       supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_shop').maybeSingle(),
       supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_legal').maybeSingle(),
       supabase.from('site_settings').select('setting_value').eq('setting_key', 'social_media').maybeSingle(),
+      supabase.from('site_settings').select('setting_value').eq('setting_key', 'store_info').maybeSingle(),
     ]);
 
     if (headerRes.status === 'fulfilled' && headerRes.value.data) {
@@ -124,6 +131,9 @@ export default async function RootLayout({
     if (socialRes.status === 'fulfilled' && socialRes.value.data) {
       socialLinks = socialRes.value.data.setting_value;
     }
+    if (storeInfoRes.status === 'fulfilled' && storeInfoRes.value.data) {
+      logoUrl = (storeInfoRes.value.data.setting_value as any)?.logo_url;
+    }
   } catch (err) {
     console.error("Critical Layout Error:", err);
   }
@@ -135,7 +145,7 @@ export default async function RootLayout({
       >
         <CartProvider>
           <div className="relative flex flex-col min-h-screen">
-            <Header navItems={headerNavItems} />
+            <Header navItems={headerNavItems} logoUrl={logoUrl} />
             <main className="flex-grow">
               {children}
             </main>

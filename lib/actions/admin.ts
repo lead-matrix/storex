@@ -413,13 +413,14 @@ export async function updateStoreSettings(formData: FormData) {
     const name = formData.get('name') as string;
     const tagline = formData.get('tagline') as string;
     const currency = formData.get('currency') as string;
+    const logo_url = formData.get('logo_url') as string;
     const storeEnabled = formData.get('storeEnabled') === 'on' || formData.get('storeEnabled') === 'true';
 
     const warehouseJson = formData.get('warehouse_info') as string;
 
     const { error: infoError } = await supabase
         .from('site_settings')
-        .upsert({ setting_key: 'store_info', setting_value: { name, tagline, currency } }, { onConflict: 'setting_key' });
+        .upsert({ setting_key: 'store_info', setting_value: { name, tagline, currency, logo_url } }, { onConflict: 'setting_key' });
 
     if (infoError) throw infoError;
 
@@ -470,7 +471,8 @@ export async function updateHeroContent(formData: FormData) {
         }
     }
 
-    revalidatePath('/');
+    revalidatePath('/', 'page');
+    revalidatePath('/', 'layout');
     revalidatePath('/admin/settings');
     return { success: true };
 }

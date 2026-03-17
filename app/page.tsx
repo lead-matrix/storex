@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server"
 import CMSRenderer from "@/components/cms/CMSRenderer"
-import { Hero } from "@/components/Hero"
+import { MasterpieceHero } from "@/components/MasterpieceHero"
+import { BentoFeaturedGrid } from "@/components/BentoFeaturedGrid"
+import { CollectionShowcase } from "@/components/CollectionShowcase"
+import { NewsletterSection } from "@/features/home/components/NewsletterSection"
 import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid"
 import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid"
-import { TestimonialSection } from "@/components/TestimonialSection"
 import type { Metadata } from "next"
 
 export const revalidate = 60
@@ -62,10 +64,10 @@ export default async function Home() {
         `)
         .eq("status", "active")
         .order("is_featured", { ascending: false })
-        .limit(4),
+        .limit(8),
       supabase
         .from("categories")
-        .select("id, name, slug, description, image_url")
+        .select("id, name, slug, description, image_url, product_count:products(count)")
         .limit(6),
     ])
 
@@ -75,12 +77,31 @@ export default async function Home() {
     console.error("Legacy Layout Fetch Error:", err)
   }
 
+  // Map categories to shape CollectionShowcase expects
+  const collections = categories.map((c: any) => ({
+    ...c,
+    product_count: c.product_count?.[0]?.count || 0
+  }))
+
   return (
     <div className="bg-black">
-      <Hero />
+      {/* Hero — client-fetches hero_slides from frontend_content table */}
+      <MasterpieceHero />
+
+      {/* Category navigation grid */}
       <HomeCategoryGrid categories={categories} />
-      <FeaturedProductsGrid products={products.map((p) => ({ ...p, name: p.title }))} />
-      <TestimonialSection />
+
+      {/* Featured products strip (first 4) */}
+      <FeaturedProductsGrid products={products.slice(0, 4)} />
+
+      {/* Bento grid (all fetched products, returns null if empty) */}
+      <BentoFeaturedGrid products={products} />
+
+      {/* Collection showcase (returns null if empty) */}
+      <CollectionShowcase collections={collections} />
+
+      {/* Newsletter */}
+      <NewsletterSection />
     </div>
   )
 }

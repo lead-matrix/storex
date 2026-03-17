@@ -84,14 +84,26 @@ export default async function AdminSettings() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Tagline</label>
-                            <input
-                                name="tagline"
-                                type="text"
-                                defaultValue={storeInfo?.setting_value?.tagline || 'Premium Beauty Products'}
-                                className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Store Tagline</label>
+                                <input
+                                    name="tagline"
+                                    type="text"
+                                    defaultValue={storeInfo?.setting_value?.tagline || 'Premium Beauty Products'}
+                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Logo URL</label>
+                                <input
+                                    name="logo_url"
+                                    type="text"
+                                    defaultValue={storeInfo?.setting_value?.logo_url || '/logo.jpg'}
+                                    placeholder="/logo.jpg or https://..."
+                                    className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold/50 focus:ring-1 focus:ring-gold/50 outline-none transition-all shadow-inner"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-between p-8 bg-rose-50 border border-rose-100/50 rounded-xl shadow-inner-soft">

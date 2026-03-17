@@ -8,7 +8,10 @@ import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
 
-export default function Header({ navItems = [] }: { navItems?: { label: string, href: string, is_active?: boolean }[] }) {
+export default function Header({ navItems = [], logoUrl }: { 
+    navItems?: { label: string, href: string, is_active?: boolean }[],
+    logoUrl?: string 
+}) {
     const { totalItems, setIsCartOpen } = useCart();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [user, setUser] = useState<{ email?: string } | null>(null);
@@ -78,7 +81,7 @@ export default function Header({ navItems = [] }: { navItems?: { label: string, 
                 <div className={`flex md:block ${isMenuOpen ? "hidden" : "flex"} justify-center md:justify-start items-center`}>
                     <Link href="/" className="flex items-center gap-3 group">
                         <img
-                            src="/logo.jpg"
+                            src={logoUrl || "/logo.jpg"}
                             alt="DINA COSMETIC"
                             className={`transition-all duration-700 object-contain py-1 group-hover:scale-105
                                 ${scrolled ? "h-6 md:h-10 lg:h-12" : "h-10 md:h-16 lg:h-20"}`}
