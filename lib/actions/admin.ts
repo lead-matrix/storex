@@ -438,6 +438,7 @@ export async function updateStoreSettings(formData: FormData) {
 
     revalidatePath('/admin/settings');
     revalidatePath('/', 'layout');
+    return { success: true };
 }
 
 export async function updateHeroContent(formData: FormData) {
@@ -471,6 +472,7 @@ export async function updateHeroContent(formData: FormData) {
 
     revalidatePath('/');
     revalidatePath('/admin/settings');
+    return { success: true };
 }
 
 export async function updateMenusAndSocials(formData: FormData) {
@@ -510,6 +512,7 @@ export async function updateMenusAndSocials(formData: FormData) {
 
     revalidatePath('/', 'layout');
     revalidatePath('/admin/settings');
+    return { success: true };
 }
 
 export async function updateShippingSettings(formData: FormData) {
@@ -537,6 +540,7 @@ export async function updateShippingSettings(formData: FormData) {
 
     revalidatePath('/admin/settings');
     revalidatePath('/checkout');
+    return { success: true };
 }
 
 // ─────────────────────────────────────────────────

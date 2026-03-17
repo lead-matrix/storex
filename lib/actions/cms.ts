@@ -58,6 +58,8 @@ export async function togglePagePublish(pageId: string, currentStatus: boolean) 
 
     if (error) throw new Error(error.message)
     revalidatePath("/admin/cms")
+    revalidatePath("/")
+    revalidatePath("/[slug]", "page")
 }
 
 export async function deletePage(pageId: string) {
