@@ -36,15 +36,17 @@ Located under **Settings**, this is where the brand's DNA lives.
 
 ---
 
-## 📜 THE MANIFEST (Order Fulfillment)
+## 📜 THE MANIFEST (Order Fulfillment & International Logistics)
 Every order is a ritual of trust.
 
 1. **Paid Status**: Orders are ONLY marked "Paid" once the **Stripe Ledger** confirms the gold arrival. Never rely on client responses.
 2. **The Fulfillment Ritual**:
    - Open a "Paid" order.
    - Click "Fulfill" — this communicates with **Shippo** to generate a legal dispatch label.
+   - **International Customs**: If the order is international, Shippo automatically generates a CN22/CP72 Customs Declaration based on the SKU, Weight, Customs Value, and Origin loaded from your Product Assets.
    - **Portal access**: Download the label and prepare the shipment.
-3. **Resend Notifications**: Once marked "Shipped", the system dispatches an elegant notification to the client automatically.
+3. **Weight Standardization (oz)**: All product weights in the admin portal must be entered in **ounces (oz)**. This ensures perfect compatibility with both the domestic "Small/Medium/Standard" parcel logic and international customs requirements.
+4. **Resend Notifications**: Once marked "Shipped", the system dispatches an elegant notification to the client automatically.
 
 ---
 

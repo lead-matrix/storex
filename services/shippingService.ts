@@ -116,7 +116,6 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
                     valueAmount: valueUsd.toString(),
                     valueCurrency: 'USD',
                     originCountry: originCountry,
-                    sku: sku,
                 });
             }));
 
@@ -125,10 +124,10 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
                 contentsExplanation: 'Cosmetic items for personal use.',
                 nonDeliveryOption: 'RETURN',
                 certify: true,
-                signer: warehouse.name || 'Warehouse Manager',
-                items: customsItems.filter(Boolean).map(ci => ci.objectId),
+                certifySigner: warehouse.name || 'Warehouse Manager',
+                items: customsItems.filter(Boolean).map(ci => (ci as any).objectId) as any[],
                 eelPfc: 'NOEEI_30_37_a', // Under $2500 exemption
-            });
+            } as any);
             
             customsDeclarationId = declaration.objectId;
         }
