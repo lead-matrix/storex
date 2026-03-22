@@ -72,21 +72,53 @@ export async function POST(req: Request) {
         const subtotal = validatedItems.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
         const totalWeightLb = validatedItems.reduce((acc: number, item: any) => acc + item.weightLb * item.quantity, 0);
 
+        // Determine Shipping Cost securely
         let shippingCost = 9.99;
         let shippingDisplayName = "Standard Flat Rate Shipping (3-5 Days)";
+        let minDays = 3;
+        let maxDays = 5;
 
-        if (subtotal >= 100) {
-            shippingCost = 0;
-            shippingDisplayName = "Free Shipping (Standard)";
-        } else if (totalWeightLb < 0.5) {
-            shippingCost = 5.00;
-            shippingDisplayName = "Small Package Shipping (3-5 Days)";
-        } else if (totalWeightLb <= 2.0) {
-            shippingCost = 8.00;
-            shippingDisplayName = "Medium Package Shipping (3-5 Days)";
+        if (selectedRateId === 'standard_fallback' || selectedRateId === 'express_fallback') {
+            const { data: shippingConfig } = await supabase
+                .from('site_settings')
+                .select('setting_value')
+                .eq('setting_key', 'shipping_settings')
+                .maybeSingle();
+
+            const cfg = shippingConfig?.setting_value || {};
+            if (selectedRateId === 'express_fallback') {
+                shippingCost = parseFloat(cfg.express_rate ?? '19.99');
+                shippingDisplayName = cfg.express_label || 'Express Shipping';
+                minDays = 1;
+                maxDays = 2;
+            } else {
+                shippingCost = parseFloat(cfg.standard_rate ?? '7.99');
+                shippingDisplayName = cfg.standard_label || 'Standard Shipping';
+            }
+        } else if (selectedRateId) {
+            try {
+                const { shippo } = await import('@/lib/shippo');
+                const rate = await shippo.rates.get(selectedRateId);
+                shippingCost = parseFloat(rate.amount);
+                shippingDisplayName = `${rate.provider} - ${rate.servicelevel?.name || 'Standard'}`;
+                if (rate.estimatedDays || (rate as any).days) {
+                    minDays = (rate.estimatedDays || (rate as any).days) - 1 || 3;
+                    maxDays = rate.estimatedDays || (rate as any).days || 5;
+                }
+            } catch (err) {
+                console.error("Failed to verify Shippo rate in checkout:", err);
+                // Fallback logic
+                shippingCost = totalWeightLb > 2.0 ? 9.99 : totalWeightLb >= 0.5 ? 8.00 : 5.00;
+            }
         } else {
-            shippingCost = 9.99;
-            shippingDisplayName = "Standard Package Shipping (3-5 Days)";
+            // Extreme fallback if no rate provided
+            shippingCost = totalWeightLb > 2.0 ? 9.99 : totalWeightLb >= 0.5 ? 8.00 : 5.00;
+        }
+
+        // Apply free domestic shipping logic if threshold met
+        if (subtotal >= 100 && shippingCost <= 15) {
+            shippingCost = 0;
+            shippingDisplayName = `Free ${shippingDisplayName}`;
         }
 
         // Removed deprecated client rate selections since Stripe handles UI now
@@ -157,11 +189,11 @@ export async function POST(req: Request) {
                         delivery_estimate: {
                             minimum: {
                                 unit: 'business_day',
-                                value: 3,
+                                value: minDays,
                             },
                             maximum: {
                                 unit: 'business_day',
-                                value: 5,
+                                value: maxDays,
                             },
                         },
                     },
