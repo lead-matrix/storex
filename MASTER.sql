@@ -2527,31 +2527,20 @@ CREATE TRIGGER trg_log_inventory
 AFTER
 UPDATE OF stock ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.log_inventory_change();
 -- ── 4. PERFORMANCE INDEXES ──────────────────────────────────────────
--- A. DROP identified unused indexes (clears Supabase linter "Unused Index" warnings)
---    Note: Some may seem useful, but zero-usage in the current schema means they can go.
-DROP INDEX IF EXISTS public.idx_email_logs_order_id;
-DROP INDEX IF EXISTS public.idx_orders_stripe_session;
-DROP INDEX IF EXISTS public.idx_profiles_role;
-DROP INDEX IF EXISTS public.idx_newsletter_email;
-DROP INDEX IF EXISTS public.idx_product_variants_sku;
-DROP INDEX IF EXISTS public.idx_shipments_order_id;
-DROP INDEX IF EXISTS public.idx_shipments_shippo_shipment_id;
-DROP INDEX IF EXISTS public.idx_shipping_labels_shipment_id;
-DROP INDEX IF EXISTS public.idx_shipping_labels_tracking_number;
-DROP INDEX IF EXISTS public.idx_coupons_code;
-DROP INDEX IF EXISTS public.idx_coupons_status;
-DROP INDEX IF EXISTS public.idx_abandoned_carts_email;
-DROP INDEX IF EXISTS public.idx_abandoned_carts_status;
-DROP INDEX IF EXISTS public.idx_inventory_logs_variant;
-DROP INDEX IF EXISTS public.idx_cms_sections_page_id;
-
--- B. CREATE missing Foreign Key indexes (fixes "unindexed_foreign_keys" warnings)
---    Crucial to prevent full table locks during parent deletes/updates.
+-- A. REQUIRED FOREIGN KEY INDEXES
+--    These MUST exist to prevent full-table locks during parent deletes.
+--    NOTE: Supabase may flag these as "Unused Index" if your DB is new and has no traffic.
+--    IGNORE "Unused Index" warnings for these specific foreign keys.
 CREATE INDEX IF NOT EXISTS idx_inventory_logs_order_id ON public.inventory_logs(order_id);
 CREATE INDEX IF NOT EXISTS idx_orders_coupon_id ON public.orders(coupon_id);
 CREATE INDEX IF NOT EXISTS idx_shipment_items_order_item_id ON public.shipment_items(order_item_id);
 CREATE INDEX IF NOT EXISTS idx_shipment_items_shipment_id ON public.shipment_items(shipment_id);
 CREATE INDEX IF NOT EXISTS idx_shipment_tracking_shipment_id ON public.shipment_tracking(shipment_id);
+CREATE INDEX IF NOT EXISTS idx_cms_sections_page_id ON public.cms_sections(page_id);
+CREATE INDEX IF NOT EXISTS idx_email_logs_order_id ON public.email_logs(order_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant_id ON public.inventory_logs(variant_id);
+CREATE INDEX IF NOT EXISTS idx_shipments_order_id ON public.shipments(order_id);
+CREATE INDEX IF NOT EXISTS idx_shipping_labels_shipment_id ON public.shipping_labels(shipment_id);
 
 -- (Fallback for legacy 'parcels' table if it exists in the live DB)
 DO $$
@@ -2560,6 +2549,20 @@ BEGIN
         EXECUTE 'CREATE INDEX IF NOT EXISTS idx_parcels_shipment_id ON public.parcels(shipment_id);';
     END IF;
 END $$;
+
+-- B. DROP UNUSED NON-FOREIGN-KEY INDEXES
+--    These were flagged by Supabase as "Unused". We can safely drop them to clear the warnings.
+DROP INDEX IF EXISTS public.idx_orders_stripe_session;
+DROP INDEX IF EXISTS public.idx_profiles_role;
+DROP INDEX IF EXISTS public.idx_newsletter_email;
+DROP INDEX IF EXISTS public.idx_product_variants_sku;
+DROP INDEX IF EXISTS public.idx_shipments_shippo_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipping_labels_tracking_number;
+DROP INDEX IF EXISTS public.idx_coupons_code;
+DROP INDEX IF EXISTS public.idx_coupons_status;
+DROP INDEX IF EXISTS public.idx_abandoned_carts_email;
+DROP INDEX IF EXISTS public.idx_abandoned_carts_status;
+DROP INDEX IF EXISTS public.idx_inventory_logs_variant; -- Replaced by standard variant_id naming
 -- ── 5. RLS UPDATES ──────────────────────────────────────────────────
 ALTER TABLE public.shipments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shipping_labels ENABLE ROW LEVEL SECURITY;
