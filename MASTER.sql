@@ -526,7 +526,7 @@ END $$;
 -- 1E. orders
 CREATE TABLE IF NOT EXISTS public.orders (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES auth.users(id) ON DELETE
+    user_id uuid REFERENCES public.profiles(id) ON DELETE
     SET NULL,
         customer_email text,
         amount_total numeric(10, 2),
@@ -550,8 +550,11 @@ CREATE TABLE IF NOT EXISTS public.orders (
         updated_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE public.orders
-ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE
-SET NULL;
+ADD COLUMN IF NOT EXISTS user_id uuid;
+
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_user_id_fkey;
+ALTER TABLE public.orders ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS customer_email text;
 ALTER TABLE public.orders

@@ -65,6 +65,13 @@ export async function createProduct(formData: FormData) {
 
         if (!title) throw new Error("Product title is required.");
 
+        let sku = (formData.get('sku') as string)?.trim();
+        if (!sku) {
+            const prefix = title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase() || 'DEF';
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            sku = `DC-${prefix}-${randomSuffix}`;
+        }
+
         const { data: product, error } = await supabase
             .from('products')
             .insert([{
@@ -82,10 +89,7 @@ export async function createProduct(formData: FormData) {
                 on_sale,
                 sale_price,
                 weight_grams: parseFloat(formData.get('weight_grams') as string) || null,
-                length_cm: parseFloat(formData.get('length_cm') as string) || null,
-                width_cm: parseFloat(formData.get('width_cm') as string) || null,
-                height_cm: parseFloat(formData.get('height_cm') as string) || null,
-                sku: (formData.get('sku') as string)?.trim() || null,
+                sku: sku,
                 country_of_origin: (formData.get('country_of_origin') as string)?.trim() || null,
                 customs_value_usd: parseFloat(formData.get('customs_value_usd') as string) || null,
             }])
@@ -100,18 +104,25 @@ export async function createProduct(formData: FormData) {
             const variants = JSON.parse(variantsJson);
             if (Array.isArray(variants) && variants.length > 0) {
                 const variantsToInsert = variants
-                    .filter(v => !v._deleted)
-                    .map(v => ({
-                        product_id: product.id,
-                        name: v.title || v.name,
-                        variant_type: v.variant_type || 'shade',
-                        sku: v.sku,
-                        price_override: v.price,
-                        stock: v.stock,
-                        color_code: v.color_code,
-                        image_url: v.image_url,
-                        weight: v.weight,
-                    }));
+                    .filter((v: any) => !v._deleted)
+                    .map((v: any) => {
+                        let variantSku = v.sku?.trim();
+                        if (!variantSku) {
+                            const vPrefix = (v.title || v.name || 'VAR').replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
+                            variantSku = `${sku}-${vPrefix}`;
+                        }
+                        return {
+                            product_id: product.id,
+                            name: v.title || v.name,
+                            variant_type: v.variant_type || 'shade',
+                            sku: variantSku,
+                            price_override: v.price,
+                            stock: v.stock,
+                            color_code: v.color_code,
+                            image_url: v.image_url,
+                            weight: v.weight,
+                        };
+                    });
                 await supabase.from('product_variants').insert(variantsToInsert);
             }
         }
@@ -152,6 +163,13 @@ export async function updateProduct(formData: FormData) {
 
     if (!id) throw new Error("Product ID is required for update.");
 
+    let sku = (formData.get('sku') as string)?.trim();
+    if (!sku) {
+        const prefix = title.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase() || 'DEF';
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        sku = `DC-${prefix}-${randomSuffix}`;
+    }
+
     const { error } = await supabase
         .from('products')
         .update({
@@ -169,10 +187,7 @@ export async function updateProduct(formData: FormData) {
             on_sale,
             sale_price,
             weight_grams: parseFloat(formData.get('weight_grams') as string) || null,
-            length_cm: parseFloat(formData.get('length_cm') as string) || null,
-            width_cm: parseFloat(formData.get('width_cm') as string) || null,
-            height_cm: parseFloat(formData.get('height_cm') as string) || null,
-            sku: (formData.get('sku') as string)?.trim() || null,
+            sku: sku,
             country_of_origin: (formData.get('country_of_origin') as string)?.trim() || null,
             customs_value_usd: parseFloat(formData.get('customs_value_usd') as string) || null,
             updated_at: new Date().toISOString(),
@@ -186,6 +201,12 @@ export async function updateProduct(formData: FormData) {
     if (variantsJson) {
         const variants = JSON.parse(variantsJson);
         for (const v of variants) {
+            let variantSku = v.sku?.trim();
+            if (!variantSku) {
+                const vPrefix = (v.title || v.name || 'VAR').replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
+                variantSku = `${sku}-${vPrefix}`;
+            }
+
             if (v._deleted && v.id) {
                 await supabase.from('product_variants').delete().eq('id', v.id);
             } else if (v._isNew) {
@@ -193,7 +214,7 @@ export async function updateProduct(formData: FormData) {
                     product_id: id,
                     name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
-                    sku: v.sku,
+                    sku: variantSku,
                     price_override: v.price || v.price_override,
                     stock: v.stock,
                     color_code: v.color_code,
@@ -204,7 +225,7 @@ export async function updateProduct(formData: FormData) {
                 await supabase.from('product_variants').update({
                     name: v.title || v.name,
                     variant_type: v.variant_type || 'shade',
-                    sku: v.sku,
+                    sku: variantSku,
                     price_override: v.price || v.price_override,
                     stock: v.stock,
                     color_code: v.color_code,
