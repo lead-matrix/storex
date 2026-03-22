@@ -11,8 +11,6 @@ import { Toaster } from 'sonner';
 import { validateEnv } from "@/lib/env";
 import Script from 'next/script';
 
-// Validate env vars at boot
-validateEnv();
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -101,6 +99,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Validate critical env vars at runtime (not build time) so missing vars
+  // produce an immediate hard error rather than a silent broken deployment.
+  validateEnv();
+
   const supabase = await createClient();
 
   // Fetch navs

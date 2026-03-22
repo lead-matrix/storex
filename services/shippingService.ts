@@ -7,6 +7,7 @@ import { sendShippingNotificationEmail } from '@/lib/utils/email';
 import { createTrackingEvent } from '@/lib/db/tracking';
 import { updateFulfilledQuantity } from '@/lib/db/orderItems';
 import { createShipmentItems } from '@/lib/db/shipmentItems';
+import { calculateTotalWeightLb, getParcelForWeight } from '@/lib/utils/shippo';
 
 export async function getShippingRates(orderId: string, itemsToFulfill?: { id: string, quantity: number }[]) {
     try {
@@ -37,31 +38,29 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
         }
 
         const allItems = await getItemsByOrder(orderId);
-        let totalWeight = 0;
 
-        const calculateWeight = (item: any) => {
-            // Priority 1: Variant specific weight (stored in OZ as per ProductForm)
-            if (item.product_variants?.weight && Number(item.product_variants.weight) > 0) {
-                return Number(item.product_variants.weight) / 16;
-            }
-            // Priority 2: Product base weight_grams (convert to lbs)
-            if (item.products?.weight_grams && Number(item.products.weight_grams) > 0) {
-                return Number(item.products.weight_grams) / 453.592;
-            }
-            // Fallback
-            return 1;
-        };
+        // Use shared weight calculator — single source of truth shared with createShippingLabel()
+        const weightItems = allItems.map((item: any) => ({
+            quantity: item.quantity,
+            variant_weight_oz: item.product_variants?.weight ? Number(item.product_variants.weight) : null,
+            product_weight_oz: item.products?.weight_grams ? Number(item.products.weight_grams) : null,
+        }));
 
+        let totalWeight: number;
         if (itemsToFulfill && itemsToFulfill.length > 0) {
-            itemsToFulfill.forEach(f => {
-                const match = allItems.find(i => i.id === f.id);
-                if (match) totalWeight += calculateWeight(match) * f.quantity;
+            const filteredItems = itemsToFulfill.map(f => {
+                const match = allItems.find((i: any) => i.id === f.id);
+                return {
+                    quantity: f.quantity,
+                    variant_weight_oz: match?.product_variants?.weight ? Number(match.product_variants.weight) : null,
+                    product_weight_oz: match?.products?.weight_grams ? Number(match.products.weight_grams) : null,
+                };
             });
+            totalWeight = calculateTotalWeightLb(filteredItems);
         } else {
-            totalWeight = allItems.reduce((acc: number, item: any) => acc + calculateWeight(item) * item.quantity, 0);
+            totalWeight = calculateTotalWeightLb(weightItems);
         }
 
-        const { getParcelForWeight } = await import('@/lib/utils/shippo');
         const parcelData = getParcelForWeight(totalWeight);
 
         const addressFrom: any = {
@@ -148,10 +147,12 @@ export async function purchaseLabelForRate(orderId: string, rateId: string, carr
 
         // Check overall fulfillment status
         const allItems = await getItemsByOrder(orderId);
-        const isFullyFulfilled = allItems.every(i => (i.fulfilled_quantity || 0) >= i.quantity);
+        const isFullyFulfilled = allItems.every((i: any) => (i.fulfilled_quantity || 0) >= i.quantity);
 
+        // Stamp tracking_number on the order so the Shippo webhook can look it up
         await updateOrderStatus(orderId, {
-            fulfillment_status: isFullyFulfilled ? 'fulfilled' : 'partial'
+            fulfillment_status: isFullyFulfilled ? 'fulfilled' : 'partial',
+            ...(transaction.trackingNumber ? { tracking_number: transaction.trackingNumber } : {}),
         });
 
         if (transaction.trackingNumber) {

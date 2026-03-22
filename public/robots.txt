@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Disallow private/functional routes from indexing
+Disallow: /admin
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /login
+Disallow: /account
+Disallow: /account/
+Disallow: /api/
+
+Sitemap: https://dinacosmetic.store/sitemap.xml

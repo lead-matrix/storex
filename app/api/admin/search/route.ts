@@ -7,6 +7,9 @@ export async function GET(request: Request) {
 
     if (!query || query.length < 2) return NextResponse.json([]);
 
+    // Cap query length to prevent expensive full-table scans from very long strings
+    const safeQuery = query.slice(0, 50);
+
     try {
         const supabase = await createClient();
 
@@ -30,7 +33,7 @@ export async function GET(request: Request) {
         const { data: products } = await supabase
             .from('products')
             .select('id, title, slug')
-            .ilike('title', `%${query}%`)
+            .ilike('title', `%${safeQuery}%`)
             .limit(5);
 
         if (products) {
@@ -47,7 +50,7 @@ export async function GET(request: Request) {
         const { data: orders } = await supabase
             .from('orders')
             .select('id, customer_email, amount_total')
-            .or(`id.ilike.%${query}%,customer_email.ilike.%${query}%`)
+            .or(`id.ilike.%${safeQuery}%,customer_email.ilike.%${safeQuery}%`)
             .limit(5);
 
         if (orders) {
@@ -64,7 +67,7 @@ export async function GET(request: Request) {
         const { data: users } = await supabase
             .from('profiles')
             .select('id, email, full_name')
-            .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
+            .or(`email.ilike.%${safeQuery}%,full_name.ilike.%${safeQuery}%`)
             .limit(5);
 
         if (users) {

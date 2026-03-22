@@ -35,6 +35,30 @@ export function getParcelForWeight(totalWeightLb: number) {
     }
 }
 
+/**
+ * Shared weight calculator — single source of truth for both createShippingLabel()
+ * and getShippingRates() so the two paths can never drift.
+ *
+ * Expects items that carry either variant_weight_oz or product_weight_oz (both in oz).
+ * Falls back to 2 oz per item if neither is set.
+ */
+export function calculateTotalWeightLb(items: Array<{
+    quantity: number
+    variant_weight_oz?: number | null
+    product_weight_oz?: number | null
+}>): number {
+    const totalOz = items.reduce((acc, item) => {
+        const weightOz =
+            (item.variant_weight_oz && item.variant_weight_oz > 0)
+                ? item.variant_weight_oz
+                : (item.product_weight_oz && item.product_weight_oz > 0)
+                    ? item.product_weight_oz
+                    : 2 // default 2oz fallback
+        return acc + weightOz * item.quantity
+    }, 0)
+    return totalOz / 16
+}
+
 export async function createShippingLabel(order: any) {
     const apiKey = process.env.SHIPPO_API_KEY;
     if (!apiKey) {
@@ -48,29 +72,25 @@ export async function createShippingLabel(order: any) {
         const { createClient } = await import('@/lib/supabase/server');
         const supabase = await createClient();
 
-        // Calculate items weight
-        let totalWeightOz = 0;
-        const { data: orderItems } = await supabase.from('order_items').select('*').eq('order_id', order.id);
+        // Fetch order items with variant and product weights
+        const { data: orderItems } = await supabase
+            .from('order_items')
+            .select(`
+                quantity,
+                product_variants:variant_id ( weight ),
+                products:product_id ( weight_grams )
+            `)
+            .eq('order_id', order.id);
 
-        if (orderItems) {
-            for (const item of orderItems) {
-                let itemWeightOz = 0;
-                if (item.variant_id) {
-                    const { data: v } = await supabase.from('product_variants').select('weight').eq('id', item.variant_id).single();
-                    if (v?.weight) itemWeightOz = Number(v.weight); // always oz
-                }
+        // Map to the shared calculator's expected shape
+        const weightItems = (orderItems || []).map((item: any) => ({
+            quantity: item.quantity || 1,
+            variant_weight_oz: item.product_variants?.weight ? Number(item.product_variants.weight) : null,
+            product_weight_oz: item.products?.weight_grams ? Number(item.products.weight_grams) : null,
+        }));
 
-                if (!itemWeightOz || itemWeightOz <= 0) {
-                    const { data: p } = await supabase.from('products').select('weight_grams').eq('id', item.product_id).single();
-                    if (p?.weight_grams) itemWeightOz = Number(p.weight_grams); // stored as oz
-                }
-
-                if (!itemWeightOz || itemWeightOz <= 0) itemWeightOz = 2; // default 2oz
-                totalWeightOz += itemWeightOz * (item.quantity || 1);
-            }
-        }
-
-        const parcel = getParcelForWeight(totalWeightOz / 16);
+        const totalWeightLb = calculateTotalWeightLb(weightItems);
+        const parcel = getParcelForWeight(totalWeightLb);
 
         const { data: settings } = await supabase
             .from('site_settings')
@@ -104,10 +124,18 @@ export async function createShippingLabel(order: any) {
         });
 
         const rate = shipment.rates[0];
+
+        // BUG FIX: async: false ensures Shippo returns the label synchronously
+        // rather than QUEUED — so labelUrl is never null.
         const transaction = await shippo.transactions.create({
             rate: rate.objectId,
-            labelFileType: "PDF"
+            labelFileType: 'PDF',
+            async: false,
         });
+
+        if (transaction.status !== 'SUCCESS') {
+            throw new Error(`Label generation failed: ${transaction.messages?.[0]?.text || 'Unknown Shippo error'}`);
+        }
 
         return {
             tracking_number: transaction.trackingNumber,

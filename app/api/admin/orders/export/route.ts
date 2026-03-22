@@ -40,7 +40,13 @@ export async function GET() {
 
         if (error) throw error;
 
-        // Convert to CSV
+        // Convert to CSV – RFC 4180: wrap every field in double-quotes and
+        // escape internal double-quotes by doubling them.
+        const csvEscape = (val: unknown): string => {
+            const s = String(val ?? '');
+            return `"${s.replace(/"/g, '""')}"`;
+        };
+
         const headers = ["Order ID", "Date", "Customer", "Amount", "Status", "Tracking", "City", "State", "Items Count"];
         const rows = orders.map(o => [
             o.id,
@@ -55,8 +61,8 @@ export async function GET() {
         ]);
 
         const csvContent = [
-            headers.join(","),
-            ...rows.map(r => r.join(","))
+            headers.map(csvEscape).join(","),
+            ...rows.map(r => r.map(csvEscape).join(","))
         ].join("\n");
 
         return new NextResponse(csvContent, {

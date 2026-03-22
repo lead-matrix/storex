@@ -33,7 +33,12 @@ export async function getOrderById(id: string) {
 
 export async function updateOrderStatus(
     id: string,
-    updates: { status?: string; payment_status?: string; fulfillment_status?: string }
+    updates: {
+        status?: string;
+        payment_status?: string;
+        fulfillment_status?: string;
+        tracking_number?: string;
+    }
 ) {
     const dbUpdates: any = { ...updates };
     if (dbUpdates.payment_status && !dbUpdates.status) {
