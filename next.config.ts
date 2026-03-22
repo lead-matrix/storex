@@ -1,28 +1,8 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
-
+module.exports = {
   images: {
-    formats: ['image/avif', 'image/webp'],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'hsevxangxdfyolgspydl.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'zsahskxejgbrvfhobfyp.supabase.co',
-      }
-    ],
-  },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+    deviceSizes: [640, 750, 1080, 1920],
+    imageSizes: [16, 32, 48, 64, 96],
+    compressor: 'gzip',
+    quality: 75,
   },
 };
-
-export default nextConfig;
