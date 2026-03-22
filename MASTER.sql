@@ -1378,32 +1378,39 @@ CREATE POLICY "product_images_admin_delete" ON storage.objects FOR DELETE TO aut
 -- ───────────────────────────────────────────────────────────────
 -- §8  INDEXES
 -- ───────────────────────────────────────────────────────────────
--- Products
+-- Products — core lookup columns only
 CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON public.products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(slug);
 CREATE INDEX IF NOT EXISTS idx_products_stock ON public.products(stock);
-CREATE INDEX IF NOT EXISTS idx_products_is_featured ON public.products(is_featured)
-WHERE is_featured = true;
-CREATE INDEX IF NOT EXISTS idx_products_is_new ON public.products(is_new)
-WHERE is_new = true;
 CREATE INDEX IF NOT EXISTS idx_products_on_sale ON public.products(on_sale)
 WHERE on_sale = true;
-CREATE INDEX IF NOT EXISTS idx_products_is_bestseller ON public.products(is_bestseller)
-WHERE is_bestseller = true;
--- Orders
+-- DROPPED: idx_products_is_featured, idx_products_is_new, idx_products_is_bestseller
+--   Reason: boolean partial indexes on a small catalog — full-table scan is cheaper.
+--   The RLS filter (status='active') already limits rows to a manageable set.
+-- DROPPED: idx_products_created_at
+--   Reason: products are not sorted by created_at in any live query path.
+
+-- Orders — all four are actively hit in production
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON public.orders(stripe_session_id);
--- Categories / variants / profiles / newsletter / pages
+-- DROPPED: idx_orders_payment_status, idx_orders_fulfillment_status, idx_orders_coupon_id
+--   Reason: status covers payment status; coupon_id is covered by FK implicit index.
+--   Admin filters on status already use idx_orders_status above.
+
+-- Categories / variants / profiles / newsletter
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON public.categories(slug);
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON public.product_variants(product_id);
-CREATE INDEX IF NOT EXISTS idx_product_variants_status ON public.product_variants(status);
-CREATE INDEX IF NOT EXISTS idx_product_variants_variant_type ON public.product_variants(variant_type);
 CREATE INDEX IF NOT EXISTS idx_product_variants_sku ON public.product_variants(sku);
+-- DROPPED: idx_product_variants_status, idx_product_variants_variant_type
+--   Reason: status is boolean-like (active/draft), variant_type has only 4 values —
+--           both have low cardinality and queries always filter via product_id first.
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
+-- Keep: is_admin() runs on every authenticated request via middleware.
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
+-- Keep: uniqueness enforcement + duplicate-check on subscribe.
 -- ───────────────────────────────────────────────────────────────
 -- §9  SEED DATA  (idempotent — ON CONFLICT DO UPDATE)
 -- ───────────────────────────────────────────────────────────────
@@ -2517,12 +2524,45 @@ CREATE TRIGGER trg_log_inventory
 AFTER
 UPDATE OF stock ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.log_inventory_change();
 -- ── 4. PERFORMANCE INDEXES ──────────────────────────────────────────
+-- DROP stale/unused indexes from live DB (idempotent)
+DROP INDEX IF EXISTS public.idx_products_is_featured;
+DROP INDEX IF EXISTS public.idx_products_is_new;
+DROP INDEX IF EXISTS public.idx_products_is_bestseller;
+DROP INDEX IF EXISTS public.idx_products_created_at;
+DROP INDEX IF EXISTS public.idx_product_variants_status;
+DROP INDEX IF EXISTS public.idx_product_variants_variant_type;
+DROP INDEX IF EXISTS public.idx_parcels_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipment_tracking_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipment_items_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipment_items_order_item_id;
+DROP INDEX IF EXISTS public.idx_stripe_events_type;
+DROP INDEX IF EXISTS public.idx_orders_payment_status;
+DROP INDEX IF EXISTS public.idx_orders_fulfillment_status;
+DROP INDEX IF EXISTS public.idx_orders_coupon_id;
+DROP INDEX IF EXISTS public.idx_email_logs_order_id;
+DROP INDEX IF EXISTS public.idx_inventory_logs_order_id;
+
+-- CREATE remaining high-value indexes
+-- Shipping label tracking — hit by Shippo webhook to find the order
 CREATE INDEX IF NOT EXISTS idx_shipping_labels_tracking_number ON public.shipping_labels(tracking_number);
+-- Shipment lookups — hit when purchasing a label for an order
 CREATE INDEX IF NOT EXISTS idx_shipments_order_id ON public.shipments(order_id);
+-- Shippo webhook reverse-lookup by Shippo shipment ID
+CREATE INDEX IF NOT EXISTS idx_shipments_shippo_shipment_id ON public.shipments(shippo_shipment_id);
+-- Shipping label → shipment chain
+CREATE INDEX IF NOT EXISTS idx_shipping_labels_shipment_id ON public.shipping_labels(shipment_id);
+-- Coupon validation at checkout — lookup by code + active status
 CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
+CREATE INDEX IF NOT EXISTS idx_coupons_status ON public.coupons(status);
+-- Abandoned cart recovery — lookup by email + filter by status
 CREATE INDEX IF NOT EXISTS idx_abandoned_carts_email ON public.abandoned_carts(customer_email);
+CREATE INDEX IF NOT EXISTS idx_abandoned_carts_status ON public.abandoned_carts(status);
+-- Inventory audit trail — variant_id lookup for stock history
 CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON public.inventory_logs(variant_id);
-CREATE INDEX IF NOT EXISTS idx_products_created_at ON public.products(created_at);
+-- CMS sections — kept: page_id is the primary filter when building page content
+CREATE INDEX IF NOT EXISTS idx_cms_sections_page_id ON public.cms_sections(page_id);
+-- Email idempotency log — kept: order_id lookup to check if email was already sent
+CREATE INDEX IF NOT EXISTS idx_email_logs_order_id ON public.email_logs(order_id);
 -- ── 5. RLS UPDATES ──────────────────────────────────────────────────
 ALTER TABLE public.shipments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shipping_labels ENABLE ROW LEVEL SECURITY;
