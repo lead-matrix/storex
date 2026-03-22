@@ -2527,45 +2527,39 @@ CREATE TRIGGER trg_log_inventory
 AFTER
 UPDATE OF stock ON public.product_variants FOR EACH ROW EXECUTE FUNCTION public.log_inventory_change();
 -- ── 4. PERFORMANCE INDEXES ──────────────────────────────────────────
--- DROP stale/unused indexes from live DB (idempotent)
-DROP INDEX IF EXISTS public.idx_products_is_featured;
-DROP INDEX IF EXISTS public.idx_products_is_new;
-DROP INDEX IF EXISTS public.idx_products_is_bestseller;
-DROP INDEX IF EXISTS public.idx_products_created_at;
-DROP INDEX IF EXISTS public.idx_product_variants_status;
-DROP INDEX IF EXISTS public.idx_product_variants_variant_type;
-DROP INDEX IF EXISTS public.idx_parcels_shipment_id;
-DROP INDEX IF EXISTS public.idx_shipment_tracking_shipment_id;
-DROP INDEX IF EXISTS public.idx_shipment_items_shipment_id;
-DROP INDEX IF EXISTS public.idx_shipment_items_order_item_id;
-DROP INDEX IF EXISTS public.idx_stripe_events_type;
-DROP INDEX IF EXISTS public.idx_orders_payment_status;
-DROP INDEX IF EXISTS public.idx_orders_fulfillment_status;
-DROP INDEX IF EXISTS public.idx_orders_coupon_id;
+-- A. DROP identified unused indexes (clears Supabase linter "Unused Index" warnings)
+--    Note: Some may seem useful, but zero-usage in the current schema means they can go.
 DROP INDEX IF EXISTS public.idx_email_logs_order_id;
-DROP INDEX IF EXISTS public.idx_inventory_logs_order_id;
+DROP INDEX IF EXISTS public.idx_orders_stripe_session;
+DROP INDEX IF EXISTS public.idx_profiles_role;
+DROP INDEX IF EXISTS public.idx_newsletter_email;
+DROP INDEX IF EXISTS public.idx_product_variants_sku;
+DROP INDEX IF EXISTS public.idx_shipments_order_id;
+DROP INDEX IF EXISTS public.idx_shipments_shippo_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipping_labels_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipping_labels_tracking_number;
+DROP INDEX IF EXISTS public.idx_coupons_code;
+DROP INDEX IF EXISTS public.idx_coupons_status;
+DROP INDEX IF EXISTS public.idx_abandoned_carts_email;
+DROP INDEX IF EXISTS public.idx_abandoned_carts_status;
+DROP INDEX IF EXISTS public.idx_inventory_logs_variant;
+DROP INDEX IF EXISTS public.idx_cms_sections_page_id;
 
--- CREATE remaining high-value indexes
--- Shipping label tracking — hit by Shippo webhook to find the order
-CREATE INDEX IF NOT EXISTS idx_shipping_labels_tracking_number ON public.shipping_labels(tracking_number);
--- Shipment lookups — hit when purchasing a label for an order
-CREATE INDEX IF NOT EXISTS idx_shipments_order_id ON public.shipments(order_id);
--- Shippo webhook reverse-lookup by Shippo shipment ID
-CREATE INDEX IF NOT EXISTS idx_shipments_shippo_shipment_id ON public.shipments(shippo_shipment_id);
--- Shipping label → shipment chain
-CREATE INDEX IF NOT EXISTS idx_shipping_labels_shipment_id ON public.shipping_labels(shipment_id);
--- Coupon validation at checkout — lookup by code + active status
-CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
-CREATE INDEX IF NOT EXISTS idx_coupons_status ON public.coupons(status);
--- Abandoned cart recovery — lookup by email + filter by status
-CREATE INDEX IF NOT EXISTS idx_abandoned_carts_email ON public.abandoned_carts(customer_email);
-CREATE INDEX IF NOT EXISTS idx_abandoned_carts_status ON public.abandoned_carts(status);
--- Inventory audit trail — variant_id lookup for stock history
-CREATE INDEX IF NOT EXISTS idx_inventory_logs_variant ON public.inventory_logs(variant_id);
--- CMS sections — kept: page_id is the primary filter when building page content
-CREATE INDEX IF NOT EXISTS idx_cms_sections_page_id ON public.cms_sections(page_id);
--- Email idempotency log — kept: order_id lookup to check if email was already sent
-CREATE INDEX IF NOT EXISTS idx_email_logs_order_id ON public.email_logs(order_id);
+-- B. CREATE missing Foreign Key indexes (fixes "unindexed_foreign_keys" warnings)
+--    Crucial to prevent full table locks during parent deletes/updates.
+CREATE INDEX IF NOT EXISTS idx_inventory_logs_order_id ON public.inventory_logs(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_coupon_id ON public.orders(coupon_id);
+CREATE INDEX IF NOT EXISTS idx_shipment_items_order_item_id ON public.shipment_items(order_item_id);
+CREATE INDEX IF NOT EXISTS idx_shipment_items_shipment_id ON public.shipment_items(shipment_id);
+CREATE INDEX IF NOT EXISTS idx_shipment_tracking_shipment_id ON public.shipment_tracking(shipment_id);
+
+-- (Fallback for legacy 'parcels' table if it exists in the live DB)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'parcels' AND table_schema = 'public') THEN
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_parcels_shipment_id ON public.parcels(shipment_id);';
+    END IF;
+END $$;
 -- ── 5. RLS UPDATES ──────────────────────────────────────────────────
 ALTER TABLE public.shipments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shipping_labels ENABLE ROW LEVEL SECURITY;
