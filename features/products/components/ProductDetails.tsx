@@ -147,7 +147,7 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
                 )}
             </div>
 
-            <div className="text-luxury-subtext text-sm mb-12 leading-relaxed font-light max-w-lg border-l border-gold/20 pl-6 italic">
+            <div className="text-luxury-subtext text-sm mb-12 leading-relaxed font-light max-w-lg border-l border-gold/20 pl-6 italic whitespace-pre-wrap">
                 <p>{product.description}</p>
             </div>
 

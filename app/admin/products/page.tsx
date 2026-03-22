@@ -222,14 +222,23 @@ export default async function AdminProductsPage() {
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-white text-sm font-serif truncate max-w-[200px] group-hover:text-gold transition-colors">{product.title}</p>
-                                                <p className="text-[10px] text-white/30 truncate mt-1 tracking-luxury uppercase">{product.slug}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <p className="text-[10px] text-white/30 truncate tracking-luxury uppercase font-mono">{product.sku || 'No SKU'}</p>
+                                                    <span className="text-[10px] text-white/10 italic">·</span>
+                                                    <p className="text-[10px] text-white/30 truncate tracking-luxury uppercase">{product.slug}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className="text-[10px] uppercase tracking-widest text-gold/60">
-                                            {product.categories?.name || 'Unfiltered'}
-                                        </span>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] uppercase tracking-widest text-gold/60 block">
+                                                {product.categories?.name || 'Unfiltered'}
+                                            </span>
+                                            <span className="text-[9px] uppercase tracking-luxury text-white/20">
+                                                Origin: {product.country_of_origin || 'US'}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <div className="space-y-1">

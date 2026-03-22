@@ -54,7 +54,7 @@ export async function POST(req: Request) {
             if (variant?.weight && Number(variant.weight) > 0) {
                 weightLb = Number(variant.weight) / 16; // OZ to LBs
             } else if (product?.weight_grams && Number(product.weight_grams) > 0) {
-                weightLb = Number(product.weight_grams) / 453.592; // Grams to LBs
+                weightLb = Number(product.weight_grams) / 16; // OZ to LBs
             }
 
             const serverName = variant && variant.name

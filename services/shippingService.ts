@@ -63,18 +63,82 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
 
         const parcelData = getParcelForWeight(totalWeight);
 
-        const addressFrom: any = {
-            name: process.env.WAREHOUSE_NAME || 'Warehouse',
-            street1: process.env.WAREHOUSE_ADDRESS_LINE1 || '123 Main St',
-            city: process.env.WAREHOUSE_CITY || 'San Francisco',
-            state: process.env.WAREHOUSE_STATE || 'CA',
-            zip: process.env.WAREHOUSE_ZIP || '94105',
+        // 1. Resolve Warehouse Info (Origin)
+        const { createClient } = await import('@/lib/supabase/server');
+        const supabase = await createClient();
+        const { data: settings } = await supabase
+            .from('site_settings')
+            .select('setting_value')
+            .eq('setting_key', 'warehouse_info')
+            .maybeSingle();
+
+        const warehouse = settings?.setting_value || {
+            name: process.env.WAREHOUSE_NAME || 'Dina Cosmetic',
+            street1: process.env.WAREHOUSE_ADDRESS_LINE1 || '5430 FM 359 Rd S Ste 400 PMB 1013',
+            city: process.env.WAREHOUSE_CITY || 'Brookshire',
+            state: process.env.WAREHOUSE_STATE || 'TX',
+            zip: process.env.WAREHOUSE_ZIP || '77423',
             country: process.env.WAREHOUSE_COUNTRY || 'US',
-            phone: process.env.WAREHOUSE_PHONE || '+1 555 341 9393',
+            phone: process.env.WAREHOUSE_PHONE || '+12816877609',
         };
 
+        const addressFrom: any = {
+            name: warehouse.name,
+            street1: warehouse.street1,
+            city: warehouse.city,
+            state: warehouse.state,
+            zip: warehouse.zip,
+            country: warehouse.country,
+            phone: warehouse.phone,
+        };
+
+        // 2. International Customs Handling
+        let customsDeclarationId: string | undefined;
+        const isInternational = addressTo.country !== addressFrom.country;
+
+        if (isInternational) {
+            console.log(`[shippingService] International shipment detected (${addressFrom.country} -> ${addressTo.country}). Generating customs declaration.`);
+            
+            const customsItems = await Promise.all(allItems.map(async (item: any) => {
+                const itemQuantity = (itemsToFulfill ? itemsToFulfill.find(f => f.id === item.id)?.quantity : item.quantity) || 0;
+                if (itemQuantity <= 0) return null;
+
+                const weightOz = item.product_variants?.weight || item.products?.weight_grams || 2;
+                const valueUsd = item.products?.customs_value_usd || item.price || 10;
+                const originCountry = item.products?.country_of_origin || addressFrom.country;
+                const sku = item.product_variants?.sku || item.products?.sku || `DC-${item.product_id.substring(0, 5)}`;
+
+                return await shippo.customsItems.create({
+                    description: item.products?.title || 'Cosmetic Item',
+                    quantity: itemQuantity,
+                    netWeight: weightOz.toString(),
+                    massUnit: 'oz',
+                    valueAmount: valueUsd.toString(),
+                    valueCurrency: 'USD',
+                    originCountry: originCountry,
+                    sku: sku,
+                });
+            }));
+
+            const declaration = await shippo.customsDeclarations.create({
+                contentsType: 'MERCHANDISE',
+                contentsExplanation: 'Cosmetic items for personal use.',
+                nonDeliveryOption: 'RETURN',
+                certify: true,
+                signer: warehouse.name || 'Warehouse Manager',
+                items: customsItems.filter(Boolean).map(ci => ci.objectId),
+                eelPfc: 'NOEEI_30_37_a', // Under $2500 exemption
+            });
+            
+            customsDeclarationId = declaration.objectId;
+        }
+
         const shippoShipment = await shippo.shipments.create({
-            addressFrom, addressTo, parcels: [parcelData], async: false,
+            addressFrom,
+            addressTo,
+            parcels: [parcelData],
+            customsDeclaration: customsDeclarationId,
+            async: false,
         });
 
         return {

@@ -28,10 +28,14 @@ export async function getItemsByOrder(orderId: string) {
       products (
         title,
         images,
-        weight_grams
+        weight_grams,
+        sku,
+        country_of_origin,
+        customs_value_usd
       ),
       product_variants (
-        weight
+        weight,
+        sku
       )
     `)
         .eq('order_id', orderId);
