@@ -55,6 +55,9 @@ interface ProductFormProps {
         length_cm?: number | null
         width_cm?: number | null
         height_cm?: number | null
+        sku?: string | null
+        country_of_origin?: string | null
+        customs_value_usd?: number | null
     }
     variants?: Variant[]
 }
@@ -74,6 +77,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
     const [categories, setCategories] = useState<Category[]>([])
     const [variants, setVariants] = useState<Variant[]>(initialVariants)
     const [showVariants, setShowVariants] = useState(initialVariants.length > 0)
+    const [descCount, setDescCount] = useState((product?.description || '').length)
 
     // Auto-generate slug from name
     const [slugValue, setSlugValue] = useState(product?.slug ?? '')
@@ -257,9 +261,9 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         </div>
                     </div>
 
-                    {/* Shipping Dimensions (Optional) */}
+                    {/* Shipping Dimensions + Customs */}
                     <div className="p-4 bg-pearl/50 rounded-lg border border-charcoal/5 space-y-4">
-                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping Details (Optional)</Label>
+                        <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping &amp; Customs Details</Label>
                         <div className="grid grid-cols-4 gap-3">
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] uppercase text-textsoft">Weight (oz)</Label>
@@ -278,7 +282,67 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 <Input name="height_cm" type="number" step="0.1" defaultValue={product?.height_cm ?? ''} className="h-9 text-xs" placeholder="in" />
                             </div>
                         </div>
-                        <p className="text-[9px] text-textsoft/50 tracking-luxury">Weight in oz is used for shipping rate calculations. Dimensions in inches.</p>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">Product SKU</Label>
+                                <Input
+                                    name="sku"
+                                    defaultValue={product?.sku ?? ''}
+                                    placeholder="e.g. DC-FND-001"
+                                    className="h-9 text-[10px] font-mono uppercase bg-white/50 border-charcoal/10"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">Country of Origin *</Label>
+                                <select
+                                    name="country_of_origin"
+                                    defaultValue={product?.country_of_origin ?? 'US'}
+                                    className="w-full h-9 bg-white/50 border border-charcoal/10 rounded px-2 text-[10px] uppercase font-bold outline-none focus:border-gold/50"
+                                >
+                                    <option value="">— Select —</option>
+                                    <option value="US">🇺🇸 United States</option>
+                                    <option value="FR">🇫🇷 France</option>
+                                    <option value="IT">🇮🇹 Italy</option>
+                                    <option value="GB">🇬🇧 United Kingdom</option>
+                                    <option value="CN">🇨🇳 China</option>
+                                    <option value="KR">🇰🇷 South Korea</option>
+                                    <option value="JP">🇯🇵 Japan</option>
+                                    <option value="DE">🇩🇪 Germany</option>
+                                    <option value="CA">🇨🇦 Canada</option>
+                                    <option value="AU">🇦🇺 Australia</option>
+                                    <option value="IN">🇮🇳 India</option>
+                                    <option value="BR">🇧🇷 Brazil</option>
+                                    <option value="MX">🇲🇽 Mexico</option>
+                                    <option value="ES">🇪🇸 Spain</option>
+                                    <option value="NL">🇳🇱 Netherlands</option>
+                                    <option value="PL">🇵🇱 Poland</option>
+                                    <option value="TR">🇹🇷 Turkey</option>
+                                    <option value="BD">🇧🇩 Bangladesh</option>
+                                    <option value="TH">🇹🇭 Thailand</option>
+                                    <option value="VN">🇻🇳 Vietnam</option>
+                                    <option value="PH">🇵🇭 Philippines</option>
+                                    <option value="MA">🇲🇦 Morocco</option>
+                                    <option value="NG">🇳🇬 Nigeria</option>
+                                    <option value="ZA">🇿🇦 South Africa</option>
+                                    <option value="SG">🇸🇬 Singapore</option>
+                                    <option value="AE">🇦🇪 UAE</option>
+                                    <option value="PK">🇵🇰 Pakistan</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-textsoft">Customs Value / Unit (USD)</Label>
+                                <Input
+                                    name="customs_value_usd"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    defaultValue={product?.customs_value_usd ?? ''}
+                                    placeholder="e.g. 12.00"
+                                    className="h-9 text-xs bg-white/50 border-charcoal/10"
+                                />
+                            </div>
+                        </div>
+                        <p className="text-[9px] text-textsoft/50 tracking-luxury">Weight in oz · Dimensions in inches · Country of origin + customs value are printed on international shipping labels (CN22/CP72).</p>
                     </div>
 
                     {/* Category */}
@@ -390,16 +454,26 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                 <div className="space-y-6">
                     {/* Description */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
-                            Description *
-                        </Label>
+                        <div className="flex items-center justify-between">
+                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                                Description *
+                            </Label>
+                            <span className={`text-[9px] font-mono tabular-nums ${
+                                descCount < 80 ? 'text-red-400' :
+                                descCount < 150 ? 'text-amber-400' : 'text-emerald-500'
+                            }`}>
+                                {descCount} chars{descCount < 80 ? ' — needs more detail' : descCount < 150 ? ' — good' : ' — excellent'}
+                            </span>
+                        </div>
                         <Textarea
                             name="description"
                             defaultValue={product?.description}
-                            placeholder="Describe the masterpiece..."
+                            placeholder="Describe this product in detail: ingredients, finish, skin type suitability, how to apply, key benefits, scent, texture, size, any certifications (vegan, cruelty-free, etc.)..."
                             required
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 min-h-[180px] resize-none"
+                            onChange={e => setDescCount(e.target.value.length)}
+                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 min-h-[220px] resize-y"
                         />
+                        <p className="text-[9px] text-textsoft/40 tracking-luxury">Aim for at least 150 characters. Include finish, skin type, how-to-use, and key ingredients.</p>
                     </div>
 
                     {/* Image Upload */}

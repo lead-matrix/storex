@@ -256,7 +256,6 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
-ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS weight_grams numeric(10, 2);
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS length_cm numeric(10, 2);
@@ -264,6 +263,15 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS width_cm numeric(10, 2);
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS height_cm numeric(10, 2);
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS sku text;
+-- Product-level SKU (for simple products without variants)
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS country_of_origin text;
+-- ISO 3166-1 alpha-2 country code, e.g. 'US', 'CN', 'FR' — required for customs on international shipments
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS customs_value_usd numeric(10, 2);
+-- Declared value per unit in USD — used on customs forms (CN22/CP72) for international shipping
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS title text;
 -- Rename legacy name → title if present

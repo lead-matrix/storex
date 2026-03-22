@@ -85,6 +85,9 @@ export async function createProduct(formData: FormData) {
                 length_cm: parseFloat(formData.get('length_cm') as string) || null,
                 width_cm: parseFloat(formData.get('width_cm') as string) || null,
                 height_cm: parseFloat(formData.get('height_cm') as string) || null,
+                sku: (formData.get('sku') as string)?.trim() || null,
+                country_of_origin: (formData.get('country_of_origin') as string)?.trim() || null,
+                customs_value_usd: parseFloat(formData.get('customs_value_usd') as string) || null,
             }])
             .select()
             .single();
@@ -169,6 +172,9 @@ export async function updateProduct(formData: FormData) {
             length_cm: parseFloat(formData.get('length_cm') as string) || null,
             width_cm: parseFloat(formData.get('width_cm') as string) || null,
             height_cm: parseFloat(formData.get('height_cm') as string) || null,
+            sku: (formData.get('sku') as string)?.trim() || null,
+            country_of_origin: (formData.get('country_of_origin') as string)?.trim() || null,
+            customs_value_usd: parseFloat(formData.get('customs_value_usd') as string) || null,
             updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -553,29 +559,34 @@ export async function updateShippingSettings(formData: FormData) {
 
 function revalidatePaths(productId?: string, slug?: string) {
     try {
-        // Essential paths for admin visibility
+        // Admin list — must update immediately
         revalidatePath('/admin/products');
         revalidatePath('/admin');
+        revalidatePath('/admin/dashboard');
 
-        // Essential paths for shop visibility
-        revalidatePath('/');
-        revalidatePath('/shop');
-        revalidatePath('/collections');
+        // Every major storefront page — products go live INSTANTLY
+        revalidatePath('/', 'page');
+        revalidatePath('/', 'layout');
+        revalidatePath('/shop', 'page');
+        revalidatePath('/collections', 'page');
+        revalidatePath('/bestsellers', 'page');
+        revalidatePath('/sale', 'page');
+        revalidatePath('/[slug]', 'page');
 
-        // Specific dynamic paths
+        // Specific dynamic product page
         if (slug) {
             revalidatePath(`/product/${slug}`, 'page');
         }
-
         if (productId) {
             revalidatePath(`/product/${productId}`, 'page');
         }
 
-        // Revalidate layout to clear cached navigation or category items
+        // Category browse pages — all of them
+        revalidatePath('/category/[slug]', 'page');
         revalidatePath('/category/[slug]', 'layout');
-        revalidatePath('/(shop)/[slug]', 'layout');
+        revalidatePath('/collections/[slug]', 'page');
     } catch (err) {
-        console.error("Revalidation failed:", err);
+        console.error('Revalidation failed:', err);
     }
 }
 
