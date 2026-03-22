@@ -43,7 +43,7 @@ export default function HeroSlidesEditor({ initialSlides }: { initialSlides: Sli
                         <button
                             type="button"
                             onClick={() => removeSlide(index)}
-                            className="absolute top-4 right-4 text-red-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                            className="absolute top-4 right-4 text-red-400 hover:text-red-600 transition-colors"
                             title="Remove Slide"
                         >
                             <Trash2 className="w-4 h-4" />
