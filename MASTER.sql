@@ -256,6 +256,7 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS weight_grams numeric(10, 2);
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS length_cm numeric(10, 2);
