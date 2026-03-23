@@ -170,7 +170,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                         w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 md:py-3 rounded text-[11px] font-bold uppercase tracking-luxury transition-all
                         ${hasChanges
                             ? "bg-gold text-black shadow-gold hover:bg-gold-light"
-                            : "bg-white/5 text-white/20 border border-white/10 cursor-not-allowed"}
+                            : "bg-[#0B0B0D]/5 text-white/20 border border-white/10 cursor-not-allowed"}
                     `}
                 >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -208,7 +208,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
-                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                            <div className="space-y-1.5 p-3 bg-[#0B0B0D]/5 rounded">
                                 <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Base Valuation ($)</label>
                                 <input
                                     type="number"
@@ -218,7 +218,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                     className="w-full bg-transparent border-none p-0 text-sm font-serif text-white focus:ring-0 outline-none transition-all"
                                 />
                             </div>
-                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                            <div className="space-y-1.5 p-3 bg-[#0B0B0D]/5 rounded">
                                 <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Sale Price ($)</label>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -231,13 +231,13 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                     />
                                     <button
                                         onClick={() => handleUpdate(row.parentId || row.id, 'product', 'on_sale', !(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale))}
-                                        className={`px-1.5 py-0.5 rounded-[2px] text-[7px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black' : 'bg-white/10 text-white/20'}`}
+                                        className={`px-1.5 py-0.5 rounded-[2px] text-[7px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black' : 'bg-[#0B0B0D]/10 text-white/20'}`}
                                     >
                                         SALE
                                     </button>
                                 </div>
                             </div>
-                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                            <div className="space-y-1.5 p-3 bg-[#0B0B0D]/5 rounded">
                                 <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Reserve</label>
                                 <input
                                     type="number"
@@ -246,7 +246,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                     className={`w-full bg-transparent border-none p-0 text-sm font-mono focus:ring-0 outline-none transition-all ${row.stock < 10 ? 'text-amber-400' : 'text-white'}`}
                                 />
                             </div>
-                            <div className="space-y-1.5 p-3 bg-white/5 rounded">
+                            <div className="space-y-1.5 p-3 bg-[#0B0B0D]/5 rounded">
                                 <label className="text-[9px] uppercase tracking-luxury text-white/20 font-bold">Weight</label>
                                 <input
                                     type="number"
@@ -279,7 +279,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                         </thead>
                         <tbody className="text-[11px] text-white/60 font-medium divide-y divide-white/5">
                             {rows.map((row) => (
-                                <tr key={row.id} className={`hover:bg-white/5 transition-colors group ${dirtyRows[row.id] ? 'bg-gold/5' : ''}`}>
+                                <tr key={row.id} className={`hover:bg-[#0B0B0D]/5 transition-colors group ${dirtyRows[row.id] ? 'bg-gold/5' : ''}`}>
                                     <td className="px-6 py-4 border-r border-white/5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded bg-black/40 border border-white/5 overflow-hidden flex-shrink-0">
@@ -325,7 +325,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                             />
                                             <button
                                                 onClick={() => handleUpdate(row.parentId || row.id, 'product', 'on_sale', !(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale))}
-                                                className={`px-2 py-0.5 rounded-[2px] text-[8px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black shadow-gold' : 'bg-white/5 text-white/20 border border-white/10'}`}
+                                                className={`px-2 py-0.5 rounded-[2px] text-[8px] font-bold uppercase tracking-widest transition-all ${(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'bg-gold text-black shadow-gold' : 'bg-[#0B0B0D]/5 text-white/20 border border-white/10'}`}
                                             >
                                                 {(dirtyRows[row.parentId || row.id]?.updates.on_sale ?? row.on_sale) ? 'On Sale' : 'Off Sale'}
                                             </button>

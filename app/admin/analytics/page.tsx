@@ -89,8 +89,8 @@ export default async function AnalyticsPage() {
     return (
         <div className="space-y-6 max-w-7xl mx-auto animate-luxury-fade">
             <div>
-                <h1 className="text-3xl font-heading text-charcoal mb-1 tracking-luxury">Analytics</h1>
-                <p className="text-textsoft text-sm tracking-luxury uppercase font-medium mt-0.5">Revenue intelligence & performance overview</p>
+                <h1 className="text-3xl font-heading text-white mb-1 tracking-luxury">Analytics</h1>
+                <p className="text-luxury-subtext text-sm tracking-luxury uppercase font-medium mt-0.5">Revenue intelligence & performance overview</p>
             </div>
 
             {/* KPIs */}
@@ -101,21 +101,21 @@ export default async function AnalyticsPage() {
                     { label: 'Total Customers', value: (totalCustomers ?? 0).toLocaleString(), sub: 'Registered profiles' },
                     { label: 'Active Products', value: (totalProducts ?? 0).toLocaleString(), sub: 'In catalog' },
                 ].map(k => (
-                    <div key={k.label} className="bg-white rounded-luxury border border-charcoal/10 p-5 shadow-sm hover:border-gold/30 transition-all group">
-                        <p className="text-[9px] uppercase tracking-[0.3em] text-textsoft mb-2 font-medium">{k.label}</p>
-                        <p className={`text-2xl font-serif ${k.gold ? 'text-gold' : 'text-charcoal group-hover:text-gold transition-colors'}`}>{k.value}</p>
-                        <p className="text-[9px] text-textsoft/70 mt-1.5 tracking-wide uppercase font-medium">{k.sub}</p>
+                    <div key={k.label} className="bg-[#0B0B0D] rounded-luxury border border-white/10 p-5 shadow-sm hover:border-gold/30 transition-all group">
+                        <p className="text-[9px] uppercase tracking-[0.3em] text-luxury-subtext mb-2 font-medium">{k.label}</p>
+                        <p className={`text-2xl font-serif ${k.gold ? 'text-gold' : 'text-white group-hover:text-gold transition-colors'}`}>{k.value}</p>
+                        <p className="text-[9px] text-luxury-subtext/70 mt-1.5 tracking-wide uppercase font-medium">{k.sub}</p>
                     </div>
                 ))}
             </div>
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2 bg-white rounded-luxury border border-charcoal/10 p-5 shadow-sm">
+                <div className="lg:col-span-2 bg-[#0B0B0D] rounded-luxury border border-white/10 p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-5">
                         <div>
-                            <h2 className="text-[11px] uppercase tracking-widest text-charcoal font-semibold">Sales Overview</h2>
-                            <p className="text-[9px] text-textsoft mt-0.5 uppercase tracking-widest">Last 7 Days</p>
+                            <h2 className="text-[11px] uppercase tracking-widest text-white font-semibold">Sales Overview</h2>
+                            <p className="text-[9px] text-luxury-subtext mt-0.5 uppercase tracking-widest">Last 7 Days</p>
                         </div>
                         <span className="text-sm font-serif text-gold font-medium">
                             ${chartW.reduce((s, v) => s + v, 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}
@@ -125,14 +125,14 @@ export default async function AnalyticsPage() {
                         <LineChart data={chartW} h={130} />
                     </div>
                     <div className="flex justify-between px-2 mt-2">
-                        {DAYS.map(d => <span key={d} className="text-[9px] text-textsoft uppercase font-medium">{d}</span>)}
+                        {DAYS.map(d => <span key={d} className="text-[9px] text-luxury-subtext uppercase font-medium">{d}</span>)}
                     </div>
                 </div>
-                <div className="bg-white rounded-luxury border border-charcoal/10 p-5 shadow-sm flex flex-col">
+                <div className="bg-[#0B0B0D] rounded-luxury border border-white/10 p-5 shadow-sm flex flex-col">
                     <div className="flex items-center justify-between mb-5">
                         <div>
-                            <h2 className="text-[11px] uppercase tracking-widest text-charcoal font-semibold">30-Day Trend</h2>
-                            <p className="text-[9px] text-textsoft mt-0.5 uppercase tracking-widest">Revenue curve</p>
+                            <h2 className="text-[11px] uppercase tracking-widest text-white font-semibold">30-Day Trend</h2>
+                            <p className="text-[9px] text-luxury-subtext mt-0.5 uppercase tracking-widest">Revenue curve</p>
                         </div>
                     </div>
                     <div className="h-[130px] w-full mt-auto">
@@ -142,38 +142,38 @@ export default async function AnalyticsPage() {
             </div>
 
             {/* Top Products */}
-            <div className="bg-white border border-charcoal/10 rounded-luxury shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-charcoal/10 flex items-center justify-between">
-                    <h2 className="text-[11px] uppercase tracking-widest text-charcoal font-semibold">Top Selling Products</h2>
-                    <span className="text-[9px] text-textsoft uppercase tracking-widest font-medium">by units sold</span>
+            <div className="bg-[#0B0B0D] border border-white/10 rounded-luxury shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                    <h2 className="text-[11px] uppercase tracking-widest text-white font-semibold">Top Selling Products</h2>
+                    <span className="text-[9px] text-luxury-subtext uppercase tracking-widest font-medium">by units sold</span>
                 </div>
                 {topProds.length === 0 ? (
-                    <div className="text-center py-16 text-textsoft/50 text-[10px] uppercase tracking-widest font-medium">No sales data yet</div>
+                    <div className="text-center py-16 text-luxury-subtext/50 text-[10px] uppercase tracking-widest font-medium">No sales data yet</div>
                 ) : (
                     <table className="w-full">
-                        <thead><tr className="border-b border-charcoal/5">
-                            <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-textsoft p-4">Rank</th>
-                            <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-textsoft p-4">Product</th>
-                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-textsoft p-4">Units</th>
-                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-textsoft p-4">Share</th>
+                        <thead><tr className="border-b border-white/5">
+                            <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Rank</th>
+                            <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Product</th>
+                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Units</th>
+                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Share</th>
                         </tr></thead>
                         <tbody>
                             {topProds.map(([, p], i) => {
                                 const total = topProds.reduce((s, [, v]) => s + v.qty, 0) || 1
                                 const pct = Math.round((p.qty / total) * 100)
                                 return (
-                                    <tr key={i} className="border-b border-charcoal/5 last:border-none hover:bg-pearl/50 transition-colors">
+                                    <tr key={i} className="border-b border-white/5 last:border-none hover:bg-[#0B0B0D]/5 transition-colors">
                                         <td className="p-4"><span className="font-serif text-gold text-sm font-medium">{ROMAN[i]}</span></td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-20 h-1.5 rounded-full bg-charcoal/5 overflow-hidden">
+                                                <div className="w-20 h-1.5 rounded-full bg-white/5 overflow-hidden">
                                                     <div className="h-full bg-gold rounded-full" style={{ width: `${pct}%` }} />
                                                 </div>
-                                                <span className="text-charcoal font-medium text-xs">{p.title}</span>
+                                                <span className="text-white font-medium text-xs">{p.title}</span>
                                             </div>
                                         </td>
                                         <td className="text-right p-4 font-mono text-gold text-xs">{p.qty}</td>
-                                        <td className="text-right p-4 font-mono text-textsoft text-xs">{pct}%</td>
+                                        <td className="text-right p-4 font-mono text-luxury-subtext text-xs">{pct}%</td>
                                     </tr>
                                 )
                             })}

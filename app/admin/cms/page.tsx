@@ -39,7 +39,7 @@ export default async function AdminCMSPage() {
                         <div className="h-40 bg-black/40 border-b border-white/5 flex items-center justify-center relative overflow-hidden">
                             <Layout className="w-12 h-12 text-white/5 group-hover:text-gold/20 transition-all group-hover:scale-110 duration-700" />
                             <div className="absolute top-4 right-4">
-                                <Badge className={`text-[8px] uppercase tracking-widest px-2 py-0.5 border ${page.is_published ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/50" : "bg-white/5 text-white/30 border-white/10"}`}>
+                                <Badge className={`text-[8px] uppercase tracking-widest px-2 py-0.5 border ${page.is_published ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/50" : "bg-[#0B0B0D]/5 text-white/30 border-white/10"}`}>
                                     {page.is_published ? "Live" : "Draft"}
                                 </Badge>
                             </div>
@@ -54,20 +54,20 @@ export default async function AdminCMSPage() {
                             <div className="flex items-center gap-2 pt-4 border-t border-white/5">
                                 <Link
                                     href={`/admin/cms/${page.id}`}
-                                    className="flex-grow bg-white/5 hover:bg-gold hover:text-black text-white/70 text-[10px] uppercase tracking-luxury font-bold py-3 text-center transition-all flex items-center justify-center gap-2"
+                                    className="flex-grow bg-[#0B0B0D]/5 hover:bg-gold hover:text-black text-white/70 text-[10px] uppercase tracking-luxury font-bold py-3 text-center transition-all flex items-center justify-center gap-2"
                                 >
                                     <Edit2 className="w-3 h-3" />
                                     Architect
                                 </Link>
 
                                 <form action={async () => { "use server"; await togglePagePublish(page.id, page.is_published); }} className="contents">
-                                    <button className="w-12 h-11 bg-white/5 hover:text-gold text-white/30 flex items-center justify-center transition-colors">
+                                    <button className="w-12 h-11 bg-[#0B0B0D]/5 hover:text-gold text-white/30 flex items-center justify-center transition-colors">
                                         {page.is_published ? <Lock className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
                                     </button>
                                 </form>
 
                                 <form action={async () => { "use server"; await deletePage(page.id); }} className="contents">
-                                    <button className="w-12 h-11 bg-white/5 hover:text-red-400 text-white/30 flex items-center justify-center transition-colors">
+                                    <button className="w-12 h-11 bg-[#0B0B0D]/5 hover:text-red-400 text-white/30 flex items-center justify-center transition-colors">
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </form>

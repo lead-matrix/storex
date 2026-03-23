@@ -111,20 +111,20 @@ export function MediaPicker({ onSelect, trigger, multiSelect = false, onSelectMu
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-luxury-border bg-white rounded-luxury shadow-luxury">
-                <DialogHeader className="p-6 border-b border-charcoal/5 bg-pearl/30">
+            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-luxury-border bg-[#0B0B0D] rounded-luxury shadow-luxury">
+                <DialogHeader className="p-6 border-b border-white/5 bg-[#0B0B0D]/5">
                     <div className="flex items-center justify-between">
-                        <DialogTitle className="text-xl font-heading tracking-luxury text-charcoal flex items-center gap-3">
+                        <DialogTitle className="text-xl font-heading tracking-luxury text-white flex items-center gap-3">
                             <ImageIcon className="w-5 h-5 text-gold" />
                             VAULT SELECTION
                         </DialogTitle>
                         <div className="relative w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-textsoft/40" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-luxury-subtext/40" />
                             <input
                                 placeholder="Search the vault..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-white border border-charcoal/10 rounded-full text-xs outline-none focus:border-gold/50 transition-all shadow-sm"
+                                className="w-full pl-9 pr-4 py-2 bg-[#0B0B0D] border border-white/10 rounded-full text-xs outline-none focus:border-gold/50 transition-all shadow-sm"
                             />
                         </div>
                     </div>
@@ -134,10 +134,10 @@ export function MediaPicker({ onSelect, trigger, multiSelect = false, onSelectMu
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24 gap-4">
                             <Loader2 className="w-8 h-8 animate-spin text-gold" />
-                            <p className="text-[10px] uppercase tracking-widest text-textsoft font-bold animate-pulse">Consulting the Archives...</p>
+                            <p className="text-[10px] uppercase tracking-widest text-luxury-subtext font-bold animate-pulse">Consulting the Archives...</p>
                         </div>
                     ) : filteredFiles.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-textsoft/40">
+                        <div className="flex flex-col items-center justify-center py-24 text-luxury-subtext/40">
                             <X className="w-12 h-12 mb-4 opacity-10" />
                             <p className="text-[10px] uppercase tracking-widest font-bold">The archives are empty</p>
                         </div>
@@ -174,19 +174,19 @@ export function MediaPicker({ onSelect, trigger, multiSelect = false, onSelectMu
                     )}
                 </div>
 
-                <div className="p-4 border-t border-charcoal/5 bg-pearl/30 flex justify-between items-center px-6">
-                    <p className="text-[10px] uppercase tracking-widest text-textsoft font-medium">
+                <div className="p-4 border-t border-white/5 bg-[#0B0B0D]/5 flex justify-between items-center px-6">
+                    <p className="text-[10px] uppercase tracking-widest text-luxury-subtext font-medium">
                         {selected.size} Artifacts Prepared
                     </p>
                     <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="text-charcoal hover:bg-black/5 text-[10px] uppercase tracking-widest font-bold">
+                        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="text-white hover:bg-black/5 text-[10px] uppercase tracking-widest font-bold">
                             Cancel
                         </Button>
                         {multiSelect && (
                             <Button
                                 onClick={confirmSelection}
                                 disabled={selected.size === 0}
-                                className="bg-charcoal text-white hover:bg-gold px-6 text-[10px] uppercase tracking-widest font-bold shadow-soft transition-all"
+                                className="bg-[#0B0B0D] text-white hover:bg-gold px-6 text-[10px] uppercase tracking-widest font-bold shadow-soft transition-all"
                             >
                                 Integrate Assets
                             </Button>

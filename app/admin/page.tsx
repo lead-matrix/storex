@@ -25,7 +25,7 @@ function KPICard({ label, value, subtext, icon: Icon, colorClass, sparkData }: a
     return (
         <div className="bg-obsidian border border-luxury-border rounded-luxury p-6 shadow-luxury group transition-all hover:border-gold/30">
             <div className="flex items-center justify-between mb-6">
-                <div className={`p-2 rounded-sm bg-white/5 border border-white/10 ${colorClass}`}>
+                <div className={`p-2 rounded-sm bg-[#0B0B0D]/5 border border-white/10 ${colorClass}`}>
                     <Icon size={16} className="opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
                 {sparkData && <LuxurySparkline data={sparkData} />}
@@ -75,11 +75,11 @@ export default async function AdminDashboard() {
                         <Plus size={14} />
                         New Product
                     </Link>
-                    <Link href="/admin/orders" className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/70 hover:border-white/30 transition-all font-bold">
+                    <Link href="/admin/orders" className="flex items-center gap-2 bg-[#0B0B0D]/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/70 hover:border-white/30 transition-all font-bold">
                         <ShoppingCart size={14} />
                         View Orders
                     </Link>
-                    <button className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/50 hover:text-gold transition-all">
+                    <button className="flex items-center gap-2 bg-[#0B0B0D]/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/50 hover:text-gold transition-all">
                         <RefreshCw className="w-3 h-3" />
                         Refresh Data
                     </button>
@@ -133,7 +133,7 @@ export default async function AdminDashboard() {
                         <table className="w-full text-left">
                             <tbody className="divide-y divide-white/5">
                                 {recentOrders?.map((order) => (
-                                    <tr key={order.id} className="hover:bg-white/5 transition-colors group">
+                                    <tr key={order.id} className="hover:bg-[#0B0B0D]/5 transition-colors group">
                                         <td className="px-8 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-[10px] text-gold font-bold">
@@ -169,7 +169,7 @@ export default async function AdminDashboard() {
                     </div>
                     <div className="p-6 space-y-4 flex-grow">
                         {lowStockProducts?.map((variant: any) => (
-                            <div key={variant.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-sm hover border-gold/20 transition-all group">
+                            <div key={variant.id} className="flex items-center justify-between p-4 bg-[#0B0B0D]/5 border border-white/10 rounded-sm hover border-gold/20 transition-all group">
                                 <div className="min-w-0">
                                     <p className="text-[10px] text-white font-medium truncate group-hover:text-gold transition-colors">
                                         {variant.products?.title} ({variant.name})

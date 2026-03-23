@@ -74,7 +74,7 @@ export default async function AdminProductsPage() {
                 <div className="flex flex-wrap items-center gap-3">
                     <a
                         href="/api/admin/products/export"
-                        className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-3 rounded text-[11px] font-bold uppercase tracking-luxury text-white/50 hover:text-white transition-all shadow-soft"
+                        className="flex items-center gap-2 bg-[#0B0B0D]/5 border border-white/10 px-4 py-3 rounded text-[11px] font-bold uppercase tracking-luxury text-white/50 hover:text-white transition-all shadow-soft"
                     >
                         <Download className="w-4 h-4" />
                         Export
@@ -127,7 +127,7 @@ export default async function AdminProductsPage() {
                                 {product.images?.[0] ? (
                                     <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover opacity-80" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-white/10 bg-white/5">
+                                    <div className="w-full h-full flex items-center justify-center text-white/10 bg-[#0B0B0D]/5">
                                         <Package size={20} />
                                     </div>
                                 )}
@@ -158,7 +158,7 @@ export default async function AdminProductsPage() {
                                     {product.first_variant_id ? (
                                         <>
                                             <form action={async () => { "use server"; await adjustStock(product.first_variant_id, -1); }}>
-                                                <button className="w-7 h-7 bg-white/5 border border-white/10 flex items-center justify-center rounded-full hover:border-gold/30 hover:text-gold transition-all text-white/30">
+                                                <button className="w-7 h-7 bg-[#0B0B0D]/5 border border-white/10 flex items-center justify-center rounded-full hover:border-gold/30 hover:text-gold transition-all text-white/30">
                                                     <ChevronDown className="w-4 h-4" />
                                                 </button>
                                             </form>
@@ -166,7 +166,7 @@ export default async function AdminProductsPage() {
                                                 {product.stock}
                                             </span>
                                             <form action={async () => { "use server"; await adjustStock(product.first_variant_id, 1); }}>
-                                                <button className="w-7 h-7 bg-white/5 border border-white/10 flex items-center justify-center rounded-full hover:border-gold/30 hover:text-gold transition-all text-white/30">
+                                                <button className="w-7 h-7 bg-[#0B0B0D]/5 border border-white/10 flex items-center justify-center rounded-full hover:border-gold/30 hover:text-gold transition-all text-white/30">
                                                     <ChevronUp className="w-4 h-4" />
                                                 </button>
                                             </form>
@@ -197,7 +197,7 @@ export default async function AdminProductsPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-white/5 bg-white/5 text-[10px] uppercase tracking-luxury text-gold font-bold">
+                            <tr className="border-b border-white/5 bg-[#0B0B0D]/5 text-[10px] uppercase tracking-luxury text-gold font-bold">
                                 <th className="px-8 py-5">Piece Information</th>
                                 <th className="px-8 py-5">Category</th>
                                 <th className="px-8 py-5 text-right">Valuation</th>
@@ -208,14 +208,14 @@ export default async function AdminProductsPage() {
                         </thead>
                         <tbody className="text-[11px] text-white/60 font-medium divide-y divide-white/5">
                             {processedProducts.map((product) => (
-                                <tr key={product.id} className="hover:bg-white/5 transition-colors group">
+                                <tr key={product.id} className="hover:bg-[#0B0B0D]/5 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-black/40 border border-white/10 rounded overflow-hidden shadow-soft flex-shrink-0 group-hover:border-gold/30 transition-colors">
                                                 {product.images?.[0] ? (
                                                     <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-white/10 bg-white/5">
+                                                    <div className="w-full h-full flex items-center justify-center text-white/10 bg-[#0B0B0D]/5">
                                                         <Package size={16} />
                                                     </div>
                                                 )}

@@ -255,8 +255,8 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Media Library</h1>
-                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury">Media Library</h1>
+                    <p className="text-luxury-subtext text-xs uppercase tracking-luxury font-medium">
                         Image & Content Command Center
                     </p>
                 </div>
@@ -264,7 +264,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                 <div className="flex items-center gap-3">
                     <button
                         onClick={refreshLibrary}
-                        className="flex items-center gap-2 bg-pearl border border-charcoal/10 px-4 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold text-textsoft hover:text-gold hover:border-gold/30 transition-all"
+                        className="flex items-center gap-2 bg-[#121214] border border-white/10 px-4 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold text-luxury-subtext hover:text-gold hover:border-gold/30 transition-all"
                     >
                         <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
                         Refresh
@@ -273,7 +273,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-pearl/50 border border-charcoal/10 rounded-lg p-1 w-fit">
+            <div className="flex gap-1 bg-[#0B0B0D]/5 border border-white/10 rounded-lg p-1 w-fit">
                 {[
                     { id: 'media', label: 'Images & Files', icon: ImageIcon },
                     { id: 'content', label: 'Text Content', icon: Edit3 },
@@ -283,8 +283,8 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                         onClick={() => setActiveTab(tab.id as 'media' | 'content')}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[10px] uppercase tracking-widest font-bold transition-all
                             ${activeTab === tab.id
-                                ? 'bg-white text-charcoal shadow-sm border border-charcoal/5'
-                                : 'text-textsoft hover:text-charcoal'}`}
+                                ? 'bg-[#0B0B0D] text-white shadow-sm border border-white/5'
+                                : 'text-luxury-subtext hover:text-white'}`}
                     >
                         <tab.icon className="w-3.5 h-3.5" />
                         {tab.label}
@@ -298,13 +298,13 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                     {/* Stats Row */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
-                            { label: 'Total Media', value: files.length, color: 'text-charcoal' },
+                            { label: 'Total Media', value: files.length, color: 'text-white' },
                             { label: 'Library Size', value: formatBytes(totalSize), color: 'text-gold' },
                             { label: 'Selected', value: selectedFiles.size, color: 'text-blue-500' },
                             { label: 'Filtered', value: filteredFiles.length, color: 'text-emerald-500' },
                         ].map(s => (
-                            <div key={s.label} className="bg-white rounded-xl border border-charcoal/10 p-5 shadow-sm">
-                                <p className="text-[9px] uppercase tracking-widest text-textsoft font-medium mb-2">{s.label}</p>
+                            <div key={s.label} className="bg-[#0B0B0D] rounded-xl border border-white/10 p-5 shadow-sm">
+                                <p className="text-[9px] uppercase tracking-widest text-luxury-subtext font-medium mb-2">{s.label}</p>
                                 <p className={`text-2xl font-serif ${s.color}`}>{s.value}</p>
                             </div>
                         ))}
@@ -316,22 +316,22 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                         className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300
                             ${isDragActive
                                 ? 'border-gold bg-gold/5 scale-[0.99]'
-                                : 'border-charcoal/20 hover:border-gold/50 bg-pearl/30 hover:bg-pearl/50'}
+                                : 'border-white/10/20 hover:border-gold/50 bg-[#0B0B0D]/5 hover:bg-[#0B0B0D]/5'}
                             ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
                     >
                         <input {...getInputProps()} />
                         <div className="flex flex-col items-center gap-4">
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all
-                                ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-pearl text-textsoft/40'}`}>
+                                ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-[#121214] text-luxury-subtext/40'}`}>
                                 {uploading
                                     ? <Loader2 className="w-8 h-8 animate-spin" />
                                     : <Upload className={`w-8 h-8 ${isDragActive ? 'animate-bounce' : ''}`} />}
                             </div>
                             <div>
-                                <p className="text-base font-medium text-charcoal tracking-wide">
+                                <p className="text-base font-medium text-white tracking-wide">
                                     {isDragActive ? 'Release to upload' : 'Drop images or click to upload'}
                                 </p>
-                                <p className="text-[10px] text-textsoft/60 uppercase tracking-widest mt-1">
+                                <p className="text-[10px] text-luxury-subtext/60 uppercase tracking-widest mt-1">
                                     PNG, JPG, WebP, GIF · Auto-optimized to WebP · Max 20MB per file
                                 </p>
                             </div>
@@ -342,12 +342,12 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                     {Object.keys(uploadProgress).length > 0 && (
                         <div className="space-y-2">
                             {Object.entries(uploadProgress).map(([name, progress]) => (
-                                <div key={name} className="bg-white border border-charcoal/10 rounded-lg p-4">
+                                <div key={name} className="bg-[#0B0B0D] border border-white/10 rounded-lg p-4">
                                     <div className="flex justify-between mb-2">
-                                        <span className="text-[10px] text-textsoft truncate uppercase tracking-widest">{name}</span>
+                                        <span className="text-[10px] text-luxury-subtext truncate uppercase tracking-widest">{name}</span>
                                         <span className="text-[10px] text-gold font-mono font-bold">{progress}%</span>
                                     </div>
-                                    <div className="h-1 bg-pearl rounded-full overflow-hidden">
+                                    <div className="h-1 bg-[#121214] rounded-full overflow-hidden">
                                         <div className="h-full bg-gold transition-all duration-300" style={{ width: `${progress}%` }} />
                                     </div>
                                 </div>
@@ -358,20 +358,20 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                     {/* Toolbar */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="relative flex-grow max-w-sm">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textsoft/40" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-luxury-subtext/40" />
                             <input
                                 type="text"
                                 placeholder="Search assets..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 bg-white border border-charcoal/10 rounded-lg text-xs text-charcoal outline-none focus:border-gold/50 transition-all"
+                                className="w-full pl-9 pr-4 py-2.5 bg-[#0B0B0D] border border-white/10 rounded-lg text-xs text-white outline-none focus:border-gold/50 transition-all"
                             />
                         </div>
 
                         <div className="flex items-center gap-2 ml-auto">
                             {selectedFiles.size > 0 && (
                                 <>
-                                    <span className="text-[10px] text-textsoft uppercase tracking-widest">
+                                    <span className="text-[10px] text-luxury-subtext uppercase tracking-widest">
                                         {selectedFiles.size} selected
                                     </span>
                                     <button
@@ -386,17 +386,17 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
 
                             <button
                                 onClick={selectAll}
-                                className="text-[9px] uppercase tracking-widest text-textsoft/60 hover:text-gold transition-colors px-3 py-2"
+                                className="text-[9px] uppercase tracking-widest text-luxury-subtext/60 hover:text-gold transition-colors px-3 py-2"
                             >
                                 {selectedFiles.size === filteredFiles.length ? 'Deselect All' : 'Select All'}
                             </button>
 
-                            <div className="flex border border-charcoal/10 rounded-lg overflow-hidden">
+                            <div className="flex border border-white/10 rounded-lg overflow-hidden">
                                 {(['grid', 'list'] as const).map(mode => (
                                     <button
                                         key={mode}
                                         onClick={() => setViewMode(mode)}
-                                        className={`p-2.5 transition-colors ${viewMode === mode ? 'bg-charcoal text-white' : 'bg-white text-textsoft hover:text-charcoal'}`}
+                                        className={`p-2.5 transition-colors ${viewMode === mode ? 'bg-white text-white' : 'bg-[#0B0B0D] text-luxury-subtext hover:text-white'}`}
                                     >
                                         {mode === 'grid' ? <Grid3X3 className="w-3.5 h-3.5" /> : <List className="w-3.5 h-3.5" />}
                                     </button>
@@ -407,9 +407,9 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
 
                     {/* File Grid / List */}
                     {filteredFiles.length === 0 ? (
-                        <div className="py-32 text-center border border-dashed border-charcoal/10 rounded-xl bg-pearl/20">
-                            <FolderOpen className="w-12 h-12 text-charcoal/10 mx-auto mb-4" />
-                            <p className="text-textsoft text-[10px] uppercase tracking-widest">
+                        <div className="py-32 text-center border border-dashed border-white/10 rounded-xl bg-[#121214]/20">
+                            <FolderOpen className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                            <p className="text-luxury-subtext text-[10px] uppercase tracking-widest">
                                 {searchQuery ? 'No media match your search' : 'No media in library. Upload your first image above.'}
                             </p>
                         </div>
@@ -418,14 +418,14 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                             {filteredFiles.map(file => (
                                 <div
                                     key={file.id}
-                                    className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer bg-pearl
+                                    className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer bg-[#121214]
                                         ${selectedFiles.has(file.id)
                                             ? 'border-gold shadow-lg shadow-gold/10'
-                                            : 'border-charcoal/10 hover:border-gold/40'}`}
+                                            : 'border-white/10 hover:border-gold/40'}`}
                                     onClick={() => toggleSelect(file.id)}
                                 >
                                     {/* Image */}
-                                    <div className="aspect-square relative bg-charcoal/5">
+                                    <div className="aspect-square relative bg-white/5">
                                         <Image
                                             src={file.url}
                                             alt={file.name}
@@ -449,21 +449,21 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                             onClick={e => e.stopPropagation()}>
                                             <button
                                                 onClick={() => setPreviewFile(file)}
-                                                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 text-white transition-colors"
+                                                className="p-2 bg-[#0B0B0D]/10 rounded-lg hover:bg-[#0B0B0D]/20 text-white transition-colors"
                                                 title="Preview"
                                             >
                                                 <Eye className="w-4 h-4" />
                                             </button>
                                             <button
                                                 onClick={() => copyUrl(file.url)}
-                                                className="p-2 bg-white/10 rounded-lg hover:bg-gold text-white transition-colors"
+                                                className="p-2 bg-[#0B0B0D]/10 rounded-lg hover:bg-gold text-white transition-colors"
                                                 title="Copy URL"
                                             >
                                                 {copiedUrl === file.url ? <Check className="w-4 h-4 text-green-300" /> : <Copy className="w-4 h-4" />}
                                             </button>
                                             <button
                                                 onClick={() => deleteFile(file)}
-                                                className="p-2 bg-white/10 rounded-lg hover:bg-red-500 text-white transition-colors"
+                                                className="p-2 bg-[#0B0B0D]/10 rounded-lg hover:bg-red-500 text-white transition-colors"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -472,74 +472,74 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                     </div>
 
                                     {/* File Info */}
-                                    <div className="p-2 bg-white">
-                                        <p className="text-[9px] text-charcoal font-medium truncate">{file.name}</p>
-                                        <p className="text-[8px] text-textsoft/50 mt-0.5">{formatBytes(file.size)}</p>
+                                    <div className="p-2 bg-[#0B0B0D]">
+                                        <p className="text-[9px] text-white font-medium truncate">{file.name}</p>
+                                        <p className="text-[8px] text-luxury-subtext/50 mt-0.5">{formatBytes(file.size)}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
                         /* List View */
-                        <div className="bg-white border border-charcoal/10 rounded-xl overflow-hidden">
+                        <div className="bg-[#0B0B0D] border border-white/10 rounded-xl overflow-hidden">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b border-charcoal/5 bg-pearl/30">
-                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold w-10">
-                                            <button onClick={selectAll} className="text-textsoft hover:text-gold transition-colors">
+                                    <tr className="border-b border-white/5 bg-[#0B0B0D]/5">
+                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-luxury-subtext font-bold w-10">
+                                            <button onClick={selectAll} className="text-luxury-subtext hover:text-gold transition-colors">
                                                 {selectedFiles.size === filteredFiles.length ? '✓' : '○'}
                                             </button>
                                         </th>
-                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Media</th>
-                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Size</th>
-                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Date</th>
-                                        <th className="text-right p-4 text-[9px] uppercase tracking-widest text-textsoft font-bold">Actions</th>
+                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-luxury-subtext font-bold">Media</th>
+                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-luxury-subtext font-bold">Size</th>
+                                        <th className="text-left p-4 text-[9px] uppercase tracking-widest text-luxury-subtext font-bold">Date</th>
+                                        <th className="text-right p-4 text-[9px] uppercase tracking-widest text-luxury-subtext font-bold">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredFiles.map(file => (
                                         <tr key={file.id}
-                                            className={`border-b border-charcoal/5 hover:bg-pearl/20 transition-colors ${selectedFiles.has(file.id) ? 'bg-gold/5' : ''}`}>
+                                            className={`border-b border-white/5 hover:bg-[#121214]/20 transition-colors ${selectedFiles.has(file.id) ? 'bg-gold/5' : ''}`}>
                                             <td className="p-4">
                                                 <button onClick={() => toggleSelect(file.id)}
-                                                    className={`transition-colors ${selectedFiles.has(file.id) ? 'text-gold' : 'text-textsoft/30 hover:text-gold'}`}>
-                                                    {selectedFiles.has(file.id) ? <Check className="w-4 h-4" /> : <div className="w-4 h-4 border border-charcoal/20 rounded" />}
+                                                    className={`transition-colors ${selectedFiles.has(file.id) ? 'text-gold' : 'text-luxury-subtext/30 hover:text-gold'}`}>
+                                                    {selectedFiles.has(file.id) ? <Check className="w-4 h-4" /> : <div className="w-4 h-4 border border-white/10/20 rounded" />}
                                                 </button>
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded overflow-hidden bg-pearl flex-shrink-0">
+                                                    <div className="w-10 h-10 rounded overflow-hidden bg-[#121214] flex-shrink-0">
                                                         <Image src={file.url} alt={file.name} width={40} height={40} className="object-cover w-full h-full" unoptimized />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs text-charcoal font-medium truncate max-w-[200px]">{file.name}</p>
-                                                        <p className="text-[9px] text-textsoft/50 uppercase tracking-widest">
+                                                        <p className="text-xs text-white font-medium truncate max-w-[200px]">{file.name}</p>
+                                                        <p className="text-[9px] text-luxury-subtext/50 uppercase tracking-widest">
                                                             {file.contentType.split('/')[1].toUpperCase()}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-[10px] text-textsoft font-mono">{formatBytes(file.size)}</td>
-                                            <td className="p-4 text-[10px] text-textsoft">{formatDate(file.createdAt)}</td>
+                                            <td className="p-4 text-[10px] text-luxury-subtext font-mono">{formatBytes(file.size)}</td>
+                                            <td className="p-4 text-[10px] text-luxury-subtext">{formatDate(file.createdAt)}</td>
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         onClick={() => setPreviewFile(file)}
-                                                        className="p-1.5 text-textsoft/40 hover:text-blue-500 transition-colors"
+                                                        className="p-1.5 text-luxury-subtext/40 hover:text-blue-500 transition-colors"
                                                         title="Preview"
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => copyUrl(file.url)}
-                                                        className="p-1.5 text-textsoft/40 hover:text-gold transition-colors"
+                                                        className="p-1.5 text-luxury-subtext/40 hover:text-gold transition-colors"
                                                         title="Copy URL"
                                                     >
                                                         {copiedUrl === file.url ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                                     </button>
                                                     <button
                                                         onClick={() => deleteFile(file)}
-                                                        className="p-1.5 text-textsoft/40 hover:text-red-500 transition-colors"
+                                                        className="p-1.5 text-luxury-subtext/40 hover:text-red-500 transition-colors"
                                                         title="Delete"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -558,25 +558,25 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
             {/* ─── CONTENT TAB ─── */}
             {activeTab === 'content' && (
                 <div className="space-y-6">
-                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">
+                    <p className="text-luxury-subtext text-xs uppercase tracking-luxury font-medium">
                         Edit text content blocks that power your storefront. Changes are saved directly to the database.
                     </p>
 
                     {contentBlocks.length === 0 ? (
-                        <div className="py-24 text-center border border-dashed border-charcoal/10 rounded-xl">
-                            <Edit3 className="w-12 h-12 text-charcoal/10 mx-auto mb-4" />
-                            <p className="text-textsoft text-[10px] uppercase tracking-widest">No frontend content blocks found</p>
+                        <div className="py-24 text-center border border-dashed border-white/10 rounded-xl">
+                            <Edit3 className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                            <p className="text-luxury-subtext text-[10px] uppercase tracking-widest">No frontend content blocks found</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
                             {contentBlocks.map(block => (
-                                <div key={block.id} className="bg-white border border-charcoal/10 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="flex items-center justify-between px-6 py-4 border-b border-charcoal/5 bg-pearl/30">
+                                <div key={block.id} className="bg-[#0B0B0D] border border-white/10 rounded-xl shadow-sm overflow-hidden">
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0B0B0D]/5">
                                         <div>
-                                            <h3 className="text-[11px] uppercase tracking-widest text-charcoal font-bold">
+                                            <h3 className="text-[11px] uppercase tracking-widest text-white font-bold">
                                                 {block.content_key.replace(/_/g, ' ')}
                                             </h3>
-                                            <p className="text-[9px] text-textsoft/50 mt-0.5 uppercase tracking-widest">
+                                            <p className="text-[9px] text-luxury-subtext/50 mt-0.5 uppercase tracking-widest">
                                                 Last updated: {formatDate(block.updated_at)}
                                             </p>
                                         </div>
@@ -585,8 +585,8 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                             disabled={savingContent === block.id || !contentEdits[block.id]}
                                             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all
                                                 ${contentEdits[block.id]
-                                                    ? 'bg-charcoal text-white hover:bg-gold'
-                                                    : 'bg-pearl text-textsoft/30 cursor-not-allowed'}`}
+                                                    ? 'bg-white text-white hover:bg-gold'
+                                                    : 'bg-[#121214] text-luxury-subtext/30 cursor-not-allowed'}`}
                                         >
                                             {savingContent === block.id
                                                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -598,7 +598,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                     <div className="p-6 space-y-4">
                                         {Object.entries(block.content_data ?? {}).map(([key, value]) => (
                                             <div key={key} className="space-y-1.5">
-                                                <label className="text-[9px] uppercase tracking-widest text-textsoft/60 font-bold">
+                                                <label className="text-[9px] uppercase tracking-widest text-luxury-subtext/60 font-bold">
                                                     {key.replace(/_/g, ' ')}
                                                 </label>
                                                 {typeof value === 'string' && value.length > 80 ? (
@@ -606,14 +606,14 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                                         rows={3}
                                                         value={getContentValue(block, key)}
                                                         onChange={e => setContentValue(block.id, key, e.target.value)}
-                                                        className="w-full bg-pearl border border-charcoal/10 rounded-lg px-4 py-3 text-sm text-charcoal outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all resize-none"
+                                                        className="w-full bg-[#121214] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all resize-none"
                                                     />
                                                 ) : (
                                                     <input
                                                         type="text"
                                                         value={getContentValue(block, key)}
                                                         onChange={e => setContentValue(block.id, key, e.target.value)}
-                                                        className="w-full bg-pearl border border-charcoal/10 rounded-lg px-4 py-3 text-sm text-charcoal outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all"
+                                                        className="w-full bg-[#121214] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all"
                                                     />
                                                 )}
                                             </div>
@@ -633,22 +633,22 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                     onClick={() => setPreviewFile(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl overflow-hidden max-w-3xl w-full shadow-2xl"
+                        className="bg-[#0B0B0D] rounded-2xl overflow-hidden max-w-3xl w-full shadow-2xl"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-charcoal/5">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                             <div>
-                                <h3 className="font-medium text-charcoal truncate">{previewFile.name}</h3>
-                                <p className="text-[9px] text-textsoft uppercase tracking-widest mt-0.5">
+                                <h3 className="font-medium text-white truncate">{previewFile.name}</h3>
+                                <p className="text-[9px] text-luxury-subtext uppercase tracking-widest mt-0.5">
                                     {formatBytes(previewFile.size)} · {previewFile.contentType.toUpperCase()}
                                 </p>
                             </div>
-                            <button onClick={() => setPreviewFile(null)} className="p-2 text-textsoft hover:text-charcoal transition-colors">
+                            <button onClick={() => setPreviewFile(null)} className="p-2 text-luxury-subtext hover:text-white transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="relative bg-pearl/30" style={{ height: 400 }}>
+                        <div className="relative bg-[#0B0B0D]/5" style={{ height: 400 }}>
                             <Image
                                 src={previewFile.url}
                                 alt={previewFile.name}
@@ -658,16 +658,16 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                             />
                         </div>
 
-                        <div className="px-6 py-4 flex items-center gap-3 border-t border-charcoal/5">
+                        <div className="px-6 py-4 flex items-center gap-3 border-t border-white/5">
                             <input
                                 type="text"
                                 readOnly
                                 value={previewFile.url}
-                                className="flex-grow bg-pearl border border-charcoal/10 rounded-lg px-4 py-2.5 text-[10px] text-textsoft font-mono outline-none"
+                                className="flex-grow bg-[#121214] border border-white/10 rounded-lg px-4 py-2.5 text-[10px] text-luxury-subtext font-mono outline-none"
                             />
                             <button
                                 onClick={() => copyUrl(previewFile.url)}
-                                className="flex items-center gap-2 bg-charcoal text-white px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold hover:bg-gold transition-all"
+                                className="flex items-center gap-2 bg-white text-white px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold hover:bg-gold transition-all"
                             >
                                 {copiedUrl === previewFile.url ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                 Copy URL
@@ -677,7 +677,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                 download={previewFile.name}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center gap-2 bg-pearl border border-charcoal/10 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold text-textsoft hover:text-gold hover:border-gold/30 transition-all"
+                                className="flex items-center gap-2 bg-[#121214] border border-white/10 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold text-luxury-subtext hover:text-gold hover:border-gold/30 transition-all"
                             >
                                 <Download className="w-3.5 h-3.5" />
                                 Download

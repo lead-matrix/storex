@@ -180,7 +180,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
 
             {/* Error Banner */}
             {error && (
-                <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm rounded-md">
+                <div className="flex items-start gap-3 bg-red-950/20 border border-red-500/20 text-red-400 px-5 py-4 text-sm rounded-md">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <span>{error}</span>
                 </div>
@@ -192,7 +192,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
 
                     {/* Product Name */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                        <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                             Product Title *
                         </Label>
                         <Input
@@ -200,7 +200,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             defaultValue={product?.title}
                             placeholder="e.g. Obsidian Foundation"
                             required
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
+                            className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 h-12"
                             onChange={e => {
                                 if (!slugManual) setSlugValue(generateSlug(e.target.value))
                             }}
@@ -209,7 +209,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
 
                     {/* Slug */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                        <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                             URL Slug *
                         </Label>
                         <Input
@@ -217,19 +217,19 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             value={slugValue}
                             placeholder="e.g. obsidian-foundation"
                             required
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12 font-mono text-xs"
+                            className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 h-12 font-mono text-xs"
                             onChange={e => {
                                 setSlugManual(true)
                                 setSlugValue(generateSlug(e.target.value))
                             }}
                         />
-                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Used in /product/[slug] — auto-generated from name</p>
+                        <p className="text-[10px] text-luxury-subtext/50 tracking-luxury">Used in /product/[slug] — auto-generated from name</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         {/* Price */}
                         <div className="space-y-2">
-                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                                 Base Price (USD) *
                             </Label>
                             <Input
@@ -240,13 +240,13 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 placeholder="0.00"
                                 defaultValue={product?.base_price}
                                 required
-                                className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal h-12"
+                                className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white h-12"
                             />
                         </div>
 
                         {/* Stock (Base) */}
                         <div className="space-y-2">
-                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                                 Initial Stock *
                             </Label>
                             <Input
@@ -256,36 +256,36 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 placeholder="50"
                                 defaultValue={product?.id ? 0 : 50}
                                 required
-                                className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal h-12"
+                                className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white h-12"
                             />
                         </div>
                     </div>
 
                     {/* Shipping Dimensions + Customs */}
-                    <div className="p-4 bg-pearl/50 rounded-lg border border-charcoal/5 space-y-4">
+                    <div className="p-4 bg-[#0B0B0D]/5 rounded-lg border border-white/5 space-y-4">
                         <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping &amp; Customs Details</Label>
                         <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">Weight (oz)</Label>
+                                <Label className="text-[9px] uppercase text-luxury-subtext">Weight (oz)</Label>
                                 <Input name="weight_grams" type="number" step="0.01" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" placeholder="oz" />
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">Product SKU</Label>
+                                <Label className="text-[9px] uppercase text-luxury-subtext">Product SKU</Label>
                                 <Input
                                     name="sku"
                                     defaultValue={product?.sku ?? ''}
                                     placeholder="e.g. DC-FND-001"
-                                    className="h-9 text-[10px] font-mono uppercase bg-white/50 border-charcoal/10"
+                                    className="h-9 text-[10px] font-mono uppercase bg-black/50 border-white/10"
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">Country of Origin *</Label>
+                                <Label className="text-[9px] uppercase text-luxury-subtext">Country of Origin *</Label>
                                 <select
                                     name="country_of_origin"
                                     defaultValue={product?.country_of_origin ?? 'US'}
-                                    className="w-full h-9 bg-white/50 border border-charcoal/10 rounded px-2 text-[10px] uppercase font-bold outline-none focus:border-gold/50"
+                                    className="w-full h-9 bg-black/50 border border-white/10 rounded px-2 text-[10px] uppercase font-bold outline-none focus:border-gold/50"
                                 >
                                     <option value="">— Select —</option>
                                     <option value="US">🇺🇸 United States</option>
@@ -318,7 +318,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-textsoft">Customs Value / Unit (USD)</Label>
+                                <Label className="text-[9px] uppercase text-luxury-subtext">Customs Value / Unit (USD)</Label>
                                 <Input
                                     name="customs_value_usd"
                                     type="number"
@@ -326,23 +326,23 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                     min="0"
                                     defaultValue={product?.customs_value_usd ?? ''}
                                     placeholder="e.g. 12.00"
-                                    className="h-9 text-xs bg-white/50 border-charcoal/10"
+                                    className="h-9 text-xs bg-black/50 border-white/10"
                                 />
                             </div>
                         </div>
-                        <p className="text-[9px] text-textsoft/50 tracking-luxury">Weight in oz · Dimensions in inches · Country of origin + customs value are printed on international shipping labels (CN22/CP72).</p>
+                        <p className="text-[9px] text-luxury-subtext/50 tracking-luxury">Weight in oz · Dimensions in inches · Country of origin + customs value are printed on international shipping labels (CN22/CP72).</p>
                     </div>
 
                     {/* Category */}
                     <div className="space-y-2">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                        <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                             Category *
                         </Label>
                         <div className="relative">
                             <select
                                 name="category_id"
                                 defaultValue={product?.category_id ?? ''}
-                                className="w-full h-12 bg-pearl rounded-md border border-charcoal/10 px-4 pr-10 text-sm text-charcoal focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-colors appearance-none"
+                                className="w-full h-12 bg-[#121214] rounded-md border border-white/10 px-4 pr-10 text-sm text-white focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-colors appearance-none"
                             >
                                 <option value="">— Select Category —</option>
                                 {categories.map(cat => (
@@ -351,10 +351,10 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                     </option>
                                 ))}
                             </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textsoft pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-luxury-subtext pointer-events-none" />
                         </div>
                         {categories.length === 0 && (
-                            <p className="text-[10px] text-textsoft/60 tracking-luxury">
+                            <p className="text-[10px] text-luxury-subtext/60 tracking-luxury">
                                 No active categories — create them in /admin/categories
                             </p>
                         )}
@@ -363,7 +363,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     {/* Sale Price */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                                 Sale Price (USD)
                             </Label>
                             <div className="flex items-center space-x-2">
@@ -384,9 +384,9 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             min="0"
                             placeholder="e.g. 9.99"
                             defaultValue={product?.sale_price ?? ''}
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 h-12"
+                            className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 h-12"
                         />
-                        <p className="text-[10px] text-textsoft/50 tracking-luxury">Setting a price and toggling 'On Sale' will highlight this item as a special offer.</p>
+                        <p className="text-[10px] text-luxury-subtext/50 tracking-luxury">Setting a price and toggling 'On Sale' will highlight this item as a special offer.</p>
                     </div>
 
                     {/* Toggles */}
@@ -397,7 +397,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 name="is_featured"
                                 defaultChecked={product?.is_featured}
                             />
-                            <Label htmlFor="is_featured" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                            <Label htmlFor="is_featured" className="text-[10px] uppercase tracking-luxury text-luxury-subtext cursor-pointer font-medium">
                                 ⭐ Featured in Collection
                             </Label>
                         </div>
@@ -407,7 +407,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 name="is_bestseller"
                                 defaultChecked={product?.is_bestseller}
                             />
-                            <Label htmlFor="is_bestseller" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                            <Label htmlFor="is_bestseller" className="text-[10px] uppercase tracking-luxury text-luxury-subtext cursor-pointer font-medium">
                                 🏆 Mark as Bestseller
                             </Label>
                         </div>
@@ -417,17 +417,17 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 name="is_new"
                                 defaultChecked={product?.is_new}
                             />
-                            <Label htmlFor="is_new" className="text-[10px] uppercase tracking-luxury text-textsoft cursor-pointer font-medium">
+                            <Label htmlFor="is_new" className="text-[10px] uppercase tracking-luxury text-luxury-subtext cursor-pointer font-medium">
                                 ✨ Mark as New Arrival
                             </Label>
                         </div>
                         <div className="flex items-center space-x-3 pt-2">
                             <div className="flex flex-col gap-1.5 flex-1">
-                                <Label className="text-[9px] uppercase tracking-luxury text-textsoft/40">Visibility Status</Label>
+                                <Label className="text-[9px] uppercase tracking-luxury text-luxury-subtext/40">Visibility Status</Label>
                                 <select
                                     name="status"
                                     defaultValue={product?.status || 'active'}
-                                    className="bg-pearl border border-charcoal/10 rounded px-3 py-2 text-[10px] uppercase tracking-luxury font-bold outline-none h-10 w-full"
+                                    className="bg-[#121214] border border-white/10 rounded px-3 py-2 text-[10px] uppercase tracking-luxury font-bold outline-none h-10 w-full"
                                 >
                                     <option value="active">Active</option>
                                     <option value="draft">Draft</option>
@@ -443,7 +443,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     {/* Description */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                            <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                                 Description *
                             </Label>
                             <span className={`text-[9px] font-mono tabular-nums ${
@@ -459,14 +459,14 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             placeholder="Describe this product in detail: ingredients, finish, skin type suitability, how to apply, key benefits, scent, texture, size, any certifications (vegan, cruelty-free, etc.)..."
                             required
                             onChange={e => setDescCount(e.target.value.length)}
-                            className="bg-pearl border-charcoal/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-charcoal placeholder:text-textsoft/50 min-h-[220px] resize-y"
+                            className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 min-h-[220px] resize-y"
                         />
-                        <p className="text-[9px] text-textsoft/40 tracking-luxury">Aim for at least 150 characters. Include finish, skin type, how-to-use, and key ingredients.</p>
+                        <p className="text-[9px] text-luxury-subtext/40 tracking-luxury">Aim for at least 150 characters. Include finish, skin type, how-to-use, and key ingredients.</p>
                     </div>
 
                     {/* Image Upload */}
                     <div className="space-y-4">
-                        <Label className="text-[10px] uppercase tracking-luxury text-textsoft">
+                        <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
                             Visual Gallery
                         </Label>
                         <ImageUpload
@@ -479,14 +479,14 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             </div>
 
             {/* VARIANTS SECTION */}
-            <div className="border border-charcoal/10 rounded-luxury overflow-hidden">
+            <div className="border border-white/10 rounded-luxury overflow-hidden">
                 <button
                     type="button"
                     onClick={() => setShowVariants(v => !v)}
-                    className="w-full flex items-center justify-between px-6 py-4 bg-pearl hover:bg-champagne/50 transition-colors"
+                    className="w-full flex items-center justify-between px-6 py-4 bg-[#121214] hover:bg-gold/10 transition-colors"
                 >
                     <div className="flex items-center gap-3">
-                        <span className="text-[10px] uppercase tracking-luxury text-charcoal font-medium">
+                        <span className="text-[10px] uppercase tracking-luxury text-white font-medium">
                             Product Variants
                         </span>
                         {visibleVariants.length > 0 && (
@@ -496,20 +496,20 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         )}
                     </div>
                     <ChevronDown
-                        className={`w-4 h-4 text-textsoft transition-transform ${showVariants ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 text-luxury-subtext transition-transform ${showVariants ? 'rotate-180' : ''}`}
                     />
                 </button>
 
                 {showVariants && (
-                    <div className="p-6 space-y-4 bg-white">
-                        <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
+                    <div className="p-6 space-y-4 bg-[#0B0B0D]">
+                        <p className="text-[10px] text-luxury-subtext/70 uppercase tracking-luxury">
                             Add shade, size, type, or bundle variants. Variant price overrides the base price when selected.
                         </p>
 
                         {/* Variant Table */}
-                        <div className="overflow-x-auto border border-charcoal/5 rounded-md">
+                        <div className="overflow-x-auto border border-white/5 rounded-md">
                             <table className="w-full text-left border-collapse">
-                                <thead className="bg-pearl text-[9px] uppercase tracking-luxury text-textsoft font-bold border-b border-charcoal/10">
+                                <thead className="bg-[#121214] text-[9px] uppercase tracking-luxury text-luxury-subtext font-bold border-b border-white/10">
                                     <tr>
                                         <th className="px-4 py-3 min-w-[120px]">Variant Name</th>
                                         <th className="px-4 py-3">Type</th>
@@ -522,24 +522,24 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                         <th className="px-4 py-3">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-charcoal/5 text-xs text-charcoal">
+                                <tbody className="divide-y divide-charcoal/5 text-xs text-white">
                                     {variants.map((v, index) => {
                                         if (v._deleted) return null
                                         return (
-                                            <tr key={index} className="hover:bg-pearl/30 transition-colors group">
+                                            <tr key={index} className="hover:bg-[#0B0B0D]/5 transition-colors group">
                                                 <td className="px-4 py-3">
                                                     <Input
                                                         value={v.title}
                                                         onChange={e => updateVariant(index, 'title', e.target.value)}
                                                         placeholder="e.g. Ruby Red"
-                                                        className="h-8 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                        className="h-8 text-xs bg-black/50 border-transparent focus:border-gold/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <select
                                                         value={v.variant_type}
                                                         onChange={e => updateVariant(index, 'variant_type', e.target.value)}
-                                                        className="h-8 text-[10px] uppercase bg-white/50 border border-charcoal/5 rounded px-1 outline-none"
+                                                        className="h-8 text-[10px] uppercase bg-black/50 border border-white/5 rounded px-1 outline-none"
                                                     >
                                                         {VARIANT_TYPE_OPTIONS.map(opt => (
                                                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -551,7 +551,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                         value={v.sku || ''}
                                                         onChange={e => updateVariant(index, 'sku', e.target.value)}
                                                         placeholder="Auto"
-                                                        className="h-8 text-[10px] font-mono bg-white/50 border-transparent focus:border-gold/50 uppercase"
+                                                        className="h-8 text-[10px] font-mono bg-black/50 border-transparent focus:border-gold/50 uppercase"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -560,7 +560,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                         step="0.01"
                                                         value={v.price}
                                                         onChange={e => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
-                                                        className="h-8 w-20 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                        className="h-8 w-20 text-xs bg-black/50 border-transparent focus:border-gold/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -568,7 +568,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                         type="number"
                                                         value={v.stock}
                                                         onChange={e => updateVariant(index, 'stock', parseInt(e.target.value) || 0)}
-                                                        className="h-8 w-16 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                        className="h-8 w-16 text-xs bg-black/50 border-transparent focus:border-gold/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -577,15 +577,15 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                         step="0.01"
                                                         value={v.weight || 0}
                                                         onChange={e => updateVariant(index, 'weight', parseFloat(e.target.value) || 0)}
-                                                        className="h-8 w-16 text-xs bg-white/50 border-transparent focus:border-gold/50"
+                                                        className="h-8 w-16 text-xs bg-black/50 border-transparent focus:border-gold/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <select
                                                         value={v.status || 'active'}
                                                         onChange={e => updateVariant(index, 'status', e.target.value)}
-                                                        className={`h-8 text-[10px] uppercase font-bold border border-charcoal/5 rounded px-1 
-                                                            ${v.status === 'draft' ? 'text-textsoft bg-pearl' : 'text-emerald-600 bg-emerald-50'}`}
+                                                        className={`h-8 text-[10px] uppercase font-bold border border-white/5 rounded px-1 
+                                                            ${v.status === 'draft' ? 'text-luxury-subtext bg-[#121214]' : 'text-emerald-600 bg-emerald-950/20'}`}
                                                     >
                                                         <option value="active">Active</option>
                                                         <option value="draft">Draft</option>
@@ -598,9 +598,9 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                                 type="color"
                                                                 value={v.color_code || '#000000'}
                                                                 onChange={e => updateVariant(index, 'color_code', e.target.value)}
-                                                                className="w-6 h-6 rounded-full border border-charcoal/10 cursor-pointer overflow-hidden p-0 bg-transparent shadow-sm"
+                                                                className="w-6 h-6 rounded-full border border-white/10 cursor-pointer overflow-hidden p-0 bg-transparent shadow-sm"
                                                             />
-                                                            <div className="hidden group-hover/swatch:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-charcoal text-white text-[8px] rounded uppercase">Swatch</div>
+                                                            <div className="hidden group-hover/swatch:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white text-white text-[8px] rounded uppercase">Swatch</div>
                                                         </div>
 
                                                         <SingleImageUpload
@@ -613,7 +613,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                     <button
                                                         type="button"
                                                         onClick={() => removeVariant(index)}
-                                                        className="text-textsoft hover:text-red-500 transition-colors"
+                                                        className="text-luxury-subtext hover:text-red-500 transition-colors"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -628,7 +628,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         <button
                             type="button"
                             onClick={addVariant}
-                            className="flex items-center gap-2 text-[10px] uppercase tracking-luxury text-charcoal font-bold border border-charcoal/10 rounded-md px-6 py-4 w-full bg-pearl hover:bg-champagne/30 transition-colors shadow-sm"
+                            className="flex items-center gap-2 text-[10px] uppercase tracking-luxury text-white font-bold border border-white/10 rounded-md px-6 py-4 w-full bg-[#121214] hover:bg-gold/5 transition-colors shadow-sm"
                         >
                             <Plus className="w-4 h-4 text-gold" />
                             Add Variant Row
@@ -638,11 +638,11 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end pt-8 border-t border-charcoal/10">
+            <div className="flex justify-end pt-8 border-t border-white/10">
                 <Button
                     type="submit"
                     disabled={loading}
-                    className="bg-charcoal text-pearl rounded-full px-12 py-6 text-[11px] font-medium uppercase tracking-luxury hover:bg-gold transition-all shadow-soft hover:shadow-luxury disabled:opacity-50 min-w-[200px]"
+                    className="bg-white text-[#0B0B0D] rounded-full px-12 py-6 text-[11px] font-medium uppercase tracking-luxury hover:bg-gold transition-all shadow-soft hover:shadow-luxury disabled:opacity-50 min-w-[200px]"
                 >
                     {loading ? <Loader2 className="animate-spin mr-2 w-4 h-4 inline" /> : null}
                     {product?.id ? 'Refine Masterpiece' : 'Forge Collection Item'}

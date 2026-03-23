@@ -60,7 +60,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
         <div
             ref={setNodeRef}
             style={style}
-            className="relative group aspect-square bg-pearl border border-charcoal/10 overflow-hidden rounded-luxury shadow-soft transition-all"
+            className="relative group aspect-square bg-[#121214] border border-white/10 overflow-hidden rounded-luxury shadow-soft transition-all"
         >
             <Image
                 src={url}
@@ -98,7 +98,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
             </button>
 
             {/* Image Index */}
-            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm text-charcoal px-2 py-1 text-[8px] uppercase tracking-luxury font-bold rounded-full shadow-sm z-20 pointer-events-none">
+            <div className="absolute bottom-3 left-3 bg-black/90 backdrop-blur-sm text-white px-2 py-1 text-[8px] uppercase tracking-luxury font-bold rounded-full shadow-sm z-20 pointer-events-none">
                 {index + 1}
             </div>
 
@@ -250,21 +250,21 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                             border-2 border-dashed rounded-luxury p-12 text-center cursor-pointer transition-all duration-300
                             ${isDragActive
                                 ? 'border-gold bg-gold/10 scale-[0.99] shadow-inner font-bold'
-                                : 'border-charcoal/20 hover:border-gold/40 bg-white shadow-soft hover:shadow-luxury'
+                                : 'border-white/20 hover:border-gold/40 bg-[#0B0B0D] shadow-luxury hover:shadow-luxury'
                             }
                             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
                     >
                         <input {...getInputProps()} />
                         <div className="flex flex-col items-center gap-4">
-                            <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-pearl text-textsoft/40 shadow-inner'}`}>
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 ${isDragActive ? 'bg-gold text-white scale-110' : 'bg-white/5 text-luxury-subtext/40 shadow-inner'}`}>
                                 <Upload className={`w-10 h-10 ${isDragActive ? 'animate-bounce' : ''}`} />
                             </div>
                             <div>
-                                <p className="text-lg text-charcoal font-heading tracking-luxury mb-1">
+                                <p className="text-lg text-white font-heading tracking-luxury mb-1">
                                     {isDragActive ? 'Release to Instant Sync' : 'Deposit Global Assets'}
                                 </p>
-                                <p className="text-[10px] text-textsoft/70 uppercase tracking-luxury">
+                                <p className="text-[10px] text-luxury-subtext/70 uppercase tracking-luxury">
                                     drag & drop or click for 0.0001s optimized upload
                                 </p>
                             </div>
@@ -287,7 +287,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                             trigger={
                                 <button
                                     type="button"
-                                    className="flex items-center gap-2 px-6 py-3 border border-charcoal/10 rounded-full text-[10px] uppercase tracking-widest font-bold text-textsoft hover:text-gold hover:border-gold/40 hover:bg-pearl/50 transition-all shadow-sm"
+                                    className="flex items-center gap-2 px-6 py-3 border border-white/10 rounded-full text-[10px] uppercase tracking-widest font-bold text-luxury-subtext hover:text-gold hover:border-gold/40 hover:bg-white/5 transition-all shadow-sm"
                                 >
                                     <ImageIcon size={14} className="text-gold" />
                                     Import from Vault
@@ -301,12 +301,12 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
             {Object.keys(uploadProgress).length > 0 && (
                 <div className="space-y-2">
                     {Object.entries(uploadProgress).map(([fileName, progress]) => (
-                        <div key={fileName} className="bg-pearl border border-charcoal/10 p-4 rounded-md shadow-sm">
+                        <div key={fileName} className="bg-[#121214] border border-white/10 p-4 rounded-md shadow-sm">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] text-textsoft uppercase tracking-luxury truncate">{fileName}</span>
+                                <span className="text-[10px] text-luxury-subtext uppercase tracking-luxury truncate">{fileName}</span>
                                 <span className="text-[10px] text-gold font-mono font-bold">{progress}%</span>
                             </div>
-                            <div className="h-1 bg-white overflow-hidden rounded-full">
+                            <div className="h-1 bg-white/10 overflow-hidden rounded-full">
                                 <div className="h-full bg-gold transition-all duration-300 rounded-full" style={{ width: `${progress}%` }} />
                             </div>
                         </div>
@@ -342,13 +342,13 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
             </DndContext>
 
             {images.length === 0 && !uploading && (
-                <div className="border border-dashed border-charcoal/10 rounded-luxury py-16 flex flex-col items-center justify-center text-textsoft bg-pearl/50">
+                <div className="border border-dashed border-white/10 rounded-luxury py-16 flex flex-col items-center justify-center text-luxury-subtext bg-white/5">
                     <ImageIcon size={48} className="mb-4 opacity-10" />
                     <span className="text-[10px] uppercase tracking-luxury font-medium">Vault Empty</span>
                 </div>
             )}
 
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-luxury text-textsoft font-medium pt-2">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-luxury text-luxury-subtext font-medium pt-2">
                 <span>{images.length} / {maxImages} Visual Assets</span>
                 <span className="text-gold font-bold">DRAG TO REORDER MASTERPIECES</span>
             </div>

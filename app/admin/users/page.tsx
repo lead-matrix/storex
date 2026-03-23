@@ -62,18 +62,18 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
         <div className="space-y-12 pb-24 animate-luxury-fade">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Clientele</h1>
-                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Exclusive Member Directory · Behavioral Intelligence</p>
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury">Clientele</h1>
+                    <p className="text-luxury-subtext text-xs uppercase tracking-luxury font-medium">Exclusive Member Directory · Behavioral Intelligence</p>
                 </div>
 
                 <div className="flex flex-col gap-4">
                     <form action="" className="relative w-full md:w-80 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-textsoft/30 group-focus-within:text-gold transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-luxury-subtext/30 group-focus-within:text-gold transition-colors" />
                         <input
                             name="q"
                             defaultValue={query}
                             placeholder="Identify member by name or email..."
-                            className="w-full bg-pearl border border-charcoal/5 rounded-luxury pl-11 pr-4 py-3 text-[11px] uppercase tracking-luxury text-charcoal outline-none focus:border-gold/30 focus:bg-white transition-all shadow-sm"
+                            className="w-full bg-[#121214] border border-white/5 rounded-luxury pl-11 pr-4 py-3 text-[11px] uppercase tracking-luxury text-white outline-none focus:border-gold/30 focus:bg-[#0B0B0D] transition-all shadow-sm"
                         />
                         {segment !== 'all' && <input type="hidden" name="segment" value={segment} />}
                     </form>
@@ -84,8 +84,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                                 key={s.id}
                                 href={`?segment=${s.id}${query ? `&q=${query}` : ''}`}
                                 className={`px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all whitespace-nowrap border ${segment === s.id
-                                    ? 'bg-charcoal text-pearl border-charcoal shadow-soft'
-                                    : 'bg-white text-textsoft border-charcoal/10 hover:border-gold/50'
+                                    ? 'bg-white text-[#0B0B0D] border-white/10 shadow-soft'
+                                    : 'bg-[#0B0B0D] text-luxury-subtext border-white/10 hover:border-gold/50'
                                     }`}
                             >
                                 {s.label} ({s.count})
@@ -98,14 +98,14 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
             {/* SEGMENTATION KPIs */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
-                    { label: "Total Result Set", value: processedUsers.length, icon: User, color: "text-charcoal" },
+                    { label: "Total Result Set", value: processedUsers.length, icon: User, color: "text-white" },
                     { label: "VIP Clients", value: segments.find(s => s.id === 'vip')?.count || 0, icon: TrendingUp, color: "text-gold" },
                     { label: "Active Retention", value: segments.find(s => s.id === 'repeat')?.count || 0, icon: ShoppingBag, color: "text-emerald-400" },
                     { label: "Potential Growth", value: segments.find(s => s.id === 'lead')?.count || 0, icon: Mail, color: "text-blue-400" },
                 ].map((k) => (
-                    <div key={k.label} className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-6 group transition-all hover:border-gold/30">
+                    <div key={k.label} className="bg-[#0B0B0D] rounded-luxury shadow-soft border border-white/10 p-6 group transition-all hover:border-gold/30">
                         <div className="flex items-center justify-between mb-4">
-                            <p className="text-[9px] uppercase tracking-luxury font-bold text-textsoft/50">{k.label}</p>
+                            <p className="text-[9px] uppercase tracking-luxury font-bold text-luxury-subtext/50">{k.label}</p>
                             <k.icon className={`w-4 h-4 ${k.color} opacity-40 group-hover:opacity-100 transition-opacity`} />
                         </div>
                         <p className={`text-4xl font-serif ${k.color}`}>{k.value}</p>
@@ -113,30 +113,30 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                 ))}
             </div>
 
-            <div className="bg-white rounded-luxury shadow-soft border border-charcoal/10 overflow-hidden">
+            <div className="bg-[#0B0B0D] rounded-luxury shadow-soft border border-white/10 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-charcoal/5 bg-pearl/30 text-[10px] uppercase tracking-luxury text-textsoft font-bold">
+                            <tr className="border-b border-white/5 bg-[#0B0B0D]/5 text-[10px] uppercase tracking-luxury text-luxury-subtext font-bold">
                                 <th className="px-8 py-5">Profile</th>
                                 <th className="px-8 py-5">Intelligence</th>
                                 <th className="px-8 py-5 text-center">Value (LTV)</th>
                                 <th className="px-8 py-5 text-right">Management</th>
                             </tr>
                         </thead>
-                        <tbody className="text-[11px] text-textsoft font-medium">
+                        <tbody className="text-[11px] text-luxury-subtext font-medium">
                             {filteredUsers.map((user) => (
-                                <tr key={user.id} className="border-b border-charcoal/5 hover:bg-gold/5 transition-colors group">
+                                <tr key={user.id} className="border-b border-white/5 hover:bg-gold/5 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-pearl border border-charcoal/10 rounded-full flex items-center justify-center text-textsoft group-hover:border-gold/30 transition-colors shrink-0">
+                                            <div className="w-10 h-10 bg-[#121214] border border-white/10 rounded-full flex items-center justify-center text-luxury-subtext group-hover:border-gold/30 transition-colors shrink-0">
                                                 <User className="w-4 h-4" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-charcoal font-medium text-sm tracking-wide truncate group-hover:text-gold transition-colors">
+                                                <p className="text-white font-medium text-sm tracking-wide truncate group-hover:text-gold transition-colors">
                                                     {user.full_name || "Guest Client"}
                                                 </p>
-                                                <div className="flex items-center gap-1.5 mt-0.5 text-textsoft/70">
+                                                <div className="flex items-center gap-1.5 mt-0.5 text-luxury-subtext/70">
                                                     <Mail className="w-3 h-3" />
                                                     <p className="text-[10px] truncate">{user.email}</p>
                                                 </div>
@@ -147,19 +147,19 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                                         <div className="flex flex-col gap-1">
                                             <span className={`px-2 py-0.5 rounded-sm text-[8px] uppercase tracking-luxury font-bold border w-fit ${user.segment === 'VIP' ? 'bg-gold/10 text-gold border-gold/20' :
                                                 user.segment === 'Repeat' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                    'bg-pearl text-textsoft border-charcoal/5'
+                                                    'bg-[#121214] text-luxury-subtext border-white/5'
                                                 }`}>
                                                 {user.segment}
                                             </span>
-                                            <div className="flex items-center gap-1.5 text-textsoft/50">
+                                            <div className="flex items-center gap-1.5 text-luxury-subtext/50">
                                                 <ShoppingBag className="w-3 h-3" />
                                                 <span className="text-[9px] uppercase tracking-widest">{user.orderCount} Transactions</span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-center">
-                                        <p className="text-sm font-serif text-charcoal tracking-wide">${user.totalSpent.toLocaleString()}</p>
-                                        <p className="text-[9px] uppercase tracking-luxury text-textsoft/40">Lifetime Contribution</p>
+                                        <p className="text-sm font-serif text-white tracking-wide">${user.totalSpent.toLocaleString()}</p>
+                                        <p className="text-[9px] uppercase tracking-luxury text-luxury-subtext/40">Lifetime Contribution</p>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -169,7 +169,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                                             }}>
                                                 <button
                                                     type="submit"
-                                                    className={`bg-pearl border border-charcoal/10 px-4 py-1.5 transition-all flex items-center gap-2 rounded-md shadow-sm active:scale-95 ${user.role === 'admin' ? 'text-textsoft hover:text-red-600 hover:border-red-200 hover:bg-red-50' : 'text-textsoft hover:text-charcoal hover:border-charcoal/30'
+                                                    className={`bg-[#121214] border border-white/10 px-4 py-1.5 transition-all flex items-center gap-2 rounded-md shadow-sm active:scale-95 ${user.role === 'admin' ? 'text-luxury-subtext hover:text-red-600 hover:border-red-200 hover:bg-red-50' : 'text-luxury-subtext hover:text-white hover:border-white/10/30'
                                                         }`}
                                                 >
                                                     <Shield className={`w-3 h-3 ${user.role === 'admin' ? 'text-red-500' : 'text-gold'}`} />
@@ -184,7 +184,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                             ))}
                             {filteredUsers.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-8 py-24 text-center text-textsoft uppercase text-[10px] tracking-luxury">
+                                    <td colSpan={4} className="px-8 py-24 text-center text-luxury-subtext uppercase text-[10px] tracking-luxury">
                                         No clients match this identity check
                                     </td>
                                 </tr>

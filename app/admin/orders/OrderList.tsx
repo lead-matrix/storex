@@ -85,7 +85,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => window.location.href = '/api/admin/orders/export'}
-                        className="flex items-center gap-2 bg-white/5 border border-white/10 text-white/60 px-4 py-2 rounded-luxury text-[9px] font-bold uppercase tracking-luxury hover:bg-white/10 transition-all"
+                        className="flex items-center gap-2 bg-[#0B0B0D]/5 border border-white/10 text-white/60 px-4 py-2 rounded-luxury text-[9px] font-bold uppercase tracking-luxury hover:bg-[#0B0B0D]/10 transition-all"
                     >
                         <Box size={12} className="text-gold/50" />
                         Download Registry (CSV)
@@ -93,12 +93,12 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                 </div>
 
                 {selectedOrderIds.length > 0 && (
-                    <div className="bg-white/5 border border-gold/20 p-2 px-4 rounded-luxury flex items-center gap-6 animate-in slide-in-from-right-2 duration-300">
+                    <div className="bg-[#0B0B0D]/5 border border-gold/20 p-2 px-4 rounded-luxury flex items-center gap-6 animate-in slide-in-from-right-2 duration-300">
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] uppercase tracking-luxury text-gold font-bold">
                                 {selectedOrderIds.length} Selections
                             </span>
-                            <div className="h-4 w-px bg-white/10" />
+                            <div className="h-4 w-px bg-[#0B0B0D]/10" />
                             <button
                                 onClick={() => setSelectedOrderIds([])}
                                 className="text-[9px] uppercase tracking-widest text-white/40 hover:text-white transition-colors"
@@ -121,7 +121,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
             {/* Mobile Card View */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
                 {initialOrders.map((order) => (
-                    <div key={order.id} className={`bg-white/5 border border-white/5 rounded-luxury p-5 space-y-4 transition-all ${selectedOrderIds.includes(order.id) ? 'border-gold/30 bg-gold/5' : ''}`}>
+                    <div key={order.id} className={`bg-[#0B0B0D]/5 border border-white/5 rounded-luxury p-5 space-y-4 transition-all ${selectedOrderIds.includes(order.id) ? 'border-gold/30 bg-gold/5' : ''}`}>
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                                 <button
@@ -158,7 +158,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                     <select
                                         value={order.status}
                                         onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
-                                        className={`appearance-none text-[9px] font-bold uppercase tracking-luxury rounded-full border px-4 py-1.5 pr-8 outline-none bg-black/40 transition-all ${STATUS_COLORS[order.status] || 'bg-white/5 border-white/10'}`}
+                                        className={`appearance-none text-[9px] font-bold uppercase tracking-luxury rounded-full border px-4 py-1.5 pr-8 outline-none bg-black/40 transition-all ${STATUS_COLORS[order.status] || 'bg-[#0B0B0D]/5 border-white/10'}`}
                                     >
                                         {STATUS_OPTIONS.map(opt => (
                                             <option key={opt} value={opt} className="bg-obsidian text-white">{opt}</option>
@@ -195,10 +195,10 @@ export default function OrderList({ initialOrders }: OrderListProps) {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto bg-white/5 rounded-luxury border border-white/5 shadow-soft">
+            <div className="hidden md:block overflow-x-auto bg-[#0B0B0D]/5 rounded-luxury border border-white/5 shadow-soft">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="border-b border-white/5 bg-white/5 text-[10px] uppercase tracking-luxury text-gold font-bold">
+                        <tr className="border-b border-white/5 bg-[#0B0B0D]/5 text-[10px] uppercase tracking-luxury text-gold font-bold">
                             <th className="px-6 py-5 w-12">
                                 <button onClick={toggleAll} className="p-1 hover:text-white transition-colors">
                                     {selectedOrderIds.length === initialOrders.length && initialOrders.length > 0 ? (
@@ -217,7 +217,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                     </thead>
                     <tbody className="text-[11px] text-white/60 font-medium divide-y divide-white/5">
                         {initialOrders.map((order) => (
-                            <tr key={order.id} className={`hover:bg-white/5 transition-colors group ${selectedOrderIds.includes(order.id) ? 'bg-gold/5' : ''}`}>
+                            <tr key={order.id} className={`hover:bg-[#0B0B0D]/5 transition-colors group ${selectedOrderIds.includes(order.id) ? 'bg-gold/5' : ''}`}>
                                 <td className="px-6 py-6">
                                     <button
                                         onClick={() => toggleSelection(order.id)}
@@ -284,7 +284,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                             <select
                                                 value={order.status}
                                                 onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
-                                                className={`appearance-none text-[9px] font-bold uppercase tracking-luxury rounded-sm border px-3 py-1.5 pr-8 outline-none cursor-pointer bg-black/40 transition-all ${STATUS_COLORS[order.status] || 'bg-white/5 border-white/10'}`}
+                                                className={`appearance-none text-[9px] font-bold uppercase tracking-luxury rounded-sm border px-3 py-1.5 pr-8 outline-none cursor-pointer bg-black/40 transition-all ${STATUS_COLORS[order.status] || 'bg-[#0B0B0D]/5 border-white/10'}`}
                                             >
                                                 {STATUS_OPTIONS.map(opt => (
                                                     <option key={opt} value={opt} className="bg-obsidian text-white">{opt}</option>
