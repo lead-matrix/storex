@@ -346,12 +346,16 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(id: string, formData: FormData) {
     const supabase = await ensureAdmin();
     const name = formData.get('name') as string;
+    const image_url = formData.get('image_url') as string | null;
 
     const { data: category } = await supabase.from('categories').select('slug').eq('id', id).single();
 
+    const updateData: any = { name };
+    if (image_url !== null) updateData.image_url = image_url;
+
     const { error } = await supabase
         .from('categories')
-        .update({ name })
+        .update(updateData)
         .eq('id', id);
 
     if (error) throw new Error(`Failed to update category: ${error.message}`);

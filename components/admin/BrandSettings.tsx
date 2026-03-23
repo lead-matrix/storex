@@ -38,16 +38,16 @@ export function BrandSettings({ initialData }: BrandSettingsProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-luxury shadow-soft border border-charcoal/10 p-10 space-y-12">
-            <div className="flex items-center justify-between border-b border-charcoal/10 pb-4">
+        <form onSubmit={handleSubmit} className="bg-[#121214] rounded-luxury shadow-luxury border border-white/5 p-10 space-y-12">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
                 <div className="flex items-center gap-4">
                     <Globe className="w-4 h-4 text-gold" />
-                    <h2 className="text-[10px] uppercase tracking-luxury text-textsoft font-medium">Brand & General Info</h2>
+                    <h2 className="text-[10px] uppercase tracking-luxury text-luxury-subtext font-medium">Brand & General Info</h2>
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="bg-pearl text-charcoal border border-charcoal/5 px-6 py-2.5 rounded-full shadow-sm hover:text-white hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                    className="bg-white/5 text-white border border-white/5 px-6 py-2.5 rounded-full shadow-sm hover:bg-gold text-[10px] uppercase tracking-luxury font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     {loading ? "Syncing..." : "Save Changes"}
@@ -59,7 +59,7 @@ export function BrandSettings({ initialData }: BrandSettingsProps) {
                      <div className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Imperial Sigil (Logo)</label>
-                            <div className="bg-pearl border border-charcoal/5 rounded-md p-6 flex flex-col items-center gap-4">
+                            <div className="bg-white/5 border border-white/5 rounded-md p-6 flex flex-col items-center gap-4">
                                 <SingleImageUpload 
                                     value={logoUrl} 
                                     onChange={(url) => setLogoUrl(url)}
@@ -78,7 +78,7 @@ export function BrandSettings({ initialData }: BrandSettingsProps) {
                                 type="text"
                                 defaultValue={initialData.name}
                                 required
-                                className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold outline-none transition-all shadow-inner"
+                                className="w-full bg-black/50 border border-white/10 rounded-md px-6 py-3 text-sm text-white focus:border-gold outline-none transition-all shadow-inner"
                             />
                         </div>
 
@@ -88,14 +88,14 @@ export function BrandSettings({ initialData }: BrandSettingsProps) {
                                 name="tagline"
                                 type="text"
                                 defaultValue={initialData.tagline}
-                                className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold outline-none transition-all shadow-inner"
+                                className="w-full bg-black/50 border border-white/10 rounded-md px-6 py-3 text-sm text-white focus:border-gold outline-none transition-all shadow-inner"
                              />
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-[9px] uppercase tracking-luxury text-textsoft font-medium">Transaction Currency</label>
                             <select name="currency" defaultValue={initialData.currency}
-                                className="w-full bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-sm text-charcoal focus:border-gold outline-none transition-all appearance-none cursor-pointer">
+                                className="w-full bg-black/50 border border-white/10 rounded-md px-6 py-3 text-sm text-white focus:border-gold outline-none transition-all appearance-none cursor-pointer">
                                 <option value="USD">USD ($)</option>
                                 <option value="EUR">EUR (€)</option>
                                 <option value="GBP">GBP (£)</option>

@@ -92,7 +92,7 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
     return (
         <div className={`relative flex flex-col gap-2 ${className}`}>
             {displayImage ? (
-                <div className={`relative w-full h-full min-h-[40px] rounded border border-charcoal/10 overflow-hidden shadow-sm group ${optimisticPreview ? 'opacity-50' : ''}`}>
+                <div className={`relative w-full h-full min-h-[40px] rounded border border-white/10 overflow-hidden shadow-sm group ${optimisticPreview ? 'opacity-50' : ''}`}>
                     <img src={displayImage} alt="Preview" className="object-cover w-full h-full" />
                     {!uploading && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -119,7 +119,7 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
                         </div>
                     )}
                     {uploading && (
-                        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm flex flex-col items-center justify-center gap-1">
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-1">
                             <Loader2 size={16} className="animate-spin text-gold" />
                             <span className="text-[8px] uppercase tracking-luxury text-gold font-bold">Syncing</span>
                         </div>
@@ -130,8 +130,8 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
                     <div
                         {...getRootProps()}
                         className={`
-                            w-full h-full min-h-[40px] flex-grow rounded border border-dashed flex flex-col items-center justify-center bg-pearl cursor-pointer transition-all gap-2
-                            ${isDragActive ? 'border-gold bg-gold/5 scale-[0.98]' : 'border-charcoal/20 hover:border-gold/40'}
+                            w-full h-full min-h-[40px] flex-grow rounded border border-dashed flex flex-col items-center justify-center bg-white/5 cursor-pointer transition-all gap-2
+                            ${isDragActive ? 'border-gold bg-gold/5 scale-[0.98]' : 'border-white/20 hover:border-gold/40'}
                             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
                     >
@@ -140,9 +140,9 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
                             <Loader2 size={16} className="animate-spin text-gold" />
                         ) : (
                             <>
-                                <Upload size={16} className="text-textsoft/40" />
+                                <Upload size={16} className="text-luxury-subtext/40" />
                                 {className.includes('h-32') && (
-                                    <span className="text-[8px] uppercase tracking-luxury text-textsoft/60">Drop Asset</span>
+                                    <span className="text-[8px] uppercase tracking-luxury text-luxury-subtext/60">Drop Asset</span>
                                 )}
                             </>
                         )}
@@ -153,7 +153,7 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
                             trigger={
                                 <button
                                     type="button"
-                                    className="text-[8px] uppercase tracking-luxury text-textsoft/60 hover:text-gold transition-colors text-center"
+                                    className="text-[8px] uppercase tracking-luxury text-luxury-subtext/60 hover:text-gold transition-colors text-center"
                                 >
                                     Vault
                                 </button>

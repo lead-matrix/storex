@@ -33,7 +33,7 @@ export default function MenuEditor({ initialItems, name }: { initialItems: MenuI
             <input type="hidden" name={name} value={JSON.stringify(items)} />
 
             {items.map((item, index) => (
-                <div key={index} className="flex flex-col sm:flex-row gap-4 bg-pearl/50 border border-charcoal/5 p-4 rounded-md relative group items-start sm:items-center w-full">
+                <div key={index} className="flex flex-col sm:flex-row gap-4 bg-[#121214] border border-white/5 p-4 rounded-md relative group items-start sm:items-center w-full">
                     <button
                         type="button"
                         onClick={() => removeItem(index)}
@@ -44,7 +44,7 @@ export default function MenuEditor({ initialItems, name }: { initialItems: MenuI
                     </button>
 
                     <div className="w-1/2 min-w-[150px] space-y-1">
-                        <label className="text-[8px] uppercase tracking-widest text-textsoft font-medium flex items-center gap-1">
+                        <label className="text-[8px] uppercase tracking-widest text-luxury-subtext font-medium flex items-center gap-1">
                             <Type className="w-2.5 h-2.5" /> Label
                         </label>
                         <input
@@ -52,13 +52,13 @@ export default function MenuEditor({ initialItems, name }: { initialItems: MenuI
                             value={item.label}
                             onChange={(e) => updateItem(index, "label", e.target.value)}
                             placeholder="Collections"
-                            className="w-full bg-white border border-charcoal/10 rounded px-3 py-1.5 text-xs text-charcoal outline-none focus:border-gold/50 shadow-sm"
+                            className="w-full bg-black border border-white/10 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-gold/50 shadow-sm"
                             required
                         />
                     </div>
 
                     <div className="w-1/2 min-w-[150px] space-y-1">
-                        <label className="text-[8px] uppercase tracking-widest text-textsoft font-medium flex items-center gap-1">
+                        <label className="text-[8px] uppercase tracking-widest text-luxury-subtext font-medium flex items-center gap-1">
                             <LinkIcon className="w-2.5 h-2.5" /> Path/URL
                         </label>
                         <input
@@ -66,7 +66,7 @@ export default function MenuEditor({ initialItems, name }: { initialItems: MenuI
                             value={item.href}
                             onChange={(e) => updateItem(index, "href", e.target.value)}
                             placeholder="/collections"
-                            className="w-full bg-white border border-charcoal/10 rounded px-3 py-1.5 text-xs text-charcoal outline-none focus:border-gold/50 shadow-sm"
+                            className="w-full bg-black border border-white/10 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-gold/50 shadow-sm"
                             required
                         />
                     </div>
@@ -76,7 +76,7 @@ export default function MenuEditor({ initialItems, name }: { initialItems: MenuI
             <button
                 type="button"
                 onClick={addItem}
-                className="w-full py-3 border border-dashed border-charcoal/10 hover:border-gold/50 text-textsoft hover:text-gold rounded-md flex items-center justify-center gap-2 text-[10px] tracking-widest uppercase font-bold transition-all"
+                className="w-full py-3 border border-dashed border-white/10 hover:border-gold/50 text-luxury-subtext hover:text-gold rounded-md flex items-center justify-center gap-2 text-[10px] tracking-widest uppercase font-bold transition-all"
             >
                 <Plus className="w-3.5 h-3.5" /> Add Navigation Link
             </button>

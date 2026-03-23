@@ -20,18 +20,18 @@ export default async function AdminCategories() {
         <div className="space-y-12 pb-24 animate-luxury-fade">
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-4xl font-heading text-charcoal mb-2 tracking-luxury">Taxonomy</h1>
-                    <p className="text-textsoft text-xs uppercase tracking-luxury font-medium">Category Management & Hierarchy</p>
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury">Taxonomy</h1>
+                    <p className="text-luxury-subtext text-xs uppercase tracking-luxury font-medium">Category Management & Hierarchy</p>
                 </div>
 
                 <form action={createCategory} className="flex gap-4">
                     <input
                         name="name"
                         placeholder="NEW CATEGORY NAME"
-                        className="bg-pearl border border-charcoal/10 rounded-md px-6 py-3 text-[10px] uppercase tracking-luxury text-charcoal outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all placeholder:text-textsoft/50 shadow-sm"
+                        className="bg-black/50 border border-white/10 rounded-md px-6 py-3 text-[10px] uppercase tracking-luxury text-white outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all placeholder:text-luxury-subtext/50 shadow-sm"
                         required
                     />
-                    <button type="submit" className="bg-charcoal text-pearl rounded-full px-10 py-3 text-[11px] font-medium uppercase tracking-luxury flex items-center gap-2 hover:bg-gold transition-all active:scale-95 shadow-soft hover:shadow-luxury">
+                    <button type="submit" className="bg-white/5 text-white border border-white/10 rounded-full px-10 py-3 text-[11px] font-medium uppercase tracking-luxury flex items-center gap-2 hover:bg-gold transition-all active:scale-95 shadow-sm hover:shadow-luxury">
                         <Plus className="w-4 h-4" />
                         Add Category
                     </button>
@@ -44,8 +44,8 @@ export default async function AdminCategories() {
                 ))}
 
                 {(!categories || categories.length === 0) && (
-                    <div className="col-span-full py-24 text-center border border-dashed border-charcoal/10 rounded-luxury">
-                        <p className="text-textsoft text-[10px] uppercase tracking-luxury">No categories defined in the vault.</p>
+                    <div className="col-span-full py-24 text-center border border-dashed border-white/10 rounded-luxury">
+                        <p className="text-luxury-subtext text-[10px] uppercase tracking-luxury">No categories defined in the vault.</p>
                     </div>
                 )}
             </div>
