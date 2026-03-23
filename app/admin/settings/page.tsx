@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { Globe, Layout, Users, Truck, DollarSign, Package } from 'lucide-react'
-import { updateStoreSettings, updateHeroContent, updateMenusAndSocials, updateShippingSettings } from '@/lib/actions/admin'
-import HeroSlidesEditor from '@/components/admin/HeroSlidesEditor'
+import { updateStoreSettings, updateMenusAndSocials, updateShippingSettings } from '@/lib/actions/admin'
 import MenuEditor from '@/components/admin/MenuEditor'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 import { BrandSettings } from '@/components/admin/BrandSettings'
@@ -14,7 +13,6 @@ export default async function AdminSettings() {
     const [
         { data: storeInfo },
         { data: storeStatus },
-        { data: heroSlides },
         { data: headerNav },
         { data: footerNav },
         { data: socialMedia },
@@ -22,7 +20,6 @@ export default async function AdminSettings() {
     ] = await Promise.all([
         supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
-        supabase.from('frontend_content').select('*').eq('content_key', 'hero_slides').maybeSingle(),
         supabase.from('navigation_menus').select('*').eq('menu_key', 'header_main').maybeSingle(),
         supabase.from('navigation_menus').select('*').eq('menu_key', 'footer_legal').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'social_media').maybeSingle(),
@@ -141,10 +138,6 @@ export default async function AdminSettings() {
                         </div>
                     </SettingsForm>
 
-                    {/* ── Hero Slides ── */}
-                    <SettingsForm action={updateHeroContent} title="Hero Slides & Banners" iconName="layout">
-                        <HeroSlidesEditor initialSlides={heroSlides?.content_data?.slides || []} />
-                    </SettingsForm>
 
                     {/* ── Menus & Socials ── */}
                     <SettingsForm action={updateMenusAndSocials} title="Navigation & Social Links" iconName="layout">

@@ -2374,6 +2374,34 @@ WHERE schemaname = 'public'
 GROUP BY tablename
 ORDER BY tablename;
 -- ================================================================
+-- §12B  ATOMIC STOCK DECREMENT FUNCTIONS (Rule 53 — Race Condition Prevention)
+--       Use these instead of read-then-write to prevent overselling.
+-- ================================================================
+CREATE OR REPLACE FUNCTION public.decrement_stock(p_product_id uuid, p_quantity int)
+RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+    UPDATE public.products
+    SET stock = GREATEST(0, stock - p_quantity)
+    WHERE id = p_product_id;
+$$;
+
+CREATE OR REPLACE FUNCTION public.decrement_variant_stock(p_variant_id uuid, p_quantity int)
+RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+    UPDATE public.product_variants
+    SET stock = GREATEST(0, stock - p_quantity)
+    WHERE id = p_variant_id;
+$$;
+
+-- ================================================================
+-- §12C  PERFORMANCE INDEXES (Part 5.1 additions)
+-- ================================================================
+CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(slug);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON public.order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_email ON public.orders(customer_email);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
+
+-- ================================================================
 -- §13  SYNC PRODUCT STOCK TRIGGER
 --      Keeps the `products.stock` column perfectly in sync with the
 --      aggregate sum of `product_variants.stock`, allowing simple

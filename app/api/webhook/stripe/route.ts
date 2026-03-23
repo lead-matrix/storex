@@ -2,7 +2,6 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderConfirmationEmail } from "@/lib/utils/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2026-02-25.clover",
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
 
     const supabase = await createAdminClient();
 
-    // 1. Store Stripe event ID for audit trail & idempotency
+    // 1. Check for duplicate delivery (idempotency check ONLY — do NOT log yet)
     const { data: existingEvent } = await supabase
         .from("stripe_events")
         .select("id")
@@ -41,29 +40,13 @@ export async function POST(req: Request) {
         .single();
 
     if (existingEvent) {
-
         return NextResponse.json({ received: true, duplicate: true });
-    }
-
-    // 2. Log the event for audit trail
-    const { error: logError } = await supabase.from("stripe_events").insert({
-        id: event.id,
-        type: event.type,
-        data: event.data.object as any,
-    });
-
-    if (logError) {
-        console.error("Failed to log stripe event:", logError);
-        // We continue anyway, but the RPC will also have its own checks
     }
 
     try {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
 
-
-
-            // Parse metadata items if they were stringified in the checkout route
             let cartItems = [];
             try {
                 cartItems = session.metadata?.items ? JSON.parse(session.metadata.items) : [];
@@ -71,7 +54,7 @@ export async function POST(req: Request) {
                 console.error("Failed to parse cart items from metadata:", e);
             }
 
-            // 2. Process the order atomically in the database
+            // 2. Process the order atomically FIRST — only log event on success
             const { error: rpcError, data: orderId } = await supabase.rpc("process_order_atomic", {
                 p_stripe_session_id: session.id,
                 p_customer_email: session.customer_details?.email || session.customer_email || 'guest@stripe.com',
@@ -86,18 +69,24 @@ export async function POST(req: Request) {
             });
 
             if (rpcError) {
+                // DO NOT log event — let Stripe retry
                 console.error("Atomic order processing failed (RPC):", rpcError);
                 throw new Error(`RPC Processing Error: ${rpcError.message}`);
             }
 
-
+            // 3. ONLY NOW log the event — proves processing was successful
+            await supabase.from("stripe_events").insert({
+                id: event.id,
+                type: event.type,
+                data: event.data.object as any,
+            }).throwOnError();
 
             const email = session.customer_details?.email || session.customer_email;
             const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
 
             if (orderId && email) {
-                // 3. Fire Email Notification
                 try {
+                    const { sendOrderConfirmationEmail } = await import("@/lib/utils/email");
                     await sendOrderConfirmationEmail({
                         orderId,
                         customerEmail: email,
@@ -105,12 +94,17 @@ export async function POST(req: Request) {
                         totalAmount: amountTotal,
                         items: cartItems
                     });
-
                 } catch (emailErr: any) {
                     console.error("Failed to send order confirmation email:", emailErr);
-                    // Don't throw here - we don't want to tell Stripe it failed if the order is already paid in DB
                 }
             }
+        } else {
+            // For non-checkout events, log immediately (no critical processing)
+            await supabase.from("stripe_events").insert({
+                id: event.id,
+                type: event.type,
+                data: event.data.object as any,
+            });
         }
 
         return NextResponse.json({ received: true });

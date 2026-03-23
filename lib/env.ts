@@ -4,6 +4,11 @@ const criticalVars = [
     "SUPABASE_SERVICE_ROLE_KEY",
     "STRIPE_SECRET_KEY",
     "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    "WAREHOUSE_NAME",
+    "WAREHOUSE_ADDRESS_LINE1",
+    "WAREHOUSE_CITY",
+    "WAREHOUSE_STATE",
+    "WAREHOUSE_ZIP",
 ]
 
 const secondaryVars = [

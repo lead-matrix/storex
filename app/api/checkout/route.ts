@@ -115,8 +115,18 @@ export async function POST(req: Request) {
             shippingCost = totalWeightLb > 2.0 ? 9.99 : totalWeightLb >= 0.5 ? 8.00 : 5.00;
         }
 
-        // Apply free domestic shipping logic if threshold met
-        if (subtotal >= 100 && shippingCost <= 15) {
+        // Apply free domestic shipping logic if threshold met (configurable from admin settings)
+        const { data: shippingSettingsRow } = await supabase
+            .from('site_settings')
+            .select('setting_value')
+            .eq('setting_key', 'shipping_settings')
+            .maybeSingle();
+
+        const freeShippingThreshold = parseFloat(
+            (shippingSettingsRow?.setting_value as any)?.free_shipping_threshold ?? '100'
+        );
+
+        if (subtotal >= freeShippingThreshold && shippingCost <= 15) {
             shippingCost = 0;
             shippingDisplayName = `Free ${shippingDisplayName}`;
         }
