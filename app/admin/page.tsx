@@ -51,9 +51,9 @@ export default async function AdminDashboard() {
         { data: lowStockProducts }
     ] = await Promise.all([
         supabase.from('orders').select('amount_total').in('status', ['paid', 'shipped', 'delivered']),
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).not('status', 'eq', 'pending'),
         supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('id, customer_email, status, amount_total, created_at').order('created_at', { ascending: false }).limit(6),
+        supabase.from('orders').select('id, customer_email, status, amount_total, created_at').not('status', 'eq', 'pending').order('created_at', { ascending: false }).limit(6),
         supabase.from('product_variants').select('id, name, product_id, products(title), stock').lt('stock', 10).order('stock', { ascending: true }).limit(5)
     ])
 

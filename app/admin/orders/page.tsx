@@ -28,6 +28,7 @@ export default async function AdminOrdersPage() {
                 )
             )
         `)
+        .not('status', 'eq', 'pending')
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -37,7 +38,7 @@ export default async function AdminOrdersPage() {
 
     const revenue = orders?.filter(o => o.status === "paid" || o.status === "shipped" || o.status === "delivered").reduce((s, o) => s + Number(o.amount_total || 0), 0) || 0;
     const paidCount = orders?.filter(o => o.status === "paid").length || 0;
-    const pendingCount = orders?.filter(o => o.status === "pending").length || 0;
+    const unfulfilledCount = orders?.filter(o => o.status === "paid" && (!o.fulfillment_status || o.fulfillment_status === "unfulfilled")).length || 0;
     const shippedCount = orders?.filter(o => o.status === "shipped" || o.status === "delivered").length || 0;
 
     return (
@@ -54,7 +55,7 @@ export default async function AdminOrdersPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                     { label: "Net Revenue", value: `$${revenue.toLocaleString()}`, color: "text-gold", icon: ShoppingBag },
-                    { label: "Pending", value: pendingCount, color: "text-amber-400", icon: Clock },
+                    { label: "Unfulfilled", value: unfulfilledCount, color: "text-amber-400", icon: Clock },
                     { label: "Paid", value: paidCount, color: "text-emerald-400", icon: CheckCircle },
                     { label: "Fulfilled", value: shippedCount, color: "text-purple-400", icon: Truck },
                 ].map((s) => (
