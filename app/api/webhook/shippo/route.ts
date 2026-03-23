@@ -77,11 +77,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch order, including total_amount and items
-    const { data: order, error: findError } = await supabase
+    const { data: orderResponse, error: findError } = await supabase
       .from("orders")
       .select("id, customer_email, billing_address, fulfillment_status, total_amount, items")
       .eq("tracking_number", tracking_number)
       .maybeSingle();
+
+    const order = orderResponse as OrderRecord | null;
 
     if (findError || !order) {
       console.error("Order not found:", tracking_number);
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest) {
     if (newStatus === "shipped") {
       const totalAmount =
         order.total_amount ??
-        order.items?.reduce<number>((sum: number, item: OrderItem) => {
+        (order.items as OrderItem[])?.reduce((sum: number, item: OrderItem) => {
           return sum + item.price * item.quantity;
         }, 0) ??
         0;
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
     if (newStatus === "delivered") {
       const totalAmount =
         order.total_amount ??
-        order.items?.reduce<number>((sum: number, item: OrderItem) => {
+        (order.items as OrderItem[])?.reduce((sum: number, item: OrderItem) => {
           return sum + item.price * item.quantity;
         }, 0) ??
         0;

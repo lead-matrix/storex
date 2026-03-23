@@ -141,7 +141,7 @@ export async function POST(req: Request) {
           .then(({ sendOrderConfirmationEmail }) =>
             sendOrderConfirmationEmail({
               orderId,
-              customerEmail: customer.email,
+              customerEmail: customer.email!,
               customerName: customer.name || "Customer",
               totalAmount: (session.amount_total || 0) / 100,
               items: cartItems,
