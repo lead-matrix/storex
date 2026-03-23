@@ -61,16 +61,16 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     }, []);
 
     return (
-        <div className="flex h-screen bg-gray-50 text-gray-900 font-sans overflow-hidden">
+        <div className="flex h-screen bg-[#0B0B0D] text-white font-sans overflow-hidden">
             {/* ══ SIDEBAR (DESKTOP) ══════════════════════════════════════════ */}
-            <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col justify-between flex-shrink-0 z-20 shadow-sm">
+            <aside className="hidden md:flex w-64 bg-[#121214] border-r border-white/10 flex-col justify-between flex-shrink-0 z-20 shadow-sm">
                 <div className="flex-1 overflow-y-auto">
-                    <div className="h-20 flex items-center px-6 border-b border-gray-200 bg-white sticky top-0 z-10">
+                    <div className="h-20 flex items-center px-6 border-b border-white/10 bg-[#121214] sticky top-0 z-10">
                         <Link href="/admin" className="flex flex-col">
-                            <span className="font-bold text-lg tracking-wide text-charcoal">
+                            <span className="font-bold text-lg tracking-wide text-white">
                                 DINA <span className="text-gold">ADMIN</span>
                             </span>
-                            <span className="text-[9px] uppercase tracking-widest text-textsoft font-bold">Admin Portal</span>
+                            <span className="text-[9px] uppercase tracking-widest text-luxury-subtext font-bold">Admin Portal</span>
                         </Link>
                     </div>
 
@@ -84,11 +84,11 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                                     key={href}
                                     href={href}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${active
-                                        ? "bg-charcoal text-white shadow-soft"
-                                        : "text-textsoft hover:bg-pearl hover:text-charcoal"
+                                        ? "bg-gold/10 text-gold shadow-sm"
+                                        : "text-luxury-subtext hover:bg-white/5 hover:text-white"
                                         }`}
                                 >
-                                    <Icon size={18} strokeWidth={2} className={active ? "text-gold" : "text-textsoft/60"} />
+                                    <Icon size={18} strokeWidth={2} className={active ? "text-gold" : "text-luxury-subtext/60 group-hover:text-white"} />
                                     <span>{label}</span>
                                 </Link>
                             );
@@ -96,40 +96,40 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     </nav>
                 </div>
 
-                <div className="p-4 border-t border-gray-100 bg-pearl/20 space-y-4">
+                <div className="p-4 border-t border-white/10 bg-black/40 space-y-4">
                     <div className="flex items-center justify-between px-2">
                         <div className="flex items-center gap-3">
                             <AdminSearch />
-                            <Link href="/" target="_blank" className="p-2 text-textsoft/60 hover:text-gold transition-colors" title="View Store">
+                            <Link href="/" target="_blank" className="p-2 text-luxury-subtext/60 hover:text-gold transition-colors" title="View Store">
                                 <Store size={18} />
                             </Link>
                         </div>
-                        <button onClick={signOut} className="p-2 text-textsoft/60 hover:text-red-500 transition-colors" title="Sign Out">
+                        <button onClick={signOut} className="p-2 text-luxury-subtext/60 hover:text-red-500 transition-colors" title="Sign Out">
                             <LogOut size={18} />
                         </button>
                     </div>
 
-                    <div className="px-3 py-2 bg-white rounded-luxury border border-charcoal/5 shadow-sm">
-                        <p className="text-[8px] uppercase tracking-luxury text-textsoft font-bold mb-0.5">Logged in as</p>
-                        <p className="text-[10px] text-charcoal font-medium truncate">{userEmail || "Admin User"}</p>
+                    <div className="px-3 py-2 bg-[#121214] rounded-luxury border border-white/5 shadow-sm">
+                        <p className="text-[8px] uppercase tracking-luxury text-luxury-subtext font-bold mb-0.5">Logged in as</p>
+                        <p className="text-[10px] text-white font-medium truncate">{userEmail || "Admin User"}</p>
                     </div>
                 </div>
             </aside>
 
             {/* ══ MAIN CONTENT ════════════════════════════════════════════════ */}
-            <main className="flex-1 overflow-y-auto bg-gray-50 p-6 md:p-8 lg:p-10 pb-24 md:pb-10 scroll-smooth">
+            <main className="flex-1 overflow-y-auto bg-[#0B0B0D] p-6 md:p-8 lg:p-10 pb-24 md:pb-10 scroll-smooth">
                 <div className="max-w-7xl mx-auto">
                     {children}
                 </div>
             </main>
 
             {/* ══ MOBILE BOTTOM NAV ════════════════════════════════════════════════ */}
-            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50 px-2 py-2 pb-safe block shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#121214] border-t border-white/10 z-50 px-2 py-2 pb-safe block shadow-luxury">
                 <div className="flex items-center justify-between">
                     {[
                         { href: "/admin", icon: LayoutDashboard, label: "Home", exact: true },
                         { href: "/admin/products", icon: Package, label: "Products" },
-                        { href: "/admin/orders", icon: ShoppingCart, label: "Cart" },
+                        { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
                         { href: "/admin/media", icon: ImageIcon, label: "Media" },
                         { href: "/admin/settings", icon: Settings, label: "Config" }
                     ].map(({ href, icon: Icon, label, exact }) => {
@@ -140,7 +140,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                             <Link
                                 key={href}
                                 href={href}
-                                className={`flex flex-col items-center gap-1 p-2 flex-1 transition-all ${active ? "text-gold" : "text-textsoft"}`}
+                                className={`flex flex-col items-center gap-1 p-2 flex-1 transition-all ${active ? "text-gold" : "text-luxury-subtext hover:text-white"}`}
                             >
                                 <Icon size={20} strokeWidth={active ? 2.5 : 2} />
                                 <span className="text-[8px] font-bold uppercase tracking-widest">{label}</span>
