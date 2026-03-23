@@ -29,8 +29,16 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     async function fetchSettings() {
+      if (cart.length === 0) {
+        setLoadingSettings(false);
+        return;
+      }
       try {
-        const res = await fetch("/api/shipping-settings");
+        const res = await fetch("/api/shipping-settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: cart }),
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.settings) setSettings(data.settings);
@@ -42,7 +50,7 @@ export default function CheckoutPage() {
       }
     }
     fetchSettings();
-  }, []);
+  }, [cart]);
 
   const freeThreshold = parseFloat(settings.free_shipping_threshold ?? "100");
   const standardRate = parseFloat(settings.standard_rate ?? "7.99");

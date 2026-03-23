@@ -256,14 +256,14 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
-ALTER TABLE public.products
-ADD COLUMN IF NOT EXISTS weight_grams numeric(10, 2);
-ALTER TABLE public.products
-ADD COLUMN IF NOT EXISTS length_cm numeric(10, 2);
-ALTER TABLE public.products
-ADD COLUMN IF NOT EXISTS width_cm numeric(10, 2);
-ALTER TABLE public.products
-ADD COLUMN IF NOT EXISTS height_cm numeric(10, 2);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS weight_oz numeric(10, 2);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS length_in numeric(10, 2);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS width_in numeric(10, 2);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS height_in numeric(10, 2);
+ALTER TABLE public.products RENAME COLUMN weight_grams TO weight_oz;
+ALTER TABLE public.products RENAME COLUMN length_cm TO length_in;
+ALTER TABLE public.products RENAME COLUMN width_cm TO width_in;
+ALTER TABLE public.products RENAME COLUMN height_cm TO height_in;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS sku text;
 -- Product-level SKU (for simple products without variants)
@@ -346,8 +346,7 @@ CREATE TABLE IF NOT EXISTS public.product_variants (
     color_code text,
     image_url text,
     -- per-variant hero image (shown when this variant is selected)
-    weight numeric(8, 3),
-    -- in lbs, used by Shippo for shipping rate calculation
+    weight numeric(8, 3), -- in oz, used by Shippo for shipping rate calculation
     status text NOT NULL DEFAULT 'active',
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
@@ -703,16 +702,24 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     setting_key text UNIQUE NOT NULL,
     setting_value jsonb NOT NULL DEFAULT '{}',
+    created_by uuid REFERENCES public.profiles(id) DEFAULT (SELECT auth.uid()),
+    updated_by uuid REFERENCES public.profiles(id),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.profiles(id);
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS updated_by uuid REFERENCES public.profiles(id);
 -- 2B. frontend_content — every editable storefront section
 CREATE TABLE IF NOT EXISTS public.frontend_content (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     content_key text UNIQUE NOT NULL,
     content_type text NOT NULL,
     content_data jsonb NOT NULL DEFAULT '{}',
+    created_by uuid REFERENCES public.profiles(id) DEFAULT (SELECT auth.uid()),
+    updated_by uuid REFERENCES public.profiles(id),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.frontend_content ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.profiles(id);
+ALTER TABLE public.frontend_content ADD COLUMN IF NOT EXISTS updated_by uuid REFERENCES public.profiles(id);
 -- 2C. newsletter_subscribers
 CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -727,9 +734,13 @@ CREATE TABLE IF NOT EXISTS public.navigation_menus (
     menu_items jsonb NOT NULL DEFAULT '[]',
     display_order integer NOT NULL DEFAULT 0,
     is_active boolean NOT NULL DEFAULT true,
+    created_by uuid REFERENCES public.profiles(id) DEFAULT (SELECT auth.uid()),
+    updated_by uuid REFERENCES public.profiles(id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.navigation_menus ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.profiles(id);
+ALTER TABLE public.navigation_menus ADD COLUMN IF NOT EXISTS updated_by uuid REFERENCES public.profiles(id);
 -- 2E. cms_pages — dynamic site pages (About/Contact/Privacy/Terms/Home)
 CREATE TABLE IF NOT EXISTS public.cms_pages (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1089,19 +1100,7 @@ CREATE POLICY "site_settings_delete" ON public.site_settings FOR DELETE USING (
 -- 5.9  FRONTEND_CONTENT  — public read, admin write
 CREATE POLICY "frontend_content_select" ON public.frontend_content FOR
 SELECT USING (true);
-CREATE POLICY "frontend_content_insert" ON public.frontend_content FOR
-INSERT TO authenticated WITH CHECK (
-        (
-            SELECT public.is_admin()
-        )
-    );
-CREATE POLICY "frontend_content_update" ON public.frontend_content FOR
-UPDATE USING (
-        (
-            SELECT public.is_admin()
-        )
-    );
-CREATE POLICY "frontend_content_delete" ON public.frontend_content FOR DELETE USING (
+CREATE POLICY "frontend_content_admin_all" ON public.frontend_content FOR ALL TO authenticated USING (
     (
         SELECT public.is_admin()
     )
@@ -1993,6 +1992,23 @@ VALUES (
     (
         'seo_defaults',
         '{"site_name":"DINA COSMETIC","title_template":"%s | DINA COSMETIC","default_description":"Luxury obsidian cosmetics — The Obsidian Palace","og_image":"/og-default.jpg","twitter_handle":"@dinacosmetic"}'::jsonb
+    ),
+    (
+        'shipping_settings',
+        '{
+            "standard_rate": "7.99",
+            "express_rate": "29.99",
+            "free_shipping_threshold": "100",
+            "standard_label": "Standard Shipping",
+            "express_label": "Express Shipping",
+            "weight_brackets": [
+                {"max_lb": 1, "rate": 7.99},
+                {"max_lb": 3, "rate": 12.99},
+                {"max_lb": 5, "rate": 18.99},
+                {"max_lb": 10, "rate": 24.99},
+                {"max_lb": 999, "rate": 35.00}
+            ]
+        }'::jsonb
     ),
     (
         'promotions',

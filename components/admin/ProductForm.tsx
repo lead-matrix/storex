@@ -51,10 +51,10 @@ interface ProductFormProps {
         is_new?: boolean
         category_id?: string
         status?: string
-        weight_grams?: number | null
-        length_cm?: number | null
-        width_cm?: number | null
-        height_cm?: number | null
+        weight_oz?: number | null
+        length_in?: number | null
+        width_in?: number | null
+        height_in?: number | null
         sku?: string | null
         country_of_origin?: string | null
         customs_value_usd?: number | null
@@ -268,10 +268,22 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     {/* Shipping Dimensions + Customs */}
                     <div className="p-4 bg-[#0B0B0D]/5 rounded-lg border border-white/5 space-y-4">
                         <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping &amp; Customs Details</Label>
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-4 gap-3">
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] uppercase text-luxury-subtext">Weight (oz)</Label>
-                                <Input name="weight_grams" type="number" step="0.01" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="oz" />
+                                <Input name="weight_oz" type="number" step="0.01" defaultValue={product?.weight_oz ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="oz" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-luxury-subtext">L (in)</Label>
+                                <Input name="length_in" type="number" step="0.1" defaultValue={product?.length_in ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="length" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-luxury-subtext">W (in)</Label>
+                                <Input name="width_in" type="number" step="0.1" defaultValue={product?.width_in ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="width" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[9px] uppercase text-luxury-subtext">H (in)</Label>
+                                <Input name="height_in" type="number" step="0.1" defaultValue={product?.height_in ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="height" />
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">

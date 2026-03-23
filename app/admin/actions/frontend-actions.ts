@@ -193,7 +193,7 @@ export async function updatePage(slug: string, pageData: Record<string, unknown>
     const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
-        .from("pages")
+        .from("cms_pages")
         .update({
             ...pageData,
             updated_at: new Date().toISOString(),
@@ -217,7 +217,7 @@ export async function getPage(slug: string) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from("pages")
+        .from("cms_pages")
         .select("*")
         .eq("slug", slug)
         .single();
@@ -234,7 +234,7 @@ export async function getAllPages() {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from("pages")
+        .from("cms_pages")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -249,7 +249,7 @@ export async function createPage(pageData: Record<string, unknown>) {
     const supabase = await ensureAdmin();
 
     const { data, error } = await supabase
-        .from("pages")
+        .from("cms_pages")
         .insert(pageData)
         .select()
         .single();
@@ -266,7 +266,7 @@ export async function createPage(pageData: Record<string, unknown>) {
 export async function deletePage(slug: string) {
     const supabase = await ensureAdmin();
 
-    const { error } = await supabase.from("pages").delete().eq("slug", slug);
+    const { error } = await supabase.from("cms_pages").delete().eq("slug", slug);
 
     if (error) {
         return { success: false, error: error.message };

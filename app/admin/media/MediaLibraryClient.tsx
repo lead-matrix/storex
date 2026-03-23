@@ -10,6 +10,11 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import {
+    updateFrontendContent,
+    createFrontendContent,
+    deleteFrontendContent
+} from '@/app/admin/actions/frontend-actions'
 
 interface MediaFile {
     id: string
@@ -231,23 +236,61 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
         setSavingContent(block.id)
         const merged = { ...block.content_data, ...(contentEdits[block.id] ?? {}) }
 
-        const { error } = await supabase
-            .from('frontend_content')
-            .update({ content_data: merged, updated_at: new Date().toISOString() })
-            .eq('id', block.id)
+        try {
+            const result = await updateFrontendContent(block.content_key, merged)
 
-        if (error) {
-            toast.error(`Failed to save: ${error.message}`)
-        } else {
-            toast.success(`Content block "${block.content_key}" saved`)
-            // Clear local edits for this block
-            setContentEdits(prev => {
-                const next = { ...prev }
-                delete next[block.id]
-                return next
-            })
+            if (result.success) {
+                toast.success(`Content block "${block.content_key}" synchronized with vault`)
+                // Clear local edits
+                setContentEdits(prev => {
+                    const next = { ...prev }
+                    delete next[block.id]
+                    return next
+                })
+            } else {
+                toast.error(`Sync failed: ${result.error}`)
+            }
+        } catch (err: any) {
+            toast.error(err.message || "Failed to contact vault")
+        } finally {
+            setSavingContent(null)
         }
-        setSavingContent(null)
+    }
+
+    const deleteBlockAction = async (contentKey: string) => {
+        if (!confirm(`Permanently delete "${contentKey}"? This will vanish from the storefront.`)) return
+
+        try {
+            const result = await deleteFrontendContent(contentKey)
+            if (result.success) {
+                toast.success(`Content block "${contentKey}" destroyed`)
+                window.location.reload()
+            } else {
+                toast.error(`Destruction failed: ${result.error}`)
+            }
+        } catch (err: any) {
+            toast.error(err.message)
+        }
+    }
+
+    const createBlockAction = async () => {
+        const key = prompt("Enter a unique Content Key (e.g. footer_legal_text):")
+        if (!key) return
+
+        try {
+            const result = await createFrontendContent(key, 'text_block', {
+                body: "Enter content here..."
+            })
+
+            if (result.success) {
+                toast.success(`Matrix generated for "${key}"`)
+                window.location.reload()
+            } else {
+                toast.error(`Generation failed: ${result.error}`)
+            }
+        } catch (err: any) {
+            toast.error(err.message)
+        }
     }
 
     return (
@@ -269,6 +312,16 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                         <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
                         Refresh
                     </button>
+
+                    {activeTab === 'content' && (
+                        <button
+                            onClick={createBlockAction}
+                            className="flex items-center gap-2 bg-white text-black px-4 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-bold hover:bg-gold transition-all"
+                        >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            Generate Block
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -580,19 +633,28 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                                 Last updated: {formatDate(block.updated_at)}
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={() => saveContentBlock(block)}
-                                            disabled={savingContent === block.id || !contentEdits[block.id]}
-                                            className={`flex items-center gap-2 px-5 py-2 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all
-                                                ${contentEdits[block.id]
-                                                    ? 'bg-white text-white hover:bg-gold'
-                                                    : 'bg-[#121214] text-luxury-subtext/30 cursor-not-allowed'}`}
-                                        >
-                                            {savingContent === block.id
-                                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                : <Save className="w-3.5 h-3.5" />}
-                                            Save Block
-                                        </button>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => deleteBlockAction(block.content_key)}
+                                                className="p-2 text-luxury-subtext/20 hover:text-red-500 transition-colors"
+                                                title="Destroy Block"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => saveContentBlock(block)}
+                                                disabled={savingContent === block.id || !contentEdits[block.id]}
+                                                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all
+                                                    ${contentEdits[block.id]
+                                                        ? 'bg-white text-black hover:bg-gold'
+                                                        : 'bg-[#121214] text-luxury-subtext/30 cursor-not-allowed'}`}
+                                            >
+                                                {savingContent === block.id
+                                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    : <Save className="w-3.5 h-3.5" />}
+                                                Save Block
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="p-6 space-y-4">

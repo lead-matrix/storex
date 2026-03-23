@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
         const { data: dbProducts } = await supabase
             .from("products")
-            .select("id, title, base_price, sale_price, on_sale, stock_quantity")
+            .select("id, title, base_price, sale_price, on_sale, stock, weight_oz")
             .in("id", itemIds);
 
         if (!dbProducts || dbProducts.length !== items.length) {
@@ -46,25 +46,24 @@ export async function POST(req: Request) {
         if (variantIds.length > 0) {
             const { data } = await supabase
                 .from("product_variants")
-                .select("id, name, price_override")
+                .select("id, name, price_override, weight")
                 .in("id", variantIds);
 
             dbVariants = data || [];
         }
 
-        // ✅ Validate + lock pricing + stock
+        // ✅ Validate + lock pricing + stock + weight
         const validatedItems = items.map((item: any) => {
             const product = dbProducts.find((p: any) => p.id === item.productId);
             if (!product) throw new Error("Invalid product");
 
-            if (product.stock_quantity < item.quantity) {
+            if (product.stock < item.quantity) {
                 throw new Error(`Insufficient stock for ${product.title}`);
             }
 
             const variant = dbVariants.find((v: any) => v.id === item.variantId);
 
             let price = product.base_price || 0;
-
             if (variant?.price_override != null) price = variant.price_override;
             if (product.on_sale && product.sale_price != null) price = product.sale_price;
 
@@ -76,8 +75,13 @@ export async function POST(req: Request) {
                 ...item,
                 name,
                 price: Number(price),
+                variant_weight_oz: variant?.weight ? Number(variant.weight) : null,
+                product_weight_oz: product?.weight_oz ? Number(product.weight_oz) : null,
             };
         });
+
+        const { calculateTotalWeightLb, calculateShippingRate } = await import("@/lib/utils/shippo");
+        const totalWeightLb = calculateTotalWeightLb(validatedItems);
 
         // ✅ Subtotal
         const subtotal = validatedItems.reduce(
@@ -93,30 +97,12 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         const cfg = shippingConfig?.setting_value || {};
+        const ship = calculateShippingRate(totalWeightLb, subtotal, cfg, shippingOption);
 
-        const standardRate = parseFloat(cfg.standard_rate ?? "7.99");
-        const expressRate = parseFloat(cfg.express_rate ?? "29.99");
-        const freeThreshold = parseFloat(cfg.free_shipping_threshold ?? "100");
-
-        let shippingCost = 0;
-        let shippingDisplayName = "";
-        let minDays = 5;
-        let maxDays = 10;
-
-        if (shippingOption === "express") {
-            shippingCost = expressRate;
-            shippingDisplayName = cfg.express_label || "Express Shipping (2-4 Days)";
-            minDays = 2;
-            maxDays = 4;
-        } else {
-            if (subtotal >= freeThreshold) {
-                shippingCost = 0;
-                shippingDisplayName = "Free Standard Shipping";
-            } else {
-                shippingCost = standardRate;
-                shippingDisplayName = cfg.standard_label || "Standard Shipping (5-10 Days)";
-            }
-        }
+        const shippingCost = ship.cost;
+        const shippingDisplayName = ship.name;
+        const minDays = ship.minDays;
+        const maxDays = ship.maxDays;
 
         // ✅ Create pending order
         const { data: order, error: orderError } = await supabase

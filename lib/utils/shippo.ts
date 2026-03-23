@@ -59,6 +59,61 @@ export function calculateTotalWeightLb(items: Array<{
     return totalOz / 16
 }
 
+/**
+ * Calculates the shipping rate based on total weight and configured brackets.
+ * Falls back to flat rates if brackets are missing.
+ */
+export function calculateShippingRate(
+    totalWeightLb: number,
+    subtotal: number,
+    config: any,
+    option: 'standard' | 'express'
+): { cost: number; name: string; minDays: number; maxDays: number } {
+    const freeThreshold = parseFloat(config.free_shipping_threshold ?? "100");
+
+    if (option === 'express') {
+        return {
+            cost: parseFloat(config.express_rate ?? "29.99"),
+            name: config.express_label || "Express Shipping",
+            minDays: 2,
+            maxDays: 4
+        };
+    }
+
+    // Standard Option
+    if (subtotal >= freeThreshold) {
+        return {
+            cost: 0,
+            name: "Free Standard Shipping",
+            minDays: 5,
+            maxDays: 10
+        };
+    }
+
+    // Bracket evaluation
+    const brackets = config.weight_brackets || [];
+    if (brackets.length > 0) {
+        // Find the first bracket where weight <= max_lb
+        const bracket = brackets.find((b: any) => totalWeightLb <= b.max_lb);
+        if (bracket) {
+            return {
+                cost: parseFloat(bracket.rate.toString()),
+                name: config.standard_label || "Standard Shipping",
+                minDays: 5,
+                maxDays: 10
+            };
+        }
+    }
+
+    // Fallback to flat rate
+    return {
+        cost: parseFloat(config.standard_rate ?? "7.99"),
+        name: config.standard_label || "Standard Shipping",
+        minDays: 5,
+        maxDays: 10
+    };
+}
+
 export async function createShippingLabel(order: any) {
     const apiKey = process.env.SHIPPO_API_KEY;
     if (!apiKey) {
@@ -78,7 +133,7 @@ export async function createShippingLabel(order: any) {
             .select(`
                 quantity,
                 product_variants:variant_id ( weight ),
-                products:product_id ( weight_grams )
+                products:product_id ( weight_oz )
             `)
             .eq('order_id', order.id);
 
@@ -86,7 +141,7 @@ export async function createShippingLabel(order: any) {
         const weightItems = (orderItems || []).map((item: any) => ({
             quantity: item.quantity || 1,
             variant_weight_oz: item.product_variants?.weight ? Number(item.product_variants.weight) : null,
-            product_weight_oz: item.products?.weight_grams ? Number(item.products.weight_grams) : null,
+            product_weight_oz: item.products?.weight_oz ? Number(item.products.weight_oz) : null,
         }));
 
         const totalWeightLb = calculateTotalWeightLb(weightItems);
