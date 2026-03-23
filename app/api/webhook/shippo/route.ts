@@ -5,7 +5,9 @@ import {
   sendDeliveryNotificationEmail,
 } from "@/lib/utils/email";
 
-// ------------------ Types ------------------
+import type { OrderItem, OrderRecord } from "@/types/order";
+
+// Incoming Shippo webhook body format
 interface ShippoTrackingStatus {
   status: string;
   status_details: string;
@@ -21,26 +23,12 @@ interface ShippoWebhookBody {
   };
 }
 
-interface OrderItem {
-  id: string;
-  price: number;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  customer_email: string;
-  total_amount?: number;
-  items?: OrderItem[];
-  billing_address?: { name?: string };
-  fulfillment_status?: string;
-}
-
-// ------------------ Webhook Handler ------------------
+// Main webhook handler
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as ShippoWebhookBody;
 
+    // Only respond to track_updated events
     if (body.event !== "track_updated") {
       return NextResponse.json({ ignored: true });
     }
@@ -53,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    // ✅ Idempotency (prevent duplicate processing)
+    // Idempotency: skip duplicates
     const eventId = `${tracking_number}_${tracking_status.status}_${tracking_status.status_date}`;
 
     const { data: existing } = await supabase
@@ -66,7 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ duplicate: true });
     }
 
-    // ✅ Map Shippo status → internal status
+    // Map Shippo status → internal
     let newStatus = "shipped";
 
     switch (tracking_status.status) {
@@ -88,7 +76,7 @@ export async function POST(req: NextRequest) {
         break;
     }
 
-    // ✅ Fetch order
+    // Fetch order, including total_amount and items
     const { data: order, error: findError } = await supabase
       .from("orders")
       .select("id, customer_email, billing_address, fulfillment_status, total_amount, items")
@@ -100,7 +88,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ notFound: true });
     }
 
-    // ✅ Prevent unnecessary updates
+    // Skip if no status change
     if (order.fulfillment_status === newStatus) {
       await supabase.from("shippo_events").insert({
         id: eventId,
@@ -110,7 +98,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true });
     }
 
-    // ✅ Update order
+    // Update status & last tracking update
     const { error: updateError } = await supabase
       .from("orders")
       .update({
@@ -123,12 +111,13 @@ export async function POST(req: NextRequest) {
 
     const customerName = order.billing_address?.name || "Customer";
 
-    // ------------------ Controlled email triggers ------------------
+    // Trigger controlled emails
     if (newStatus === "shipped") {
-      // Calculate totalAmount safely
       const totalAmount =
         order.total_amount ??
-        order.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) ??
+        order.items?.reduce<number>((sum: number, item: OrderItem) => {
+          return sum + item.price * item.quantity;
+        }, 0) ??
         0;
 
       await sendShippingNotificationEmail({
@@ -139,14 +128,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (newStatus === "out_for_delivery") {
-      // Optional future email
-    }
-
     if (newStatus === "delivered") {
       const totalAmount =
         order.total_amount ??
-        order.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) ??
+        order.items?.reduce<number>((sum: number, item: OrderItem) => {
+          return sum + item.price * item.quantity;
+        }, 0) ??
         0;
 
       await sendDeliveryNotificationEmail({
@@ -157,7 +144,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ✅ Log event AFTER success
+    // Log event
     await supabase.from("shippo_events").insert({
       id: eventId,
       order_id: order.id,
@@ -172,6 +159,9 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Shippo webhook failed:", error);
 
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
