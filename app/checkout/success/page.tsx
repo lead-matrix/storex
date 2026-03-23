@@ -1,8 +1,9 @@
 import Link from "next/link"
 import { CheckCircle, ArrowRight } from "lucide-react"
+import { CartClearer } from "@/components/CartClearer"
 
 export const metadata = {
-    title: "Order Confirmed | The Obsidian Palace",
+    title: "Order Confirmed | Dina Cosmetic",
 }
 
 export default async function SuccessPage({
@@ -14,7 +15,10 @@ export default async function SuccessPage({
     const ref = session_id ? session_id.slice(-8).toUpperCase() : null
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center p-6">
+        <div className="min-h-[80vh] flex items-center justify-center p-6 pt-40">
+            {/* Clears cart client-side after successful payment */}
+            <CartClearer />
+
             <div className="max-w-md w-full text-center space-y-12 animate-in fade-in zoom-in duration-1000">
                 <div className="flex justify-center">
                     <div className="w-24 h-24 rounded-full border border-gold/30 flex items-center justify-center bg-gold/5 relative">
@@ -45,7 +49,7 @@ export default async function SuccessPage({
                     href="/"
                     className="inline-flex items-center gap-3 bg-white text-black px-12 py-5 text-[10px] font-bold uppercase tracking-[0.4em] hover:bg-gold transition-all duration-500 group"
                 >
-                    Return to Store
+                    Continue Shopping
                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>

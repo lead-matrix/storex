@@ -68,20 +68,25 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
         .filter(([_, qty]) => qty > 0)
         .map(([id, qty]) => ({ id, quantity: qty }))
 
-    // Determine recommended rate based on order's shipping_option
+    // Determine recommended rate based on address country + chosen Stripe shipping display name
     const getRecommendedRate = (rateList: Rate[]) => {
-        const isUS = order?.shipping_address?.country === 'US'
-        const isExpress = order?.metadata?.shipping_option === 'express'
+        const country = order?.shipping_address?.country || 'US'
+        const isUS = country === 'US'
+        // Detect express from the chosen Stripe shipping option name stored in metadata
+        const shippingLabel: string = (
+            order?.metadata?.shipping_label ||
+            order?.metadata?.shipping_option ||
+            ''
+        ).toLowerCase()
+        const isExpress = shippingLabel.includes('express') || shippingLabel.includes('dhl')
 
         const recommended = rateList.find(r => {
             if (isUS) {
-                return r.provider === 'USPS' && r.service.includes(isExpress ? 'Express' : 'Priority')
+                if (isExpress) return r.provider === 'USPS' && r.service.toLowerCase().includes('express')
+                return r.provider === 'USPS' && (r.service.toLowerCase().includes('priority') || r.service.toLowerCase().includes('ground'))
             } else {
-                if (isExpress) {
-                    return r.provider === 'DHL' || r.service.includes('Express International')
-                } else {
-                    return r.provider === 'USPS' && r.service.includes('International')
-                }
+                if (isExpress) return r.provider === 'DHL' || r.service.toLowerCase().includes('express')
+                return r.provider === 'USPS' && r.service.toLowerCase().includes('international')
             }
         })
 

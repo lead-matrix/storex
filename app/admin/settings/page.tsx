@@ -4,6 +4,7 @@ import { updateStoreSettings, updateMenusAndSocials, updateShippingSettings } fr
 import MenuEditor from '@/components/admin/MenuEditor'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 import { BrandSettings } from '@/components/admin/BrandSettings'
+import { SettingsSidebar } from '@/components/admin/SettingsSidebar'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,137 +41,129 @@ export default async function AdminSettings() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-                {/* Sidebar nav */}
-                <div className="lg:col-span-1 space-y-2">
-                    {[
-                        { label: 'General Info', icon: Globe, active: true },
-                        { label: 'Shipping Rates', icon: Truck },
-                        { label: 'Visual Storefront', icon: Layout },
-                        { label: 'Socials', icon: Users },
-                    ].map((item: any) => (
-                        <button key={item.label} type="button"
-                            className={`w-full flex items-center gap-4 px-6 py-4 rounded-md transition-all ${item.active ? 'bg-gold/10 text-gold shadow-sm' : 'bg-transparent text-luxury-subtext hover:text-white hover:bg-gold/5'}`}>
-                            <item.icon className="w-4 h-4" />
-                            <span className="text-[10px] uppercase tracking-luxury font-medium">{item.label}</span>
-                        </button>
-                    ))}
-                </div>
+                <SettingsSidebar />
 
                 {/* Content */}
                 <div className="lg:col-span-3 space-y-12">
 
                     {/* ── Brand & General ── */}
-                    <BrandSettings 
-                        initialData={{
-                            name: storeInfo?.setting_value?.name || 'Dina Cosmetic',
-                            tagline: storeInfo?.setting_value?.tagline || 'Premium Beauty Products',
-                            currency: storeInfo?.setting_value?.currency || 'USD',
-                            logo_url: storeInfo?.setting_value?.logo_url
-                        }} 
-                    />
+                    <section id="section-general" className="scroll-mt-32 space-y-12">
+                        <BrandSettings 
+                            initialData={{
+                                name: storeInfo?.setting_value?.name || 'Dina Cosmetic',
+                                tagline: storeInfo?.setting_value?.tagline || 'Premium Beauty Products',
+                                currency: storeInfo?.setting_value?.currency || 'USD',
+                                logo_url: storeInfo?.setting_value?.logo_url
+                            }} 
+                        />
 
-                    <SettingsForm action={updateStoreSettings} title="Operational Status" iconName="globe">
-                        <div className="flex items-center justify-between p-8 bg-rose-950/20 border border-rose-500/20 rounded-xl shadow-inner-soft">
-                            <div className="space-y-1">
-                                <p className="text-[11px] uppercase tracking-widest text-white font-bold">Store Status</p>
-                                <p className="text-[9px] text-rose-500 uppercase tracking-luxury font-medium flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
-                                    Maintenance Mode Kill Switch
-                                </p>
+                        <SettingsForm action={updateStoreSettings} title="Operational Status" iconName="globe">
+                            <div className="flex items-center justify-between p-8 bg-rose-950/20 border border-rose-500/20 rounded-xl shadow-inner-soft">
+                                <div className="space-y-1">
+                                    <p className="text-[11px] uppercase tracking-widest text-white font-bold">Store Status</p>
+                                    <p className="text-[9px] text-rose-500 uppercase tracking-luxury font-medium flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
+                                        Maintenance Mode Kill Switch
+                                    </p>
+                                </div>
+                                <div className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        name="storeEnabled"
+                                        defaultChecked={isEnabled}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-14 h-7 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
+                                </div>
                             </div>
-                            <div className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="storeEnabled"
-                                    defaultChecked={isEnabled}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-14 h-7 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
-                            </div>
-                        </div>
-                    </SettingsForm>
+                        </SettingsForm>
+                    </section>
 
                     {/* ── Shipping Rate Settings ── */}
-                    <SettingsForm action={updateShippingSettings} title="Shipping Rate Configuration" iconName="truck">
-                        <p className="text-[11px] text-luxury-subtext leading-relaxed">
-                            Configure the flat-rate shipping prices shown to customers at checkout. Stripe collects the customer address — Shippo is only called by admin at fulfillment.
-                        </p>
+                    <section id="section-shipping" className="scroll-mt-32">
+                        <SettingsForm action={updateShippingSettings} title="Shipping Rate Configuration" iconName="truck">
+                            <p className="text-[11px] text-luxury-subtext leading-relaxed">
+                                Configure the flat-rate shipping prices shown to customers at checkout. Stripe collects the customer address — Shippo is only called by admin at fulfillment.
+                            </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <Package className="w-4 h-4 text-white" />
-                                    <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Standard</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Package className="w-4 h-4 text-white" />
+                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Standard</p>
+                                    </div>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-subtext text-sm">$</span>
+                                        <input name="standard_rate" type="number" step="0.01" defaultValue={shipping.standard_rate ?? '7.99'}
+                                            className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                    </div>
+                                    <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'Standard Shipping (5-10 Business Days)'}
+                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Free Shipping Threshold</label>
+                                        <input name="free_shipping_threshold" type="number" step="0.01" defaultValue={shipping.free_shipping_threshold ?? '100'}
+                                            className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                    </div>
                                 </div>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-subtext text-sm">$</span>
-                                    <input name="standard_rate" type="number" step="0.01" defaultValue={shipping.standard_rate ?? '7.99'}
-                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                </div>
-                                <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'Standard Shipping (5-10 Business Days)'}
-                                    className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                <div className="space-y-1.5">
-                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Free Shipping Threshold</label>
-                                    <input name="free_shipping_threshold" type="number" step="0.01" defaultValue={shipping.free_shipping_threshold ?? '100'}
+
+                                <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Truck className="w-4 h-4 text-gold" />
+                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Express</p>
+                                    </div>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-subtext text-sm">$</span>
+                                        <input name="express_rate" type="number" step="0.01" defaultValue={shipping.express_rate ?? '19.99'}
+                                            className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                    </div>
+                                    <input name="express_label" type="text" defaultValue={shipping.express_label ?? 'Express Shipping'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
                                 </div>
                             </div>
 
-                            <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <Truck className="w-4 h-4 text-gold" />
-                                    <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Express</p>
-                                </div>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-subtext text-sm">$</span>
-                                    <input name="express_rate" type="number" step="0.01" defaultValue={shipping.express_rate ?? '19.99'}
-                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                </div>
-                                <input name="express_label" type="text" defaultValue={shipping.express_label ?? 'Express Shipping'}
-                                    className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                            <div className="flex items-start gap-3 p-5 bg-emerald-950/20 border border-emerald-500/20 rounded-xl">
+                                <DollarSign className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                <p className="text-[11px] text-emerald-400/80 leading-relaxed">
+                                    Live Shippo rates are active. The flat rates above are used as fallback if carrier services are unreachable.
+                                </p>
                             </div>
-                        </div>
-
-                        <div className="flex items-start gap-3 p-5 bg-emerald-950/20 border border-emerald-500/20 rounded-xl">
-                            <DollarSign className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                            <p className="text-[11px] text-emerald-400/80 leading-relaxed">
-                                Live Shippo rates are active. The flat rates above are used as fallback if carrier services are unreachable.
-                            </p>
-                        </div>
-                    </SettingsForm>
+                        </SettingsForm>
+                    </section>
 
 
                     {/* ── Menus & Socials ── */}
-                    <SettingsForm action={updateMenusAndSocials} title="Navigation & Social Links" iconName="layout">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Header Navigation</label>
-                                <MenuEditor name="header_nav" initialItems={headerNav?.menu_items || [{ label: 'Shop', href: '/shop' }]} />
+                    <section id="section-socials" className="scroll-mt-32">
+                        <SettingsForm action={updateMenusAndSocials} title="Navigation & Social Links" iconName="layout">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Header Navigation</label>
+                                    <MenuEditor name="header_nav" initialItems={headerNav?.menu_items || [{ label: 'Shop', href: '/shop' }]} />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Footer legal Links</label>
+                                    <MenuEditor name="footer_legal" initialItems={footerNav?.menu_items || [{ label: 'Privacy', href: '/privacy' }]} />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Footer legal Links</label>
-                                <MenuEditor name="footer_legal" initialItems={footerNav?.menu_items || [{ label: 'Privacy', href: '/privacy' }]} />
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white/5 rounded-xl border border-white/5">
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Instagram</label>
-                                <input name="instagram" type="text" defaultValue={socialMedia?.setting_value?.instagram || ''} placeholder="https://instagram.com/..."
-                                    className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white/5 rounded-xl border border-white/5">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Instagram</label>
+                                    <input name="instagram" type="text" defaultValue={socialMedia?.setting_value?.instagram || ''} placeholder="https://instagram.com/..."
+                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">TikTok</label>
+                                    <input name="tiktok" type="text" defaultValue={socialMedia?.setting_value?.tiktok || ''} placeholder="https://tiktok.com/..."
+                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Facebook</label>
+                                    <input name="facebook" type="text" defaultValue={socialMedia?.setting_value?.facebook || ''} placeholder="https://facebook.com/..."
+                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">TikTok</label>
-                                <input name="tiktok" type="text" defaultValue={socialMedia?.setting_value?.tiktok || ''} placeholder="https://tiktok.com/..."
-                                    className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Facebook</label>
-                                <input name="facebook" type="text" defaultValue={socialMedia?.setting_value?.facebook || ''} placeholder="https://facebook.com/..."
-                                    className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
-                            </div>
-                        </div>
-                    </SettingsForm>
+                        </SettingsForm>
+                    </section>
 
                 </div>
             </div>
