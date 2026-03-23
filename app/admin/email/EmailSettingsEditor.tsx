@@ -97,22 +97,22 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
         )
     }
 
-    const FIELD_CLASS = 'w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 placeholder:text-gray-400'
-    const LABEL_CLASS = 'block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5'
+    const FIELD_CLASS = 'w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gray-900 placeholder:text-white/40'
+    const LABEL_CLASS = 'block text-xs font-semibold uppercase tracking-wide text-luxury-subtext mb-1.5'
 
     return (
         <div className="space-y-8 pb-24">
             {/* Header */}
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-3xl font-serif text-gray-900 tracking-tight">Email Design Studio</h1>
-                    <p className="text-xs uppercase tracking-widest text-gray-400 mt-1 font-medium">Visual Email Template Editor</p>
+                    <h1 className="text-3xl font-serif text-white tracking-tight">Email Design Studio</h1>
+                    <p className="text-xs uppercase tracking-widest text-white/40 mt-1 font-medium">Visual Email Template Editor</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleSave}
                         disabled={isPending}
-                        className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 bg-white text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors disabled:opacity-50"
                     >
                         {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                         Save Design
@@ -133,10 +133,10 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                 <div className="xl:col-span-2 space-y-6">
 
                     {/* Brand Identity */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                    <div className="bg-[#121214] border border-white/10 rounded-xl p-6 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 mb-2">
-                            <Palette className="w-4 h-4 text-gray-400" />
-                            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-700">Brand Identity</h2>
+                            <Palette className="w-4 h-4 text-white/40" />
+                            <h2 className="text-sm font-bold uppercase tracking-wide text-white">Brand Identity</h2>
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Brand Name</label>
@@ -151,24 +151,24 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                                 <label className={LABEL_CLASS}>Accent</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" value={settings.accent_color} onChange={e => set('accent_color', e.target.value)}
-                                        className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5" />
-                                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono" value={settings.accent_color} onChange={e => set('accent_color', e.target.value)} />
+                                        className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer p-0.5" />
+                                    <input className="flex-1 bg-black/50 border border-white/10 rounded px-2 py-1.5 text-xs font-mono" value={settings.accent_color} onChange={e => set('accent_color', e.target.value)} />
                                 </div>
                             </div>
                             <div>
                                 <label className={LABEL_CLASS}>Background</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" value={settings.background_color} onChange={e => set('background_color', e.target.value)}
-                                        className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5" />
-                                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono" value={settings.background_color} onChange={e => set('background_color', e.target.value)} />
+                                        className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer p-0.5" />
+                                    <input className="flex-1 bg-black/50 border border-white/10 rounded px-2 py-1.5 text-xs font-mono" value={settings.background_color} onChange={e => set('background_color', e.target.value)} />
                                 </div>
                             </div>
                             <div>
                                 <label className={LABEL_CLASS}>Text</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" value={settings.text_color} onChange={e => set('text_color', e.target.value)}
-                                        className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5" />
-                                    <input className="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono" value={settings.text_color} onChange={e => set('text_color', e.target.value)} />
+                                        className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer p-0.5" />
+                                    <input className="flex-1 bg-black/50 border border-white/10 rounded px-2 py-1.5 text-xs font-mono" value={settings.text_color} onChange={e => set('text_color', e.target.value)} />
                                 </div>
                             </div>
                         </div>
@@ -179,10 +179,10 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                     </div>
 
                     {/* Order Confirmation Template */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                    <div className="bg-[#121214] border border-white/10 rounded-xl p-6 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 mb-2">
                             <ShoppingBag className="w-4 h-4 text-emerald-500" />
-                            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-700">Order Confirmation Email</h2>
+                            <h2 className="text-sm font-bold uppercase tracking-wide text-white">Order Confirmation Email</h2>
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Subject Line</label>
@@ -193,23 +193,23 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                             <input className={FIELD_CLASS} value={settings.confirm_label} onChange={e => set('confirm_label', e.target.value)} placeholder="Order Confirmation" />
                         </div>
                         <div>
-                            <label className={LABEL_CLASS}>Greeting <span className="normal-case text-gray-400 font-normal">— use {"{{name}}"} for customer name</span></label>
+                            <label className={LABEL_CLASS}>Greeting <span className="normal-case text-white/40 font-normal">— use {"{{name}}"} for customer name</span></label>
                             <input className={FIELD_CLASS} value={settings.confirm_greeting} onChange={e => set('confirm_greeting', e.target.value)} placeholder="Hello, {{name}}" />
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Body Text</label>
                             <textarea className={`${FIELD_CLASS} min-h-[80px] resize-none`} value={settings.confirm_body} onChange={e => set('confirm_body', e.target.value)} />
                         </div>
-                        <button onClick={() => setPreview('confirm')} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${preview === 'confirm' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                        <button onClick={() => setPreview('confirm')} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${preview === 'confirm' ? 'bg-white text-black' : 'bg-white/5 text-luxury-subtext hover:bg-white/10'}`}>
                             <Eye className="w-3 h-3 inline mr-1.5" />Preview this template
                         </button>
                     </div>
 
                     {/* Shipping Notification Template */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+                    <div className="bg-[#121214] border border-white/10 rounded-xl p-6 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 mb-2">
                             <Truck className="w-4 h-4 text-purple-500" />
-                            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-700">Shipping Notification Email</h2>
+                            <h2 className="text-sm font-bold uppercase tracking-wide text-white">Shipping Notification Email</h2>
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Subject Line</label>
@@ -220,25 +220,25 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                             <input className={FIELD_CLASS} value={settings.ship_label} onChange={e => set('ship_label', e.target.value)} placeholder="Shipping Manifest" />
                         </div>
                         <div>
-                            <label className={LABEL_CLASS}>Greeting <span className="normal-case text-gray-400 font-normal">— use {"{{name}}"} for customer name</span></label>
+                            <label className={LABEL_CLASS}>Greeting <span className="normal-case text-white/40 font-normal">— use {"{{name}}"} for customer name</span></label>
                             <input className={FIELD_CLASS} value={settings.ship_greeting} onChange={e => set('ship_greeting', e.target.value)} placeholder="Your order has shipped, {{name}}" />
                         </div>
                         <div>
                             <label className={LABEL_CLASS}>Body Text</label>
                             <textarea className={`${FIELD_CLASS} min-h-[80px] resize-none`} value={settings.ship_body} onChange={e => set('ship_body', e.target.value)} />
                         </div>
-                        <button onClick={() => setPreview('ship')} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${preview === 'ship' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                        <button onClick={() => setPreview('ship')} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${preview === 'ship' ? 'bg-white text-black' : 'bg-white/5 text-luxury-subtext hover:bg-white/10'}`}>
                             <Eye className="w-3 h-3 inline mr-1.5" />Preview this template
                         </button>
                     </div>
 
                     {/* Send Test Email */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <div className="bg-[#121214] border border-white/10 rounded-xl p-6 shadow-sm">
                         <div className="flex items-center gap-2 mb-4">
                             <Send className="w-4 h-4 text-blue-500" />
-                            <h2 className="text-sm font-bold uppercase tracking-wide text-gray-700">Send Test Email</h2>
+                            <h2 className="text-sm font-bold uppercase tracking-wide text-white">Send Test Email</h2>
                         </div>
-                        <p className="text-xs text-gray-500 mb-4">Fire a live test with the current settings to any inbox.</p>
+                        <p className="text-xs text-luxury-subtext mb-4">Fire a live test with the current settings to any inbox.</p>
                         <div className="flex gap-2">
                             <input
                                 type="email"
@@ -256,7 +256,7 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                                 Send
                             </button>
                         </div>
-                        <p className="text-[10px] text-gray-400 mt-2">Will send the currently previewed template type: <strong>{preview === 'confirm' ? 'Order Confirmation' : 'Shipping Notification'}</strong>.</p>
+                        <p className="text-[10px] text-white/40 mt-2">Will send the currently previewed template type: <strong>{preview === 'confirm' ? 'Order Confirmation' : 'Shipping Notification'}</strong>.</p>
                     </div>
                 </div>
 
@@ -264,27 +264,27 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                 <div className="xl:col-span-3">
                     <div className="sticky top-8">
                         <div className="flex items-center gap-3 mb-4">
-                            <Mail className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Live Preview</span>
-                            <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded font-medium">
+                            <Mail className="w-4 h-4 text-white/40" />
+                            <span className="text-sm font-semibold text-white uppercase tracking-wide">Live Preview</span>
+                            <span className="ml-auto text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded font-medium">
                                 {preview === 'confirm' ? 'Order Confirmation' : 'Shipping Notification'}
                             </span>
                         </div>
 
                         {/* Email client chrome mockup */}
-                        <div className="bg-gray-100 rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                        <div className="bg-white/5 rounded-2xl shadow-xl overflow-hidden border border-white/10">
                             {/* Simulated email header */}
-                            <div className="bg-white border-b border-gray-200 px-6 py-4">
-                                <p className="text-xs text-gray-500">
-                                    <span className="font-semibold text-gray-700">From: </span>{settings.brand_name} &lt;orders@updates.dinacosmetic.com&gt;
+                            <div className="bg-[#121214] border-b border-white/10 px-6 py-4">
+                                <p className="text-xs text-luxury-subtext">
+                                    <span className="font-semibold text-white">From: </span>{settings.brand_name} &lt;orders@updates.dinacosmetic.com&gt;
                                 </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    <span className="font-semibold text-gray-700">Subject: </span>
+                                <p className="text-xs text-luxury-subtext mt-1">
+                                    <span className="font-semibold text-white">Subject: </span>
                                     {preview === 'confirm' ? settings.confirm_subject : settings.ship_subject}
                                 </p>
                             </div>
                             {/* Email body rendered live */}
-                            <div className="p-4 bg-gray-50 overflow-auto max-h-[700px]">
+                            <div className="p-4 bg-black/50 overflow-auto max-h-[700px]">
                                 <div
                                     className="mx-auto"
                                     style={{ maxWidth: 600 }}
@@ -293,7 +293,7 @@ export default function EmailSettingsEditor({ settings: initial }: { settings: E
                             </div>
                         </div>
 
-                        <p className="text-[10px] text-gray-400 text-center mt-3">
+                        <p className="text-[10px] text-white/40 text-center mt-3">
                             ✦ All changes update the preview instantly. Click "Save Design" to make them live.
                         </p>
                     </div>

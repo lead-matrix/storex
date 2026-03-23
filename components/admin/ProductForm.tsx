@@ -80,6 +80,9 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
     const [descCount, setDescCount] = useState((product?.description || '').length)
 
     // Auto-generate slug from name
+    const generateSKU = () => 'DC-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase()
+    
+    const [skuValue, setSkuValue] = useState(product?.sku || generateSKU())
     const [slugValue, setSlugValue] = useState(product?.slug ?? '')
     const [slugManual, setSlugManual] = useState(!!product?.slug)
 
@@ -110,6 +113,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
             color_code: '',
             image_url: '',
             weight: 0.5,
+            sku: generateSKU(),
             status: 'active',
             _isNew: true,
         }])
@@ -267,7 +271,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] uppercase text-luxury-subtext">Weight (oz)</Label>
-                                <Input name="weight_grams" type="number" step="0.01" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs" placeholder="oz" />
+                                <Input name="weight_grams" type="number" step="0.01" defaultValue={product?.weight_grams ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="oz" />
                             </div>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
@@ -275,7 +279,8 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 <Label className="text-[9px] uppercase text-luxury-subtext">Product SKU</Label>
                                 <Input
                                     name="sku"
-                                    defaultValue={product?.sku ?? ''}
+                                    value={skuValue}
+                                    onChange={e => setSkuValue(e.target.value)}
                                     placeholder="e.g. DC-FND-001"
                                     className="h-9 text-[10px] font-mono uppercase bg-black/50 border-white/10"
                                 />
