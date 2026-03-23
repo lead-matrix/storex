@@ -2378,14 +2378,14 @@ ORDER BY tablename;
 --       Use these instead of read-then-write to prevent overselling.
 -- ================================================================
 CREATE OR REPLACE FUNCTION public.decrement_stock(p_product_id uuid, p_quantity int)
-RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
     UPDATE public.products
     SET stock = GREATEST(0, stock - p_quantity)
     WHERE id = p_product_id;
 $$;
 
 CREATE OR REPLACE FUNCTION public.decrement_variant_stock(p_variant_id uuid, p_quantity int)
-RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
     UPDATE public.product_variants
     SET stock = GREATEST(0, stock - p_quantity)
     WHERE id = p_variant_id;
@@ -2536,7 +2536,7 @@ CREATE TABLE IF NOT EXISTS public.inventory_logs (
     SET NULL,
         created_at timestamptz DEFAULT now()
 );
-CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN IF (
+CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ BEGIN IF (
         OLD.stock IS DISTINCT
         FROM NEW.stock
     ) THEN
@@ -2578,8 +2578,11 @@ BEGIN
     END IF;
 END $$;
 
--- B. DROP UNUSED NON-FOREIGN-KEY INDEXES
---    These were flagged by Supabase as "Unused". We can safely drop them to clear the warnings.
+-- B. DROP UNUSED/DUPLICATE NON-FOREIGN-KEY INDEXES
+--    These were flagged by Supabase as "Unused" or "Duplicate". We safely drop them to clear warnings.
+DROP INDEX IF EXISTS public.idx_order_items_order_id;
+DROP INDEX IF EXISTS public.idx_orders_customer_email;
+DROP INDEX IF EXISTS public.idx_products_category_id;
 DROP INDEX IF EXISTS public.idx_orders_stripe_session;
 DROP INDEX IF EXISTS public.idx_profiles_role;
 DROP INDEX IF EXISTS public.idx_newsletter_email;
