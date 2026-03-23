@@ -2034,6 +2034,13 @@ VALUES (
                 {"max_lb": 5, "rate": 18.99},
                 {"max_lb": 10, "rate": 24.99},
                 {"max_lb": 999, "rate": 35.00}
+            ],
+            "intl_weight_brackets": [
+                {"max_lb": 1, "rate": 19.99},
+                {"max_lb": 3, "rate": 29.99},
+                {"max_lb": 5, "rate": 39.99},
+                {"max_lb": 10, "rate": 59.99},
+                {"max_lb": 999, "rate": 99.99}
             ]
         }'::jsonb
     ),

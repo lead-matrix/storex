@@ -97,8 +97,19 @@ export async function POST(req: Request) {
         const expRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "express");
 
         // International flat rate (recovers cost for heavy cross-border shipments)
-        const intlStandardCost = parseFloat(cfg.international_standard_rate ?? "19.99");
-        const intlExpressCost = parseFloat(cfg.international_express_rate ?? "49.99");
+        const intlBrackets = cfg.intl_weight_brackets || [
+            {"max_lb": 1, "rate": 19.99},
+            {"max_lb": 3, "rate": 29.99},
+            {"max_lb": 5, "rate": 39.99},
+            {"max_lb": 10, "rate": 59.99},
+            {"max_lb": 999, "rate": 99.99}
+        ];
+        
+        const matchingIntlBracket = intlBrackets.find((b: any) => totalWeightLb <= b.max_lb) || intlBrackets[intlBrackets.length - 1];
+        const intlStandardCost = matchingIntlBracket ? parseFloat(matchingIntlBracket.rate) : 19.99;
+        
+        // International Express is evaluated dynamically as standard bracket + $30 premium
+        const intlExpressCost = intlStandardCost + 30.00;
 
         const shippingOptions: Stripe.Checkout.SessionCreateParams.ShippingOption[] = [
             // Option 1: US Domestic Standard (or FREE)
