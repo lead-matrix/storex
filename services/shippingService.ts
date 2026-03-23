@@ -16,30 +16,30 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
 
         const address = order.shipping_address as any;
 
-        // Defensive check: If address is missing or severely incomplete, try fallback
-        if (!address || (!address.line1 && !address.street1)) {
-            console.warn(`[shippingService] Order ${orderId} has incomplete shipping_address. Checking billing fallback.`);
+        // Stripe-native flow: address is always a flat object populated by webhook.
+        // Guard: if address is missing, the webhook hasn't fired yet.
+        if (!address || !address.line1) {
+            throw new Error('Order has no shipping address. Wait for Stripe webhook to populate it.');
         }
 
         const addressTo: any = {
-            name: order.customer_name || address?.name || address?.recipient || 'Valued Client',
-            // Support both flat and Stripe-nested address structures
-            street1: address?.address?.line1 || address?.line1 || address?.street1 || order.billing_address?.address?.line1 || order.billing_address?.line1 || '',
-            street2: address?.address?.line2 || address?.line2 || address?.street2 || order.billing_address?.address?.line2 || order.billing_address?.line2 || '',
-            city: address?.address?.city || address?.city || order.billing_address?.address?.city || order.billing_address?.city || '',
-            state: address?.address?.state || address?.state || order.billing_address?.address?.state || order.billing_address?.state || '',
-            zip: address?.address?.postal_code || address?.address?.zip || address?.postal_code || address?.zip || order.billing_address?.address?.postal_code || order.billing_address?.postal_code || '',
-            country: address?.address?.country || address?.country || order.billing_address?.address?.country || order.billing_address?.country || 'US',
-            email: order.customer_email || address?.email || '',
+            name: order.customer_name || address.name || 'Valued Client',
+            street1: address.line1 || '',
+            street2: address.line2 || '',
+            city: address.city || '',
+            state: address.state || '',
+            zip: address.postal_code || '',
+            country: address.country || 'US',
+            email: order.customer_email || '',
+            phone: order.customer_phone || '',
         };
 
         if (!addressTo.street1) {
-            throw new Error('Incomplete shipping address: Street address (line1) is missing from both shipping and billing data.');
+            throw new Error('Incomplete shipping address: line1 is missing.');
         }
 
         const allItems = await getItemsByOrder(orderId);
 
-        // Use shared weight calculator — single source of truth shared with createShippingLabel()
         const weightItems = allItems.map((item: any) => ({
             quantity: item.quantity,
             variant_weight_oz: item.product_variants?.weight ? Number(item.product_variants.weight) : null,
@@ -63,7 +63,7 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
 
         const parcelData = getParcelForWeight(totalWeight);
 
-        // 1. Resolve Warehouse Info (Origin)
+        // Resolve Warehouse Info
         const { createClient } = await import('@/lib/supabase/server');
         const supabase = await createClient();
         const { data: settings } = await supabase
@@ -92,13 +92,13 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
             phone: warehouse.phone,
         };
 
-        // 2. International Customs Handling
+        // International Customs Handling
         let customsDeclarationId: string | undefined;
         const isInternational = addressTo.country !== addressFrom.country;
 
         if (isInternational) {
-            console.log(`[shippingService] International shipment detected (${addressFrom.country} -> ${addressTo.country}). Generating customs declaration.`);
-            
+            console.log(`[shippingService] International shipment (${addressFrom.country} -> ${addressTo.country}). Generating customs declaration.`);
+
             const customsItems = await Promise.all(allItems.map(async (item: any) => {
                 const itemQuantity = (itemsToFulfill ? itemsToFulfill.find(f => f.id === item.id)?.quantity : item.quantity) || 0;
                 if (itemQuantity <= 0) return null;
@@ -106,7 +106,6 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
                 const weightOz = item.product_variants?.weight || item.products?.weight_grams || 2;
                 const valueUsd = item.products?.customs_value_usd || item.price || 10;
                 const originCountry = item.products?.country_of_origin || addressFrom.country;
-                const sku = item.product_variants?.sku || item.products?.sku || `DC-${item.product_id.substring(0, 5)}`;
 
                 return await shippo.customsItems.create({
                     description: item.products?.title || 'Cosmetic Item',
@@ -126,9 +125,9 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
                 certify: true,
                 certifySigner: warehouse.name || 'Warehouse Manager',
                 items: customsItems.filter(Boolean).map(ci => (ci as any).objectId) as any[],
-                eelPfc: 'NOEEI_30_37_a', // Under $2500 exemption
+                eelPfc: 'NOEEI_30_37_a',
             } as any);
-            
+
             customsDeclarationId = declaration.objectId;
         }
 
@@ -140,9 +139,38 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
             async: false,
         });
 
+        // Sort rates: preferred carriers first
+        const isExpress = (order as any).metadata?.shipping_option === 'express';
+        const isUS = addressTo.country === 'US';
+
+        const sortedRates = ((shippoShipment.rates || []) as any[]).sort((a: any, b: any) => {
+            const score = (r: any) => {
+                if (isUS) {
+                    if (r.provider === 'USPS') {
+                        if (isExpress && r.servicelevel?.name?.includes('Express')) return 0;
+                        if (!isExpress && r.servicelevel?.name?.includes('Priority')) return 1;
+                        return 2;
+                    }
+                    if (r.provider === 'UPS') return 3;
+                    return 4;
+                } else {
+                    // International
+                    if (isExpress) {
+                        if (r.provider === 'DHL') return 0;
+                        if (r.servicelevel?.name?.includes('Express International')) return 1;
+                        return 2;
+                    } else {
+                        if (r.provider === 'USPS' && r.servicelevel?.name?.includes('International')) return 0;
+                        return 1;
+                    }
+                }
+            };
+            return score(a) - score(b);
+        });
+
         return {
             shipmentId: shippoShipment.objectId || '',
-            rates: (shippoShipment.rates || []) as any[],
+            rates: sortedRates,
             parcelName: (parcelData as any).name || 'Standard Parcel'
         };
     } catch (error) {
@@ -156,7 +184,13 @@ export async function purchaseLabelForRate(orderId: string, rateId: string, carr
         const order = await getOrderById(orderId);
         if (!order) throw new Error('Order not found');
 
-        // Purchase label
+        // Guard: Stripe webhook must have populated address before admin can generate label
+        const address = order.shipping_address as any;
+        if (!address || !address.line1) {
+            throw new Error('Order has no shipping address. Wait for Stripe webhook to populate it.');
+        }
+
+        // Purchase label from Shippo
         const transaction = await shippo.transactions.create({
             rate: rateId,
             labelFileType: 'PDF',
@@ -176,7 +210,7 @@ export async function purchaseLabelForRate(orderId: string, rateId: string, carr
             status: 'pending',
         });
 
-        // Link Items to Shipment and Update Quantities
+        // Link Items to Shipment and update quantities
         if (itemsToFulfill && itemsToFulfill.length > 0) {
             await createShipmentItems(itemsToFulfill.map(i => ({
                 shipment_id: dbShipment.id,
@@ -212,7 +246,6 @@ export async function purchaseLabelForRate(orderId: string, rateId: string, carr
         const allItems = await getItemsByOrder(orderId);
         const isFullyFulfilled = allItems.every((i: any) => (i.fulfilled_quantity || 0) >= i.quantity);
 
-        // Stamp tracking_number on the order so the Shippo webhook can look it up
         await updateOrderStatus(orderId, {
             fulfillment_status: isFullyFulfilled ? 'fulfilled' : 'partial',
             ...(transaction.trackingNumber ? { tracking_number: transaction.trackingNumber } : {}),
@@ -242,6 +275,6 @@ export async function createShipmentAndLabel(orderId: string) {
     // Legacy support: auto-select cheapest
     const { rates } = await getShippingRates(orderId);
     if (!rates || rates.length === 0) throw new Error('No rates');
-    const cheapest = rates.sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount))[0];
+    const cheapest = rates.sort((a: any, b: any) => parseFloat(a.amount) - parseFloat(b.amount))[0];
     return purchaseLabelForRate(orderId, cheapest.objectId || '', cheapest.provider || '', cheapest.servicelevel?.name || '');
 }

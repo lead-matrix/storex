@@ -1,3 +1,4 @@
+// This route is called ONLY from admin fulfillment — never from customer checkout
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,19 +20,17 @@ export async function POST(req: Request) {
             let itemWeightOz = 0;
 
             if (item.variantId) {
-                const { data: v } = await supabase.from('product_variants').select('weight').eq('id', item.variantId).single();
-                if (v && v.weight) itemWeightOz = Number(v.weight); // variant weight is in oz
+                const { data: v } = await supabase.from("product_variants").select("weight").eq("id", item.variantId).single();
+                if (v && v.weight) itemWeightOz = Number(v.weight);
             }
 
-            // Fallback to product weight_grams field (now stores oz directly)
             if (!itemWeightOz || itemWeightOz <= 0) {
-                const { data: p } = await supabase.from('products').select('weight_grams').eq('id', item.productId).single();
+                const { data: p } = await supabase.from("products").select("weight_grams").eq("id", item.productId).single();
                 if (p && p.weight_grams) {
-                    itemWeightOz = Number(p.weight_grams); // stored as oz
+                    itemWeightOz = Number(p.weight_grams);
                 }
             }
 
-            // Default to 2 oz if no weight specified
             if (!itemWeightOz || itemWeightOz <= 0) {
                 itemWeightOz = 2;
             }
@@ -40,23 +39,22 @@ export async function POST(req: Request) {
         }
 
         const totalWeightLb = totalWeightOz / 16;
-        const shippoUtils = await import('@/lib/utils/shippo');
+        const shippoUtils = await import("@/lib/utils/shippo");
         const parcel = shippoUtils.getParcelForWeight(totalWeightLb);
 
         const apiKey = process.env.SHIPPO_API_KEY;
         if (!apiKey) {
-            // Fetch admin-configured fallback rates from settings
             const { data: shippingConfig } = await supabase
-                .from('site_settings')
-                .select('setting_value')
-                .eq('setting_key', 'shipping_settings')
+                .from("site_settings")
+                .select("setting_value")
+                .eq("setting_key", "shipping_settings")
                 .maybeSingle();
 
             const cfg = shippingConfig?.setting_value || {};
-            const standardRate = String(cfg.standard_rate ?? '7.99');
-            const expressRate = String(cfg.express_rate ?? '19.99');
-            const standardLabel = cfg.standard_label || 'Standard Shipping';
-            const expressLabel = cfg.express_label || 'Express Shipping';
+            const standardRate = String(cfg.standard_rate ?? "7.99");
+            const expressRate = String(cfg.express_rate ?? "29.99");
+            const standardLabel = cfg.standard_label || "Standard Shipping";
+            const expressLabel = cfg.express_label || "Express Shipping";
 
             return NextResponse.json({
                 rates: [
@@ -66,7 +64,7 @@ export async function POST(req: Request) {
                         provider_image_75: "",
                         servicelevel: { name: standardLabel },
                         amount: standardRate,
-                        days: 5
+                        days: 5,
                     },
                     {
                         object_id: "express_fallback",
@@ -74,16 +72,20 @@ export async function POST(req: Request) {
                         provider_image_75: "",
                         servicelevel: { name: expressLabel },
                         amount: expressRate,
-                        days: 2
-                    }
-                ]
+                        days: 2,
+                    },
+                ],
             });
         }
 
-        const { shippo } = await import('@/lib/shippo');
+        const { shippo } = await import("@/lib/shippo");
 
-        // Fetch Warehouse Address from site settings
-        const { data: settings } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'warehouse_info').maybeSingle();
+        const { data: settings } = await supabase
+            .from("site_settings")
+            .select("setting_value")
+            .eq("setting_key", "warehouse_info")
+            .maybeSingle();
+
         const warehouse = settings?.setting_value || {
             name: "Dina Cosmetic",
             street1: "5430 FM 359 Rd S Ste 400 PMB 1013",
@@ -92,7 +94,7 @@ export async function POST(req: Request) {
             zip: "77423",
             country: "US",
             phone: "+12816877609",
-            email: "dinaecosmetic@gmail.com"
+            email: "dinaecosmetic@gmail.com",
         };
 
         const targetAddress = {
@@ -103,20 +105,18 @@ export async function POST(req: Request) {
             state: address.state,
             zip: address.postal_code,
             country: address.country,
-            email: address.email || "customer@example.com"
+            email: address.email || "customer@example.com",
         };
 
         const shipment = await shippo.shipments.create({
             addressFrom: warehouse,
             addressTo: targetAddress,
-            parcels: [parcel]
+            parcels: [parcel],
         });
 
-        const rates = shipment.rates;
-
-        return NextResponse.json({ rates: rates });
+        return NextResponse.json({ rates: shipment.rates });
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Failed to fetch rates';
+        const message = err instanceof Error ? err.message : "Failed to fetch rates";
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }

@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     const supabase = await createAdminClient();
 
-    // 1. Check for duplicate delivery (idempotency check ONLY — do NOT log yet)
+    // Idempotency check — do NOT log yet
     const { data: existingEvent } = await supabase
         .from("stripe_events")
         .select("id")
@@ -54,34 +54,80 @@ export async function POST(req: Request) {
                 console.error("Failed to parse cart items from metadata:", e);
             }
 
-            // 2. Process the order atomically FIRST — only log event on success
-            const { error: rpcError, data: orderId } = await supabase.rpc("process_order_atomic", {
-                p_stripe_session_id: session.id,
-                p_customer_email: session.customer_details?.email || session.customer_email || 'guest@stripe.com',
-                p_amount_total: session.amount_total,
-                p_currency: session.currency,
-                p_metadata: {
-                    ...session.metadata,
-                    items: cartItems
-                },
-                p_shipping_address: (session as any).shipping_details || null,
-                p_billing_address: session.customer_details || null
-            });
+            const shipping = session.shipping_details;
+            const customer = session.customer_details;
+            const orderId = session.metadata?.order_id;
 
-            if (rpcError) {
-                // DO NOT log event — let Stripe retry
-                console.error("Atomic order processing failed (RPC):", rpcError);
-                throw new Error(`RPC Processing Error: ${rpcError.message}`);
+            if (!orderId) {
+                console.error("No order_id in session metadata:", session.id);
+                throw new Error("Missing order_id in Stripe session metadata");
             }
 
-            // 3. ONLY NOW log the event — proves processing was successful
+            // Update order with full data collected by Stripe
+            const { error: updateError } = await supabase
+                .from("orders")
+                .update({
+                    status: "paid",
+                    fulfillment_status: "unfulfilled",
+                    customer_email: customer?.email || "",
+                    customer_name: shipping?.name || customer?.name || "",
+                    customer_phone: customer?.phone || null,
+                    shipping_address: {
+                        name: shipping?.name || customer?.name || "",
+                        line1: shipping?.address?.line1 || "",
+                        line2: shipping?.address?.line2 || "",
+                        city: shipping?.address?.city || "",
+                        state: shipping?.address?.state || "",
+                        postal_code: shipping?.address?.postal_code || "",
+                        country: shipping?.address?.country || "US",
+                    },
+                    billing_address: {
+                        name: customer?.name || "",
+                        email: customer?.email || "",
+                        line1: customer?.address?.line1 || "",
+                        city: customer?.address?.city || "",
+                        state: customer?.address?.state || "",
+                        postal_code: customer?.address?.postal_code || "",
+                        country: customer?.address?.country || "US",
+                    },
+                    amount_total: session.amount_total ? session.amount_total / 100 : 0,
+                })
+                .eq("id", orderId);
+
+            if (updateError) {
+                console.error("Order update failed:", updateError);
+                throw new Error(`Order update error: ${updateError.message}`);
+            }
+
+            // Create order_items from metadata
+            if (cartItems.length > 0) {
+                const orderItemsToInsert = cartItems.map((item: any) => ({
+                    order_id: orderId,
+                    product_id: item.product_id,
+                    variant_id: item.variant_id || null,
+                    quantity: item.quantity,
+                    price: item.price,
+                    fulfilled_quantity: 0,
+                }));
+
+                const { error: itemsError } = await supabase
+                    .from("order_items")
+                    .insert(orderItemsToInsert);
+
+                if (itemsError) {
+                    console.error("order_items insert failed:", itemsError);
+                    // Non-fatal — order is paid, items can be added manually
+                }
+            }
+
+            // Log event — proves processing was successful
             await supabase.from("stripe_events").insert({
                 id: event.id,
                 type: event.type,
                 data: event.data.object as any,
             }).throwOnError();
 
-            const email = session.customer_details?.email || session.customer_email;
+            const email = customer?.email;
             const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
 
             if (orderId && email) {
@@ -90,16 +136,16 @@ export async function POST(req: Request) {
                     await sendOrderConfirmationEmail({
                         orderId,
                         customerEmail: email,
-                        customerName: session.customer_details?.name || 'Valued Client',
+                        customerName: customer?.name || "Valued Client",
                         totalAmount: amountTotal,
-                        items: cartItems
+                        items: cartItems,
                     });
                 } catch (emailErr: any) {
                     console.error("Failed to send order confirmation email:", emailErr);
                 }
             }
         } else {
-            // For non-checkout events, log immediately (no critical processing)
+            // Non-checkout events — log immediately
             await supabase.from("stripe_events").insert({
                 id: event.id,
                 type: event.type,

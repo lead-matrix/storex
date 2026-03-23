@@ -68,6 +68,26 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
         .filter(([_, qty]) => qty > 0)
         .map(([id, qty]) => ({ id, quantity: qty }))
 
+    // Determine recommended rate based on order's shipping_option
+    const getRecommendedRate = (rateList: Rate[]) => {
+        const isUS = order?.shipping_address?.country === 'US'
+        const isExpress = order?.metadata?.shipping_option === 'express'
+
+        const recommended = rateList.find(r => {
+            if (isUS) {
+                return r.provider === 'USPS' && r.service.includes(isExpress ? 'Express' : 'Priority')
+            } else {
+                if (isExpress) {
+                    return r.provider === 'DHL' || r.service.includes('Express International')
+                } else {
+                    return r.provider === 'USPS' && r.service.includes('International')
+                }
+            }
+        })
+
+        return recommended || rateList[0] || null
+    }
+
     const handleFetchRates = async () => {
         if (itemsToShipArray.length === 0) {
             toast.error("Manifest is empty. Select assets to include.")
@@ -79,6 +99,9 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
             const data = await fetchShippingRatesAction(order.id, itemsToShipArray)
             setRates(data.rates)
             setParcelName(data.parcelName || 'Standard Box')
+            // Auto-select recommended rate
+            const recommended = getRecommendedRate(data.rates)
+            setSelectedRate(recommended)
             setStep('rates')
             toast.success('Logistics matrix synchronized')
         } catch (err: any) {
@@ -236,32 +259,44 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                {rates.map((rate) => (
-                                    <button
-                                        key={rate.id}
-                                        onClick={() => setSelectedRate(rate)}
-                                        className={`group flex items-center justify-between p-4 rounded-luxury border transition-all ${selectedRate?.id === rate.id
-                                            ? 'bg-gold/10 border-gold shadow-gold-sm'
-                                            : 'bg-white/5 border-white/10 hover:border-gold/30'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-white p-1 rounded-sm flex items-center justify-center grayscale group-hover:grayscale-0 transition-all">
-                                                <Image src={rate.provider_image} alt={rate.provider} width={30} height={30} className="object-contain" />
+                                {rates.map((rate) => {
+                                    const isRecommended = selectedRate?.id === rate.id && rates.indexOf(rate) === rates.findIndex(r => r.id === selectedRate?.id)
+                                    const recommended = getRecommendedRate(rates)
+                                    const isThisRecommended = recommended?.id === rate.id
+                                    return (
+                                        <button
+                                            key={rate.id}
+                                            onClick={() => setSelectedRate(rate)}
+                                            className={`group flex items-center justify-between p-4 rounded-luxury border transition-all ${selectedRate?.id === rate.id
+                                                ? 'bg-gold/10 border-gold shadow-gold-sm'
+                                                : 'bg-white/5 border-white/10 hover:border-gold/30'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-white p-1 rounded-sm flex items-center justify-center grayscale group-hover:grayscale-0 transition-all">
+                                                    <Image src={rate.provider_image} alt={rate.provider} width={30} height={30} className="object-contain" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-[10px] font-bold text-white uppercase tracking-wider">{rate.provider} {rate.service}</p>
+                                                        {isThisRecommended && (
+                                                            <span className="text-[7px] bg-gold/20 text-gold border border-gold/30 px-1.5 py-0.5 rounded-full uppercase tracking-tighter font-bold">
+                                                                ✓ RECOMMENDED
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[8px] text-white/40 uppercase tracking-widest">Estimated: {rate.estimatedDays} Days</p>
+                                                </div>
                                             </div>
-                                            <div className="text-left">
-                                                <p className="text-[10px] font-bold text-white uppercase tracking-wider">{rate.provider} {rate.service}</p>
-                                                <p className="text-[8px] text-white/40 uppercase tracking-widest">Estimated: {rate.estimatedDays} Days</p>
+                                            <div className="text-right">
+                                                <p className="text-sm font-serif text-gold">${rate.amount}</p>
+                                                {rate.amount === Math.min(...rates.map(r => Number(r.amount))).toString() && (
+                                                    <span className="text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Best Value</span>
+                                                )}
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-serif text-gold">${rate.amount}</p>
-                                            {rate.amount === Math.min(...rates.map(r => Number(r.amount))).toString() && (
-                                                <span className="text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Best Value</span>
-                                            )}
-                                        </div>
-                                    </button>
-                                ))}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}
