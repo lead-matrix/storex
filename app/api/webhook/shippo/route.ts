@@ -5,6 +5,7 @@ import {
   sendDeliveryNotificationEmail,
 } from "@/lib/utils/email";
 
+// ------------------ Types ------------------
 interface ShippoTrackingStatus {
   status: string;
   status_details: string;
@@ -20,6 +21,22 @@ interface ShippoWebhookBody {
   };
 }
 
+interface OrderItem {
+  id: string;
+  price: number;
+  quantity: number;
+}
+
+interface Order {
+  id: string;
+  customer_email: string;
+  total_amount?: number;
+  items?: OrderItem[];
+  billing_address?: { name?: string };
+  fulfillment_status?: string;
+}
+
+// ------------------ Webhook Handler ------------------
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as ShippoWebhookBody;
@@ -74,7 +91,7 @@ export async function POST(req: NextRequest) {
     // ✅ Fetch order
     const { data: order, error: findError } = await supabase
       .from("orders")
-      .select("id, customer_email, billing_address, fulfillment_status")
+      .select("id, customer_email, billing_address, fulfillment_status, total_amount, items")
       .eq("tracking_number", tracking_number)
       .maybeSingle();
 
@@ -104,15 +121,21 @@ export async function POST(req: NextRequest) {
 
     if (updateError) throw updateError;
 
-    const customerName =
-      (order.billing_address as any)?.name || "Customer";
+    const customerName = order.billing_address?.name || "Customer";
 
-    // ✅ Controlled email triggers (NO spam)
+    // ------------------ Controlled email triggers ------------------
     if (newStatus === "shipped") {
+      // Calculate totalAmount safely
+      const totalAmount =
+        order.total_amount ??
+        order.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) ??
+        0;
+
       await sendShippingNotificationEmail({
         customerEmail: order.customer_email,
         customerName,
         orderId: order.id,
+        totalAmount,
       });
     }
 
@@ -121,11 +144,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (newStatus === "delivered") {
+      const totalAmount =
+        order.total_amount ??
+        order.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) ??
+        0;
+
       await sendDeliveryNotificationEmail({
         customerEmail: order.customer_email,
         customerName,
         orderId: order.id,
-        totalAmount: 0,
+        totalAmount,
       });
     }
 
@@ -144,9 +172,6 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Shippo webhook failed:", error);
 
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
