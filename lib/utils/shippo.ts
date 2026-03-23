@@ -112,13 +112,13 @@ export async function createShippingLabel(order: any) {
         const shipment = await shippo.shipments.create({
             addressFrom: warehouse,
             addressTo: {
-                name: order.shipping_address?.name || "Valued client",
-                street1: order.shipping_address?.address?.line1 || order.shipping_address?.line1,
-                street2: order.shipping_address?.address?.line2 || order.shipping_address?.line2,
-                city: order.shipping_address?.address?.city || order.shipping_address?.city,
-                state: order.shipping_address?.address?.state || order.shipping_address?.state,
-                zip: order.shipping_address?.address?.postal_code || order.shipping_address?.zip,
-                country: order.shipping_address?.address?.country || order.shipping_address?.country || "US",
+                name: order.shipping_address?.name || order.billing_address?.name || "Valued client",
+                street1: order.shipping_address?.address?.line1 || order.shipping_address?.line1 || order.billing_address?.line1 || order.billing_address?.address?.line1 || order.billing_address?.street1,
+                street2: order.shipping_address?.address?.line2 || order.shipping_address?.line2 || order.billing_address?.line2 || order.billing_address?.address?.line2 || order.billing_address?.street2,
+                city: order.shipping_address?.address?.city || order.shipping_address?.city || order.billing_address?.city || order.billing_address?.address?.city,
+                state: order.shipping_address?.address?.state || order.shipping_address?.state || order.billing_address?.state || order.billing_address?.address?.state,
+                zip: order.shipping_address?.address?.postal_code || order.shipping_address?.zip || order.billing_address?.postal_code || order.billing_address?.zip || order.billing_address?.address?.postal_code,
+                country: order.shipping_address?.address?.country || order.shipping_address?.country || order.billing_address?.country || order.billing_address?.address?.country || "US",
             },
             parcels: [parcel]
         });

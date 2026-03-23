@@ -14,28 +14,36 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
         const order = await getOrderById(orderId);
         if (!order) throw new Error('Order not found');
 
-        const address = order.shipping_address as any;
+        let address = order.shipping_address as any;
 
-        // Stripe-native flow: address is always a flat object populated by webhook.
-        // Guard: if address is missing, the webhook hasn't fired yet.
-        if (!address || !address.line1) {
-            throw new Error('Order has no shipping address. Wait for Stripe webhook to populate it.');
+        // Stripe-native flow: address is usually populated by webhook.
+        // Fallback: If shipping is missing/incomplete, attempt to use billing_address.
+        if (!address || (!address.line1 && !address.street1)) {
+            console.log(`[shippingService] Order ${orderId} has incomplete shipping_address. Checking billing fallback.`);
+            const billing = order.billing_address as any;
+            if (billing && (billing.line1 || billing.street1)) {
+                address = billing;
+            }
+        }
+
+        if (!address || (!address.line1 && !address.street1)) {
+            throw new Error('Order has no usable shipping or billing address. Wait for Stripe webhook to populate it.');
         }
 
         const addressTo: any = {
             name: order.customer_name || address.name || 'Valued Client',
-            street1: address.line1 || '',
-            street2: address.line2 || '',
+            street1: address.line1 || address.street1 || '',
+            street2: address.line2 || address.street2 || '',
             city: address.city || '',
             state: address.state || '',
-            zip: address.postal_code || '',
+            zip: address.postal_code || address.zip || address.postal_code || '',
             country: address.country || 'US',
             email: order.customer_email || '',
             phone: order.customer_phone || '',
         };
 
         if (!addressTo.street1) {
-            throw new Error('Incomplete shipping address: line1 is missing.');
+            throw new Error('Incomplete address profile: street1 is missing.');
         }
 
         const allItems = await getItemsByOrder(orderId);
@@ -185,9 +193,17 @@ export async function purchaseLabelForRate(orderId: string, rateId: string, carr
         if (!order) throw new Error('Order not found');
 
         // Guard: Stripe webhook must have populated address before admin can generate label
-        const address = order.shipping_address as any;
-        if (!address || !address.line1) {
-            throw new Error('Order has no shipping address. Wait for Stripe webhook to populate it.');
+        // Guard: Stripe webhook must have populated address before admin can generate label
+        let address = order.shipping_address as any;
+        if (!address || (!address.line1 && !address.street1)) {
+            const billing = order.billing_address as any;
+            if (billing && (billing.line1 || billing.street1)) {
+                address = billing;
+            }
+        }
+
+        if (!address || (!address.line1 && !address.street1)) {
+            throw new Error('Order has no shipping/billing address. Wait for Stripe webhook to populate it.');
         }
 
         // Purchase label from Shippo
