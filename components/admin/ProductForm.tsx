@@ -464,21 +464,20 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 Description *
                             </Label>
                             <span className={`text-[9px] font-mono tabular-nums ${
-                                descCount < 80 ? 'text-red-400' :
-                                descCount < 150 ? 'text-amber-400' : 'text-emerald-500'
+                                descCount < 20 ? 'text-red-400' :
+                                descCount < 50 ? 'text-amber-400' : 'text-emerald-500'
                             }`}>
-                                {descCount} chars{descCount < 80 ? ' — needs more detail' : descCount < 150 ? ' — good' : ' — excellent'}
+                                {descCount} chars{descCount < 20 ? ' — brief' : descCount < 50 ? ' — good' : ' — excellent'}
                             </span>
                         </div>
                         <Textarea
                             name="description"
                             defaultValue={product?.description}
-                            placeholder="Describe this product in detail: ingredients, finish, skin type suitability, how to apply, key benefits, scent, texture, size, any certifications (vegan, cruelty-free, etc.)..."
-                            required
+                            placeholder="Product details..."
                             onChange={e => setDescCount(e.target.value.length)}
-                            className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 min-h-[220px] resize-y"
+                            className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 min-h-[120px] resize-y"
                         />
-                        <p className="text-[9px] text-luxury-subtext/40 tracking-luxury">Aim for at least 150 characters. Include finish, skin type, how-to-use, and key ingredients.</p>
+                        <p className="text-[9px] text-luxury-subtext/40 tracking-luxury">Describe your masterpiece. High quality descriptions improve SEO.</p>
                     </div>
 
                     {/* Image Upload */}

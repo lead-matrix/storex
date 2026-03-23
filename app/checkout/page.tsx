@@ -3,76 +3,42 @@
 import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Package } from "lucide-react";
-
-interface ShippingSettings {
-  standard_rate: string;
-  express_rate: string;
-  standard_label: string;
-  express_label: string;
-  free_shipping_threshold: string;
-}
+import { ArrowLeft, Loader2, Package, ShieldCheck } from "lucide-react";
 
 export default function CheckoutPage() {
   const { cart, subtotal: cartTotal } = useCart();
-  const [shippingOption, setShippingOption] = useState<"standard" | "express">("standard");
-  const [loadingSettings, setLoadingSettings] = useState(true);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ShippingSettings>({
-    standard_rate: "7.99",
-    express_rate: "29.99",
-    standard_label: "Standard Shipping (5-10 Business Days)",
-    express_label: "Express Shipping (2-4 Business Days)",
-    free_shipping_threshold: "100",
-  });
+  const [freeThreshold, setFreeThreshold] = useState(100);
 
+  // Fetch just the free-shipping threshold to show the badge
   useEffect(() => {
-    async function fetchSettings() {
-      if (cart.length === 0) {
-        setLoadingSettings(false);
-        return;
-      }
-      try {
-        const res = await fetch("/api/shipping-settings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: cart }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.settings) setSettings(data.settings);
+    fetch("/api/shipping-settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [] }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings?.free_shipping_threshold) {
+          setFreeThreshold(parseFloat(d.settings.free_shipping_threshold));
         }
-      } catch (e) {
-        // fallback to defaults
-      } finally {
-        setLoadingSettings(false);
-      }
-    }
-    fetchSettings();
-  }, [cart]);
+      })
+      .catch(() => {});
+  }, []);
 
-  const freeThreshold = parseFloat(settings.free_shipping_threshold ?? "100");
-  const standardRate = parseFloat(settings.standard_rate ?? "7.99");
-  const expressRate = parseFloat(settings.express_rate ?? "29.99");
   const isFreeShipping = cartTotal >= freeThreshold;
-
-  const shippingCost = shippingOption === "express"
-    ? expressRate
-    : isFreeShipping ? 0 : standardRate;
-
-  const total = cartTotal + shippingCost;
+  const remaining = freeThreshold - cartTotal;
 
   const handleProceed = async () => {
     if (!cart.length) return;
     setLoadingCheckout(true);
     setError(null);
-
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart, shippingOption }),
+        body: JSON.stringify({ items: cart }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not initiate checkout.");
@@ -147,105 +113,76 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-xs uppercase tracking-widest text-luxury-subtext">
                     <span>Shipping</span>
-                    <span>
-                      {shippingOption === "express"
-                        ? `$${expressRate.toFixed(2)}`
-                        : isFreeShipping
-                        ? "FREE"
-                        : `$${standardRate.toFixed(2)}`}
+                    <span className={isFreeShipping ? "text-gold font-medium" : ""}>
+                      {isFreeShipping ? "FREE ✦" : "Calculated at checkout"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm uppercase tracking-widest text-white border-t border-white/10 pt-3 font-medium">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>Estimated Total</span>
+                    <span>${cartTotal.toFixed(2)}{!isFreeShipping && " + shipping"}</span>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Shipping Options + CTA */}
-          <div className="bg-obsidian border border-luxury-border p-8 md:p-12 relative animate-in fade-in duration-700 flex flex-col">
-            <h2 className="text-xl font-serif uppercase tracking-widest text-white mb-8 border-b border-white/5 pb-4">
-              Shipping Method
-            </h2>
+          {/* Checkout CTA */}
+          <div className="bg-obsidian border border-luxury-border p-8 md:p-12 flex flex-col gap-8">
+            <div className="space-y-4">
+              <h2 className="text-xl font-serif uppercase tracking-widest text-white border-b border-white/5 pb-4">
+                Secure Checkout
+              </h2>
 
-            {loadingSettings ? (
-              <div className="flex items-center justify-center flex-grow py-12">
-                <Loader2 className="w-6 h-6 text-gold animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-4 flex-grow">
-                {/* Standard Option */}
-                <label
-                  className={`flex items-start gap-4 p-5 border cursor-pointer transition-all ${
-                    shippingOption === "standard"
-                      ? "border-gold bg-gold/5"
-                      : "border-white/10 hover:border-white/30"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="shippingOption"
-                    value="standard"
-                    checked={shippingOption === "standard"}
-                    onChange={() => setShippingOption("standard")}
-                    className="mt-1 accent-gold"
-                  />
-                  <div className="flex-grow">
-                    <p className="text-sm text-white font-medium">
-                      {settings.standard_label || "Standard Shipping (5-10 Business Days)"}
-                    </p>
-                    <p className="text-[10px] text-luxury-subtext uppercase tracking-widest mt-1">5–10 Business Days</p>
-                  </div>
-                  <span className={`text-sm font-medium ${isFreeShipping ? "text-gold" : "text-white"}`}>
-                    {isFreeShipping ? "FREE" : `$${standardRate.toFixed(2)}`}
-                  </span>
-                </label>
-
-                {/* Express Option */}
-                <label
-                  className={`flex items-start gap-4 p-5 border cursor-pointer transition-all ${
-                    shippingOption === "express"
-                      ? "border-gold bg-gold/5"
-                      : "border-white/10 hover:border-white/30"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="shippingOption"
-                    value="express"
-                    checked={shippingOption === "express"}
-                    onChange={() => setShippingOption("express")}
-                    className="mt-1 accent-gold"
-                  />
-                  <div className="flex-grow">
-                    <p className="text-sm text-white font-medium">
-                      {settings.express_label || "Express Shipping (2-4 Business Days)"}
-                    </p>
-                    <p className="text-[10px] text-luxury-subtext uppercase tracking-widest mt-1">2–4 Business Days</p>
-                  </div>
-                  <span className="text-sm font-medium text-white">${expressRate.toFixed(2)}</span>
-                </label>
-
-                {isFreeShipping && (
-                  <p className="text-[10px] text-gold uppercase tracking-widest text-center py-2">
-                    ✦ Free standard shipping applied — order over ${freeThreshold.toFixed(0)}
+              {/* Free shipping progress */}
+              {!isFreeShipping && (
+                <div className="bg-gold/5 border border-gold/20 rounded-sm p-4 space-y-2">
+                  <p className="text-[10px] uppercase tracking-widest text-gold">
+                    Add ${remaining.toFixed(2)} more for FREE Standard Shipping
                   </p>
-                )}
+                  <div className="h-0.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gold transition-all duration-500"
+                      style={{ width: `${Math.min((cartTotal / freeThreshold) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {isFreeShipping && (
+                <p className="text-[10px] text-gold uppercase tracking-widest text-center py-2">
+                  ✦ Free standard shipping applied — order over ${freeThreshold.toFixed(0)}
+                </p>
+              )}
+
+              {/* What happens at Stripe */}
+              <div className="space-y-3 pt-2">
+                <p className="text-[10px] uppercase tracking-widest text-luxury-subtext">You will select your shipping method on the next screen, along with:</p>
+                <ul className="space-y-2">
+                  {[
+                    "Name & email address",
+                    "Shipping address (with auto-complete)",
+                    "Standard · Express · International options",
+                    "Card payment — secured by Stripe",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-[10px] text-luxury-subtext">
+                      <ShieldCheck className="w-3 h-3 text-gold mt-0.5 flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
+            </div>
 
             {error && (
-              <div className="mt-6 p-4 bg-red-950/20 border border-red-500/20 rounded-sm">
+              <div className="p-4 bg-red-950/20 border border-red-500/20 rounded-sm">
                 <p className="text-sm text-red-400 font-light tracking-wide">{error}</p>
               </div>
             )}
 
-            <div className="mt-8">
+            <div className="mt-auto space-y-4">
               <button
                 onClick={handleProceed}
-                disabled={loadingCheckout || cart.length === 0 || loadingSettings}
+                disabled={loadingCheckout || cart.length === 0}
                 className="btn-gold w-full flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingCheckout ? (
@@ -254,8 +191,8 @@ export default function CheckoutPage() {
                   <>PROCEED TO CHECKOUT →</>
                 )}
               </button>
-              <p className="text-[9px] text-luxury-subtext text-center mt-4 uppercase tracking-widest">
-                Secured by Stripe · Address collected at payment
+              <p className="text-[9px] text-luxury-subtext text-center uppercase tracking-widest">
+                Secured by Stripe · Address &amp; shipping selected at payment
               </p>
             </div>
           </div>

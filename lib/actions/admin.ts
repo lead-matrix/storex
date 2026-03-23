@@ -110,9 +110,9 @@ export async function createProduct(formData: FormData) {
                     .filter((v: any) => !v._deleted)
                     .map((v: any) => {
                         let variantSku = v.sku?.trim();
-                        if (!variantSku) {
+                        if (!variantSku || variantSku === '') {
                             const vPrefix = (v.title || v.name || 'VAR').replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
-                            variantSku = `${sku}-${vPrefix}`;
+                            variantSku = `${sku?.split('-')[0] || 'DC'}-${sku?.split('-')[1] || 'PROD'}-${vPrefix}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
                         }
                         return {
                             product_id: product.id,
@@ -208,9 +208,9 @@ export async function updateProduct(formData: FormData) {
         const variants = JSON.parse(variantsJson);
         for (const v of variants) {
             let variantSku = v.sku?.trim();
-            if (!variantSku) {
+            if (!variantSku || variantSku === '') {
                 const vPrefix = (v.title || v.name || 'VAR').replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
-                variantSku = `${sku}-${vPrefix}`;
+                variantSku = `${sku?.split('-')[0] || 'DC'}-${sku?.split('-')[1] || 'PROD'}-${vPrefix}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
             }
 
             if (v._deleted && v.id) {

@@ -256,14 +256,39 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS weight_oz numeric(10, 2);
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS length_in numeric(10, 2);
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS width_in numeric(10, 2);
-ALTER TABLE public.products ADD COLUMN IF NOT EXISTS height_in numeric(10, 2);
-ALTER TABLE public.products RENAME COLUMN weight_grams TO weight_oz;
-ALTER TABLE public.products RENAME COLUMN length_cm TO length_in;
-ALTER TABLE public.products RENAME COLUMN width_cm TO width_in;
-ALTER TABLE public.products RENAME COLUMN height_cm TO height_in;
+DO $$ 
+BEGIN 
+    -- 1. Addition with ADD COLUMN IF NOT EXISTS (Safety)
+    ALTER TABLE public.products ADD COLUMN IF NOT EXISTS weight_oz numeric(10, 2);
+    ALTER TABLE public.products ADD COLUMN IF NOT EXISTS length_in numeric(10, 2);
+    ALTER TABLE public.products ADD COLUMN IF NOT EXISTS width_in numeric(10, 2);
+    ALTER TABLE public.products ADD COLUMN IF NOT EXISTS height_in numeric(10, 2);
+
+    -- 2. Rename Legacy Columns ONLY if they exist and target doesn't exist yet
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='weight_grams') AND 
+       NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='weight_oz') 
+    THEN 
+       ALTER TABLE public.products RENAME COLUMN weight_grams TO weight_oz;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='length_cm') AND 
+       NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='length_in') 
+    THEN 
+       ALTER TABLE public.products RENAME COLUMN length_cm TO length_in;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='width_cm') AND 
+       NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='width_in') 
+    THEN 
+       ALTER TABLE public.products RENAME COLUMN width_cm TO width_in;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='height_cm') AND 
+       NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='height_in') 
+    THEN 
+       ALTER TABLE public.products RENAME COLUMN height_cm TO height_in;
+    END IF;
+END $$;
 ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS sku text;
 -- Product-level SKU (for simple products without variants)
@@ -1998,6 +2023,8 @@ VALUES (
         '{
             "standard_rate": "7.99",
             "express_rate": "29.99",
+            "international_standard_rate": "19.99",
+            "international_express_rate": "49.99",
             "free_shipping_threshold": "100",
             "standard_label": "Standard Shipping",
             "express_label": "Express Shipping",

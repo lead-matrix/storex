@@ -52,9 +52,10 @@ export async function POST(req: Request) {
       const orderId = session.metadata?.order_id;
       if (!orderId) throw new Error("Missing order_id");
 
-      // ✅ FIXED SHIPPING (NEW STRIPE FORMAT)
+      // ✅ FIXED SHIPPING — check both SDK formats
+      const sessionAny = session as any;
       const shipping =
-        session.collected_information?.shipping_details ?? null;
+        sessionAny.shipping_details ?? sessionAny.collected_information?.shipping_details ?? null;
 
       const customer = session.customer_details ?? null;
 
@@ -89,6 +90,9 @@ export async function POST(req: Request) {
         country: customer?.address?.country || "US",
       };
 
+      const chosenShipping = session.shipping_cost ?? null;
+      // shippingOptionName unused for now (reserved for carrier routing)
+
       // ✅ Atomic order update
       const { error: updateError } = await supabase
         .from("orders")
@@ -100,9 +104,12 @@ export async function POST(req: Request) {
           customer_phone: customer?.phone || null,
           shipping_address: shippingAddress,
           billing_address: billingAddress,
-          amount_total: session.amount_total
-            ? session.amount_total / 100
-            : 0,
+          amount_total: session.amount_total ? session.amount_total / 100 : 0,
+          metadata: {
+            stripe_session_id: session.id,
+            shipping_cost_cents: chosenShipping?.amount_total ?? 0,
+            shipping_label: (session as any).shipping_details?.dynamic_tax_locations?.[0] ?? "selected_in_stripe",
+          },
         })
         .eq("id", orderId);
 
