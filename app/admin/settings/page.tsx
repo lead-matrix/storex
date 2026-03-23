@@ -93,7 +93,7 @@ export default async function AdminSettings() {
                     {/* ── Shipping Rate Settings ── */}
                     <SettingsForm action={updateShippingSettings} title="Shipping Rate Configuration" iconName="truck">
                         <p className="text-[11px] text-luxury-subtext leading-relaxed">
-                            Configure flat-rate fallback prices for Standard and Express shipping. These are used when live Shippo rates are unavailable.
+                            Configure the flat-rate shipping prices shown to customers at checkout. Stripe collects the customer address — Shippo is only called by admin at fulfillment.
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -107,6 +107,8 @@ export default async function AdminSettings() {
                                     <input name="standard_rate" type="number" step="0.01" defaultValue={shipping.standard_rate ?? '7.99'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
                                 </div>
+                                <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'Standard Shipping (5-10 Business Days)'}
+                                    className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Free Shipping Threshold</label>
                                     <input name="free_shipping_threshold" type="number" step="0.01" defaultValue={shipping.free_shipping_threshold ?? '100'}

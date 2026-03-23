@@ -554,9 +554,10 @@ export async function updateShippingSettings(formData: FormData) {
     const supabase = await ensureAdmin();
 
     const standard_rate = parseFloat(formData.get('standard_rate') as string) || 7.99;
-    const express_rate = parseFloat(formData.get('express_rate') as string) || 19.99;
+    const express_rate = parseFloat(formData.get('express_rate') as string) || 29.99;
     const free_shipping_threshold = parseFloat(formData.get('free_shipping_threshold') as string) || 100;
-    const express_label = (formData.get('express_label') as string) || 'Express Shipping';
+    const standard_label = (formData.get('standard_label') as string) || 'Standard Shipping (5-10 Business Days)';
+    const express_label = (formData.get('express_label') as string) || 'Express Shipping (2-4 Business Days)';
 
     const { error } = await supabase
         .from('site_settings')
@@ -566,8 +567,8 @@ export async function updateShippingSettings(formData: FormData) {
                 standard_rate,
                 express_rate,
                 free_shipping_threshold,
+                standard_label,
                 express_label,
-                standard_label: 'Standard Shipping',
             },
         }, { onConflict: 'setting_key' });
 
