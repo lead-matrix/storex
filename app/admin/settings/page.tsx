@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { Globe, Layout, Users, Truck, DollarSign, Package } from 'lucide-react'
-import { updateStoreSettings, updateMenusAndSocials, updateShippingSettings } from '@/lib/actions/admin'
+import { updateStoreSettings, updateMenusAndSocials, updateShippingSettings, updateHomeSections } from '@/lib/actions/admin'
 import MenuEditor from '@/components/admin/MenuEditor'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 import { BrandSettings } from '@/components/admin/BrandSettings'
@@ -18,6 +18,7 @@ export default async function AdminSettings() {
         { data: footerNav },
         { data: socialMedia },
         { data: shippingSettings },
+        { data: homeSettings },
     ] = await Promise.all([
         supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
@@ -25,10 +26,12 @@ export default async function AdminSettings() {
         supabase.from('navigation_menus').select('*').eq('menu_key', 'footer_legal').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'social_media').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'shipping_settings').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'home_sections').maybeSingle(),
     ])
 
     const isEnabled = storeStatus?.setting_value ?? true
     const shipping = shippingSettings?.setting_value || {}
+    const homeConfig = homeSettings?.setting_value || {}
 
     return (
         <div className="space-y-12 pb-24 animate-luxury-fade">
@@ -74,6 +77,43 @@ export default async function AdminSettings() {
                                         className="sr-only peer"
                                     />
                                     <div className="w-14 h-7 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
+                                </div>
+                            </div>
+                        </SettingsForm>
+                    </section>
+
+                    {/* ── Home Page Sections ── */}
+                    <section id="section-home" className="scroll-mt-32 space-y-12">
+                        <SettingsForm action={updateHomeSections} title="Home Page Curation" iconName="monitor">
+                            <p className="text-[11px] text-luxury-subtext leading-relaxed mb-6">
+                                Control which sections currently appear on the index/front page.
+                            </p>
+
+                            <div className="grid grid-cols-1 gap-8">
+                                <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Obsidian Bestsellers</p>
+                                            <p className="text-[9px] text-luxury-subtext leading-relaxed">Show the horizontal scrolling carousel of best-selling items.</p>
+                                        </div>
+                                        <div className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" name="show_bestsellers" defaultChecked={homeConfig.show_bestsellers !== false} className="sr-only peer" />
+                                            <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Carousel Heading</label>
+                                            <input name="bestseller_heading" type="text" defaultValue={homeConfig.bestseller_heading || 'Obsidian Bestsellers'}
+                                                className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Carousel Subheading</label>
+                                            <input name="bestseller_subheading" type="text" defaultValue={homeConfig.bestseller_subheading || 'Most-loved by our community'}
+                                                className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </SettingsForm>

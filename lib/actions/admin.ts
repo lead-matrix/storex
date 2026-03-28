@@ -392,7 +392,7 @@ export async function fulfillOrder(orderId: string) {
 
     const { data: order, error: orderError } = await supabase
         .from('orders')
-        .select('*, profiles(email)')
+        .select('*')
         .eq('id', orderId)
         .single();
 
@@ -410,16 +410,21 @@ export async function fulfillOrder(orderId: string) {
 
     if (updateError) throw new Error(updateError.message);
 
-    const customerEmail = (order.profiles as { email?: string })?.email;
+    const customerEmail = order.customer_email;
+    const customerName =
+        order.customer_name ||
+        (order.shipping_address as any)?.name ||
+        'Valued Client';
+
     if (customerEmail) {
         await sendShippingNotificationEmail({
             orderId,
             customerEmail,
-            customerName: (order.shipping_address as { name?: string })?.name || 'Valued Client',
+            customerName,
             totalAmount: Number(order.amount_total),
             trackingNumber: shipping.tracking_number,
-            labelUrl: shipping.label_url
-        });
+            labelUrl: shipping.label_url,
+        }).catch((e: any) => console.error('[Email] Shipping notification failed:', e));
     }
 
     revalidatePath('/admin/orders');
@@ -435,6 +440,45 @@ export async function updateOrderStatus(orderId: string, status: string) {
         .eq('id', orderId);
 
     if (error) throw new Error(error.message);
+
+    // Send email notifications for key status transitions
+    if (status === 'shipped' || status === 'delivered') {
+        try {
+            const { data: order } = await supabase
+                .from('orders')
+                .select('customer_email, customer_name, tracking_number, amount_total, shipping_address')
+                .eq('id', orderId)
+                .single();
+
+            if (order?.customer_email) {
+                const { sendShippingNotificationEmail, sendDeliveryNotificationEmail } = await import('@/lib/utils/email');
+                const customerName =
+                    order.customer_name ||
+                    (order.shipping_address as any)?.name ||
+                    'Valued Client';
+
+                if (status === 'shipped') {
+                    await sendShippingNotificationEmail({
+                        orderId,
+                        customerEmail: order.customer_email,
+                        customerName,
+                        totalAmount: Number(order.amount_total),
+                        trackingNumber: order.tracking_number || undefined,
+                    }).catch((e: any) => console.error('[Email] Shipping notification failed:', e));
+                } else if (status === 'delivered') {
+                    await sendDeliveryNotificationEmail({
+                        orderId,
+                        customerEmail: order.customer_email,
+                        customerName,
+                        totalAmount: Number(order.amount_total),
+                    }).catch((e: any) => console.error('[Email] Delivery notification failed:', e));
+                }
+            }
+        } catch (emailErr) {
+            console.error('[Email] Status notification error (non-critical):', emailErr);
+        }
+    }
+
     revalidatePath('/admin/orders');
     revalidatePath(`/account/orders/${orderId}`);
     revalidatePath('/admin/dashboard');
@@ -585,7 +629,36 @@ export async function updateShippingSettings(formData: FormData) {
     return { success: true };
 }
 
-// ─────────────────────────────────────────────────
+export async function updateHomeSections(formData: FormData) {
+    const supabase = await ensureAdmin();
+
+    const show_bestsellers = formData.get('show_bestsellers') === 'on';
+    const bestseller_heading = (formData.get('bestseller_heading') as string)?.trim() || 'Obsidian Bestsellers';
+    const bestseller_subheading = (formData.get('bestseller_subheading') as string)?.trim() || 'Most-loved by our community';
+    const show_featured = formData.get('show_featured') !== 'off';
+    const show_collections = formData.get('show_collections') !== 'off';
+
+    const { error } = await supabase
+        .from('site_settings')
+        .upsert({
+            setting_key: 'home_sections',
+            setting_value: {
+                show_bestsellers,
+                bestseller_heading,
+                bestseller_subheading,
+                show_featured,
+                show_collections,
+            },
+        }, { onConflict: 'setting_key' });
+
+    if (error) throw error;
+
+    revalidatePath('/', 'page');
+    revalidatePath('/admin/settings');
+    return { success: true };
+}
+
+
 // HELPERS
 // ─────────────────────────────────────────────────
 

@@ -6,6 +6,7 @@ import { CollectionShowcase } from "@/components/CollectionShowcase"
 import { NewsletterSection } from "@/features/home/components/NewsletterSection"
 import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid"
 import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid"
+import { BestSellersSlider } from "@/components/BestSellersSlider"
 import type { Metadata } from "next"
 
 export const revalidate = 60
@@ -54,9 +55,11 @@ export default async function Home() {
   let products: any[] = []
   let categories: any[] = []
   let saleProducts: any[] = []
+  let bestsellerProducts: any[] = []
+  let homeSettings: any = {}
 
   try {
-    const [productsRes, categoriesRes, saleRes] = await Promise.all([
+    const [productsRes, categoriesRes, saleRes, bestsellersRes, settingsRes] = await Promise.all([
       supabase
         .from("products")
         .select(`
@@ -79,13 +82,37 @@ export default async function Home() {
         .eq("on_sale", true)
         .order("created_at", { ascending: false })
         .limit(5),
+      // Bestsellers: is_bestseller flagged products, up to 12
+      supabase
+        .from("products")
+        .select(`
+          id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status,
+          product_variants (id, name, price_override, stock, status)
+        `)
+        .eq("status", "active")
+        .eq("is_bestseller", true)
+        .order("created_at", { ascending: false })
+        .limit(12),
+      // Home section config (headings, visibility toggles set in admin)
+      supabase
+        .from("site_settings")
+        .select("setting_value")
+        .eq("setting_key", "home_sections")
+        .maybeSingle(),
     ])
 
     products = productsRes.data || []
     categories = categoriesRes.data || []
-    
+    homeSettings = settingsRes.data?.setting_value || {}
+
     // Ensure we only include products with a valid sale price
     saleProducts = (saleRes.data || []).filter(p => typeof p.sale_price === 'number' && p.sale_price > 0)
+
+    // If no explicitly flagged bestsellers, fall back to featured products
+    bestsellerProducts = bestsellersRes.data || []
+    if (bestsellerProducts.length === 0) {
+      bestsellerProducts = products.slice(0, 8)
+    }
   } catch (err) {
     console.error("Legacy Layout Fetch Error:", err)
   }
@@ -96,6 +123,10 @@ export default async function Home() {
     product_count: c.product_count?.[0]?.count || 0
   }))
 
+  const showBestsellers = homeSettings.show_bestsellers !== false // default true
+  const bestsellerHeading = homeSettings.bestseller_heading || 'Obsidian Bestsellers'
+  const bestsellerSubheading = homeSettings.bestseller_subheading || 'Most-loved by our community'
+
   return (
     <div className="bg-black">
       {/* Hero — custom auto sliding sale slider */}
@@ -103,6 +134,15 @@ export default async function Home() {
 
       {/* Category navigation grid */}
       <HomeCategoryGrid categories={categories} />
+
+      {/* ── Bestsellers Auto-Scrolling Slider ── */}
+      {showBestsellers && bestsellerProducts.length > 0 && (
+        <BestSellersSlider
+          products={bestsellerProducts}
+          heading={bestsellerHeading}
+          subheading={bestsellerSubheading}
+        />
+      )}
 
       {/* Featured products strip (first 4) */}
       <FeaturedProductsGrid products={products.slice(0, 4)} />

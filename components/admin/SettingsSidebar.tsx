@@ -1,13 +1,14 @@
 'use client'
 
-import { Globe, Layout, Users, Truck } from 'lucide-react'
+import { Globe, Layout, Users, Truck, Monitor } from 'lucide-react'
 
 const SECTIONS = [
-    { label: 'General Info',    icon: Globe,   href: 'section-general'  },
-    { label: 'Shipping Rates',  icon: Truck,   href: 'section-shipping' },
-    { label: 'Visual Storefront', icon: Layout, href: 'section-socials' },
-    { label: 'Socials',         icon: Users,   href: 'section-socials'  },
+    { label: 'General Info',      icon: Globe,    href: 'section-general'   },
+    { label: 'Home Page',         icon: Monitor,  href: 'section-home'      },
+    { label: 'Shipping Rates',    icon: Truck,    href: 'section-shipping'  },
+    { label: 'Navigation & Social', icon: Layout, href: 'section-socials'   },
 ]
+
 
 export function SettingsSidebar() {
     const scrollTo = (id: string) => {

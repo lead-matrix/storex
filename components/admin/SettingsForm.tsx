@@ -2,13 +2,13 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { Save, Globe, Truck, Layout, Users } from "lucide-react";
+import { Save, Globe, Truck, Layout, Users, Monitor } from "lucide-react";
 
 interface SettingsFormProps {
     action: (formData: FormData) => Promise<any>;
     children: React.ReactNode;
     title: string;
-    iconName: "globe" | "truck" | "layout" | "users";
+    iconName: "globe" | "truck" | "layout" | "users" | "monitor";
 }
 
 const ICON_MAP = {
@@ -16,6 +16,7 @@ const ICON_MAP = {
     truck: Truck,
     layout: Layout,
     users: Users,
+    monitor: Monitor,
 };
 
 export function SettingsForm({ action, children, title, iconName }: SettingsFormProps) {
