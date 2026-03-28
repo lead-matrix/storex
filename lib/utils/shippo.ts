@@ -42,21 +42,44 @@ export function getParcelForWeight(totalWeightLb: number) {
  * Expects items that carry either variant_weight_oz or product_weight_oz (both in oz).
  * Falls back to 2 oz per item if neither is set.
  */
-export function calculateTotalWeightLb(items: Array<{
-    quantity: number
-    variant_weight_oz?: number | null
-    product_weight_oz?: number | null
-}>): number {
-    const totalOz = items.reduce((acc, item) => {
-        const weightOz =
-            (item.variant_weight_oz && item.variant_weight_oz > 0)
-                ? item.variant_weight_oz
-                : (item.product_weight_oz && item.product_weight_oz > 0)
-                    ? item.product_weight_oz
-                    : 2 // default 2oz fallback
-        return acc + weightOz * item.quantity
-    }, 0)
-    return totalOz / 16
+export function calculateTotalWeightLb(
+  items: Array<{
+    quantity: number;
+    variant_weight_oz: number | null;
+    product_weight_oz: number | null;
+  }>
+): number {
+  let totalOz = 0;
+
+  for (const item of items) {
+    // Validate quantity
+    const qty = Math.max(1, item.quantity || 1);
+    
+    // Get weight with validation
+    let weightOz = item.variant_weight_oz ?? item.product_weight_oz ?? 2;
+    
+    // Safety checks
+    if (isNaN(weightOz) || weightOz <= 0) {
+      console.warn(`Invalid weight detected for item, using 2oz fallback:`, item);
+      weightOz = 2;
+    }
+    
+    // Cap at 160oz (10 lbs) per item to prevent calculation errors
+    if (weightOz > 160) {
+      console.warn(`Unusually heavy item detected (${weightOz}oz), capping at 160oz`);
+      weightOz = 160;
+    }
+    
+    totalOz += weightOz * qty;
+  }
+
+  // Convert to pounds
+  const totalLbs = totalOz / 16;
+  
+  // Log for debugging
+  console.log(`[Weight Calc] Total: ${totalOz}oz = ${totalLbs.toFixed(2)} lbs from ${items.length} items`);
+  
+  return totalLbs;
 }
 
 export function calculateShippingRate(
@@ -65,12 +88,12 @@ export function calculateShippingRate(
   config: any,
   type: 'standard' | 'express' | 'intl_standard' | 'intl_express'
 ): { cost: number; name: string; minDays: number; maxDays: number } {
-  // Free shipping check (US only)
+  // Free shipping check (US domestic only)
   const freeThreshold = parseFloat(config.free_shipping_threshold ?? '100');
   if (type === 'standard' && subtotal >= freeThreshold) {
     return {
       cost: 0,
-      name: config.standard_label || 'Free Standard Shipping',
+      name: config.standard_label || 'Free Standard Shipping 🎁',
       minDays: 3,
       maxDays: 5,
     };
@@ -85,33 +108,35 @@ export function calculateShippingRate(
   switch (type) {
     case 'standard':
       brackets = config.weight_brackets || DEFAULT_US_STANDARD_BRACKETS;
-      name = config.standard_label || 'USPS Ground Advantage (3-5 Days)';
+      name = config.standard_label || 'USPS Ground Advantage (US)';
       minDays = 3;
       maxDays = 5;
       break;
     case 'express':
       brackets = config.express_weight_brackets || DEFAULT_US_EXPRESS_BRACKETS;
-      name = config.express_label || 'USPS Priority Mail (1-3 Days)';
+      name = config.express_label || 'USPS Priority Mail (US)';
       minDays = 1;
       maxDays = 3;
       break;
     case 'intl_standard':
       brackets = config.intl_weight_brackets || DEFAULT_INTL_STANDARD_BRACKETS;
-      name = 'USPS Priority Mail International';
+      name = 'USPS Priority Mail International 🌍';
       minDays = 6;
       maxDays = 10;
       break;
     case 'intl_express':
       brackets = config.intl_express_weight_brackets || DEFAULT_INTL_EXPRESS_BRACKETS;
-      name = 'USPS Priority Mail Express International';
+      name = 'USPS Priority Mail Express International 🚀';
       minDays = 3;
       maxDays = 5;
       break;
   }
 
-  // Find matching bracket (first bracket where weight <= max_lb)
+  // Find matching bracket
   const matchingBracket = brackets.find((b) => weightLb <= b.max_lb);
-  const cost = matchingBracket ? parseFloat(String(matchingBracket.rate)) : parseFloat(String(brackets[brackets.length - 1]?.rate ?? 15.99));
+  const cost = matchingBracket 
+    ? parseFloat(String(matchingBracket.rate)) 
+    : parseFloat(String(brackets[brackets.length - 1]?.rate ?? 15.99));
 
   return { cost, name, minDays, maxDays };
 }

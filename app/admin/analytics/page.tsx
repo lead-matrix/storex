@@ -53,7 +53,7 @@ export default async function AnalyticsPage() {
         { data: monthly },
         { data: topItems },
     ] = await Promise.all([
-        supabase.from('orders').select('amount_total, created_at').eq('status', 'paid'),
+        supabase.from('orders').select('amount_total, created_at, metadata').eq('status', 'paid'),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'active'),
@@ -65,6 +65,12 @@ export default async function AnalyticsPage() {
     ])
 
     const grossRevenue = paidOrders?.reduce((s, o) => s + (o.amount_total || 0), 0) ?? 0
+    const shippingRevenue = paidOrders?.reduce((sum, o) => {
+        const shippingCost = (o.metadata as any)?.shipping_cost_cents 
+            ? Number((o.metadata as any).shipping_cost_cents) / 100 
+            : 0;
+        return sum + shippingCost;
+    }, 0) || 0;
     const aov = (totalOrders ?? 0) > 0 ? grossRevenue / (totalOrders ?? 1) : 0
 
     const w7 = buildDailyTotals((weekly ?? []) as { amount_total: number; created_at: string }[], 7)
@@ -99,9 +105,9 @@ export default async function AnalyticsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                     { label: 'Gross Revenue', value: `$${grossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sub: 'From paid orders', gold: true },
+                    { label: 'Shipping Revenue', value: `$${shippingRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sub: 'From logistics' },
                     { label: 'Avg. Order Value', value: `$${aov.toFixed(2)}`, sub: `${(totalOrders ?? 0).toLocaleString()} total orders` },
                     { label: 'Total Customers', value: (totalCustomers ?? 0).toLocaleString(), sub: 'Registered profiles' },
-                    { label: 'Active Products', value: (totalProducts ?? 0).toLocaleString(), sub: 'In catalog' },
                 ].map(k => (
                     <div key={k.label} className="bg-[#0B0B0D] rounded-luxury border border-white/10 p-5 shadow-sm hover:border-gold/30 transition-all group">
                         <p className="text-[9px] uppercase tracking-[0.3em] text-luxury-subtext mb-2 font-medium">{k.label}</p>

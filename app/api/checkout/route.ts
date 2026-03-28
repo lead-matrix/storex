@@ -14,6 +14,11 @@ const INTL_COUNTRIES = [
 
 const ALL_COUNTRIES = ["US", ...INTL_COUNTRIES] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[];
 
+// ─── Caching ──────────────────────────────────────────────────────────
+let cachedShippingConfig: any = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function POST(req: Request) {
     try {
         const { items } = await req.json();
@@ -79,14 +84,20 @@ export async function POST(req: Request) {
             0
         );
 
-        // ─── Load shipping config ────────────────────────────────────────────
-        const { data: shippingConfig } = await supabase
-            .from("site_settings")
-            .select("setting_value")
-            .eq("setting_key", "shipping_settings")
-            .maybeSingle();
+        // ─── Load shipping config (cached) ──────────────────────────────────
+        const now = Date.now();
+        if (!cachedShippingConfig || (now - cacheTimestamp) > CACHE_TTL) {
+            const { data: shippingConfig } = await supabase
+                .from("site_settings")
+                .select("setting_value")
+                .eq("setting_key", "shipping_settings")
+                .maybeSingle();
 
-        const cfg = shippingConfig?.setting_value || {};
+            cachedShippingConfig = shippingConfig?.setting_value || {};
+            cacheTimestamp = now;
+        }
+
+        const cfg = cachedShippingConfig;
         const isFree = subtotal >= parseFloat(cfg.free_shipping_threshold ?? "100");
 
         // Calculate all 4 options based on actual weight
@@ -104,7 +115,7 @@ export async function POST(req: Request) {
                         amount: Math.round(stdRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: isFree ? "Free Standard Shipping 🎁" : `${stdRate.name} (US)`,
+                    display_name: stdRate.name,
                     delivery_estimate: {
                         minimum: { unit: "business_day", value: stdRate.minDays },
                         maximum: { unit: "business_day", value: stdRate.maxDays },
@@ -119,7 +130,7 @@ export async function POST(req: Request) {
                         amount: Math.round(expRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: `${expRate.name} (US)`,
+                    display_name: expRate.name,
                     delivery_estimate: {
                         minimum: { unit: "business_day", value: expRate.minDays },
                         maximum: { unit: "business_day", value: expRate.maxDays },
@@ -134,7 +145,7 @@ export async function POST(req: Request) {
                         amount: Math.round(intlStdRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: `${intlStdRate.name} 🌍`,
+                    display_name: intlStdRate.name,
                     delivery_estimate: {
                         minimum: { unit: "business_day", value: intlStdRate.minDays },
                         maximum: { unit: "business_day", value: intlStdRate.maxDays },
@@ -149,7 +160,7 @@ export async function POST(req: Request) {
                         amount: Math.round(intlExpRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: `${intlExpRate.name} 🚀`,
+                    display_name: intlExpRate.name,
                     delivery_estimate: {
                         minimum: { unit: "business_day", value: intlExpRate.minDays },
                         maximum: { unit: "business_day", value: intlExpRate.maxDays },

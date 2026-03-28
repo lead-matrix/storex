@@ -146,8 +146,15 @@ export default async function AdminSettings() {
                                     <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'USPS Ground Advantage (3-5 Days)'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
                                     <div className="space-y-1.5">
-                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON) - Orders match FIRST bracket where weight ≤ max_lb</label>
-                                        <p className="text-[10px] text-luxury-subtext/60 leading-relaxed mb-2">Example: Cart weighing 0.8 lb matches the 1 lb bracket. Cart weighing 1.5 lb matches the 2 lb bracket. Always include a catch-all bracket with max_lb: 999 for heavy orders.</p>
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">
+                                            Weight Brackets (JSON)
+                                        </label>
+                                        <p className="text-[10px] text-emerald-400/60 leading-relaxed mb-2">
+                                            ✓ Format: [{`{ "max_lb": 0.5, "rate": 4.99 }`}, {`{ "max_lb": 1, "rate": 6.99 }`}, ...]<br/>
+                                            ✓ Orders match the FIRST bracket where weight ≤ max_lb<br/>
+                                            ✓ Always end with a catch-all: {`{ "max_lb": 999, "rate": 15.99 }`}<br/>
+                                            ✓ Example: 0.8 lb cart matches the 1 lb bracket
+                                        </p>
                                         <textarea name="weight_brackets" defaultValue={JSON.stringify(shipping.weight_brackets || [
                                             { max_lb: 0.5, rate: 4.99 },
                                             { max_lb: 1, rate: 6.99 },
@@ -155,7 +162,7 @@ export default async function AdminSettings() {
                                             { max_lb: 5, rate: 12.99 },
                                             { max_lb: 999, rate: 15.99 }
                                         ], null, 2)}
-                                        rows={5} className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-emerald-400 focus:border-gold/50 outline-none transition-all" />
+                                        rows={6} className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-emerald-400 focus:border-gold/50 outline-none transition-all" />
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Free Shipping Threshold</label>

@@ -25,6 +25,7 @@ interface Product {
     on_sale?: boolean
     description: string
     images: string[]
+    weight_oz?: number | null
     product_variants?: Variant[]
 }
 
@@ -59,6 +60,7 @@ export function ProductClient({ product }: ProductClientProps) {
                             on_sale: product.on_sale,
                             description: product.description || "The quintessence of modern luxury.",
                             images: (product.images && product.images.length > 0) ? product.images : ["/logo.jpg"],
+                            weight_oz: product.weight_oz,
                             product_variants: product.product_variants,
                         }}
                         onVariantImageChange={setVariantImage}

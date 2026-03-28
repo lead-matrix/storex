@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Package, ShieldCheck } from "lucide-react";
@@ -29,6 +29,13 @@ export default function CheckoutPage() {
 
   const isFreeShipping = cartTotal >= freeThreshold;
   const remaining = freeThreshold - cartTotal;
+
+  const totalWeightLb = useMemo(() => {
+    return cart.reduce((total, item) => {
+      const weightOz = item.variantWeight || item.productWeight || 2;
+      return total + (weightOz * item.quantity);
+    }, 0) / 16;
+  }, [cart]);
 
   const handleProceed = async () => {
     if (!cart.length) return;
@@ -110,6 +117,13 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-xs uppercase tracking-widest text-luxury-subtext">
                     <span>Subtotal</span>
                     <span>${cartTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs uppercase tracking-widest text-luxury-subtext transition-all duration-500 hover:text-white">
+                    <span className="flex items-center gap-2">
+                        <Package className="w-3 h-3 text-gold/60" />
+                        Estimated weight
+                    </span>
+                    <span>{totalWeightLb.toFixed(2)} lbs</span>
                   </div>
                   <div className="flex justify-between text-xs uppercase tracking-widest text-luxury-subtext">
                     <span>Shipping</span>

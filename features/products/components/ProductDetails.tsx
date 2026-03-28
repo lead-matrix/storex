@@ -13,6 +13,7 @@ interface Variant {
     stock: number
     color_code?: string | null
     image_url?: string | null
+    weight?: number | null
 }
 
 interface ProductDetailsProps {
@@ -24,6 +25,7 @@ interface ProductDetailsProps {
         on_sale?: boolean
         description: string
         images: string[]
+        weight_oz?: number | null
         product_variants?: Variant[]
     }
     /** Called when a variant's image should update the gallery */
@@ -103,6 +105,8 @@ export function ProductDetails({ product, onVariantImageChange }: ProductDetails
             quantity: Math.min(quantity, currentStock),
             image: selectedVariant?.image_url || product.images[0] || "",
             variantName: selectedVariant?.name,
+            variantWeight: selectedVariant?.weight ? Number(selectedVariant.weight) : null,
+            productWeight: product.weight_oz ? Number(product.weight_oz) : null,
         })
         setIsCartOpen(true)
     }

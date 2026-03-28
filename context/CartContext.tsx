@@ -11,6 +11,8 @@ export interface CartItem {
     image: string;
     quantity: number;
     variantName?: string;
+    variantWeight?: number | null;
+    productWeight?: number | null;
 }
 
 interface CartContextType {
