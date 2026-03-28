@@ -142,7 +142,21 @@ export async function POST(req: Request) {
             );
 
             if (itemsError) {
-            console.error("Items insert failed", itemsError);
+              console.error("Items insert failed", itemsError);
+            } else {
+              for (const item of cartItems) {
+                if (item.variant_id) {
+                    const { data: v } = await supabase.from('product_variants').select('stock').eq('id', item.variant_id).single();
+                    if (v && v.stock !== undefined) {
+                      await supabase.from('product_variants').update({ stock: Math.max(0, v.stock - item.quantity) }).eq('id', item.variant_id);
+                    }
+                } else if (item.product_id) {
+                    const { data: p } = await supabase.from('products').select('stock').eq('id', item.product_id).single();
+                    if (p && p.stock !== undefined) {
+                      await supabase.from('products').update({ stock: Math.max(0, p.stock - item.quantity) }).eq('id', item.product_id);
+                    }
+                }
+              }
             }
         }
       }

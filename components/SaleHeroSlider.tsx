@@ -16,7 +16,7 @@ interface Product {
     description: string;
 }
 
-export function SaleHeroSlider({ products }: { products: Product[] }) {
+export function SaleHeroSlider({ products, mode = 'sale' }: { products: Product[], mode?: 'sale' | 'bestseller' }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
@@ -94,9 +94,9 @@ export function SaleHeroSlider({ products }: { products: Product[] }) {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8 }}
-                                className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.55em] text-red-500 font-bold whitespace-nowrap bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20"
+                                className={`inline-flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.55em] font-bold whitespace-nowrap px-4 py-2 rounded-full border ${mode === 'sale' ? 'text-red-500 bg-red-500/10 border-red-500/20' : 'text-gold bg-gold/10 border-gold/20'}`}
                             >
-                                <Tag className="w-3.5 h-3.5" /> Featured Sale
+                                <Tag className="w-3.5 h-3.5" /> {mode === 'sale' ? 'Featured Sale' : 'Bestseller'}
                             </motion.span>
 
                             <div className="space-y-4">
@@ -110,8 +110,14 @@ export function SaleHeroSlider({ products }: { products: Product[] }) {
                             
                             {/* Pricing */}
                             <div className="flex items-center justify-center gap-4 text-xl">
-                                <span className="text-white/40 line-through decoration-gold/50">${currentProduct.base_price?.toFixed(2)}</span>
-                                <span className="text-gold font-bold text-3xl">${currentProduct.sale_price?.toFixed(2)}</span>
+                                {mode === 'sale' ? (
+                                    <>
+                                        <span className="text-white/40 line-through decoration-gold/50">${currentProduct.base_price?.toFixed(2)}</span>
+                                        <span className="text-gold font-bold text-3xl">${currentProduct.sale_price?.toFixed(2)}</span>
+                                    </>
+                                ) : (
+                                    <span className="text-white font-bold text-3xl">${currentProduct.base_price?.toFixed(2)}</span>
+                                )}
                             </div>
 
                             <div className="flex flex-wrap items-center justify-center gap-6 pt-6">

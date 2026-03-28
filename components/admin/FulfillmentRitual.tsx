@@ -212,7 +212,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                                                         <div className="flex items-center bg-black/40 border border-white/10 rounded-sm overflow-hidden">
                                                             <button
                                                                 onClick={() => handleQuantityChange(item.id, selectedItems[item.id] - 1, remaining)}
-                                                                className="px-2 py-1 text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                                                                className="px-2 py-2 min-w-[44px] min-h-[44px] text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
                                                             >-</button>
                                                             <input
                                                                 type="number"
@@ -222,7 +222,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                                                             />
                                                             <button
                                                                 onClick={() => handleQuantityChange(item.id, selectedItems[item.id] + 1, remaining)}
-                                                                className="px-2 py-1 text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                                                                className="px-2 py-2 min-w-[44px] min-h-[44px] text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
                                                                 disabled={selectedItems[item.id] >= remaining}
                                                             >+</button>
                                                         </div>
@@ -345,7 +345,12 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                             <div className="text-left">
                                 <p className="text-[9px] text-white/20 uppercase tracking-[0.2em]">Ready for matrix sync.</p>
                                 <p className="text-[11px] font-serif text-gold italic">
-                                    {itemsToShipArray.length} items total in this parcel
+                                    {itemsToShipArray.length} items ({itemsToShipArray.reduce((acc, row) => {
+                                        const originalItem = order.order_items?.find((i: any) => i.id === row.id);
+                                        const w1 = originalItem?.product_variants?.products?.weight_oz || 0;
+                                        const w2 = originalItem?.product_variants?.weight || 0;
+                                        return acc + (row.quantity * (w2 || w1 || 0.5));
+                                    }, 0).toFixed(2)} oz)
                                 </p>
                             </div>
                             <Button

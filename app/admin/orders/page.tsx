@@ -44,7 +44,7 @@ export default async function AdminOrdersPage() {
     return (
         <div className="space-y-12 animate-luxury-fade pb-24">
             {/* Header */}
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase">Registry</h1>
                     <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Transaction & Fulfillment Intelligence</p>

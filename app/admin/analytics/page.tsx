@@ -69,8 +69,8 @@ export default async function AnalyticsPage() {
 
     const w7 = buildDailyTotals((weekly ?? []) as { amount_total: number; created_at: string }[], 7)
     const m30 = buildDailyTotals((monthly ?? []) as { amount_total: number; created_at: string }[], 30)
-    const chartW = w7.every(v => v === 0) ? [3200, 4800, 3900, 6100, 5400, 7200, 5800] : w7
-    const chartM = m30.every(v => v === 0) ? Array.from({ length: 30 }, (_, i) => 2000 + Math.sin(i * 0.5) * 1500 + i * 80) : m30
+    const chartW = w7
+    const chartM = m30
 
     // Top products
     const pMap: Record<string, { title: string; qty: number }> = {}
@@ -88,9 +88,11 @@ export default async function AnalyticsPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto animate-luxury-fade">
-            <div>
-                <h1 className="text-3xl font-heading text-white mb-1 tracking-luxury">Analytics</h1>
-                <p className="text-luxury-subtext text-sm tracking-luxury uppercase font-medium mt-0.5">Revenue intelligence & performance overview</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-heading text-white mb-1 tracking-luxury">Analytics</h1>
+                    <p className="text-luxury-subtext text-sm tracking-luxury uppercase font-medium mt-0.5">Revenue intelligence & performance overview</p>
+                </div>
             </div>
 
             {/* KPIs */}
@@ -150,7 +152,8 @@ export default async function AnalyticsPage() {
                 {topProds.length === 0 ? (
                     <div className="text-center py-16 text-luxury-subtext/50 text-[10px] uppercase tracking-widest font-medium">No sales data yet</div>
                 ) : (
-                    <table className="w-full">
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[500px]">
                         <thead><tr className="border-b border-white/5">
                             <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Rank</th>
                             <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Product</th>
@@ -179,6 +182,7 @@ export default async function AnalyticsPage() {
                             })}
                         </tbody>
                     </table>
+                    </div>
                 )}
             </div>
         </div>

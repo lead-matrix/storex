@@ -190,7 +190,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* LEFT COLUMN */}
                 <div className="space-y-6">
 
@@ -230,7 +230,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                         <p className="text-[10px] text-luxury-subtext/50 tracking-luxury">Used in /product/[slug] — auto-generated from name</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Price */}
                         <div className="space-y-2">
                             <Label className="text-[10px] uppercase tracking-luxury text-luxury-subtext">
@@ -268,10 +268,11 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                     {/* Shipping Dimensions + Customs */}
                     <div className="p-4 bg-[#0B0B0D]/5 rounded-lg border border-white/5 space-y-4">
                         <Label className="text-[10px] uppercase tracking-widest text-gold font-bold">Shipping &amp; Customs Details</Label>
-                        <div className="grid grid-cols-4 gap-3">
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] uppercase text-luxury-subtext">Weight (oz)</Label>
-                                <Input name="weight_oz" type="number" step="0.01" defaultValue={product?.weight_oz ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="oz" />
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="space-y-1.5 flex flex-col justify-start">
+                                <Label className="text-[9px] uppercase text-luxury-subtext">Weight (oz) *</Label>
+                                <Input name="weight_oz" type="number" step="0.01" required defaultValue={product?.weight_oz ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="oz" />
+                                <p className="text-[10px] text-amber-500 tracking-luxury mt-1 font-medium">Required for accurate shipping rates.</p>
                             </div>
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] uppercase text-luxury-subtext">L (in)</Label>
@@ -286,7 +287,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                 <Input name="height_in" type="number" step="0.1" defaultValue={product?.height_in ?? ''} className="h-9 text-xs bg-black/50 border-white/10" placeholder="height" />
                             </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
                                 <Label className="text-[9px] uppercase text-luxury-subtext">Product SKU</Label>
                                 <Input
@@ -629,7 +630,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                                                     <button
                                                         type="button"
                                                         onClick={() => removeVariant(index)}
-                                                        className="text-luxury-subtext hover:text-red-500 transition-colors"
+                                                        className="text-luxury-subtext hover:text-red-500 transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>

@@ -126,7 +126,7 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => toggleSelection(order.id)}
-                                    className={`transition-colors h-10 w-10 border border-white/10 rounded flex items-center justify-center ${selectedOrderIds.includes(order.id) ? 'text-gold border-gold/30' : 'text-white/20'}`}
+                                    className={`transition-colors min-h-[44px] min-w-[44px] border border-white/10 rounded flex items-center justify-center ${selectedOrderIds.includes(order.id) ? 'text-gold border-gold/30' : 'text-white/20'}`}
                                 >
                                     {selectedOrderIds.includes(order.id) ? (
                                         <CheckSquare className="w-5 h-5" />

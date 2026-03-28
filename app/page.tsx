@@ -130,7 +130,11 @@ export default async function Home() {
   return (
     <div className="bg-black">
       {/* Hero — custom auto sliding sale slider */}
-      <SaleHeroSlider products={saleProducts} />
+      {homeSettings.show_bestsellers_hero ? (
+        <SaleHeroSlider products={bestsellerProducts} mode="bestseller" />
+      ) : (
+        <SaleHeroSlider products={saleProducts} mode="sale" />
+      )}
 
       {/* Category navigation grid */}
       <HomeCategoryGrid categories={categories} />

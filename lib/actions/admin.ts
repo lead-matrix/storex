@@ -12,7 +12,10 @@ async function ensureAdmin() {
 
     if (!user) throw new Error("Authentication required");
 
-    const { data: profile } = await supabase
+    const { createClient: createAdminClient } = await import('@/lib/supabase/admin');
+    const adminSupabase = await createAdminClient();
+
+    const { data: profile } = await adminSupabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
@@ -22,7 +25,7 @@ async function ensureAdmin() {
         throw new Error("Unauthorized: Admin access required");
     }
 
-    return supabase;
+    return adminSupabase;
 }
 
 // ─────────────────────────────────────────────────
