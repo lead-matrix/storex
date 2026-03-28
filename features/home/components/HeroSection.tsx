@@ -18,7 +18,7 @@ export function HeroSection({ content }: HeroSectionProps) {
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
                 <Image
-                    src={content.image_url || "/hero-default.jpg"}
+                    src={content.image_url && content.image_url.trim() !== '' && !content.image_url.includes('hero-default') ? content.image_url : "/logo.jpg"}
                     alt="Hero background"
                     fill
                     className="object-cover object-center w-full h-full"
