@@ -87,47 +87,21 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         const cfg = shippingConfig?.setting_value || {};
-        const freeThreshold = parseFloat(cfg.free_shipping_threshold ?? "100");
-        const isFree = subtotal >= freeThreshold;
+        const isFree = subtotal >= parseFloat(cfg.free_shipping_threshold ?? "100");
 
-        // ─── Build shipping options for Stripe ──────────────────────────────
-        // Stripe will show ALL options; the customer picks one.
-        // Domestic-oriented options shown first, International last.
+        // Calculate all 4 options based on actual weight
         const stdRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "standard");
         const expRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "express");
-
-        // International Standard Evaluation
-        let intlBrackets = cfg.intl_weight_brackets;
-        if (!intlBrackets || intlBrackets.length === 0) {
-            intlBrackets = [
-                { max_lb: 1, rate: 19.99 },
-                { max_lb: 3, rate: 29.99 },
-                { max_lb: 5, rate: 39.99 },
-                { max_lb: 999, rate: 59.99 }
-            ];
-        }
-        const matchingIntlBracket = intlBrackets.find((b: any) => totalWeightLb <= b.max_lb) || intlBrackets[intlBrackets.length - 1];
-        const intlStandardCost = matchingIntlBracket ? parseFloat(matchingIntlBracket.rate) : 19.99;
-        
-        // International Express Evaluation
-        let intlExpressBrackets = cfg.intl_express_weight_brackets;
-        if (!intlExpressBrackets || intlExpressBrackets.length === 0) {
-            intlExpressBrackets = [
-                { max_lb: 1, rate: 49.99 },
-                { max_lb: 3, rate: 69.99 },
-                { max_lb: 999, rate: 89.99 }
-            ]
-        }
-        const matchingIntlExpressBracket = intlExpressBrackets.find((b: any) => totalWeightLb <= b.max_lb) || intlExpressBrackets[intlExpressBrackets.length - 1];
-        const intlExpressCost = matchingIntlExpressBracket ? parseFloat(matchingIntlExpressBracket.rate) : 49.99;
+        const intlStdRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "intl_standard");
+        const intlExpRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "intl_express");
 
         const shippingOptions: Stripe.Checkout.SessionCreateParams.ShippingOption[] = [
-            // Option 1: US Domestic Standard (or FREE)
+            // Option 1: US Domestic Standard (or FREE if threshold met)
             {
                 shipping_rate_data: {
                     type: "fixed_amount",
                     fixed_amount: {
-                        amount: isFree ? 0 : Math.round(stdRate.cost * 100),
+                        amount: Math.round(stdRate.cost * 100),
                         currency: "usd",
                     },
                     display_name: isFree ? "Free Standard Shipping 🎁" : `${stdRate.name} (US)`,
@@ -157,13 +131,13 @@ export async function POST(req: Request) {
                 shipping_rate_data: {
                     type: "fixed_amount",
                     fixed_amount: {
-                        amount: Math.round(intlStandardCost * 100),
+                        amount: Math.round(intlStdRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: "USPS Priority Mail International 🌍",
+                    display_name: `${intlStdRate.name} 🌍`,
                     delivery_estimate: {
-                        minimum: { unit: "business_day", value: 6 },
-                        maximum: { unit: "business_day", value: 10 },
+                        minimum: { unit: "business_day", value: intlStdRate.minDays },
+                        maximum: { unit: "business_day", value: intlStdRate.maxDays },
                     },
                 },
             },
@@ -172,13 +146,13 @@ export async function POST(req: Request) {
                 shipping_rate_data: {
                     type: "fixed_amount",
                     fixed_amount: {
-                        amount: Math.round(intlExpressCost * 100),
+                        amount: Math.round(intlExpRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: "USPS Priority Mail Express International 🚀",
+                    display_name: `${intlExpRate.name} 🚀`,
                     delivery_estimate: {
-                        minimum: { unit: "business_day", value: 3 },
-                        maximum: { unit: "business_day", value: 5 },
+                        minimum: { unit: "business_day", value: intlExpRate.minDays },
+                        maximum: { unit: "business_day", value: intlExpRate.maxDays },
                     },
                 },
             },

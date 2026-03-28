@@ -60,72 +60,89 @@ export function calculateTotalWeightLb(items: Array<{
 }
 
 export function calculateShippingRate(
-    totalWeightLb: number,
-    subtotal: number,
-    config: any,
-    option: 'standard' | 'express'
+  weightLb: number,
+  subtotal: number,
+  config: any,
+  type: 'standard' | 'express' | 'intl_standard' | 'intl_express'
 ): { cost: number; name: string; minDays: number; maxDays: number } {
-    const freeThreshold = parseFloat(config.free_shipping_threshold ?? "100");
-
-    if (option === 'express') {
-        const brackets = (config.express_weight_brackets && config.express_weight_brackets.length > 0) 
-            ? config.express_weight_brackets 
-            : [
-                { max_lb: 1, rate: 9.99 },
-                { max_lb: 3, rate: 14.99 },
-                { max_lb: 999, rate: 19.99 }
-            ];
-        
-        // Find the first bracket where weight <= max_lb
-        const bracket = brackets.find((b: any) => totalWeightLb <= b.max_lb) || brackets[brackets.length - 1];
-        
-        return {
-            cost: bracket ? parseFloat(bracket.rate.toString()) : parseFloat(config.express_rate ?? "19.99"),
-            name: config.express_label || "USPS Priority Mail (1-3 Days)",
-            minDays: 1,
-            maxDays: 3
-        };
-    }
-
-    // Standard Option
-    if (subtotal >= freeThreshold) {
-        return {
-            cost: 0,
-            name: "Free Standard Shipping",
-            minDays: 3,
-            maxDays: 5
-        };
-    }
-
-    // Bracket evaluation
-    const brackets = (config.weight_brackets && config.weight_brackets.length > 0) 
-        ? config.weight_brackets 
-        : [
-            { max_lb: 0.5, rate: 4.99 },
-            { max_lb: 1, rate: 6.99 },
-            { max_lb: 2, rate: 8.99 },
-            { max_lb: 5, rate: 12.99 },
-            { max_lb: 999, rate: 15.99 }
-        ];
-        
-    const bracket = brackets.find((b: any) => totalWeightLb <= b.max_lb) || brackets[brackets.length - 1];
-    if (bracket) {
-        return {
-            cost: parseFloat(bracket.rate.toString()),
-            name: config.standard_label || "USPS Ground Advantage (3-5 Days)",
-            minDays: 3,
-            maxDays: 5
-        };
-    }
-
-    // Fallback to flat rate
+  // Free shipping check (US only)
+  const freeThreshold = parseFloat(config.free_shipping_threshold ?? '100');
+  if (type === 'standard' && subtotal >= freeThreshold) {
     return {
-        cost: parseFloat(config.standard_rate ?? "7.99"),
-        name: config.standard_label || "USPS Ground Advantage (3-5 Days)",
-        minDays: 3,
-        maxDays: 5
+      cost: 0,
+      name: config.standard_label || 'Free Standard Shipping',
+      minDays: 3,
+      maxDays: 5,
     };
+  }
+
+  // Select bracket config
+  let brackets: Array<{ max_lb: number; rate: number }> = [];
+  let name = '';
+  let minDays = 3;
+  let maxDays = 5;
+
+  switch (type) {
+    case 'standard':
+      brackets = config.weight_brackets || DEFAULT_US_STANDARD_BRACKETS;
+      name = config.standard_label || 'USPS Ground Advantage (3-5 Days)';
+      minDays = 3;
+      maxDays = 5;
+      break;
+    case 'express':
+      brackets = config.express_weight_brackets || DEFAULT_US_EXPRESS_BRACKETS;
+      name = config.express_label || 'USPS Priority Mail (1-3 Days)';
+      minDays = 1;
+      maxDays = 3;
+      break;
+    case 'intl_standard':
+      brackets = config.intl_weight_brackets || DEFAULT_INTL_STANDARD_BRACKETS;
+      name = 'USPS Priority Mail International';
+      minDays = 6;
+      maxDays = 10;
+      break;
+    case 'intl_express':
+      brackets = config.intl_express_weight_brackets || DEFAULT_INTL_EXPRESS_BRACKETS;
+      name = 'USPS Priority Mail Express International';
+      minDays = 3;
+      maxDays = 5;
+      break;
+  }
+
+  // Find matching bracket (first bracket where weight <= max_lb)
+  const matchingBracket = brackets.find((b) => weightLb <= b.max_lb);
+  const cost = matchingBracket ? parseFloat(String(matchingBracket.rate)) : parseFloat(String(brackets[brackets.length - 1]?.rate ?? 15.99));
+
+  return { cost, name, minDays, maxDays };
 }
+
+// Default brackets (fallback if DB config missing)
+const DEFAULT_US_STANDARD_BRACKETS = [
+  { max_lb: 0.5, rate: 4.99 },
+  { max_lb: 1, rate: 6.99 },
+  { max_lb: 2, rate: 8.99 },
+  { max_lb: 5, rate: 12.99 },
+  { max_lb: 999, rate: 15.99 },
+];
+
+const DEFAULT_US_EXPRESS_BRACKETS = [
+  { max_lb: 1, rate: 9.99 },
+  { max_lb: 3, rate: 14.99 },
+  { max_lb: 999, rate: 19.99 },
+];
+
+const DEFAULT_INTL_STANDARD_BRACKETS = [
+  { max_lb: 1, rate: 19.99 },
+  { max_lb: 3, rate: 29.99 },
+  { max_lb: 5, rate: 39.99 },
+  { max_lb: 999, rate: 59.99 },
+];
+
+const DEFAULT_INTL_EXPRESS_BRACKETS = [
+  { max_lb: 1, rate: 49.99 },
+  { max_lb: 3, rate: 69.99 },
+  { max_lb: 999, rate: 89.99 },
+];
 
 export async function createShippingLabel(order: any) {
     const apiKey = process.env.SHIPPO_API_KEY;

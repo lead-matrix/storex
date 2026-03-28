@@ -146,7 +146,8 @@ export default async function AdminSettings() {
                                     <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'USPS Ground Advantage (3-5 Days)'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
                                     <div className="space-y-1.5">
-                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON) Default: [ {`{"max_lb": 0.5, "rate": 4.99}`} ... ]</label>
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON) - Orders match FIRST bracket where weight ≤ max_lb</label>
+                                        <p className="text-[10px] text-luxury-subtext/60 leading-relaxed mb-2">Example: Cart weighing 0.8 lb matches the 1 lb bracket. Cart weighing 1.5 lb matches the 2 lb bracket. Always include a catch-all bracket with max_lb: 999 for heavy orders.</p>
                                         <textarea name="weight_brackets" defaultValue={JSON.stringify(shipping.weight_brackets || [
                                             { max_lb: 0.5, rate: 4.99 },
                                             { max_lb: 1, rate: 6.99 },
@@ -171,7 +172,7 @@ export default async function AdminSettings() {
                                     <input name="express_label" type="text" defaultValue={shipping.express_label ?? 'USPS Priority Mail (1-3 Days)'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
                                     <div className="space-y-1.5">
-                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON)</label>
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON) - Orders match FIRST bracket where weight ≤ max_lb</label>
                                         <textarea name="express_weight_brackets" defaultValue={JSON.stringify(shipping.express_weight_brackets || [
                                             { max_lb: 1, rate: 9.99 },
                                             { max_lb: 3, rate: 14.99 },
