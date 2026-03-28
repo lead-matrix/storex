@@ -8,20 +8,16 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
  * WARNING: Only use this in server-side code and server actions
  * This bypasses RLS policies - use with extreme caution
  */
-export async function createClient() {
-    return createSupabaseClient(
-        supabaseUrl!,
-        supabaseServiceKey!,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
+export const supabaseAdmin = createSupabaseClient(
+    supabaseUrl!,
+    supabaseServiceKey!,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
         }
-    );
-};
+    }
+);
 
-/**
- * Legacy export for backward compatibility
- */
-export const supabaseAdmin = createClient;
+// Backward compatibility function
+export const createClient = async () => supabaseAdmin;
