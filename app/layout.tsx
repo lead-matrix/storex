@@ -3,6 +3,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { ShoppingBagDrawer } from "@/components/ShoppingBagDrawer";
 import { Analytics } from "@vercel/analytics/next";
 import { createClient } from "@/lib/supabase/server";
@@ -147,6 +148,7 @@ export default async function RootLayout({
       >
         <CartProvider>
           <div className="relative flex flex-col min-h-screen">
+            <AnnouncementBar />
             <Header navItems={headerNavItems} logoUrl={logoUrl} />
             <main className="flex-grow">
               {children}

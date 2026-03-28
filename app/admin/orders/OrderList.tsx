@@ -6,6 +6,7 @@ import { Box, MapPin, Truck, ExternalLink, ChevronDown, ShoppingBag, CheckSquare
 import { updateOrderStatus } from '@/lib/actions/admin'
 import { generateShippingLabel } from '@/app/admin/orders/actions'
 import { FulfillmentRitual } from '@/components/admin/FulfillmentRitual'
+import QuickShip from '@/components/admin/QuickShip'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -189,6 +190,17 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                     Begin Fulfillment
                                 </button>
                             )}
+                            
+                            {/* QUICK SHIP DISPATCH */}
+                            {!order.shipping_label_url && order.status === 'paid' && order.shipping_address?.country === 'US' && (
+                                <QuickShip 
+                                    orderId={order.id} 
+                                    customerName={order.customer_email || 'Guest'} 
+                                    shippingAddress={order.shipping_address} 
+                                    orderItems={order.order_items || []} 
+                                    onSuccess={() => router.refresh()}
+                                />
+                            )}
                         </div>
                     </div>
                 ))}
@@ -321,6 +333,17 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                                                 <Truck className="w-3.5 h-3.5" />
                                                 Fulfill
                                             </button>
+                                        )}
+
+                                        {/* QUICK SHIP DISPATCH */}
+                                        {!order.shipping_label_url && order.status === 'paid' && order.shipping_address?.country === 'US' && (
+                                            <QuickShip 
+                                                orderId={order.id} 
+                                                customerName={order.customer_email || 'Guest'} 
+                                                shippingAddress={order.shipping_address} 
+                                                orderItems={order.order_items || []} 
+                                                onSuccess={() => router.refresh()}
+                                            />
                                         )}
                                     </div>
                                 </td>

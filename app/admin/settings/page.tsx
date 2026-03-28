@@ -76,7 +76,7 @@ export default async function AdminSettings() {
                                         defaultChecked={isEnabled}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-14 h-7 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
+                                    <div className="w-14 h-7 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
                                 </label>
                             </div>
                         </SettingsForm>
@@ -98,7 +98,7 @@ export default async function AdminSettings() {
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" name="show_bestsellers_hero" defaultChecked={homeConfig.show_bestsellers_hero === true} className="sr-only peer" />
-                                            <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                            <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
                                         </label>
                                     </div>
                                     
@@ -109,7 +109,7 @@ export default async function AdminSettings() {
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" name="show_bestsellers" defaultChecked={homeConfig.show_bestsellers !== false} className="sr-only peer" />
-                                            <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                            <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
                                         </label>
                                     </div>
 

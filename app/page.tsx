@@ -1,161 +1,168 @@
 import { createClient } from "@/lib/supabase/server"
-import CMSRenderer from "@/components/cms/CMSRenderer"
-import { SaleHeroSlider } from "@/components/SaleHeroSlider"
-import { BentoFeaturedGrid } from "@/components/BentoFeaturedGrid"
-import { CollectionShowcase } from "@/components/CollectionShowcase"
-import { NewsletterSection } from "@/features/home/components/NewsletterSection"
+import AnnouncementBar from "@/components/AnnouncementBar"
+import SplitHero from "@/components/home/SplitHero"
+import TrustBar from "@/components/home/TrustBar"
+import SocialProof from "@/components/home/SocialProof"
 import { FeaturedProductsGrid } from "@/features/home/components/FeaturedProductsGrid"
 import { HomeCategoryGrid } from "@/features/home/components/HomeCategoryGrid"
-import { BestSellersSlider } from "@/components/BestSellersSlider"
+import { NewsletterSection } from "@/features/home/components/NewsletterSection"
+import CMSRenderer from "@/components/cms/CMSRenderer"
 import type { Metadata } from "next"
 
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: "DINA COSMETIC | The Radiant Atelier",
-  description: "Exquisite beauty rituals curated for the modern aesthetic. Explore the Radiant Atelier collections.",
+  title: "DINA COSMETIC | Premium Beauty",
+  description: "Premium beauty formulations for those who demand absolute excellence. Shop lipstick, foundation, eyeshadow and more.",
 }
 
 export default async function Home() {
   const supabase = await createClient()
 
-  // 1. Try CMS-driven home page first (cms_pages with slug 'home')
-  const { data: homePage, error: cmsError } = await supabase
+  // Check for CMS-driven home page
+  const { data: homePage } = await supabase
     .from("cms_pages")
-    .select(`
-            *,
-            cms_sections(*)
-        `)
+    .select("*, cms_sections(*)")
     .eq("slug", "home")
     .eq("is_published", true)
     .maybeSingle()
 
-  if (cmsError) {
-    console.warn("CMS Home Page Fetch Error:", cmsError.message)
+  // If CMS page exists with sections, render it (admin override)
+  if (homePage?.cms_sections?.length > 0) {
+    const sections = [...homePage.cms_sections]
+      .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
+      .map((s) => ({ type: s.type, props: s.props }))
+
+    return (
+      <main className="bg-[#FAFAF8]">
+        <AnnouncementBar />
+        <CMSRenderer sections={sections} />
+      </main>
+    )
   }
 
-  if (homePage && homePage.cms_sections && Array.isArray(homePage.cms_sections) && homePage.cms_sections.length > 0) {
-    try {
-      const sections = [...homePage.cms_sections]
-        .sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
-        .map((s) => ({ type: s.type, props: s.props }))
-
-      return (
-        <main className="bg-obsidian">
-          <CMSRenderer sections={sections} />
-        </main>
-      )
-    } catch (err) {
-      console.error("CMS Rendering Error:", err)
-      // Fall through to legacy layout
-    }
-  }
-
-  // 2. Fallback to curated legacy layout if no CMS home exists yet
+  // Default curated layout
   let products: any[] = []
   let categories: any[] = []
-  let saleProducts: any[] = []
-  let bestsellerProducts: any[] = []
-  let homeSettings: any = {}
+  let announcementMessages: string[] | undefined
+  let homeConfig: any = {}
 
   try {
-    const [productsRes, categoriesRes, saleRes, bestsellersRes, settingsRes] = await Promise.all([
-      supabase
-        .from("products")
-        .select(`
-          id, title, slug, base_price, sale_price, on_sale, is_new, is_besteller, images, description, status,
-          product_variants (id, name, price_override, stock, status)
-        `)
-        .eq("status", "active")
-        .order("is_featured", { ascending: false })
-        .limit(8),
+    const [productsRes, categoriesRes, announcementRes, homeSectionsRes] = await Promise.all([
+      // Fetch based on curation settings
+      (async () => {
+        const { data: hConfig } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'home_sections').maybeSingle();
+        const config = hConfig?.setting_value || {};
+        homeConfig = config;
+
+        let query = supabase
+          .from("products")
+          .select(`
+            id, title, slug, base_price, sale_price, on_sale, is_new,
+            is_bestseller, images, description, status,
+            product_variants (id, name, price_override, stock, status, color_code, image_url)
+          `)
+          .eq("status", "active");
+
+        if (config.show_bestsellers_hero) {
+          query = query.eq("is_bestseller", true);
+        } else {
+          query = query.eq("is_featured", true);
+        }
+
+        return query.order("created_at", { ascending: false }).limit(8);
+      })(),
       supabase
         .from("categories")
-        .select("id, name, slug, description, image_url, product_count:products(count)")
+        .select("id, name, slug, description, image_url")
         .limit(6),
-      supabase
-        .from("products")
-        .select(`
-          id, title, slug, base_price, sale_price, on_sale, images, description, status
-        `)
-        .eq("status", "active")
-        .eq("on_sale", true)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      // Bestsellers: is_bestseller flagged products, up to 12
-      supabase
-        .from("products")
-        .select(`
-          id, title, slug, base_price, sale_price, on_sale, is_new, is_bestseller, images, description, status,
-          product_variants (id, name, price_override, stock, status)
-        `)
-        .eq("status", "active")
-        .eq("is_bestseller", true)
-        .order("created_at", { ascending: false })
-        .limit(12),
-      // Home section config (headings, visibility toggles set in admin)
       supabase
         .from("site_settings")
         .select("setting_value")
-        .eq("setting_key", "home_sections")
+        .eq("setting_key", "announcement_messages")
         .maybeSingle(),
+      supabase.from('site_settings').select('setting_value').eq('setting_key', 'home_sections').maybeSingle()
     ])
 
-    products = productsRes.data || []
+    products = (productsRes as any).data || []
     categories = categoriesRes.data || []
-    homeSettings = settingsRes.data?.setting_value || {}
 
-    // Ensure we only include products with a valid sale price
-    saleProducts = (saleRes.data || []).filter(p => typeof p.sale_price === 'number' && p.sale_price > 0)
-
-    // If no explicitly flagged bestsellers, fall back to featured products
-    bestsellerProducts = bestsellersRes.data || []
-    if (bestsellerProducts.length === 0) {
-      bestsellerProducts = products.slice(0, 8)
+    if (announcementRes.data?.setting_value?.messages) {
+      announcementMessages = announcementRes.data.setting_value.messages
     }
   } catch (err) {
-    console.error("Legacy Layout Fetch Error:", err)
+    console.error("Home page fetch error:", err)
   }
 
-  // Map categories to shape CollectionShowcase expects
-  const collections = categories.map((c: any) => ({
-    ...c,
-    product_count: c.product_count?.[0]?.count || 0
-  }))
-
-  const showBestsellers = homeSettings.show_bestsellers !== false // default true
-  const bestsellerHeading = homeSettings.bestseller_heading || 'Obsidian Bestsellers'
-  const bestsellerSubheading = homeSettings.bestseller_subheading || 'Most-loved by our community'
-
   return (
-    <div className="bg-black">
-      {/* Hero — custom auto sliding sale slider */}
-      {homeSettings.show_bestsellers_hero ? (
-        <SaleHeroSlider products={bestsellerProducts} mode="bestseller" />
-      ) : (
-        <SaleHeroSlider products={saleProducts} mode="sale" />
+    <div className="bg-[#FAFAF8]">
+      {/* Announcement bar — above everything */}
+      <AnnouncementBar messages={announcementMessages} />
+
+      {/* Split hero — product photo + copy */}
+      <SplitHero />
+
+      {/* Trust bar — 4 signals */}
+      <TrustBar variant="light" />
+
+      {/* Category navigation */}
+      {categories.length > 0 && (
+        <section className="bg-white py-16 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-3">Shop By Category</p>
+              <h2 className="text-3xl md:text-4xl font-serif text-[#1A1A1A]">Explore Collections</h2>
+            </div>
+            <HomeCategoryGrid categories={categories} />
+          </div>
+        </section>
       )}
 
-      {/* Category navigation grid */}
-      <HomeCategoryGrid categories={categories} />
+      {/* Featured products — light background */}
+      <section className="bg-[#FAFAF8] py-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-[11px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-3">Bestsellers</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-[#1A1A1A]">Featured Products</h2>
+          </div>
+          <FeaturedProductsGrid products={products.slice(0, 4)} />
+        </div>
+      </section>
 
-      {/* ── Bestsellers Auto-Scrolling Slider ── */}
-      {showBestsellers && bestsellerProducts.length > 0 && (
-        <BestSellersSlider
-          products={bestsellerProducts}
-          heading={bestsellerHeading}
-          subheading={bestsellerSubheading}
-        />
+      {/* Social proof — reviews + press */}
+      <SocialProof />
+
+      {/* Second product row */}
+      {products.length > 4 && (
+        <section className="bg-white py-16 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-3">New Arrivals</p>
+              <h2 className="text-3xl md:text-4xl font-serif text-[#1A1A1A]">Just Landed</h2>
+            </div>
+            <FeaturedProductsGrid products={products.slice(4, 8)} />
+          </div>
+        </section>
       )}
 
-      {/* Featured products strip (first 4) */}
-      <FeaturedProductsGrid products={products.slice(0, 4)} />
-
-      {/* Bento grid (all fetched products, returns null if empty) */}
-      <BentoFeaturedGrid products={products} />
-
-      {/* Collection showcase (returns null if empty) */}
-      <CollectionShowcase collections={collections} />
+      {/* Editorial banner */}
+      <section className="bg-[#1A1A1A] py-20 px-6 text-center">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <p className="text-[11px] uppercase tracking-[0.5em] text-[#D4AF37] font-bold">The Obsidian Standard</p>
+          <h2 className="text-4xl md:text-5xl font-serif text-white leading-tight italic">
+            "Beauty is the illumination of your soul"
+          </h2>
+          <p className="text-[#FFFFFF]/60 leading-relaxed">
+            Every DINA COSMETIC formulation is crafted for those who see beauty as a ritual, not a routine.
+          </p>
+          <a
+            href="/about"
+            className="inline-flex items-center gap-3 border border-[#D4AF37] text-[#D4AF37] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#D4AF37] hover:text-black transition-all duration-300"
+          >
+            Our Story
+          </a>
+        </div>
+      </section>
 
       {/* Newsletter */}
       <NewsletterSection />
