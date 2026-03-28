@@ -50,13 +50,15 @@ export async function POST(req: Request) {
             // Get standard rate from brackets
             const ship = calculateShippingRate(totalWeightLb, subtotal, cfg, 'standard');
             standard_rate = ship.cost;
+            const exprShip = calculateShippingRate(totalWeightLb, subtotal, cfg, 'express');
+            express_rate = exprShip.cost;
         }
 
         const settings = {
             standard_rate: standard_rate.toString(),
             express_rate: express_rate.toString(),
-            standard_label: cfg.standard_label ?? "Standard Shipping",
-            express_label: cfg.express_label ?? "Express Shipping",
+            standard_label: cfg.standard_label ?? "USPS Ground Advantage (3-5 Days)",
+            express_label: cfg.express_label ?? "USPS Priority Mail (1-3 Days)",
             free_shipping_threshold: cfg.free_shipping_threshold ?? "100",
         };
 

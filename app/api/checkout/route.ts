@@ -96,20 +96,30 @@ export async function POST(req: Request) {
         const stdRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "standard");
         const expRate = calculateShippingRate(totalWeightLb, subtotal, cfg, "express");
 
-        // International flat rate (recovers cost for heavy cross-border shipments)
-        const intlBrackets = cfg.intl_weight_brackets || [
-            {"max_lb": 1, "rate": 19.99},
-            {"max_lb": 3, "rate": 29.99},
-            {"max_lb": 5, "rate": 39.99},
-            {"max_lb": 10, "rate": 59.99},
-            {"max_lb": 999, "rate": 99.99}
-        ];
-        
+        // International Standard Evaluation
+        let intlBrackets = cfg.intl_weight_brackets;
+        if (!intlBrackets || intlBrackets.length === 0) {
+            intlBrackets = [
+                { max_lb: 1, rate: 19.99 },
+                { max_lb: 3, rate: 29.99 },
+                { max_lb: 5, rate: 39.99 },
+                { max_lb: 999, rate: 59.99 }
+            ];
+        }
         const matchingIntlBracket = intlBrackets.find((b: any) => totalWeightLb <= b.max_lb) || intlBrackets[intlBrackets.length - 1];
         const intlStandardCost = matchingIntlBracket ? parseFloat(matchingIntlBracket.rate) : 19.99;
         
-        // International Express is evaluated dynamically as standard bracket + $30 premium
-        const intlExpressCost = intlStandardCost + 30.00;
+        // International Express Evaluation
+        let intlExpressBrackets = cfg.intl_express_weight_brackets;
+        if (!intlExpressBrackets || intlExpressBrackets.length === 0) {
+            intlExpressBrackets = [
+                { max_lb: 1, rate: 49.99 },
+                { max_lb: 3, rate: 69.99 },
+                { max_lb: 999, rate: 89.99 }
+            ]
+        }
+        const matchingIntlExpressBracket = intlExpressBrackets.find((b: any) => totalWeightLb <= b.max_lb) || intlExpressBrackets[intlExpressBrackets.length - 1];
+        const intlExpressCost = matchingIntlExpressBracket ? parseFloat(matchingIntlExpressBracket.rate) : 49.99;
 
         const shippingOptions: Stripe.Checkout.SessionCreateParams.ShippingOption[] = [
             // Option 1: US Domestic Standard (or FREE)
@@ -120,10 +130,10 @@ export async function POST(req: Request) {
                         amount: isFree ? 0 : Math.round(stdRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: isFree ? "Free Standard Shipping 🎁" : "Standard Shipping (US)",
+                    display_name: isFree ? "Free Standard Shipping 🎁" : `${stdRate.name} (US)`,
                     delivery_estimate: {
-                        minimum: { unit: "business_day", value: 5 },
-                        maximum: { unit: "business_day", value: 10 },
+                        minimum: { unit: "business_day", value: stdRate.minDays },
+                        maximum: { unit: "business_day", value: stdRate.maxDays },
                     },
                 },
             },
@@ -135,10 +145,10 @@ export async function POST(req: Request) {
                         amount: Math.round(expRate.cost * 100),
                         currency: "usd",
                     },
-                    display_name: "Express Shipping (US) ⚡",
+                    display_name: `${expRate.name} (US)`,
                     delivery_estimate: {
-                        minimum: { unit: "business_day", value: 2 },
-                        maximum: { unit: "business_day", value: 4 },
+                        minimum: { unit: "business_day", value: expRate.minDays },
+                        maximum: { unit: "business_day", value: expRate.maxDays },
                     },
                 },
             },
@@ -150,14 +160,14 @@ export async function POST(req: Request) {
                         amount: Math.round(intlStandardCost * 100),
                         currency: "usd",
                     },
-                    display_name: "International Standard Shipping 🌍",
+                    display_name: "USPS Priority Mail International 🌍",
                     delivery_estimate: {
-                        minimum: { unit: "business_day", value: 10 },
-                        maximum: { unit: "business_day", value: 21 },
+                        minimum: { unit: "business_day", value: 6 },
+                        maximum: { unit: "business_day", value: 10 },
                     },
                 },
             },
-            // Option 4: International Express (DHL / Priority)
+            // Option 4: International Express
             {
                 shipping_rate_data: {
                     type: "fixed_amount",
@@ -165,10 +175,10 @@ export async function POST(req: Request) {
                         amount: Math.round(intlExpressCost * 100),
                         currency: "usd",
                     },
-                    display_name: "International Express (DHL) 🚀",
+                    display_name: "USPS Priority Mail Express International 🚀",
                     delivery_estimate: {
                         minimum: { unit: "business_day", value: 3 },
-                        maximum: { unit: "business_day", value: 7 },
+                        maximum: { unit: "business_day", value: 5 },
                     },
                 },
             },

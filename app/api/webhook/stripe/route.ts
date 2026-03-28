@@ -32,21 +32,30 @@ export async function POST(req: Request) {
   // ✅ STRONG idempotency (race-condition safe)
   const { data: existingEvent } = await supabase
     .from("stripe_events")
-    .select("id")
+    .select("id, processed")
     .eq("id", event.id)
     .maybeSingle();
 
-  if (existingEvent) {
+  if (existingEvent && existingEvent.processed) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object as Stripe.Checkout.Session;
 
       // ✅ Verify payment actually succeeded
       if (session.payment_status !== "paid") {
-        throw new Error("Payment not completed");
+        console.warn(`[Stripe Webhook] Order ${session.metadata?.order_id} is unpaid. Waiting for async_payment_succeeded.`);
+        // Don't throw error, just log it and return 200 so Stripe doesn't retry this specific event. 
+        // We will catch async_payment_succeeded later.
+        await supabase.from("stripe_events").upsert({
+          id: event.id,
+          type: event.type,
+          processed: true,
+          error: "Payment not completed yet",
+        }, { onConflict: 'id' });
+        return NextResponse.json({ received: true, status: "pending_payment" });
       }
 
       const orderId = session.metadata?.order_id;
@@ -55,7 +64,7 @@ export async function POST(req: Request) {
       // ✅ FIXED SHIPPING — check both SDK formats
       const sessionAny = session as any;
       const shipping =
-        sessionAny.shipping_details ?? sessionAny.collected_information?.shipping_details ?? null;
+        sessionAny.shipping_details ?? sessionAny.collected_information?.shipping_details ?? sessionAny.customer_details?.address ?? null;
 
       const customer = session.customer_details ?? null;
 
@@ -91,7 +100,6 @@ export async function POST(req: Request) {
       };
 
       const chosenShipping = session.shipping_cost ?? null;
-      // shippingOptionName unused for now (reserved for carrier routing)
 
       // ✅ Atomic order update
       const { error: updateError } = await supabase
@@ -100,7 +108,7 @@ export async function POST(req: Request) {
           status: "paid",
           fulfillment_status: "unfulfilled",
           customer_email: customer?.email || "",
-          customer_name: shippingAddress.name,
+          customer_name: shippingAddress.name || customer?.name || "Customer",
           customer_phone: customer?.phone || null,
           shipping_address: shippingAddress,
           billing_address: billingAddress,
@@ -115,35 +123,40 @@ export async function POST(req: Request) {
 
       if (updateError) throw updateError;
 
-      // ✅ Insert items (safe)
+      // ✅ Insert items only if order is paid correctly
       if (cartItems.length > 0) {
-        const { error: itemsError } = await supabase
-          .from("order_items")
-          .insert(
-            cartItems.map((item) => ({
-              order_id: orderId,
-              product_id: item.product_id,
-              variant_id: item.variant_id || null,
-              quantity: item.quantity,
-              price: item.price,
-              fulfilled_quantity: 0,
-            }))
-          );
+        // First check if items already exist (if async_payment_succeeded fired after session.completed)
+        const { data: existingItems } = await supabase.from("order_items").select("id").eq("order_id", orderId);
+        if (!existingItems || existingItems.length === 0) {
+            const { error: itemsError } = await supabase
+            .from("order_items")
+            .insert(
+                cartItems.map((item) => ({
+                order_id: orderId,
+                product_id: item.product_id,
+                variant_id: item.variant_id || null,
+                quantity: item.quantity,
+                price: item.price,
+                fulfilled_quantity: 0,
+                }))
+            );
 
-        if (itemsError) {
-          console.error("Items insert failed", itemsError);
+            if (itemsError) {
+            console.error("Items insert failed", itemsError);
+            }
         }
       }
 
       // ✅ Log AFTER success
-      await supabase.from("stripe_events").insert({
+      await supabase.from("stripe_events").upsert({
         id: event.id,
         type: event.type,
         processed: true,
-      });
+      }, { onConflict: 'id' });
 
       // ✅ Async email (non-blocking)
       if (customer?.email) {
+        // Send order confirmation only down this path securely
         import("@/lib/utils/email")
           .then(({ sendOrderConfirmationEmail }) =>
             sendOrderConfirmationEmail({
@@ -158,24 +171,24 @@ export async function POST(req: Request) {
       }
     } else {
       // log other events
-      await supabase.from("stripe_events").insert({
+      await supabase.from("stripe_events").upsert({
         id: event.id,
         type: event.type,
         processed: true,
-      });
+      }, { onConflict: 'id' });
     }
 
     return NextResponse.json({ received: true });
   } catch (error: any) {
     console.error("Webhook failed:", error);
 
-    // ❗ log failed attempt (important for retries)
-    await supabase.from("stripe_events").insert({
+    // ❗ log failed attempt (important for retries) using UPSERT
+    await supabase.from("stripe_events").upsert({
       id: event.id,
       type: event.type,
       processed: false,
       error: error.message,
-    });
+    }, { onConflict: 'id' });
 
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

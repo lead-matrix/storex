@@ -123,22 +123,28 @@ export default async function AdminSettings() {
                     <section id="section-shipping" className="scroll-mt-32">
                         <SettingsForm action={updateShippingSettings} title="Shipping Rate Configuration" iconName="truck">
                             <p className="text-[11px] text-luxury-subtext leading-relaxed">
-                                Configure the flat-rate shipping prices shown to customers at checkout. Stripe collects the customer address — Shippo is only called by admin at fulfillment.
+                                Configure the weight-based shipping prices shown to customers at checkout. Brackets are evaluated from lowest weight to highest. Set `max_lb` to 999 for the catch-all bracket.
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 gap-8">
                                 <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
                                     <div className="flex items-center gap-3">
                                         <Package className="w-4 h-4 text-white" />
-                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Standard</p>
+                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">US Domestic Standard</p>
                                     </div>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-subtext text-sm">$</span>
-                                        <input name="standard_rate" type="number" step="0.01" defaultValue={shipping.standard_rate ?? '7.99'}
-                                            className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                    </div>
-                                    <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'Standard Shipping (5-10 Business Days)'}
+                                    <input name="standard_label" type="text" defaultValue={shipping.standard_label ?? 'USPS Ground Advantage (3-5 Days)'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON) Default: [ {`{"max_lb": 0.5, "rate": 4.99}`} ... ]</label>
+                                        <textarea name="weight_brackets" defaultValue={JSON.stringify(shipping.weight_brackets || [
+                                            { max_lb: 0.5, rate: 4.99 },
+                                            { max_lb: 1, rate: 6.99 },
+                                            { max_lb: 2, rate: 8.99 },
+                                            { max_lb: 5, rate: 12.99 },
+                                            { max_lb: 999, rate: 15.99 }
+                                        ], null, 2)}
+                                        rows={5} className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-emerald-400 focus:border-gold/50 outline-none transition-all" />
+                                    </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Free Shipping Threshold</label>
                                         <input name="free_shipping_threshold" type="number" step="0.01" defaultValue={shipping.free_shipping_threshold ?? '100'}
@@ -149,22 +155,60 @@ export default async function AdminSettings() {
                                 <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
                                     <div className="flex items-center gap-3">
                                         <Truck className="w-4 h-4 text-gold" />
-                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Express</p>
+                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">US Domestic Express</p>
                                     </div>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-subtext text-sm">$</span>
-                                        <input name="express_rate" type="number" step="0.01" defaultValue={shipping.express_rate ?? '19.99'}
-                                            className="w-full bg-[#0B0B0D] border border-white/10 rounded-md pl-8 pr-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                    </div>
-                                    <input name="express_label" type="text" defaultValue={shipping.express_label ?? 'Express Shipping'}
+                                    <input name="express_label" type="text" defaultValue={shipping.express_label ?? 'USPS Priority Mail (1-3 Days)'}
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Weight Brackets (JSON)</label>
+                                        <textarea name="express_weight_brackets" defaultValue={JSON.stringify(shipping.express_weight_brackets || [
+                                            { max_lb: 1, rate: 9.99 },
+                                            { max_lb: 3, rate: 14.99 },
+                                            { max_lb: 999, rate: 19.99 }
+                                        ], null, 2)}
+                                        rows={5} className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-emerald-400 focus:border-gold/50 outline-none transition-all" />
+                                    </div>
                                 </div>
+
+                                <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Globe className="w-4 h-4 text-white" />
+                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">International Standard</p>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">International Std Brackets (JSON)</label>
+                                        <textarea name="intl_weight_brackets" defaultValue={JSON.stringify(shipping.intl_weight_brackets || [
+                                            { max_lb: 1, rate: 19.99 },
+                                            { max_lb: 3, rate: 29.99 },
+                                            { max_lb: 5, rate: 39.99 },
+                                            { max_lb: 999, rate: 59.99 }
+                                        ], null, 2)}
+                                        rows={5} className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-emerald-400 focus:border-gold/50 outline-none transition-all" />
+                                    </div>
+                                </div>
+
+                                <div className="p-6 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Globe className="w-4 h-4 text-gold" />
+                                        <p className="text-[11px] uppercase tracking-luxury font-bold text-white">International Express</p>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">International Express Brackets (JSON)</label>
+                                        <textarea name="intl_express_weight_brackets" defaultValue={JSON.stringify(shipping.intl_express_weight_brackets || [
+                                            { max_lb: 1, rate: 49.99 },
+                                            { max_lb: 3, rate: 69.99 },
+                                            { max_lb: 999, rate: 89.99 }
+                                        ], null, 2)}
+                                        rows={5} className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-emerald-400 focus:border-gold/50 outline-none transition-all" />
+                                    </div>
+                                </div>
+
                             </div>
 
-                            <div className="flex items-start gap-3 p-5 bg-emerald-950/20 border border-emerald-500/20 rounded-xl">
+                            <div className="flex items-start gap-3 p-5 bg-emerald-950/20 border border-emerald-500/20 rounded-xl mt-6">
                                 <DollarSign className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                                 <p className="text-[11px] text-emerald-400/80 leading-relaxed">
-                                    Live Shippo rates are active. The flat rates above are used as fallback if carrier services are unreachable.
+                                    Shipping rates are now fully dynamic and calculated live based on cart weight + location when requested at checkout. Admin can adjust these JSON boundaries anytime.
                                 </p>
                             </div>
                         </SettingsForm>

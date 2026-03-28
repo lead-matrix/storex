@@ -609,6 +609,16 @@ export async function updateShippingSettings(formData: FormData) {
     const standard_label = (formData.get('standard_label') as string) || 'Standard Shipping (5-10 Business Days)';
     const express_label = (formData.get('express_label') as string) || 'Express Shipping (2-4 Business Days)';
 
+    let weight_brackets = [];
+    let express_weight_brackets = [];
+    let intl_weight_brackets = [];
+    let intl_express_weight_brackets = [];
+
+    try { weight_brackets = JSON.parse(formData.get('weight_brackets') as string || '[]'); } catch { }
+    try { express_weight_brackets = JSON.parse(formData.get('express_weight_brackets') as string || '[]'); } catch { }
+    try { intl_weight_brackets = JSON.parse(formData.get('intl_weight_brackets') as string || '[]'); } catch { }
+    try { intl_express_weight_brackets = JSON.parse(formData.get('intl_express_weight_brackets') as string || '[]'); } catch { }
+
     const { error } = await supabase
         .from('site_settings')
         .upsert({
@@ -619,6 +629,10 @@ export async function updateShippingSettings(formData: FormData) {
                 free_shipping_threshold,
                 standard_label,
                 express_label,
+                weight_brackets,
+                express_weight_brackets,
+                intl_weight_brackets,
+                intl_express_weight_brackets
             },
         }, { onConflict: 'setting_key' });
 
