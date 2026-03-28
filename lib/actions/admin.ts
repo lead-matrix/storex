@@ -494,19 +494,39 @@ export async function updateOrderStatus(orderId: string, status: string) {
 export async function updateStoreSettings(formData: FormData) {
     const supabase = await ensureAdmin();
 
-    const name = formData.get('name') as string;
-    const tagline = formData.get('tagline') as string;
-    const currency = formData.get('currency') as string;
-    const logo_url = formData.get('logo_url') as string;
-    const storeEnabled = formData.get('storeEnabled') === 'on' || formData.get('storeEnabled') === 'true';
+    const name = formData.get('name') as string | null;
+    const tagline = formData.get('tagline') as string | null;
+    const currency = formData.get('currency') as string | null;
+    const logo_url = formData.get('logo_url') as string | null;
+    
+    // Check if storeEnabled was even in the form before using its value
+    const hasStoreEnabled = formData.has('storeEnabled');
+    const storeEnabledRaw = formData.get('storeEnabled');
+    const storeEnabled = storeEnabledRaw === 'on' || storeEnabledRaw === 'true';
 
-    const warehouseJson = formData.get('warehouse_info') as string;
+    const warehouseJson = formData.get('warehouse_info') as string | null;
 
-    const { error: infoError } = await supabase
-        .from('site_settings')
-        .upsert({ setting_key: 'store_info', setting_value: { name, tagline, currency, logo_url } }, { onConflict: 'setting_key' });
+    // Handle store_info (merge if only some fields are present)
+    if (name !== null || tagline !== null || currency !== null || logo_url !== null) {
+        const { data: existingInfo } = await supabase
+            .from('site_settings')
+            .select('setting_value')
+            .eq('setting_key', 'store_info')
+            .maybeSingle();
 
-    if (infoError) throw infoError;
+        const newInfo = {
+            ...(existingInfo?.setting_value || {}),
+            ...(name !== null ? { name } : {}),
+            ...(tagline !== null ? { tagline } : {}),
+            ...(currency !== null ? { currency } : {}),
+            ...(logo_url !== null ? { logo_url } : {}),
+        };
+
+        const { error } = await supabase
+            .from('site_settings')
+            .upsert({ setting_key: 'store_info', setting_value: newInfo }, { onConflict: 'setting_key' });
+        if (error) throw error;
+    }
 
     if (warehouseJson) {
         const { error: whError } = await supabase
@@ -515,14 +535,14 @@ export async function updateStoreSettings(formData: FormData) {
         if (whError) throw whError;
     }
 
-    const { error: enabledError } = await supabase
-        .from('site_settings')
-        .upsert({ setting_key: 'store_enabled', setting_value: storeEnabled }, { onConflict: 'setting_key' });
-
-    if (enabledError) throw enabledError;
+    if (hasStoreEnabled) {
+        const { error: enabledError } = await supabase
+            .from('site_settings')
+            .upsert({ setting_key: 'store_enabled', setting_value: storeEnabled }, { onConflict: 'setting_key' });
+        if (enabledError) throw enabledError;
+    }
 
     revalidatePath('/admin/settings');
-    revalidatePath('/collections');
     revalidatePath('/', 'layout');
     return { success: true };
 }
@@ -649,23 +669,40 @@ export async function updateShippingSettings(formData: FormData) {
 export async function updateHomeSections(formData: FormData) {
     const supabase = await ensureAdmin();
 
-    const show_bestsellers = formData.get('show_bestsellers') === 'on';
-    const bestseller_heading = (formData.get('bestseller_heading') as string)?.trim() || 'Obsidian Bestsellers';
-    const bestseller_subheading = (formData.get('bestseller_subheading') as string)?.trim() || 'Most-loved by our community';
-    const show_featured = formData.get('show_featured') !== 'off';
-    const show_collections = formData.get('show_collections') !== 'off';
+    // Fetch existing to avoid wiping out fields not present in this form/v4 schema
+    const { data: existing } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('setting_key', 'home_sections')
+        .maybeSingle();
+
+    const newValue = { ...(existing?.setting_value || {}) };
+
+    // Only update keys that are actually in the form data
+    if (formData.has('show_bestsellers')) {
+        newValue.show_bestsellers = formData.get('show_bestsellers') === 'on' || formData.get('show_bestsellers') === 'true';
+    }
+    if (formData.has('show_bestsellers_hero')) {
+        newValue.show_bestsellers_hero = formData.get('show_bestsellers_hero') === 'on' || formData.get('show_bestsellers_hero') === 'true';
+    }
+    if (formData.has('bestseller_heading')) {
+        newValue.bestseller_heading = (formData.get('bestseller_heading') as string)?.trim();
+    }
+    if (formData.has('bestseller_subheading')) {
+        newValue.bestseller_subheading = (formData.get('bestseller_subheading') as string)?.trim();
+    }
+    if (formData.has('show_featured')) {
+        newValue.show_featured = formData.get('show_featured') === 'on' || formData.get('show_featured') === 'true';
+    }
+    if (formData.has('show_collections')) {
+        newValue.show_collections = formData.get('show_collections') === 'on' || formData.get('show_collections') === 'true';
+    }
 
     const { error } = await supabase
         .from('site_settings')
         .upsert({
             setting_key: 'home_sections',
-            setting_value: {
-                show_bestsellers,
-                bestseller_heading,
-                bestseller_subheading,
-                show_featured,
-                show_collections,
-            },
+            setting_value: newValue,
         }, { onConflict: 'setting_key' });
 
     if (error) throw error;

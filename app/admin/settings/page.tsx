@@ -69,7 +69,7 @@ export default async function AdminSettings() {
                                         Maintenance Mode Kill Switch
                                     </p>
                                 </div>
-                                <div className="relative inline-flex items-center cursor-pointer">
+                                <label className="relative inline-flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
                                         name="storeEnabled"
@@ -77,7 +77,7 @@ export default async function AdminSettings() {
                                         className="sr-only peer"
                                     />
                                     <div className="w-14 h-7 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 shadow-inner group transition-all"></div>
-                                </div>
+                                </label>
                             </div>
                         </SettingsForm>
                     </section>
@@ -96,10 +96,10 @@ export default async function AdminSettings() {
                                             <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Show Bestsellers in Hero</p>
                                             <p className="text-[9px] text-luxury-subtext leading-relaxed">Replace the top sale slider with bestsellers.</p>
                                         </div>
-                                        <div className="relative inline-flex items-center cursor-pointer">
+                                        <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" name="show_bestsellers_hero" defaultChecked={homeConfig.show_bestsellers_hero === true} className="sr-only peer" />
                                             <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
-                                        </div>
+                                        </label>
                                     </div>
                                     
                                     <div className="flex items-center justify-between border-t border-white/5 pt-6">
@@ -107,10 +107,10 @@ export default async function AdminSettings() {
                                             <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Obsidian Bestsellers</p>
                                             <p className="text-[9px] text-luxury-subtext leading-relaxed">Show the horizontal scrolling carousel of best-selling items.</p>
                                         </div>
-                                        <div className="relative inline-flex items-center cursor-pointer">
+                                        <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" name="show_bestsellers" defaultChecked={homeConfig.show_bestsellers !== false} className="sr-only peer" />
                                             <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
-                                        </div>
+                                        </label>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
