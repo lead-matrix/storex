@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react'
-import AIProductWriter from './AIProductWriter'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
@@ -84,7 +83,6 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
     const generateSKU = () => 'DC-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase()
     
     const [skuValue, setSkuValue] = useState(product?.sku || generateSKU())
-    const [titleValue, setTitleValue] = useState(product?.title || '')
     const [slugValue, setSlugValue] = useState(product?.slug ?? '')
     const [slugManual, setSlugManual] = useState(!!product?.slug)
 
@@ -208,37 +206,7 @@ export function ProductForm({ product, variants: initialVariants = [] }: Product
                             required
                             className="bg-[#121214] border-white/10 rounded-md focus-visible:ring-gold/50 focus-visible:ring-offset-0 text-white placeholder:text-luxury-subtext/50 h-12"
                             onChange={e => {
-                                setTitleValue(e.target.value)
                                 if (!slugManual) setSlugValue(generateSlug(e.target.value))
-                            }}
-                        />
-                        <AIProductWriter
-                            productTitle={titleValue}
-                            onApplyDescription={(desc) => {
-                                const textarea = document.querySelector('textarea[name="description"]') as HTMLTextAreaElement
-                                if (textarea) {
-                                  textarea.value = desc
-                                  setDescCount(desc.length)
-                                }
-                            }}
-                            onApplyPrice={(price) => {
-                                const input = document.querySelector('input[name="base_price"]') as HTMLInputElement
-                                if (input) input.value = price.toString()
-                            }}
-                            onApplyVariants={(vList) => {
-                                setVariants(prev => [...prev, ...vList.map((v: any) => ({
-                                  title: v.name,
-                                  variant_type: 'shade',
-                                  price: v.suggestedPrice || 0,
-                                  compare_price: null,
-                                  stock: 10,
-                                  color_code: v.colorCode,
-                                  image_url: '',
-                                  weight: 0.5,
-                                  _isNew: true,
-                                  sku: generateSKU(),
-                                }))])
-                                setShowVariants(true)
                             }}
                         />
                     </div>

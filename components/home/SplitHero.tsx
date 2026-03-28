@@ -45,8 +45,9 @@ export default function SplitHero() {
       .eq("content_key", "hero_slides")
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.content_data?.slides?.length > 0) {
-          setSlides(data.content_data.slides);
+        const customSlides = (data as any)?.content_data?.slides;
+        if (Array.isArray(customSlides) && customSlides.length > 0) {
+          setSlides(customSlides);
         }
       });
   }, []);
