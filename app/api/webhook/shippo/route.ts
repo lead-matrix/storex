@@ -1,169 +1,146 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/admin";
-import {
-  sendShippingNotificationEmail,
-  sendDeliveryNotificationEmail,
-} from "@/lib/utils/email";
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/admin';
+import { verifyShippoSignature } from '@/lib/utils/shippo';
+import { 
+    sendShippingNotificationEmail, 
+    sendOutForDeliveryNotificationEmail, 
+    sendDeliveryNotificationEmail 
+} from '@/lib/utils/email';
 
-import type { OrderItem, OrderRecord } from "@/types/order";
-
-// Incoming Shippo webhook body format
-interface ShippoTrackingStatus {
-  status: string;
-  status_details: string;
-  status_date: string;
-}
-
-interface ShippoWebhookBody {
-  event: string;
-  data: {
-    tracking_number: string;
-    tracking_status: ShippoTrackingStatus;
-    carrier: string;
-  };
-}
-
-// Main webhook handler
 export async function POST(req: NextRequest) {
-  try {
-    const body = (await req.json()) as ShippoWebhookBody;
+    const bodyText = await req.text();
+    const signature = req.headers.get('x-shippo-signature') || '';
 
-    // Only respond to track_updated events
-    if (body.event !== "track_updated") {
-      return NextResponse.json({ ignored: true });
+    const searchParams = req.nextUrl.searchParams;
+    const urlToken = searchParams.get('token');
+    const secret = process.env.SHIPPO_WEBHOOK_SECRET;
+
+    // 1. Verify via URL Token (Method B) OR HMAC Signature (Method A)
+    const isValid = (urlToken && urlToken === secret) || (await verifyShippoSignature(bodyText, signature));
+    
+    if (!isValid) {
+        console.error('[Shippo Webhook] Unauthorized access attempt');
+        return NextResponse.json({ error: 'Invalid security token' }, { status: 401 });
     }
 
-    const { tracking_number, tracking_status } = body.data || {};
+    const payload = JSON.parse(bodyText);
+    const event = payload.event;
+    const data = payload.data;
 
-    if (!tracking_number || !tracking_status) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    if (event !== 'track_updated') {
+        return NextResponse.json({ message: 'Event ignored' });
+    }
+
+    const trackingNumber = data.tracking_number;
+    const carrier = data.carrier;
+    const trackingStatus = data.tracking_status; // Latest status object
+
+    if (!trackingNumber || !trackingStatus) {
+        return NextResponse.json({ error: 'Missing tracking data' }, { status: 400 });
     }
 
     const supabase = await createClient();
 
-    // Idempotency: skip duplicates
-    const eventId = `${tracking_number}_${tracking_status.status}_${tracking_status.status_date}`;
+    // 2. Find Order
+    const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('tracking_number', trackingNumber)
+        .maybeSingle();
 
-    const { data: existing } = await supabase
-      .from("shippo_events")
-      .select("id")
-      .eq("id", eventId)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json({ duplicate: true });
+    if (orderError || !order) {
+        console.warn(`[Shippo Webhook] Order not found for tracking: ${trackingNumber}`);
+        return NextResponse.json({ message: 'Order not found' });
     }
 
-    // Map Shippo status → internal
-    let newStatus = "shipped";
+    // 3. Update Order Status
+    let nextStatus: string = order.status;
+    let fulfillmentStatus: string = order.fulfillment_status;
 
-    switch (tracking_status.status) {
-      case "DELIVERED":
-        newStatus = "delivered";
-        break;
-      case "RETURNED":
-        newStatus = "returned";
-        break;
-      case "FAILURE":
-        newStatus = "failed";
-        break;
-      case "OUT_FOR_DELIVERY":
-        newStatus = "out_for_delivery";
-        break;
-      case "TRANSIT":
-      case "PRE_TRANSIT":
-        newStatus = "shipped";
-        break;
+    // Map Shippo statuses to our Order statuses
+    // SHippo statuses: UNKNOWN, PRE_TRANSIT, TRANSIT, OUT_FOR_DELIVERY, DELIVERED, RETURNED, FAILURE
+    const shippoStatus = trackingStatus.status;
+
+    if (shippoStatus === 'DELIVERED') {
+        nextStatus = 'delivered';
+        fulfillmentStatus = 'delivered';
+    } else if (shippoStatus === 'OUT_FOR_DELIVERY') {
+        nextStatus = 'out_for_delivery';
+        fulfillmentStatus = 'out_for_delivery';
+    } else if (shippoStatus === 'TRANSIT') {
+        // Only update to 'shipped' if it wasn't already 'out_for_delivery' or 'delivered'
+        if (order.status !== 'delivered' && order.status !== 'out_for_delivery') {
+            nextStatus = 'shipped';
+            fulfillmentStatus = 'shipped';
+        }
     }
 
-    // Fetch order, including total_amount and items
-    const { data: orderResponse, error: findError } = await supabase
-      .from("orders")
-      .select("id, customer_email, billing_address, fulfillment_status, total_amount, items")
-      .eq("tracking_number", tracking_number)
-      .maybeSingle();
-
-    const order = orderResponse as OrderRecord | null;
-
-    if (findError || !order) {
-      console.error("Order not found:", tracking_number);
-      return NextResponse.json({ notFound: true });
-    }
-
-    // Skip if no status change
-    if (order.fulfillment_status === newStatus) {
-      await supabase.from("shippo_events").insert({
-        id: eventId,
-        status: "skipped_duplicate_status",
-      });
-
-      return NextResponse.json({ skipped: true });
-    }
-
-    // Update status & last tracking update
     const { error: updateError } = await supabase
-      .from("orders")
-      .update({
-        fulfillment_status: newStatus,
-        last_tracking_update: tracking_status.status_date,
-      })
-      .eq("id", order.id);
+        .from('orders')
+        .update({
+            status: nextStatus as any,
+            fulfillment_status: fulfillmentStatus as any,
+            shippo_tracking_status: shippoStatus,
+            carrier: carrier,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', order.id);
 
-    if (updateError) throw updateError;
-
-    const customerName = order.billing_address?.name || "Customer";
-
-    // Trigger controlled emails
-    if (newStatus === "shipped") {
-      const totalAmount =
-        order.total_amount ??
-        (order.items as OrderItem[])?.reduce((sum: number, item: OrderItem) => {
-          return sum + item.price * item.quantity;
-        }, 0) ??
-        0;
-
-      await sendShippingNotificationEmail({
-        customerEmail: order.customer_email,
-        customerName,
-        orderId: order.id,
-        totalAmount,
-      });
+    if (updateError) {
+        console.error('[Shippo Webhook] Update Order Error:', updateError);
     }
 
-    if (newStatus === "delivered") {
-      const totalAmount =
-        order.total_amount ??
-        (order.items as OrderItem[])?.reduce((sum: number, item: OrderItem) => {
-          return sum + item.price * item.quantity;
-        }, 0) ??
-        0;
-
-      await sendDeliveryNotificationEmail({
-        customerEmail: order.customer_email,
-        customerName,
-        orderId: order.id,
-        totalAmount,
-      });
+    // 4. Record Tracking History
+    // Shippo tracking status objects have an 'object_id' which is unique for that specific update
+    const eventId = trackingStatus.object_id;
+    
+    if (eventId) {
+        await supabase
+            .from('order_tracking_history')
+            .upsert({
+                order_id: order.id,
+                status: shippoStatus,
+                details: trackingStatus.status_details,
+                location: trackingStatus.location 
+                    ? `${trackingStatus.location.city || ''}, ${trackingStatus.location.state || ''} ${trackingStatus.location.country || ''}`.trim().replace(/^,/, '').trim()
+                    : null,
+                shippo_event_id: eventId,
+                object_created: trackingStatus.object_created,
+            }, { onConflict: 'shippo_event_id' });
     }
 
-    // Log event
-    await supabase.from("shippo_events").insert({
-      id: eventId,
-      order_id: order.id,
-      status: newStatus,
-    });
+    // 5. Trigger Emails on State Changes
+    if (nextStatus !== order.status) {
+        const customerName = order.shipping_address?.name || 'Valued Customer';
+        const customerEmail = order.customer_email || order.shipping_address?.email;
 
-    return NextResponse.json({
-      success: true,
-      orderId: order.id,
-      status: newStatus,
-    });
-  } catch (error: any) {
-    console.error("Shippo webhook failed:", error);
+        if (customerEmail) {
+            if (nextStatus === 'shipped' && order.status === 'paid') {
+                await sendShippingNotificationEmail({
+                    customerEmail,
+                    customerName,
+                    trackingNumber,
+                    orderId: order.id,
+                    totalAmount: order.amount_total
+                });
+            } else if (nextStatus === 'out_for_delivery') {
+                await sendOutForDeliveryNotificationEmail({
+                    customerEmail,
+                    customerName,
+                    trackingNumber,
+                    orderId: order.id,
+                    totalAmount: order.amount_total
+                });
+            } else if (nextStatus === 'delivered') {
+                await sendDeliveryNotificationEmail({
+                    customerEmail,
+                    customerName,
+                    orderId: order.id,
+                    totalAmount: order.amount_total
+                });
+            }
+        }
+    }
 
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
-  }
+    return NextResponse.json({ success: true });
 }

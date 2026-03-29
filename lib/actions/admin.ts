@@ -407,7 +407,10 @@ export async function fulfillOrder(orderId: string) {
         .from('orders')
         .update({
             status: 'shipped',
+            fulfillment_status: 'shipped',
             tracking_number: shipping.tracking_number,
+            carrier: shipping.carrier || 'usps', // Ensure carrier is saved for webhook matching
+            updated_at: new Date().toISOString()
         })
         .eq('id', orderId);
 

@@ -163,15 +163,13 @@ export function AccountDashboard({ user, profile, orders = [] }: AccountDashboar
                                                     <div className="flex flex-col items-end gap-2">
                                                         <span className="text-sm tracking-widest">${Number(order.amount_total).toFixed(2)}</span>
                                                         {order.tracking_number && (
-                                                            <a
-                                                                href={`https://goshippo.com/tracking/${order.tracking_number}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <Link
+                                                                href={`/track/${order.tracking_number}`}
                                                                 className="text-[9px] text-gold/60 hover:text-gold underline decoration-gold/20 flex items-center gap-1 transition-colors uppercase tracking-widest"
                                                             >
                                                                 Track Manifest
                                                                 <ChevronRight size={10} />
-                                                            </a>
+                                                            </Link>
                                                         )}
                                                     </div>
                                                 </td>

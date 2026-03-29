@@ -251,9 +251,48 @@ export async function createShippingLabel(order: any) {
             tracking_number: transaction.trackingNumber,
             label_url: transaction.labelUrl,
             status: transaction.status,
+            carrier: rate.provider,
         };
     } catch (error) {
         console.error("Shippo Error:", error);
         throw error;
+    }
+}
+
+
+export async function getTrackingInfo(carrier: string, trackingNumber: string) {
+    const apiKey = process.env.SHIPPO_API_KEY;
+    if (!apiKey) throw new Error("SHIPPO_API_KEY is missing");
+
+    const { shippo } = await import('@/lib/shippo');
+    try {
+        const tracking = await (shippo as any).track.get(carrier, trackingNumber);
+        return tracking;
+    } catch (err) {
+        console.error(`[Shippo] Tracking failed for ${carrier} - ${trackingNumber}:`, err);
+        throw err;
+    }
+}
+
+/**
+ * Shippo signs webhooks with a private key (not based on the API key).
+ * This must be stored in process.env.SHIPPO_WEBHOOK_SECRET.
+ * Note: If no secret is provided, the webhook remains open but non-idempotent.
+ */
+export async function verifyShippoSignature(body: string, signature: string): Promise<boolean> {
+    const secret = process.env.SHIPPO_WEBHOOK_SECRET;
+    if (!secret) {
+        console.warn('[Shippo Webhook] ⚠️  SHIPPO_WEBHOOK_SECRET is missing. Skipping signature check (Unsafe for production).');
+        return true; 
+    }
+
+    try {
+        const { createHmac } = await import('crypto');
+        const hmac = createHmac('sha256', secret);
+        const digest = hmac.update(body).digest('hex');
+        return digest === signature;
+    } catch (err) {
+        console.error('[Shippo Webhook] Signature verification error:', err);
+        return false;
     }
 }

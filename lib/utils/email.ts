@@ -211,12 +211,47 @@ export async function sendDeliveryNotificationEmail({
     </div>
     <div style="margin:0 40px 30px;background:${s.accent_color}10;border:1px solid ${s.accent_color}30;padding:20px;">
         <p style="margin:0;font-size:10px;color:${s.accent_color};text-transform:uppercase;letter-spacing:1px;">Reference ID</p>
-        <p style="margin:6px 0 0;font-family:monospace;font-size:18px;">${orderId}</p>
+        <p style="margin:6px 0 16px;font-family:monospace;font-size:18px;">${orderId}</p>
+        <div style="margin-top:20px;text-align:center;">
+            <p style="font-size:12px;margin-bottom:15px;color:${s.text_color}80;">Would you care to share your experience with these artifacts?</p>
+            <a href="https://dinacosmetic.store/account/orders" style="display:inline-block;padding:12px 24px;background-color:${s.accent_color};color:#000;text-decoration:none;font-size:10px;text-transform:uppercase;letter-spacing:2px;font-weight:bold;">
+                Leave a Review
+            </a>
+        </div>
     </div>`
 
     await sendMail({
         to: customerEmail,
         subject: `Artifacts Delivered — Order ${orderId.slice(0, 8)}`,
+        html: buildHtml(s, body),
+        fromName: s.brand_name
+    })
+}
+
+export async function sendOutForDeliveryNotificationEmail({
+    customerEmail,
+    customerName,
+    trackingNumber,
+}: OrderEmailProps) {
+    const s = await getEmailSettings()
+    const greeting = `Immediate Manifestation — ${customerName}`
+
+    const body = `
+    <div style="padding:24px 40px 0;">
+        <p style="text-transform:uppercase;letter-spacing:3px;font-size:10px;color:${s.accent_color}80;margin:0;">Out For Delivery</p>
+    </div>
+    <div style="padding:20px 40px 30px;">
+        <h2 style="font-weight:normal;font-size:20px;margin:0 0 16px;">${greeting}</h2>
+        <p style="line-height:1.7;color:${s.text_color}cc;margin:0;">Your artifacts have entered the final stage of arrival. They are currently out for delivery and will manifest at your destination shortly.</p>
+    </div>
+    <div style="margin:0 40px 30px;background:${s.accent_color}10;border:1px solid ${s.accent_color}30;padding:20px;">
+        <p style="margin:0;font-size:10px;color:${s.accent_color};text-transform:uppercase;letter-spacing:1px;">Tracking ID</p>
+        <p style="margin:6px 0 0;font-family:monospace;font-size:18px;">${trackingNumber ?? 'N/A'}</p>
+    </div>`
+
+    await sendMail({
+        to: customerEmail,
+        subject: `Artifacts Incoming — Out For Delivery`,
         html: buildHtml(s, body),
         fromName: s.brand_name
     })

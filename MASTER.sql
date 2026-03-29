@@ -560,6 +560,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
                 'pending',
                 'paid',
                 'shipped',
+                'out_for_delivery',
+                'delivered',
                 'cancelled',
                 'refunded'
             )
@@ -569,10 +571,16 @@ CREATE TABLE IF NOT EXISTS public.orders (
         billing_address jsonb,
         stripe_session_id text UNIQUE,
         tracking_number text,
+        carrier text,
+        shippo_tracking_status text,
         metadata jsonb,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
 );
+-- Ensure existing constraint is updated
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE public.orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending', 'paid', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'refunded'));
+
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS user_id uuid;
 
@@ -719,6 +727,17 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+-- 1L. order_tracking_history — real-time carrier updates
+CREATE TABLE IF NOT EXISTS public.order_tracking_history (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+    status text NOT NULL,
+    details text,
+    location text,
+    shippo_event_id text UNIQUE,
+    object_created timestamptz NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
 -- ───────────────────────────────────────────────────────────────
 -- §2  CMS TABLES
 -- ───────────────────────────────────────────────────────────────
@@ -817,6 +836,7 @@ ALTER TABLE public.navigation_menus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cms_pages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cms_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.theme_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_tracking_history ENABLE ROW LEVEL SECURITY;
 -- ───────────────────────────────────────────────────────────────
 -- §4  NUCLEAR DROP — every public RLS policy
 --     Guarantees zero duplicates and removes all stale/rogue
@@ -1255,6 +1275,26 @@ CREATE POLICY "cms_sections_delete" ON public.cms_sections FOR DELETE USING (
         SELECT public.is_admin()
     )
 );
+-- 5.21 ORDER_TRACKING_HISTORY — users see their own, admins see all
+CREATE POLICY "order_tracking_history_select" ON public.order_tracking_history FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM public.orders o
+        WHERE o.id = order_tracking_history.order_id
+        AND (
+            (SELECT auth.uid()) = o.user_id
+            OR (SELECT public.is_admin())
+        )
+    )
+);
+CREATE POLICY "order_tracking_history_insert" ON public.order_tracking_history FOR INSERT WITH CHECK (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "order_tracking_history_update" ON public.order_tracking_history FOR UPDATE USING (
+    (SELECT public.is_admin())
+);
+CREATE POLICY "order_tracking_history_delete" ON public.order_tracking_history FOR DELETE USING (
+    (SELECT public.is_admin())
+);
 -- ───────────────────────────────────────────────────────────────
 -- §6  TRIGGERS  — updated_at + auto-profile on signup
 -- ───────────────────────────────────────────────────────────────
@@ -1437,6 +1477,8 @@ CREATE INDEX IF NOT EXISTS idx_product_variants_sku ON public.product_variants(s
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 -- Keep: is_admin() runs on every authenticated request via middleware.
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON public.newsletter_subscribers(email);
+-- Add index for tracking history
+CREATE INDEX IF NOT EXISTS idx_tracking_order_id ON public.order_tracking_history(order_id);
 -- Keep: uniqueness enforcement + duplicate-check on subscribe.
 -- ───────────────────────────────────────────────────────────────
 -- §9  SEED DATA  (idempotent — ON CONFLICT DO UPDATE)
