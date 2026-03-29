@@ -32,21 +32,17 @@ A full-stack, headless e-commerce platform purpose-built for **Dina Cosmetic** �
 - Stripe Hosted Checkout with worldwide shipping address collection
 - Guest checkout + authenticated account orders
 - Order history and tracking in customer account dashboard
-- Free shipping threshold logic ($99.99+)
+- Dynamic free shipping threshold logic (configurable in Admin)
 
 ### Admin Portal (`/admin`)
 - **Dashboard** — Real-time KPIs: gross revenue, active orders, low-stock alerts
-- **Products** — Full CRUD with drag-and-drop image upload, variant management, status toggle
+- **Products** — Full CRUD with variant management, status toggle, and stock adjustment
 - **Orders** — Status management, single + batch fulfillment via Shippo, tracking integration
-- **Media Library** — Centralized image vault with upload, copy URL, delete, grid/list view, and text content editor
-- **Inventory Vault** — Variant-level stock ledger with security indicators
+- **Experiences (CMS)** — Page builder for digital storytelling and custom landing pages
+- **Media Library** — Centralized image vault with upload, copy URL, delete, and grid/list view
 - **Analytics** — 7-day and 30-day revenue charts, top-selling products
 - **Marketing** — Coupon/discount code engine (% and fixed), expiry + usage limits
-- **CMS / Experiences** — Drag-and-drop page builder for landing pages
-- **Categories** — Taxonomy management
-- **Clientele** — Customer directory with VIP/Repeat/Lead segmentation
-- **Email Design** — Transactional email template preview
-- **Settings** — Store info, warehouse address, social links, nav menus, hero slides, kill switch (maintenance mode)
+- **Settings** — Operational status (Kill Switch), Live Shipping Rate configuration, Navigation menus, and Hero slides
 
 ---
 
@@ -131,16 +127,17 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 │   ├── [slug]/                 # Dynamic CMS pages (from cms_pages table)
 │   ├── admin/                  # Admin Portal
 │   │   ├── analytics/          # Revenue charts & KPIs
+│   │   ├── builder/            # 🆕 Experience builder engine
 │   │   ├── categories/         # Product taxonomy
-│   │   ├── cms/                # Page builder
+│   │   ├── cms/                # Page management (Experiences)
 │   │   ├── email/              # Email template editor
 │   │   ├── marketing/          # Coupons & abandoned carts
-│   │   ├── media/              # 🆕 Media library & content editor
+│   │   ├── media/              # Media library
 │   │   ├── orders/             # Order fulfillment
-│   │   ├── products/           # Product catalog management
-│   │   ├── settings/           # Store configuration
-│   │   ├── users/              # Customer directory
-│   │   └── vault/              # Inventory ledger
+│   │   ├── pages/              # CMS Page listing
+│   │   ├── products/           # Product & stock management
+│   │   ├── settings/           # Store & shipping configuration
+│   │   └── users/              # Customer directory
 │   ├── api/                    # API Routes
 │   │   ├── admin/              # Admin-authenticated API endpoints
 │   │   ├── checkout/           # Stripe session creation
@@ -213,16 +210,13 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 | URL | Purpose |
 |---|---|
 | `/admin` | Dashboard — live KPIs |
-| `/admin/products` | Manage products & variants |
-| `/admin/orders` | Fulfill orders, generate shipping labels |
-| `/admin/media` | Upload/manage images, edit content blocks |
-| `/admin/vault` | View all variant stock levels |
+| `/admin/products` | Manage products, variants & inventory |
+| `/admin/orders` | Fulfill orders & generate labels |
+| `/admin/cms` | Experiences — Build custom landing pages |
+| `/admin/media` | Upload/manage images |
 | `/admin/analytics` | Revenue & sales charts |
 | `/admin/marketing` | Coupon codes & abandoned carts |
-| `/admin/cms` | Build custom landing pages |
-| `/admin/categories` | Manage product categories |
-| `/admin/users` | Customer directory & role management |
-| `/admin/settings` | Store config, hero slides, menus, warehouse |
+| `/admin/settings` | Store config, shipping rates, menus |
 
 ---
 
