@@ -48,7 +48,7 @@ export async function fetchShippingRatesAction(orderId: string, itemsToFulfill?:
         rates: result.rates.map((r: any) => ({
             id: r.objectId,
             provider: r.provider,
-            service: r.servicelevel.name,
+            service: r.servicelevel?.name || 'Standard Shipping',
             amount: r.amount,
             estimatedDays: r.estimated_days,
             provider_image: r.provider_image_75
