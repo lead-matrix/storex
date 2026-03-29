@@ -156,7 +156,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                 else onOpenChange(open)
             }
         }}>
-            <DialogContent className="bg-obsidian border-luxury-border text-white sm:max-w-[700px] p-0 overflow-hidden">
+            <DialogContent aria-describedby={undefined} className="bg-obsidian border-luxury-border text-white sm:max-w-[700px] p-0 overflow-hidden">
                 <div className="h-1.5 bg-gold/20 w-full">
                     <div
                         className="h-full bg-gold transition-all duration-700 ease-in-out"

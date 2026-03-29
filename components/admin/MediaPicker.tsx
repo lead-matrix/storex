@@ -111,7 +111,7 @@ export function MediaPicker({ onSelect, trigger, multiSelect = false, onSelectMu
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-luxury-border bg-[#0B0B0D] rounded-luxury shadow-luxury">
+            <DialogContent aria-describedby={undefined} className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-luxury-border bg-[#0B0B0D] rounded-luxury shadow-luxury">
                 <DialogHeader className="p-6 border-b border-white/5 bg-[#0B0B0D]/5">
                     <div className="flex items-center justify-between">
                         <DialogTitle className="text-xl font-heading tracking-luxury text-white flex items-center gap-3">
