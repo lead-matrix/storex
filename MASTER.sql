@@ -2429,17 +2429,19 @@ VALUES (
         (item_record->>'quantity')::integer,
         (item_record->>'price')::numeric
     );
--- b. Deduct product stock
-UPDATE public.products
-SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
-WHERE id = (item_record->>'product_id')::uuid;
--- c. Deduct product_variant stock
-IF (item_record->>'variant_id') IS NOT NULL
-AND (item_record->>'variant_id') != '' THEN
-UPDATE public.product_variants
-SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
-WHERE id = (item_record->>'variant_id')::uuid;
-END IF;
+    -- b. Deduct product stock (Atomic lock)
+    PERFORM id FROM public.products WHERE id = (item_record->>'product_id')::uuid FOR UPDATE;
+    UPDATE public.products
+    SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
+    WHERE id = (item_record->>'product_id')::uuid;
+    -- c. Deduct product_variant stock (Atomic lock)
+    IF (item_record->>'variant_id') IS NOT NULL
+    AND (item_record->>'variant_id') != '' THEN
+        PERFORM id FROM public.product_variants WHERE id = (item_record->>'variant_id')::uuid FOR UPDATE;
+        UPDATE public.product_variants
+        SET stock = GREATEST(0, stock - (item_record->>'quantity')::integer)
+        WHERE id = (item_record->>'variant_id')::uuid;
+    END IF;
 END LOOP;
 END IF;
 RETURN v_order_id;
