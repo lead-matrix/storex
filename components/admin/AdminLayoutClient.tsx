@@ -206,11 +206,30 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
       </aside>
 
       {/* ── MAIN CONTENT ── */}
-      <main className="flex-1 overflow-y-auto bg-[#0B0B0D] p-6 md:p-8 pb-24 md:pb-8 scroll-smooth">
-        <div className="max-w-7xl mx-auto">
-          {children}
-        </div>
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#0B0B0D]">
+        {/* Mobile Header */}
+        <header className="md:hidden flex items-center justify-between px-5 py-4 border-b border-white/[0.06] bg-[#0D0D0F] z-20">
+          <Link href="/admin" className="flex flex-col">
+            <span className="font-bold text-sm tracking-wide text-white">
+              DINA <span className="text-[#D4AF37]">ADMIN</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/" target="_blank" className="text-white/30 hover:text-[#D4AF37] transition-colors">
+              <Store className="w-5 h-5" />
+            </Link>
+            <button onClick={signOut} className="text-white/30 hover:text-red-400 transition-colors">
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 scroll-smooth">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#0D0D0F] border-t border-white/[0.06] z-50 px-2 py-2 pb-safe">

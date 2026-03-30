@@ -108,7 +108,7 @@ export default function ShippingRateManager({ initialConfig }: { initialConfig?:
   return (
     <div className="space-y-8 pb-24 animate-luxury-fade">
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif text-white tracking-wide">Shipping Rates</h1>
           <p className="text-xs text-white/40 uppercase tracking-widest mt-1">
@@ -126,7 +126,7 @@ export default function ShippingRateManager({ initialConfig }: { initialConfig?:
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/10">
+      <div className="flex border-b border-white/10 overflow-x-auto custom-scrollbar whitespace-nowrap pb-1">
         {TABS.map(tab => (
           <button
             key={tab.id}
