@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
+  apiVersion: "2026-01-28.clover",
 });
 
 export async function POST(req: Request) {
@@ -41,44 +41,44 @@ export async function POST(req: Request) {
   }
 
   try {
-    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+    if (
+      event.type === "checkout.session.completed" ||
+      event.type === "checkout.session.async_payment_succeeded"
+    ) {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      // ✅ Verify payment actually succeeded
+      // For checkout.session.completed with a delayed payment, payment_status may be
+      // 'unpaid' — we log it but do NOT fulfill. async_payment_succeeded will fire later.
       if (session.payment_status !== "paid") {
-        console.warn(`[Stripe Webhook] Order ${session.metadata?.order_id} is unpaid. Waiting for async_payment_succeeded.`);
-        // Don't throw error, just log it and return 200 so Stripe doesn't retry this specific event. 
-        // We will catch async_payment_succeeded later.
-        await supabase.from("stripe_events").upsert({
-          id: event.id,
-          type: event.type,
-          processed: true,
-          error: "Payment not completed yet",
-        }, { onConflict: 'id' });
+        console.warn(
+          `[Stripe Webhook] Session ${session.id} payment_status=${session.payment_status}. Awaiting async_payment_succeeded.`
+        );
+        await supabase.from("stripe_events").upsert(
+          { id: event.id, type: event.type, processed: true, error: "payment_pending" },
+          { onConflict: "id" }
+        );
         return NextResponse.json({ received: true, status: "pending_payment" });
       }
 
       const orderId = session.metadata?.order_id;
-      if (!orderId) throw new Error("Missing order_id");
+      if (!orderId) throw new Error("Missing order_id in session metadata");
 
-      // ✅ FIXED SHIPPING — check both SDK formats
+      // Resolve shipping address — handle all known SDK shapes
       const sessionAny = session as any;
       const shipping =
-        sessionAny.shipping_details ?? sessionAny.collected_information?.shipping_details ?? sessionAny.customer_details?.address ?? null;
-
+        sessionAny.shipping_details ??
+        sessionAny.collected_information?.shipping_details ??
+        null;
       const customer = session.customer_details ?? null;
 
-      // ✅ Safe parsing
+      // Safe-parse cart items from metadata
       let cartItems: any[] = [];
       try {
-        cartItems = session.metadata?.items
-          ? JSON.parse(session.metadata.items)
-          : [];
+        cartItems = session.metadata?.items ? JSON.parse(session.metadata.items) : [];
       } catch {
         cartItems = [];
       }
 
-      // ✅ Defensive data extraction
       const shippingAddress = {
         name: shipping?.name || customer?.name || "",
         line1: shipping?.address?.line1 || "",
@@ -100,96 +100,144 @@ export async function POST(req: Request) {
       };
 
       const chosenShipping = session.shipping_cost ?? null;
+      const customerName = shippingAddress.name || customer?.name || "Customer";
 
-      // ✅ Atomic order update
+      // Atomic order update — writes all columns that now exist in the schema
       const { error: updateError } = await supabase
         .from("orders")
         .update({
           status: "paid",
           fulfillment_status: "unfulfilled",
           customer_email: customer?.email || "",
-          customer_name: shippingAddress.name || customer?.name || "Customer",
+          customer_name: customerName,
           customer_phone: customer?.phone || null,
           shipping_address: shippingAddress,
           billing_address: billingAddress,
           amount_total: session.amount_total ? session.amount_total / 100 : 0,
+          stripe_session_id: session.id,
           metadata: {
             stripe_session_id: session.id,
             shipping_cost_cents: chosenShipping?.amount_total ?? 0,
-            shipping_label: (session as any).shipping_details?.dynamic_tax_locations?.[0] ?? "selected_in_stripe",
           },
         })
         .eq("id", orderId);
 
       if (updateError) throw updateError;
 
-      // ✅ Insert items only if order is paid correctly
+      // Insert order items — guarded against double-insert if both events fire
       if (cartItems.length > 0) {
-        // First check if items already exist (if async_payment_succeeded fired after session.completed)
-        const { data: existingItems } = await supabase.from("order_items").select("id").eq("order_id", orderId);
-        if (!existingItems || existingItems.length === 0) {
-            const { error: itemsError } = await supabase
-            .from("order_items")
-            .insert(
-                cartItems.map((item) => ({
-                order_id: orderId,
-                product_id: item.product_id,
-                variant_id: item.variant_id || null,
-                quantity: item.quantity,
-                price: item.price,
-                fulfilled_quantity: 0,
-                }))
-            );
+        const { data: existingItems } = await supabase
+          .from("order_items")
+          .select("id")
+          .eq("order_id", orderId);
 
-            if (itemsError) {
-              console.error("Items insert failed", itemsError);
-            } else {
-              for (const item of cartItems) {
-                if (item.variant_id) {
-                    const { data: v } = await supabase.from('product_variants').select('stock').eq('id', item.variant_id).single();
-                    if (v && v.stock !== undefined) {
-                      await supabase.from('product_variants').update({ stock: Math.max(0, v.stock - item.quantity) }).eq('id', item.variant_id);
-                    }
-                } else if (item.product_id) {
-                    const { data: p } = await supabase.from('products').select('stock').eq('id', item.product_id).single();
-                    if (p && p.stock !== undefined) {
-                      await supabase.from('products').update({ stock: Math.max(0, p.stock - item.quantity) }).eq('id', item.product_id);
-                    }
+        if (!existingItems || existingItems.length === 0) {
+          const { error: itemsError } = await supabase.from("order_items").insert(
+            cartItems.map((item) => ({
+              order_id: orderId,
+              product_id: item.product_id,
+              variant_id: item.variant_id || null,
+              quantity: item.quantity,
+              price: item.price,
+              fulfilled_quantity: 0,
+            }))
+          );
+
+          if (itemsError) {
+            console.error("[Stripe Webhook] Items insert failed:", itemsError);
+          } else {
+            // Deduct stock
+            for (const item of cartItems) {
+              if (item.variant_id) {
+                const { data: v } = await supabase
+                  .from("product_variants")
+                  .select("stock")
+                  .eq("id", item.variant_id)
+                  .single();
+                if (v && v.stock !== undefined) {
+                  await supabase
+                    .from("product_variants")
+                    .update({ stock: Math.max(0, v.stock - item.quantity) })
+                    .eq("id", item.variant_id);
+                }
+              } else if (item.product_id) {
+                const { data: p } = await supabase
+                  .from("products")
+                  .select("stock")
+                  .eq("id", item.product_id)
+                  .single();
+                if (p && p.stock !== undefined) {
+                  await supabase
+                    .from("products")
+                    .update({ stock: Math.max(0, p.stock - item.quantity) })
+                    .eq("id", item.product_id);
                 }
               }
             }
+          }
         }
       }
 
-      // ✅ Log AFTER success
-      await supabase.from("stripe_events").upsert({
-        id: event.id,
-        type: event.type,
-        processed: true,
-      }, { onConflict: 'id' });
+      // Mark event processed
+      await supabase.from("stripe_events").upsert(
+        { id: event.id, type: event.type, processed: true },
+        { onConflict: "id" }
+      );
 
-      // ✅ Async email (non-blocking)
+      // Send confirmation email (non-blocking)
       if (customer?.email) {
-        // Send order confirmation only down this path securely
         import("@/lib/utils/email")
           .then(({ sendOrderConfirmationEmail }) =>
             sendOrderConfirmationEmail({
               orderId,
               customerEmail: customer.email!,
-              customerName: customer.name || "Customer",
+              customerName,
               totalAmount: (session.amount_total || 0) / 100,
               items: cartItems,
             })
           )
           .catch(() => {});
       }
+
+    } else if (event.type === "checkout.session.async_payment_failed") {
+      // Delayed payment method definitively failed — mark order cancelled
+      const session = event.data.object as Stripe.Checkout.Session;
+      const orderId = session.metadata?.order_id;
+      if (orderId) {
+        await supabase
+          .from("orders")
+          .update({ status: "cancelled", fulfillment_status: "cancelled" })
+          .eq("id", orderId);
+        console.warn(`[Stripe Webhook] Async payment FAILED for order ${orderId}. Marked cancelled.`);
+      }
+      await supabase.from("stripe_events").upsert(
+        { id: event.id, type: event.type, processed: true },
+        { onConflict: "id" }
+      );
+
+    } else if (event.type === "checkout.session.expired") {
+      // Session timed out — mark order cancelled so admin knows
+      const session = event.data.object as Stripe.Checkout.Session;
+      const orderId = session.metadata?.order_id;
+      if (orderId) {
+        await supabase
+          .from("orders")
+          .update({ status: "cancelled", fulfillment_status: "cancelled" })
+          .eq("id", orderId)
+          .eq("status", "pending"); // only cancel if still pending — don't overwrite a paid order
+        console.info(`[Stripe Webhook] Session expired for order ${orderId}. Marked cancelled.`);
+      }
+      await supabase.from("stripe_events").upsert(
+        { id: event.id, type: event.type, processed: true },
+        { onConflict: "id" }
+      );
+
     } else {
-      // log other events
-      await supabase.from("stripe_events").upsert({
-        id: event.id,
-        type: event.type,
-        processed: true,
-      }, { onConflict: 'id' });
+      // All other events — just log
+      await supabase.from("stripe_events").upsert(
+        { id: event.id, type: event.type, processed: true },
+        { onConflict: "id" }
+      );
     }
 
     return NextResponse.json({ received: true });

@@ -607,6 +607,10 @@ ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 ALTER TABLE public.orders
 ADD COLUMN IF NOT EXISTS shipping_label_url text;
+ALTER TABLE public.orders
+ADD COLUMN IF NOT EXISTS customer_name text;
+ALTER TABLE public.orders
+ADD COLUMN IF NOT EXISTS customer_phone text;
 -- Drop orphaned admin_audit_logs table (has RLS but no policies — not in schema)
 DROP TABLE IF EXISTS public.admin_audit_logs CASCADE;
 -- Sync legacy columns
@@ -667,8 +671,10 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     SET NULL,
         quantity integer NOT NULL CHECK (quantity > 0),
         price numeric(10, 2) NOT NULL,
+        fulfilled_quantity integer NOT NULL DEFAULT 0,
         created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.order_items ADD COLUMN IF NOT EXISTS fulfilled_quantity integer NOT NULL DEFAULT 0;
 ALTER TABLE public.order_items
 ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 DO $$ BEGIN IF NOT EXISTS (
@@ -687,8 +693,12 @@ CREATE TABLE IF NOT EXISTS public.stripe_events (
     id text PRIMARY KEY,
     type text,
     data jsonb,
+    processed boolean NOT NULL DEFAULT false,
+    error text,
     created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.stripe_events ADD COLUMN IF NOT EXISTS processed boolean NOT NULL DEFAULT false;
+ALTER TABLE public.stripe_events ADD COLUMN IF NOT EXISTS error text;
 -- 1H. email_logs — idempotency log for sent emails (service_role only)
 CREATE TABLE IF NOT EXISTS public.email_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
