@@ -16,18 +16,12 @@ ALTER TABLE public.order_items
   ADD COLUMN IF NOT EXISTS product_name text,
   ADD COLUMN IF NOT EXISTS variant_name text;
 
--- 2. Back-fill existing rows from the joined product/variant tables so historical
---    orders aren't left with NULLs where the product still exists.
-UPDATE public.order_items oi
+UPDATE public.order_items
 SET
-  product_name = COALESCE(oi.product_name, p.title),
-  variant_name = COALESCE(oi.variant_name, pv.name)
-FROM
-  public.products p
-  LEFT JOIN public.product_variants pv ON pv.id = oi.variant_id
+  product_name = COALESCE(product_name, (SELECT title FROM public.products p WHERE p.id = product_id)),
+  variant_name = COALESCE(variant_name, (SELECT name FROM public.product_variants pv WHERE pv.id = variant_id))
 WHERE
-  p.id = oi.product_id
-  AND (oi.product_name IS NULL OR oi.variant_name IS NULL);
+  product_name IS NULL OR (variant_name IS NULL AND variant_id IS NOT NULL);
 
 -- 3. Add index on order_id if missing (speeds up order detail page queries)
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id
