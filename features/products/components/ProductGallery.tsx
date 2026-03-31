@@ -63,7 +63,7 @@ export function ProductGallery({ images, productName, forcedImage }: ProductGall
                                 src={image}
                                 alt={`Thumbnail ${index + 1}`}
                                 fill
-                                className="object-cover"
+                                className="object-contain object-center"
                             />
                         </button>
                     ))}

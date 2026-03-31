@@ -93,7 +93,7 @@ export function SingleImageUpload({ value, onChange, label, className = "" }: Si
         <div className={`relative flex flex-col gap-2 ${className}`}>
             {displayImage ? (
                 <div className={`relative w-full h-full min-h-[40px] rounded border border-white/10 overflow-hidden shadow-sm group ${optimisticPreview ? 'opacity-50' : ''}`}>
-                    <img src={displayImage} alt="Preview" className="object-cover w-full h-full" />
+                    <img src={displayImage} alt="Preview" className="object-contain object-center w-full h-full" />
                     {!uploading && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button

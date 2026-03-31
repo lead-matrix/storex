@@ -31,7 +31,7 @@ export function OrderSummary({ cart, subtotal, shipping, tax, total, shippingCal
                 {cart.map((item) => (
                     <div key={item.id} className="flex gap-6 group items-center">
                         <div className="relative w-20 h-24 flex-shrink-0 bg-black rounded-lg overflow-hidden border border-white/5">
-                            <Image src={item.image} alt={item.name} fill className="object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                            <Image src={item.image} alt={item.name} fill className="object-contain object-center opacity-80 group-hover:opacity-100 transition-opacity" />
                             <div className="absolute top-0 right-0 w-6 h-6 bg-gold text-black text-[10px] font-bold flex items-center justify-center rounded-bl-lg">
                                 {item.quantity}
                             </div>

@@ -184,7 +184,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                     <div key={row.id} className={`bg-obsidian border border-luxury-border rounded-luxury p-5 space-y-4 transition-all ${dirtyRows[row.id] ? 'ring-1 ring-gold/30 bg-gold/5' : ''}`}>
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded bg-black/40 border border-white/5 overflow-hidden flex-shrink-0">
-                                <img src={row.image} alt="" className="w-full h-full object-cover opacity-60" />
+                                <img src={row.image} alt="" className="w-full h-full object-contain object-center opacity-60" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <p className="text-white text-sm font-medium truncate">{row.productTitle}</p>
@@ -283,7 +283,7 @@ export function CatalogSpreadsheet({ initialProducts }: CatalogSpreadsheetProps)
                                     <td className="px-6 py-4 border-r border-white/5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded bg-black/40 border border-white/5 overflow-hidden flex-shrink-0">
-                                                <img src={row.image} alt="" className="w-full h-full object-cover opacity-60" />
+                                                <img src={row.image} alt="" className="w-full h-full object-contain object-center opacity-60" />
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-white truncate max-w-[150px] group-hover:text-gold transition-colors">{row.productTitle}</p>

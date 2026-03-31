@@ -122,7 +122,7 @@ function OrderDetailModal({ order, onClose, onStatusUpdate, onFulfill }: {
                                                     <img
                                                         src={item.product_variants.products.images[0]}
                                                         alt={productName}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-contain object-center"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-white/10">

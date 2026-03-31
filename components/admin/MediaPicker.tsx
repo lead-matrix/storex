@@ -154,7 +154,7 @@ export function MediaPicker({ onSelect, trigger, multiSelect = false, onSelectMu
                                         src={file.url}
                                         alt={file.name}
                                         fill
-                                        className="object-cover transition-transform group-hover:scale-110"
+                                        className="object-contain object-center transition-transform group-hover:scale-110"
                                         sizes="(max-width: 768px) 33vw, 20vw"
                                         unoptimized
                                     />

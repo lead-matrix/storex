@@ -125,7 +125,7 @@ export default async function AdminProductsPage() {
                         <div className="flex items-start gap-4">
                             <div className="w-16 h-16 bg-black/40 border border-white/10 rounded overflow-hidden shadow-soft flex-shrink-0">
                                 {product.images?.[0] ? (
-                                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover opacity-80" />
+                                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-contain object-center opacity-80" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-white/10 bg-[#0B0B0D]/5">
                                         <Package size={20} />
@@ -213,7 +213,7 @@ export default async function AdminProductsPage() {
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-black/40 border border-white/10 rounded overflow-hidden shadow-soft flex-shrink-0 group-hover:border-gold/30 transition-colors">
                                                 {product.images?.[0] ? (
-                                                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-contain object-center opacity-80 group-hover:opacity-100 transition-opacity" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-white/10 bg-[#0B0B0D]/5">
                                                         <Package size={16} />

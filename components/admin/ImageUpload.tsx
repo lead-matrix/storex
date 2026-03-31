@@ -66,7 +66,7 @@ function SortableImage({ url, index, onRemove }: SortableImageProps) {
                 src={url}
                 alt={`Product image ${index + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain object-center"
                 sizes="(max-width: 768px) 50vw, 25vw"
             />
 
@@ -331,7 +331,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10 }: ImageUpl
                         {/* Optimistic Preview Grid */}
                         {optimisticPreviews.map((url, idx) => (
                             <div key={`preview-${idx}`} className="relative aspect-square rounded-luxury overflow-hidden border border-gold/40 opacity-40 animate-pulse">
-                                <img src={url} alt="Preview" className="object-cover w-full h-full" />
+                                <img src={url} alt="Preview" className="object-contain object-center w-full h-full" />
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                                     <Loader2 className="w-6 h-6 text-gold animate-spin" />
                                 </div>

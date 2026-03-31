@@ -483,7 +483,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                             src={file.url}
                                             alt={file.name}
                                             fill
-                                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                            className="object-contain object-center transition-transform duration-300 group-hover:scale-105"
                                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
                                             unoptimized
                                         />
@@ -562,7 +562,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded overflow-hidden bg-[#121214] flex-shrink-0">
-                                                        <Image src={file.url} alt={file.name} width={40} height={40} className="object-cover w-full h-full" unoptimized />
+                                                        <Image src={file.url} alt={file.name} width={40} height={40} className="object-contain object-center w-full h-full" unoptimized />
                                                     </div>
                                                     <div>
                                                         <p className="text-xs text-white font-medium truncate max-w-[200px]">{file.name}</p>
