@@ -36,7 +36,7 @@ export function HomeCategoryGrid({ categories }: { categories: Category[] }) {
                                 src={category.image_url || "/logo.jpg"}
                                 alt={category.name}
                                 fill
-                                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                className="object-contain transition-transform duration-700 ease-out group-hover:scale-105"
                             />
                             {/* Overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />

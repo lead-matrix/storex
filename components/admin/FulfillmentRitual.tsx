@@ -164,7 +164,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                     />
                 </div>
 
-                <div className="p-8">
+                <div className="p-4 sm:p-8">
                     <DialogHeader className="mb-8">
                         <DialogTitle className="text-2xl font-serif italic tracking-luxury uppercase flex items-center gap-3">
                             <Package className="w-5 h-5 text-gold" />
@@ -185,34 +185,36 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                                     {order.order_items?.map((item: any) => {
                                         const remaining = (item.quantity || 0) - (item.fulfilled_quantity || 0)
                                         return (
-                                            <div key={item.id} className={`flex items-center gap-4 p-3 rounded-luxury transition-all ${selectedItems[item.id] > 0 ? 'bg-gold/5 border border-gold/20' : 'bg-black/20 border border-transparent opacity-60'}`}>
-                                                <div className="w-12 h-12 bg-black/40 border border-white/10 rounded overflow-hidden relative flex-shrink-0">
-                                                    <Image
-                                                        src={item.product_variants?.products?.images?.[0] || '/placeholder.png'}
-                                                        alt="Asset"
-                                                        fill
-                                                        className="object-cover"
-                                                    />
-                                                </div>
-                                                <div className="flex-grow">
-                                                    <p className="text-[10px] font-medium text-white truncate">{item.product_variants?.products?.title}</p>
-                                                    <p className="text-[8px] text-white/40 uppercase tracking-widest">{item.product_variants?.name}</p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[7px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                                                            Total: {item.quantity}
-                                                        </span>
-                                                        <span className="text-[7px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                                                            Shipped: {item.fulfilled_quantity || 0}
-                                                        </span>
+                                            <div key={item.id} className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-luxury transition-all ${selectedItems[item.id] > 0 ? 'bg-gold/5 border border-gold/20' : 'bg-black/20 border border-transparent opacity-60'}`}>
+                                                <div className="flex items-center gap-4 w-full sm:w-auto flex-grow overflow-hidden">
+                                                    <div className="w-12 h-12 bg-black/40 border border-white/10 rounded overflow-hidden relative flex-shrink-0">
+                                                        <Image
+                                                            src={item.product_variants?.products?.images?.[0] || '/placeholder.png'}
+                                                            alt="Asset"
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-grow min-w-0">
+                                                        <p className="text-[10px] font-medium text-white truncate">{item.product_variants?.products?.title}</p>
+                                                        <p className="text-[8px] text-white/40 uppercase tracking-widest truncate">{item.product_variants?.name}</p>
+                                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                            <span className="text-[7px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded uppercase tracking-tighter whitespace-nowrap">
+                                                                Total: {item.quantity}
+                                                            </span>
+                                                            <span className="text-[7px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded uppercase tracking-tighter whitespace-nowrap">
+                                                                Shipped: {item.fulfilled_quantity || 0}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="text-right">
-                                                        <p className="text-[8px] text-white/30 uppercase tracking-widest mb-1">To Ship</p>
-                                                        <div className="flex items-center bg-black/40 border border-white/10 rounded-sm overflow-hidden">
+                                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-white/5 sm:border-0">
+                                                    <div className="text-left sm:text-right w-full flex items-center justify-between sm:block">
+                                                        <p className="text-[8px] text-white/30 uppercase tracking-widest mb-0 sm:mb-1">To Ship</p>
+                                                        <div className="flex items-center bg-black/40 border border-white/10 rounded-sm overflow-hidden flex-shrink-0">
                                                             <button
                                                                 onClick={() => handleQuantityChange(item.id, selectedItems[item.id] - 1, remaining)}
-                                                                className="px-2 py-2 min-w-[44px] min-h-[44px] text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
+                                                                className="px-2 py-2 min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
                                                             >-</button>
                                                             <input
                                                                 type="number"
@@ -222,7 +224,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                                                             />
                                                             <button
                                                                 onClick={() => handleQuantityChange(item.id, selectedItems[item.id] + 1, remaining)}
-                                                                className="px-2 py-2 min-w-[44px] min-h-[44px] text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
+                                                                className="px-2 py-2 min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
                                                                 disabled={selectedItems[item.id] >= remaining}
                                                             >+</button>
                                                         </div>
@@ -339,7 +341,7 @@ export function FulfillmentRitual({ order, isOpen, onOpenChange, onSuccess }: Fu
                     )}
                 </div>
 
-                <DialogFooter className="p-8 pt-0 flex sm:justify-between items-center bg-black/20 border-t border-white/5">
+                <DialogFooter className="p-4 sm:p-8 pt-0 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 bg-black/20 border-t border-white/5 sm:bg-transparent sm:border-t-0 mt-4 sm:mt-0 pb-4 sm:pb-8">
                     {step === 'verify' && (
                         <>
                             <div className="text-left">

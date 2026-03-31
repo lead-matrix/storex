@@ -34,13 +34,7 @@ const NAV_ITEMS = [
   { href: "/admin/guide", icon: BookOpen, label: "How to Use" },
 ];
 
-const MOBILE_BOTTOM_NAV = [
-  { href: "/admin", icon: LayoutDashboard, label: "Home", exact: true },
-  { href: "/admin/products", icon: Package, label: "Products" },
-  { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
-  { href: "/admin/settings", icon: Settings, label: "Settings" },
-  { href: "/admin/guide", icon: BookOpen, label: "Guide" },
-];
+
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -311,39 +305,12 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 scroll-smooth">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-8 scroll-smooth">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
-
-      {/* ── MOBILE BOTTOM NAV ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#0D0D0F] border-t border-white/[0.06] z-30 px-2 py-2">
-        <div className="flex items-center justify-between">
-          {MOBILE_BOTTOM_NAV.map(({ href, icon: Icon, label, exact }) => {
-            const active = exact ? pathname === href : pathname.startsWith(href) && href !== "/admin";
-            const isOrders = href === "/admin/orders";
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex flex-col items-center gap-1 p-2 flex-1 transition-all relative ${
-                  active ? "text-[#D4AF37]" : "text-white/30 hover:text-white"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-[9px] font-bold uppercase tracking-wide">{label}</span>
-                {isOrders && unfulfilledCount > 0 && (
-                  <span className="absolute top-1 right-3 bg-amber-500 text-black text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                    {unfulfilledCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }
