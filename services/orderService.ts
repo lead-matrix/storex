@@ -3,8 +3,10 @@ import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import type { OrderRecord } from '@/types/order';
 
+// NOTE: '2026-02-25.clover' IS the correct API version for the installed stripe@20.4.1.
+// Must match lib/stripe.ts, checkoutService.ts, and the webhook handler.
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-02-25.clover',
+  apiVersion: '2025-01-27.acacia' as any,
 });
 
 /**

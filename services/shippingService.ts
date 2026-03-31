@@ -48,10 +48,14 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
 
         const allItems = await getItemsByOrder(orderId);
 
+        // BUG #2 FIX: weight_grams was renamed to weight_oz by MASTER.sql migration.
+        // The old code read item.products?.weight_grams which returns null after the
+        // migration, causing every item to fall back to 2oz and all rates to be wrong.
+        // Changed to weight_oz in all three mapping locations below.
         const weightItems = allItems.map((item: any) => ({
             quantity: item.quantity,
             variant_weight_oz: item.product_variants?.weight ? Number(item.product_variants.weight) : null,
-            product_weight_oz: item.products?.weight_grams ? Number(item.products.weight_grams) : null,
+            product_weight_oz: item.products?.weight_oz ? Number(item.products.weight_oz) : null,
         }));
 
         let totalWeight: number;
@@ -61,7 +65,7 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
                 return {
                     quantity: f.quantity,
                     variant_weight_oz: match?.product_variants?.weight ? Number(match.product_variants.weight) : null,
-                    product_weight_oz: match?.products?.weight_grams ? Number(match.products.weight_grams) : null,
+                    product_weight_oz: match?.products?.weight_oz ? Number(match.products.weight_oz) : null,
                 };
             });
             totalWeight = calculateTotalWeightLb(filteredItems);
@@ -111,7 +115,8 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
                 const itemQuantity = (itemsToFulfill ? itemsToFulfill.find(f => f.id === item.id)?.quantity : item.quantity) || 0;
                 if (itemQuantity <= 0) return null;
 
-                const weightOz = item.product_variants?.weight || item.products?.weight_grams || 2;
+                // BUG #2 FIX: was item.products?.weight_grams — corrected to weight_oz
+                const weightOz = item.product_variants?.weight || item.products?.weight_oz || 2;
                 const valueUsd = item.products?.customs_value_usd || item.price || 10;
                 const originCountry = item.products?.country_of_origin || addressFrom.country;
 

@@ -6,6 +6,10 @@ export async function createOrderItems(items: {
     variant_id?: string | null;
     quantity: number;
     price: number;
+    // Snapshot fields — store names at time of purchase so history never breaks
+    // if a product is renamed or deleted later (Bug #5)
+    product_name?: string;
+    variant_name?: string | null;
     weight?: number;
     length?: number;
     width?: number;
@@ -28,7 +32,7 @@ export async function getItemsByOrder(orderId: string) {
       products (
         title,
         images,
-        weight_grams,
+        weight_oz,
         sku,
         country_of_origin,
         customs_value_usd
@@ -38,6 +42,10 @@ export async function getItemsByOrder(orderId: string) {
         sku
       )
     `)
+        // BUG #2 FIX: The column was renamed weight_grams → weight_oz by the
+        // migration in MASTER.sql. Selecting weight_grams returns null for every
+        // product, causing all weights to fall back to 2oz and all shipping rates
+        // to be wrong. Changed to weight_oz throughout.
         .eq('order_id', orderId);
 
     if (error) throw new Error(`getItemsByOrder error: ${error.message}`);

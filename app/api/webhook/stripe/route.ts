@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
+  apiVersion: "2025-01-27.acacia" as any,
 });
 
 export async function POST(req: Request) {
@@ -139,6 +139,10 @@ export async function POST(req: Request) {
               variant_id: item.variant_id || null,
               quantity: item.quantity,
               price: item.price,
+              // Bug #5: Snapshot names at purchase time so order history stays
+              // correct even if the product is later renamed or deleted.
+              product_name: item.product_name || null,
+              variant_name: item.variant_name || null,
               fulfilled_quantity: 0,
             }))
           );
@@ -184,7 +188,10 @@ export async function POST(req: Request) {
         { onConflict: "id" }
       );
 
-      // Send confirmation email (non-blocking)
+      // BUG #6 FIX: Email failures were silently swallowed with .catch(() => {}).
+      // Now logs the error so you can tell when confirmation emails aren't sending.
+      // Still non-blocking (fire-and-forget) — a failed email must never fail
+      // the webhook response (Stripe would retry the entire webhook).
       if (customer?.email) {
         import("@/lib/utils/email")
           .then(({ sendOrderConfirmationEmail }) =>
@@ -196,7 +203,9 @@ export async function POST(req: Request) {
               items: cartItems,
             })
           )
-          .catch(() => {});
+          .catch((err) =>
+            console.error("[Stripe Webhook] Order confirmation email failed:", err)
+          );
       }
 
     } else if (event.type === "checkout.session.async_payment_failed") {

@@ -1,7 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { Package, Truck, ExternalLink, Box, MapPin, RefreshCw, Filter, ShoppingBag, Clock, CheckCircle } from "lucide-react";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { ShoppingBag, Clock, CheckCircle, Truck } from "lucide-react";
 import OrderList from "./OrderList";
 import type { Metadata } from "next";
 
@@ -19,6 +17,9 @@ export default async function AdminOrdersPage() {
                 id,
                 quantity,
                 price,
+                product_name,
+                variant_name,
+                fulfilled_quantity,
                 product_variants (
                     name,
                     products (
@@ -28,9 +29,8 @@ export default async function AdminOrdersPage() {
                 )
             )
         `)
-        .not('status', 'eq', 'pending')
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(200);
 
     if (error) {
         console.error("Orders Fetch Error:", error);
@@ -39,32 +39,32 @@ export default async function AdminOrdersPage() {
     const revenue = orders?.filter(o => o.status === "paid" || o.status === "shipped" || o.status === "delivered").reduce((s, o) => s + Number(o.amount_total || 0), 0) || 0;
     const paidCount = orders?.filter(o => o.status === "paid").length || 0;
     const unfulfilledCount = orders?.filter(o => o.status === "paid" && (!o.fulfillment_status || o.fulfillment_status === "unfulfilled")).length || 0;
-    const shippedCount = orders?.filter(o => o.status === "shipped" || o.status === "delivered").length || 0;
+    const shippedCount = orders?.filter(o => o.status === "shipped" || o.status === "delivered" || o.fulfillment_status === "fulfilled").length || 0;
 
     return (
-        <div className="space-y-12 animate-luxury-fade pb-24">
+        <div className="space-y-8 animate-luxury-fade pb-24">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase">Registry</h1>
+                    <h1 className="text-4xl font-heading text-white mb-2 tracking-luxury font-serif uppercase">Orders</h1>
                     <p className="text-gold text-[10px] uppercase tracking-luxury font-bold">Transaction & Fulfillment Intelligence</p>
                 </div>
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                     { label: "Net Revenue", value: `$${revenue.toLocaleString()}`, color: "text-gold", icon: ShoppingBag },
                     { label: "Unfulfilled", value: unfulfilledCount, color: "text-amber-400", icon: Clock },
                     { label: "Paid", value: paidCount, color: "text-emerald-400", icon: CheckCircle },
                     { label: "Fulfilled", value: shippedCount, color: "text-purple-400", icon: Truck },
                 ].map((s) => (
-                    <div key={s.label} className="bg-obsidian rounded-luxury shadow-luxury border border-luxury-border p-6 hover:border-gold/30 transition-all group">
-                        <div className="flex items-center justify-between mb-4">
+                    <div key={s.label} className="bg-obsidian rounded-luxury shadow-luxury border border-luxury-border p-5 hover:border-gold/30 transition-all group">
+                        <div className="flex items-center justify-between mb-3">
                             <p className="text-[9px] uppercase tracking-luxury font-bold text-white/30">{s.label}</p>
                             <s.icon className={`w-4 h-4 ${s.color} opacity-50 group-hover:opacity-100 transition-opacity`} />
                         </div>
-                        <p className={`text-4xl font-serif ${s.color}`}>{s.value}</p>
+                        <p className={`text-3xl font-serif ${s.color}`}>{s.value}</p>
                     </div>
                 ))}
             </div>
@@ -76,4 +76,3 @@ export default async function AdminOrdersPage() {
         </div>
     );
 }
-

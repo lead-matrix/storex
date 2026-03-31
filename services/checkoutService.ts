@@ -5,8 +5,10 @@ import { calculateTotalWeightLb, calculateShippingRate } from '@/lib/utils/shipp
 import type { CartItem } from '@/types/product';
 
 // ── Stripe init ──────────────────────────────────────────────────────────────
+// NOTE: The user requested to change the API version to '2025-01-27.acacia'
+// All four Stripe initialisations must use this same version string.
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-02-25.clover',
+  apiVersion: '2025-01-27.acacia' as any,
 });
 
 // ── Allowed shipping countries ───────────────────────────────────────────────
@@ -87,9 +89,17 @@ export async function createCheckoutSession(
     if (product.stock < item.quantity) throw new Error(`Insufficient stock for ${product.title}`);
 
     const variant = dbVariants.find((v: any) => v.id === item.variantId);
+
+    // BUG #1 FIX: Correct price precedence.
+    // Previous code applied sale_price AFTER variant.price_override, silently
+    // overwriting it. The correct hierarchy is:
+    //   1. Start with base_price
+    //   2. Apply sale_price if product is on sale (discounts the base)
+    //   3. Variant price_override always wins — it's an explicit per-SKU price
+    //      set by the admin (e.g. a premium shade costs more regardless of sale)
     let price = Number(product.base_price);
-    if (variant?.price_override != null) price = Number(variant.price_override);
     if (product.on_sale && product.sale_price != null) price = Number(product.sale_price);
+    if (variant?.price_override != null) price = Number(variant.price_override);
 
     return {
       productId: item.productId,
