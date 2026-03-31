@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, Reorder, AnimatePresence } from "framer-motion"
-import { GripVertical, Trash2, Plus, Save, Settings2, Image as ImageIcon, Type, LayoutGrid, Palette, Sparkles, Loader2, Mail } from "lucide-react"
+import { GripVertical, Trash2, Plus, Save, Settings2, Image as ImageIcon, Type, LayoutGrid, Palette, Sparkles, Loader2, Mail, Film } from "lucide-react"
 import { saveSections } from "@/lib/actions/cms"
 import { toast } from "sonner"
 import { SingleImageUpload } from "@/components/admin/SingleImageUpload"
@@ -21,6 +21,7 @@ const COMPONENT_TYPES = [
     { type: "richText", label: "Philosophy Block", icon: Type, color: "text-blue-400", defaultProps: { content: "Add your storytelling here..." } },
     { type: "philosophyGrid", label: "Philosophy Grid", icon: LayoutGrid, color: "text-amber-500/80", defaultProps: {} },
     { type: "imageBanner", label: "Visual Vibe", icon: ImageIcon, color: "text-purple-400", defaultProps: { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaLink: "", overlayOpacity: 0.4, height: "70vh" } },
+    { type: "videoBlock", label: "Video Showcase", icon: Film, color: "text-red-400", defaultProps: { playbackId: "", title: "", subtitle: "", autoPlay: 1 } },
     { type: "contactForm", label: "Concierge Link", icon: Mail, color: "text-gold", defaultProps: {} },
 ]
 

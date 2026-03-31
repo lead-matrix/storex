@@ -5,6 +5,7 @@ import PhilosophyBlock from "./PhilosophyBlock";
 import ImageBannerSection from "./ImageBannerSection";
 import PhilosophyGrid from "./PhilosophyGrid";
 import ContactSection from "./ContactSection";
+import VideoShowcaseSection from "./VideoShowcaseSection";
 
 interface Section {
     type: string
@@ -18,6 +19,7 @@ const COMPONENT_MAP: Record<string, React.FC<any>> = {
     imageBanner: ImageBannerSection,
     philosophyGrid: PhilosophyGrid,
     contactForm: ContactSection,
+    videoBlock: VideoShowcaseSection,
 };
 
 export default function CMSRenderer({ sections }: { sections: Section[] }) {
