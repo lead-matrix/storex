@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users, Settings,
   Layers, LogOut, Store, BarChart2, Mail, LayoutPanelLeft,
   Ticket, Image as ImageIcon, Truck, ChevronRight, Menu, X,
-  BookOpen,
+  BookOpen, Film,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { AdminSearch } from "./AdminSearch";
@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/admin/users", icon: Users, label: "Customers" },
   { href: "/admin/marketing", icon: Ticket, label: "Marketing" },
   { href: "/admin/media", icon: ImageIcon, label: "Media" },
+  { href: "/admin/videos", icon: Film, label: "Video Manager" },
   { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },
   { href: "/admin/cms", icon: LayoutPanelLeft, label: "CMS Pages" },
   { href: "/admin/email", icon: Mail, label: "Email Settings" },

@@ -40,6 +40,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
+  // ✅ CRITICAL FIX: Always persist full event payload immediately on receipt
+  // This ensures we have the raw data even if processing crashes below.
+  await supabase.from("stripe_events").upsert(
+    { id: event.id, type: event.type, data: event.data, processed: false },
+    { onConflict: "id" }
+  );
+
   try {
     if (
       event.type === "checkout.session.completed" ||
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
           `[Stripe Webhook] Session ${session.id} payment_status=${session.payment_status}. Awaiting async_payment_succeeded.`
         );
         await supabase.from("stripe_events").upsert(
-          { id: event.id, type: event.type, processed: true, error: "payment_pending" },
+          { id: event.id, type: event.type, data: event.data, processed: true, error: "payment_pending" },
           { onConflict: "id" }
         );
         return NextResponse.json({ received: true, status: "pending_payment" });
@@ -107,6 +114,7 @@ export async function POST(req: Request) {
         .from("orders")
         .update({
           status: "paid",
+          payment_status: "paid",          // ✅ CRITICAL FIX: was missing
           fulfillment_status: "unfulfilled",
           customer_email: customer?.email || "",
           customer_name: customerName,
@@ -182,9 +190,9 @@ export async function POST(req: Request) {
         }
       }
 
-      // Mark event processed
+      // Mark event processed (data already stored at top of handler)
       await supabase.from("stripe_events").upsert(
-        { id: event.id, type: event.type, processed: true },
+        { id: event.id, type: event.type, data: event.data, processed: true },
         { onConflict: "id" }
       );
 
@@ -220,7 +228,7 @@ export async function POST(req: Request) {
         console.warn(`[Stripe Webhook] Async payment FAILED for order ${orderId}. Marked cancelled.`);
       }
       await supabase.from("stripe_events").upsert(
-        { id: event.id, type: event.type, processed: true },
+        { id: event.id, type: event.type, data: event.data, processed: true },
         { onConflict: "id" }
       );
 
@@ -237,14 +245,14 @@ export async function POST(req: Request) {
         console.info(`[Stripe Webhook] Session expired for order ${orderId}. Marked cancelled.`);
       }
       await supabase.from("stripe_events").upsert(
-        { id: event.id, type: event.type, processed: true },
+        { id: event.id, type: event.type, data: event.data, processed: true },
         { onConflict: "id" }
       );
 
     } else {
-      // All other events — just log
+      // All other events — just log (data already stored at top)
       await supabase.from("stripe_events").upsert(
-        { id: event.id, type: event.type, processed: true },
+        { id: event.id, type: event.type, data: event.data, processed: true },
         { onConflict: "id" }
       );
     }
@@ -257,6 +265,7 @@ export async function POST(req: Request) {
     await supabase.from("stripe_events").upsert({
       id: event.id,
       type: event.type,
+      data: event.data,
       processed: false,
       error: error.message,
     }, { onConflict: 'id' });

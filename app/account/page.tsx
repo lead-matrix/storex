@@ -38,7 +38,7 @@ export default async function AccountPage() {
         .eq("id", user.id)
         .single();
 
-    // Fetch Orders
+    // Fetch Orders — filter out pending/cancelled so customers only see real orders
     const { data: orders } = await supabase
         .from("orders")
         .select(`
@@ -46,14 +46,18 @@ export default async function AccountPage() {
             created_at,
             amount_total,
             status,
+            payment_status,
             tracking_number,
             order_items (
                 quantity,
+                product_name,
+                variant_name,
                 products (title, images),
                 product_variants (image_url)
             )
         `)
         .eq("customer_email", user.email)
+        .not("status", "in", '("pending","cancelled")')
         .order("created_at", { ascending: false });
 
     return (
