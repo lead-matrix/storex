@@ -25,6 +25,9 @@ interface VideoPlayerProps {
  *   npm install hls.js
  * and we'll auto-initialise it below.
  */
+import { useEffect, useRef } from 'react'
+import Hls from 'hls.js'
+
 export default function VideoPlayer({
     playbackId,
     title,
@@ -36,15 +39,48 @@ export default function VideoPlayer({
     poster,
     aspectClass = 'aspect-video',
 }: VideoPlayerProps) {
-    if (!playbackId || playbackId === 'pending') return null
-
+    const videoRef = useRef<HTMLVideoElement>(null)
     const streamUrl = `https://stream.mux.com/${playbackId}.m3u8`
-    const mp4Url = `https://stream.mux.com/${playbackId}/high.mp4`
     const thumbnailUrl = poster ?? `https://image.mux.com/${playbackId}/thumbnail.jpg`
 
+    useEffect(() => {
+        if (!playbackId || playbackId === 'pending') return
+        const video = videoRef.current
+        if (!video) return
+
+        let hls: Hls | null = null;
+
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Safari / native support
+            video.src = streamUrl
+            if (autoPlay) {
+                video.play().catch(e => console.log('Autoplay prevented:', e))
+            }
+        } else if (Hls.isSupported()) {
+            // Chrome / Firefox
+            hls = new Hls()
+            hls.loadSource(streamUrl)
+            hls.attachMedia(video)
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                if (autoPlay) {
+                    video.play().catch(e => console.log('Autoplay prevented:', e))
+                }
+            })
+        }
+
+        return () => {
+            if (hls) {
+                hls.destroy()
+            }
+        }
+    }, [playbackId, streamUrl, autoPlay])
+
+    if (!playbackId || playbackId === 'pending') return null
+
     return (
-        <div className={`w-full overflow-hidden ${aspectClass} ${className}`}>
+        <div className={`w-full overflow-hidden flex items-center justify-center bg-black ${aspectClass} ${className}`}>
             <video
+                ref={videoRef}
                 className="w-full h-full object-cover"
                 autoPlay={autoPlay}
                 muted={muted}
@@ -53,12 +89,7 @@ export default function VideoPlayer({
                 playsInline
                 poster={thumbnailUrl}
                 aria-label={title}
-            >
-                {/* HLS (Safari native + hls.js polyfill) */}
-                <source src={streamUrl} type="application/x-mpegURL" />
-                {/* MP4 fallback (Chrome/Firefox without hls.js) */}
-                <source src={mp4Url} type="video/mp4" />
-            </video>
+            />
         </div>
     )
 }
