@@ -2,7 +2,7 @@
 
 > **Live store**: [dinacosmetic.store](https://dinacosmetic.store)  
 > **Stack**: Next.js 16 · Supabase · Stripe · Shippo · Resend · Vercel  
-> **Version**: 2.0.0 — Admin Ownership Release
+> **Version**: 2.2.0 — Mobile & Builder Release
 
 A full-stack, headless e-commerce platform purpose-built for **Dina Cosmetic** — a professional beauty brand. Zero SaaS lock-in. 100% admin-owned infrastructure with an immersive luxury storefront and a fully-featured command portal.
 
@@ -207,6 +207,14 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 
 ## 🐛 Bug Fixes & Changelog
 
+### v2.2.0 — April 2026 · Mobile & Builder Improvements
+- Fixed GitHub CI workflow: added required secrets and build step dependencies
+- CMS Builder: added mobile tab navigation (Blocks / Preview / Settings panels)
+- CMS Builder: added Media Library picker for all image fields
+- Admin content labels: human-readable field names in Content tab
+- Admin sidebar: increased tap targets to 48px min-height for mobile
+- Customer hero: added swipe gesture support for mobile
+
 ### April 2026 — Image & Video Fixes
 
 #### Image Display
@@ -236,5 +244,5 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 
 ---
 
-*Built and maintained by **Mahmud R B** — Version 2.0.0*  
-*Last updated: March 2026*
+*Built and maintained by **Mahmud R B** — Version 2.2.0*  
+*Last updated: April 2026*
