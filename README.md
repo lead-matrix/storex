@@ -1,6 +1,6 @@
-# DINA COSMETIC — The Obsidian Palace
+# DstoreX — The ultimate headless E commerce platform
 
-> **Live store**: [dinacosmetic.store](https://dinacosmetic.store)  
+> **Live store(1st client)**: [dinacosmetic.store](https://dinacosmetic.store)  
 > **Stack**: Next.js 16 · Supabase · Stripe · Shippo · Resend · Vercel  
 > **Version**: 2.2.0 — Mobile & Builder Release
 
