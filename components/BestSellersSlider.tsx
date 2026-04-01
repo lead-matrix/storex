@@ -219,7 +219,7 @@ export function BestSellersSlider({
                                             alt={product.title}
                                             fill
                                             sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
-                                            className="object-contain object-center group-hover:scale-105 transition-transform duration-700"
+                                            className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
                                         />
                                         {/* Overlay gradient */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

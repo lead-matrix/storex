@@ -205,6 +205,22 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 
 ---
 
+## 🐛 Bug Fixes & Changelog
+
+### April 2026 — Image & Video Fixes
+
+#### Image Display
+- Fixed `object-contain` → `object-cover` across category grid, best sellers slider, split hero, and category pages
+- Images now fill their containers edge-to-edge on all screen sizes (mobile and desktop)
+- Product detail gallery retains `object-contain` intentionally for cosmetic product shots
+
+#### Video Upload (Mux)
+- Fixed 401 Unauthorized error on `/api/mux/create-upload`
+- Added admin auth guard (user session + role check) matching all other admin API routes
+- Separated service role client (for DB writes) from request-scoped client (for auth)
+
+---
+
 ## 📋 Admin Panel Quick Reference
 
 | URL | Purpose |

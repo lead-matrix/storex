@@ -88,7 +88,7 @@ export default function SplitHero() {
                 src={slide.image}
                 alt={slide.title}
                 fill
-                className="object-contain object-center drop-shadow-2xl"
+                className="object-cover object-center"
                 priority
                 onLoad={() => setImageLoaded(true)}
                 sizes="(max-width: 1024px) 80vw, 45vw"

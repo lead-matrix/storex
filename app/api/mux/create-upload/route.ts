@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server";
 import Mux from "@mux/mux-node";
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 const mux = new Mux({
   tokenId: process.env.MUX_TOKEN_ID!,
   tokenSecret: process.env.MUX_TOKEN_SECRET!,
 });
 
-const supabase = createClient(
+const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-/**
- * POST /api/mux/create-upload
- * Creates a Mux Direct Upload and pre-inserts a video row in the DB
- * so the admin can track upload progress from the media manager.
- * Body: { title?: string }
- */
 export async function POST(req: Request) {
+  // ── Auth Guard ─────────────────────────────────────────
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // ───────────────────────────────────────────────────────
+
   try {
     const body = await req.json().catch(() => ({}));
     const title = body?.title || null;
@@ -31,13 +34,12 @@ export async function POST(req: Request) {
       cors_origin: process.env.NEXT_PUBLIC_SITE_URL || "*",
     });
 
-    // Pre-insert video row with upload_id so webhook can link the asset
-    const { data: video } = await supabase
+    const { data: video } = await supabaseAdmin
       .from("videos")
       .insert({
         mux_upload_id: upload.id,
-        mux_asset_id: "pending",       // Mux webhook will update this
-        mux_playback_id: "pending",    // Mux webhook will update this
+        mux_asset_id: "pending",
+        mux_playback_id: "pending",
         title: title,
         status: "uploading",
       })
