@@ -51,6 +51,21 @@ function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  hero_title: 'Hero Headline',
+  hero_subtitle: 'Hero Subheadline',
+  hero_cta_text: 'Hero Button Text',
+  hero_cta_link: 'Hero Button Link (URL)',
+  bestseller_heading: 'Bestsellers Section Title',
+  bestseller_subheading: 'Bestsellers Subtitle',
+  announcement_text: 'Announcement Bar Text',
+  announcement_link: 'Announcement Bar Link (URL)',
+  brand_story_heading: 'Brand Story Heading',
+  brand_story_body: 'Brand Story Body Text',
+  newsletter_heading: 'Newsletter Section Title',
+  newsletter_subheading: 'Newsletter Subtitle',
+}
+
 export default function MediaLibraryClient({ initialFiles, bucketBase, contentBlocks }: Props) {
     const [files, setFiles] = useState<MediaFile[]>(initialFiles)
     const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
@@ -661,7 +676,7 @@ export default function MediaLibraryClient({ initialFiles, bucketBase, contentBl
                                         {Object.entries(block.content_data ?? {}).map(([key, value]) => (
                                             <div key={key} className="space-y-1.5">
                                                 <label className="text-[9px] uppercase tracking-widest text-luxury-subtext/60 font-bold">
-                                                    {key.replace(/_/g, ' ')}
+                                                    {FIELD_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                                                 </label>
                                                 {typeof value === 'string' && value.length > 80 ? (
                                                     <textarea
