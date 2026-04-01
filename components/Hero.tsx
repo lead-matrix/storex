@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Slide {
@@ -37,6 +37,8 @@ export function Hero() {
     const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [loading, setLoading] = useState(true);
+    const touchStartX = useRef<number>(0);
+    const touchEndX = useRef<number>(0);
 
     useEffect(() => {
         const fetchSlides = async () => {
@@ -69,7 +71,21 @@ export function Hero() {
     }
 
     return (
-        <section className="relative w-full h-[calc(100svh-6rem)] md:h-[calc(100svh-8rem)] lg:h-[calc(100svh-9rem)] xl:h-[calc(100svh-10rem)] mt-[6rem] md:mt-[8rem] lg:mt-[9rem] xl:mt-[10rem] min-h-[500px] overflow-hidden bg-black">
+        <section 
+            className="relative w-full h-[calc(100svh-6rem)] md:h-[calc(100svh-8rem)] lg:h-[calc(100svh-9rem)] xl:h-[calc(100svh-10rem)] mt-[6rem] md:mt-[8rem] lg:mt-[9rem] xl:mt-[10rem] min-h-[500px] overflow-hidden bg-black"
+            onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+            onTouchEnd={e => {
+                touchEndX.current = e.changedTouches[0].clientX
+                const diff = touchStartX.current - touchEndX.current
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        setCurrentSlide(prev => (prev + 1) % slides.length)
+                    } else {
+                        setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length)
+                    }
+                }
+            }}
+        >
             {slides.map((slide, index) => (
                 <div
                     key={slide.id || index}
