@@ -81,7 +81,7 @@ export default function VideoPlayer({
         <div className={`w-full overflow-hidden flex items-center justify-center bg-black ${aspectClass} ${className}`}>
             <video
                 ref={videoRef}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 autoPlay={autoPlay}
                 muted={muted}
                 loop={loop}

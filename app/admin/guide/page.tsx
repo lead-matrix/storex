@@ -346,7 +346,7 @@ const sections = [
                 </p>
                 
                 <div className="space-y-4 pt-2">
-                    <p className="text-white font-bold text-sm uppercase tracking-widest border-b border-white/10 pb-2">Image Sizing & Formats</p>
+                    <p className="text-white font-bold text-sm uppercase tracking-widest border-b border-white/10 pb-2">Media Sizing & Formats</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-white/5 p-4 rounded-xl border border-white/10">
@@ -360,9 +360,9 @@ const sections = [
                             <p className="text-white/50 text-xs">Aspect Ratio: 16:9 (Landscape). High-resolution lifestyle shots work best. The system will automatically add a subtle dark gradient for text legibility.</p>
                         </div>
                         <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                            <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Visual Vibe Components</p>
-                            <p className="text-white text-lg font-mono mb-2">1080 × 1080 px</p>
-                            <p className="text-white/50 text-xs">Aspect Ratio: 1:1 (Square). Used for split layouts and storytelling imagery.</p>
+                            <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Video Showcase</p>
+                            <p className="text-white text-lg font-mono mb-2">1920 × 1080 px</p>
+                            <p className="text-white/50 text-xs">Aspect Ratio: 16:9 (Landscape). The player will maintain the exact video boundaries without cropping. For best results, edit your video into a cinematic 16:9 widescreen format prior to upload.</p>
                         </div>
                         <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                             <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Category & Collections</p>
