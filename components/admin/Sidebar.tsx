@@ -53,7 +53,7 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center justify-between px-4 py-3 transition-all duration-300 group",
+                                "flex items-center justify-between px-4 py-3 transition-all duration-300 group min-h-[48px]",
                                 isActive
                                     ? "bg-white/5 text-gold border-l-2 border-gold"
                                     : "text-zinc-400 hover:text-white hover:bg-white/5"
@@ -75,7 +75,7 @@ export function Sidebar() {
                 <Link
                     href="/"
                     target="_blank"
-                    className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase tracking-widest hover:text-gold transition-colors"
+                    className="flex items-center min-h-[48px] gap-2 text-[10px] text-zinc-500 uppercase tracking-widest hover:text-gold transition-colors"
                 >
                     <ExternalLink className="w-3 h-3" />
                     View Live Store
