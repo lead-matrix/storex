@@ -1,25 +1,40 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import Mux from "@mux/mux-node";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const mux = new Mux({
+  tokenId: process.env.MUX_TOKEN_ID || "not_set",
+  tokenSecret: process.env.MUX_TOKEN_SECRET || "not_set",
+});
+
 /**
  * Mux Webhook handler.
- * Listens for video lifecycle events:
- *   - video.upload.asset_created  → insert row with mux_upload_id for tracking
- *   - video.asset.created         → row created, still processing
- *   - video.asset.ready           → asset playback is live, update status + metadata
- *   - video.asset.errored         → mark as errored so admin can retry
- *
- * We do NOT verify the Mux webhook signature here for simplicity; in production,
- * you can add Mux webhook signature verification using the mux-node SDK.
+ * Now optionally supports verify-signature integration via MUX_WEBHOOK_SECRET.
  */
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+    const muxSignature = req.headers.get("mux-signature");
+    const webhookSecret = process.env.MUX_WEBHOOK_SECRET;
+
+    let body;
+
+    if (webhookSecret && muxSignature) {
+      try {
+        body = mux.webhooks.unwrap(rawBody, req.headers, webhookSecret);
+      } catch (err: any) {
+        console.error("[Mux Webhook] Signature verification failed:", err.message);
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+    } else {
+      body = JSON.parse(rawBody);
+    }
+
     const type = body.type as string;
     const data = body.data as any;
 
