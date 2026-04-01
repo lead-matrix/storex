@@ -9,7 +9,7 @@ import { useState } from 'react'
 import {
     ClipboardList, ShoppingCart, Package, Truck, Mail,
     Settings, ChevronDown, ChevronUp, CheckCircle2, AlertCircle,
-    BookOpen, Zap, Scale, HelpCircle
+    BookOpen, Zap, Scale, HelpCircle, LayoutGrid
 } from 'lucide-react'
 
 const sections = [
@@ -329,6 +329,62 @@ const sections = [
                         </div>
                     </div>
                 ))}
+            </div>
+        )
+    },
+    {
+        id: 'cms',
+        icon: LayoutGrid,
+        color: 'text-rose-400',
+        bgColor: 'bg-rose-500/10 border-rose-500/20',
+        title: 'CMS & Image Guidelines',
+        subtitle: 'Formatting images and building pages',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    Follow these guidelines to ensure your images appear perfectly across all screens, and learn how to use the CMS blocks correctly. We avoid automatic cropping to preserve maximum image quality, so prepping your images is key.
+                </p>
+                
+                <div className="space-y-4 pt-2">
+                    <p className="text-white font-bold text-sm uppercase tracking-widest border-b border-white/10 pb-2">Image Sizing & Formats</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Product Gallery Images</p>
+                            <p className="text-white text-lg font-mono mb-2">1080 × 1440 px</p>
+                            <p className="text-white/50 text-xs">Aspect Ratio: 3:4 (Vertical). Use a solid white or transparent background for best cosmetic product shots.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Hero Banner Slides</p>
+                            <p className="text-white text-lg font-mono mb-2">1920 × 1080 px</p>
+                            <p className="text-white/50 text-xs">Aspect Ratio: 16:9 (Landscape). High-resolution lifestyle shots work best. The system will automatically add a subtle dark gradient for text legibility.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Visual Vibe Components</p>
+                            <p className="text-white text-lg font-mono mb-2">1080 × 1080 px</p>
+                            <p className="text-white/50 text-xs">Aspect Ratio: 1:1 (Square). Used for split layouts and storytelling imagery.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-rose-400 font-bold text-[11px] uppercase tracking-wider mb-1">Category & Collections</p>
+                            <p className="text-white text-lg font-mono mb-2">1200 × 1500 px</p>
+                            <p className="text-white/50 text-xs">Aspect Ratio: 4:5. Stunning portrait photography to introduce your collections.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                    <p className="text-white font-bold text-sm uppercase tracking-widest border-b border-white/10 pb-2">CMS Blocks Guide</p>
+                    <div className="space-y-3">
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-gold font-bold text-[12px] mb-1">Hero Banner (Slider)</p>
+                            <p className="text-white/60 text-xs">The Hero Banner now supports multiple photos. Upload up to 3 images in the property settings (Slide 1, Slide 2, Slide 3). They will automatically transition in a slideshow.</p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <p className="text-gold font-bold text-[12px] mb-1">Contact Form (formerly Concierge Link)</p>
+                            <p className="text-white/60 text-xs">A sophisticated contact section. Drop this into your page to allow clients to send support requests directly to your customer service email. No configuration needed.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         )
     },

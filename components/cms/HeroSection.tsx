@@ -4,26 +4,26 @@ import { MasterpieceHero } from "../MasterpieceHero";
 interface HeroProps {
     title: string
     subtitle: string
-    imageUrl?: string
+    slide1_url?: string
+    slide2_url?: string
+    slide3_url?: string
 }
 
-export default function HeroSection({ title, subtitle, imageUrl }: HeroProps) {
-    // If we have an imageUrl from the CMS, we can pass it as a single slide
-    // However, if we want total control, we can let MasterpieceHero fetch the global slides
-    // if no specific props are provided that override it.
-    
-    // For now, let's treat the CMS props as an override if they are present and non-default.
+export default function HeroSection({ title, subtitle, slide1_url, slide2_url, slide3_url }: HeroProps) {
+    const customImages = [slide1_url, slide2_url, slide3_url].filter(img => img && img.trim() !== '');
     const hasOverride = title && title !== "New Experience";
     
-    const singleSlide = hasOverride ? [{
-        id: 'cms-hero',
-        image: imageUrl || "/products/Banner-1.jpg", 
+    // If no custom images provided but an override is present, use default.
+    const finalImages = customImages.length > 0 ? customImages : ["/products/Banner-1.jpg"];
+
+    const slides = hasOverride ? finalImages.map((img, i) => ({
+        id: `cms-hero-${i}`,
+        image: img as string,
         title: title,
         subtitle: subtitle,
         buttonText: "Discover Collection",
         link: "/shop"
-    }] : undefined;
+    })) : undefined;
 
-    return <MasterpieceHero initialSlides={singleSlide} />;
+    return <MasterpieceHero initialSlides={slides} />;
 }
-

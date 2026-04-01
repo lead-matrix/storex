@@ -53,6 +53,10 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error("[Mux] create-upload error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const msg = err.message || "";
+    if (msg.includes("401") || msg.includes("unauthorized")) {
+       return NextResponse.json({ error: "Mux Authentication failed. Please verify MUX_TOKEN_ID and MUX_TOKEN_SECRET in your Vercel Environment Variables. Confirm you are using Video API tokens." }, { status: 500 });
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

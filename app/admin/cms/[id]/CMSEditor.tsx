@@ -16,13 +16,13 @@ interface Section {
 
 // ── COMPONENT REGISTRY ──
 const COMPONENT_TYPES = [
-    { type: "hero", label: "Hero Banner", icon: Sparkles, color: "text-amber-400", defaultProps: { title: "New Experience", subtitle: "Crafted for Excellence", imageUrl: "" } },
+    { type: "hero", label: "Hero Banner", icon: Sparkles, color: "text-amber-400", defaultProps: { title: "New Experience", subtitle: "Crafted for Excellence", slide1_url: "", slide2_url: "", slide3_url: "" } },
     { type: "productGrid", label: "Product Gallery", icon: LayoutGrid, color: "text-emerald-400", defaultProps: { category: "all", limit: 4 } },
     { type: "richText", label: "Philosophy Block", icon: Type, color: "text-blue-400", defaultProps: { content: "Add your storytelling here..." } },
     { type: "philosophyGrid", label: "Philosophy Grid", icon: LayoutGrid, color: "text-amber-500/80", defaultProps: {} },
     { type: "imageBanner", label: "Visual Vibe", icon: ImageIcon, color: "text-purple-400", defaultProps: { imageUrl: "", title: "", subtitle: "", ctaText: "", ctaLink: "", overlayOpacity: 0.4, height: "70vh" } },
     { type: "videoBlock", label: "Video Showcase", icon: Film, color: "text-red-400", defaultProps: { playbackId: "", title: "", subtitle: "", autoPlay: 1 } },
-    { type: "contactForm", label: "Concierge Link", icon: Mail, color: "text-gold", defaultProps: {} },
+    { type: "contactForm", label: "Contact Form", icon: Mail, color: "text-gold", defaultProps: {} },
 ]
 
 export default function CMSEditor({ pageId, initialSections }: { pageId: string, initialSections: any[] }) {
