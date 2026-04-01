@@ -4,7 +4,7 @@
 // Uses @dnd-kit/core + @dnd-kit/sortable.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
     DndContext, closestCenter, PointerSensor, useSensor, useSensors,
     DragEndEvent, DragOverlay, DragStartEvent
@@ -26,6 +26,31 @@ function newId() {
     return typeof crypto !== 'undefined'
         ? crypto.randomUUID()
         : Math.random().toString(36).slice(2)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Media Picker Inline
+// ─────────────────────────────────────────────────────────────────────────────
+function MediaPickerInline({ onSelect }: { onSelect: (url: string) => void }) {
+  const [images, setImages] = useState<{url:string,name:string}[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    fetch('/api/admin/media-list')
+      .then(r => r.json())
+      .then(data => { setImages(data); setLoading(false) })
+  }, [])
+  if (loading) return <p className='text-center text-gray-400 py-8'>Loading...</p>
+  return (
+    <div className='grid grid-cols-3 gap-3'>
+      {images.map(img => (
+        <button key={img.url} type='button' onClick={() => onSelect(img.url)}
+          className='aspect-square rounded overflow-hidden border-2 border-transparent
+            hover:border-blue-500 transition-all'>
+          <img src={img.url} alt={img.name} className='w-full h-full object-cover' />
+        </button>
+      ))}
+    </div>
+  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -82,6 +107,7 @@ function SortableBlockShell({
 // Prop Editor — auto-generates form fields from block props
 // ─────────────────────────────────────────────────────────────────────────────
 function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated: PageBlock) => void }) {
+    const [mediaTarget, setMediaTarget] = useState<string|null>(null)
     const set = (key: string, value: unknown) => {
         onChange({ ...block, props: { ...block.props, [key]: value } })
     }
@@ -150,8 +176,24 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                 if (typeof val === 'string' && key.includes('image')) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
-                        <input type="url" value={val} onChange={e => set(key, e.target.value)} placeholder="https://…" className={FIELD} />
-                        {val && <img src={String(val)} alt="preview" className="mt-2 h-16 w-full object-cover rounded border border-gray-200" />}
+                        <div className='flex gap-2 items-center'>
+                            <input type='url' value={val} onChange={e => set(key, e.target.value)} placeholder='Paste image URL or click Browse' className={`${FIELD} flex-1`} />
+                            <button type='button' onClick={() => setMediaTarget(key)} className='flex-shrink-0 px-3 py-2 bg-gray-800 text-white rounded text-xs font-bold hover:bg-gray-700 whitespace-nowrap'>
+                                Browse
+                            </button>
+                        </div>
+                        {val && <img src={String(val)} alt='preview' onError={e => (e.currentTarget.style.display='none')} className='mt-2 h-20 w-full object-cover rounded border border-gray-200' />}
+                        {mediaTarget === key && (
+                            <div className='fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4' onClick={() => setMediaTarget(null)}>
+                                <div className='bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-auto' onClick={e => e.stopPropagation()}>
+                                    <div className='flex justify-between mb-4'>
+                                        <h3 className='font-bold text-gray-900'>Choose from Media Library</h3>
+                                        <button onClick={() => setMediaTarget(null)}>✕</button>
+                                    </div>
+                                    <MediaPickerInline onSelect={url => { set(key, url); setMediaTarget(null) }} />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )
 
@@ -188,6 +230,7 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
     const [saving, setSaving] = useState(false)
     const [draggingId, setDraggingId] = useState<string | null>(null)
     const [rightOpen, setRightOpen] = useState(true)
+    const [mobileTab, setMobileTab] = useState<'blocks'|'canvas'|'props'>('canvas')
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -198,6 +241,7 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
         setBlocks(prev => [...prev, newBlock])
         setSelected(newBlock.id)
         setSidebarMode('props')
+        if (window.innerWidth < 768) setMobileTab('canvas')
     }, [])
 
     const updateBlock = useCallback((updated: PageBlock) => {
@@ -238,9 +282,27 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
     const draggingBlock = draggingId ? blocks.find(b => b.id === draggingId) : null
 
     return (
-        <div className="flex h-screen overflow-hidden bg-gray-100" id="builder-root">
+        <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100" id="builder-root">
+            <div className='flex md:hidden border-b border-gray-200 bg-white sticky top-0 z-30 flex-shrink-0'>
+                {(['blocks','canvas','props'] as const).map(tab => (
+                    <button key={tab} type='button'
+                        onClick={() => { 
+                            setMobileTab(tab); 
+                            if(tab==='props' && !selected) setMobileTab('canvas');
+                            else if(tab==='blocks') setSidebarMode('blocks');
+                            else if(tab==='props') setSidebarMode('props');
+                        }}
+                        className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider transition-colors ${
+                            mobileTab===tab
+                                ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50'
+                                : 'text-gray-400 hover:text-gray-600'
+                        }`}>
+                        {tab==='blocks' ? '⊞ Blocks' : tab==='canvas' ? '⬜ Preview' : '⚙ Settings'}
+                    </button>
+                ))}
+            </div>
             {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
-            <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 z-20 overflow-y-auto">
+            <aside className={`w-full md:w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0 z-20 overflow-y-auto ${mobileTab === 'blocks' || mobileTab === 'props' ? 'flex' : 'hidden md:flex'}`}>
                 <div className="px-4 py-4 border-b border-gray-200">
                     <p className="text-[9px] uppercase font-bold tracking-widest text-gray-400 mb-1">Page Title</p>
                     <input
@@ -318,7 +380,7 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
             </aside>
 
             {/* ── MAIN CANVAS ─────────────────────────────────────────────── */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className={`flex-1 flex flex-col overflow-hidden ${mobileTab === 'canvas' ? 'flex' : 'hidden md:flex'}`}>
                 {/* Top Bar */}
                 <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 flex-shrink-0 z-10">
                     <div className="flex items-center gap-2 text-sm text-gray-500 flex-1">
@@ -383,7 +445,11 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
                                                 key={block.id}
                                                 block={block}
                                                 isSelected={selected === block.id}
-                                                onSelect={() => { setSelected(block.id); setSidebarMode('props') }}
+                                                onSelect={() => { 
+                                                    setSelected(block.id); 
+                                                    setSidebarMode('props');
+                                                    if (window.innerWidth < 768) setMobileTab('props');
+                                                }}
                                                 onDelete={() => deleteBlock(block.id)}
                                             />
                                         ))
