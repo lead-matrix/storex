@@ -145,6 +145,29 @@ export async function createCheckoutSession(
 
   if (orderError) throw new Error(`Order creation failed: ${orderError.message}`);
 
+  // 4b ─ Reserve Inventory for this Order (30 min window)
+  // This prevents ghost inventory issues during the Stripe checkout window.
+  try {
+    const { error: reserveError } = await supabase.rpc('check_and_reserve_inventory', {
+      p_items: validatedItems.map(i => ({
+        product_id: i.productId,
+        variant_id: i.variantId,
+        quantity: i.quantity
+      })),
+      p_order_id: order.id,
+      p_expires_in: '30 minutes'
+    });
+
+    if (reserveError) {
+      // If reservation fails (stock gone between validation and reservation), mark order cancelled
+      await supabase.from('orders').update({ status: 'cancelled', metadata: { error: reserveError.message } }).eq('id', order.id);
+      throw new Error(`Inventory reservation failed: ${reserveError.message}`);
+    }
+  } catch (err: any) {
+    console.error('[Checkout Reservation Error]', err.message);
+    throw err;
+  }
+
   // 5 ─ Create Stripe checkout session
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dinacosmetic.store';
   const lineItems = validatedItems.map(item => ({

@@ -159,8 +159,6 @@ export async function POST(req: Request) {
               variant_id: item.variant_id || null,
               quantity: item.quantity,
               price: item.price,
-              // Bug #5: Snapshot names at purchase time so order history stays
-              // correct even if the product is later renamed or deleted.
               product_name: item.product_name || null,
               variant_name: item.variant_name || null,
               fulfilled_quantity: 0,
@@ -170,33 +168,15 @@ export async function POST(req: Request) {
           if (itemsError) {
             console.error("[Stripe Webhook] Items insert failed:", itemsError);
           } else {
-            // Deduct stock
-            for (const item of cartItems) {
-              if (item.variant_id) {
-                const { data: v } = await supabase
-                  .from("product_variants")
-                  .select("stock")
-                  .eq("id", item.variant_id)
-                  .single();
-                if (v && v.stock !== undefined) {
-                  await supabase
-                    .from("product_variants")
-                    .update({ stock: Math.max(0, v.stock - item.quantity) })
-                    .eq("id", item.variant_id);
-                }
-              } else if (item.product_id) {
-                const { data: p } = await supabase
-                  .from("products")
-                  .select("stock")
-                  .eq("id", item.product_id)
-                  .single();
-                if (p && p.stock !== undefined) {
-                  await supabase
-                    .from("products")
-                    .update({ stock: Math.max(0, p.stock - item.quantity) })
-                    .eq("id", item.product_id);
-                }
-              }
+            // ✅ ATOMIC STOCK UPDATE & RESERVATION CLEARANCE
+            // This replaces the manual loop to prevent race conditions and ensures
+            // ghost inventory (reservations) is cleared for the completed order.
+            const { error: inventoryError } = await supabase.rpc('finalize_order_inventory', {
+              p_order_id: orderId
+            });
+
+            if (inventoryError) {
+              console.error("[Stripe Webhook] Atomic inventory update failed:", inventoryError);
             }
           }
         }
