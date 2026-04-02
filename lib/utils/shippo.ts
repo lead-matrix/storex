@@ -109,26 +109,26 @@ export function calculateShippingRate(
     case 'standard':
       brackets = config.weight_brackets || DEFAULT_US_STANDARD_BRACKETS;
       name = config.standard_label || 'USPS Ground Advantage (US)';
-      minDays = 3;
-      maxDays = 5;
+      minDays = config.standard_min_days ?? 3;
+      maxDays = config.standard_max_days ?? 5;
       break;
     case 'express':
       brackets = config.express_weight_brackets || DEFAULT_US_EXPRESS_BRACKETS;
       name = config.express_label || 'USPS Priority Mail (US)';
-      minDays = 1;
-      maxDays = 3;
+      minDays = config.express_min_days ?? 1;
+      maxDays = config.express_max_days ?? 3;
       break;
     case 'intl_standard':
       brackets = config.intl_weight_brackets || DEFAULT_INTL_STANDARD_BRACKETS;
       name = 'USPS Priority Mail International 🌍';
-      minDays = 6;
-      maxDays = 10;
+      minDays = config.intl_standard_min_days ?? 6;
+      maxDays = config.intl_standard_max_days ?? 10;
       break;
     case 'intl_express':
       brackets = config.intl_express_weight_brackets || DEFAULT_INTL_EXPRESS_BRACKETS;
       name = 'USPS Priority Mail Express International 🚀';
-      minDays = 3;
-      maxDays = 5;
+      minDays = config.intl_express_min_days ?? 3;
+      maxDays = config.intl_express_max_days ?? 5;
       break;
   }
 

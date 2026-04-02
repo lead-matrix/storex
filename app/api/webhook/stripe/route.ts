@@ -52,7 +52,16 @@ export async function POST(req: Request) {
       event.type === "checkout.session.completed" ||
       event.type === "checkout.session.async_payment_succeeded"
     ) {
-      const session = event.data.object as Stripe.Checkout.Session;
+      let session = event.data.object as Stripe.Checkout.Session;
+
+      // Expand shipping_rate to capture shipping method name
+      try {
+        session = await stripe.checkout.sessions.retrieve(session.id, {
+          expand: ['shipping_cost.shipping_rate']
+        });
+      } catch (err) {
+        console.warn(`[Stripe Webhook] Expanded session retrieve failed for ${session.id}`, err);
+      }
 
       // For checkout.session.completed with a delayed payment, payment_status may be
       // 'unpaid' — we log it but do NOT fulfill. async_payment_succeeded will fire later.
@@ -108,6 +117,7 @@ export async function POST(req: Request) {
 
       const chosenShipping = session.shipping_cost ?? null;
       const customerName = shippingAddress.name || customer?.name || "Customer";
+      const shippingRate = chosenShipping?.shipping_rate as Stripe.ShippingRate | undefined;
 
       // Atomic order update — writes all columns that now exist in the schema
       const { error: updateError } = await supabase
@@ -123,6 +133,8 @@ export async function POST(req: Request) {
           billing_address: billingAddress,
           amount_total: session.amount_total ? session.amount_total / 100 : 0,
           stripe_session_id: session.id,
+          shipping_cost: chosenShipping?.amount_total ? chosenShipping.amount_total / 100 : 0,
+          shipping_method: shippingRate?.display_name || "Standard Shipping",
           metadata: {
             stripe_session_id: session.id,
             shipping_cost_cents: chosenShipping?.amount_total ?? 0,
