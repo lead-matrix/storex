@@ -2,7 +2,7 @@
 
 > **Live store(1st client)**: [dinacosmetic.store](https://dinacosmetic.store)  
 > **Stack**: Next.js 16 · Supabase · Stripe · Shippo · Resend · Vercel  
-> **Version**: 2.2.0 — Mobile & Builder Release
+> **Version**: 2.3.0 — CMS & Inventory Hardening
 
 A full-stack, headless e-commerce platform purpose-built for **Dina Cosmetic** — a professional beauty brand. Zero SaaS lock-in. 100% admin-owned infrastructure with an immersive luxury storefront and a fully-featured command portal.
 
@@ -207,6 +207,24 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 
 ## 🐛 Bug Fixes & Changelog
 
+### v2.3.0 — April 2026 · CMS Power-Up & Inventory Hardening
+
+#### 💎 Philosophy Grid Refactor
+- **Dynamic Component**: Rewritten `PhilosophyGrid` to accept fully dynamic props (eyebrow, heading, and items[]).
+- **Dedicated Editor**: Added a custom `PhilosophyGridEditor` to the CMS builder with real-time item management (add/remove) and a luxury icon picker (Sparkles, ShieldCheck, Zap, Heart, etc.).
+
+#### 📂 Content Architecture Refactor
+- **CMS Migration**: Successfully migrated 8 page-specific content blocks (About Hero, Story, Philosophy, Contact, Policies) from static `frontend_content` to the `cms_sections` table.
+- **Direct Editing**: About, Contact, Privacy, and Terms pages are now 100% editable via **Admin → Experiences**.
+- **Global Content Cleanup**: Cleaned up `frontend_content` to focus purely on site-wide globals (Footer, Announcement Bar, Social Links).
+
+#### 🛡️ Inventory & DB Hardening
+- **Atomic Operations**: Implemented PostgreSQL functions for atomic stock deduction to prevent race conditions during concurrent checkouts.
+- **Reservation Lifecycle**: Enforced reservation-based order creation for enhanced data integrity.
+- **Database Safety**: Applied non-destructive constraints and finalized production-ready inventory schema.
+
+---
+
 ### v2.2.0 — April 2026 · Mobile & Builder Improvements
 - Fixed GitHub CI workflow: added required secrets and build step dependencies
 - CMS Builder: added mobile tab navigation (Blocks / Preview / Settings panels)
@@ -244,5 +262,5 @@ Ensure all environment variables from step 2 are set in **Vercel → Project →
 
 ---
 
-*Built and maintained by **Mahmud R B** — Version 2.2.0*  
-*Last updated: April 2026*
+*Built and maintained by **Mahmud R B** — Version 2.3.0*  
+*Last updated: April 3, 2026*
