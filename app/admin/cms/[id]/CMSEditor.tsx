@@ -1,5 +1,9 @@
-const CMSEditor = () => {
-  // existing code
-};
+import CmsClient from '../cms-client';
 
-CMSEditor.defaultProps = { title: "New Experience", subtitle: "Crafted for Excellence", badge: "", imageUrl: "", ctaText: "Discover Collection", ctaLink: "/shop" };
+const CMSEditor = (props) => {
+  const hero = {
+    badge: props.badge,  
+    ctaText: props.ctaText,
+    ctaLink: props.ctaLink,
+  };
+  // Component implementation continues...
