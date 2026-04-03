@@ -1,4 +1,4 @@
-"use server"
+use server
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -97,6 +97,12 @@ export async function saveSections(pageId: string, sections: any[]) {
     }
 
     revalidatePath(`/admin/cms/${pageId}`)
-    revalidatePath("/") // Revalidate home/dynamic pages
+    revalidatePath("/", "layout")
+    revalidatePath("/about")
+    revalidatePath("/contact")
+    revalidatePath("/collections")
+    revalidatePath("/privacy")
+    revalidatePath("/terms")
+    revalidatePath("/sale")
+    revalidatePath("/[slug]", "page")
 }
-
