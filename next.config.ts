@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  reactCompiler: true,
+  experimental: {
+    turbopackFileSystemCacheForDev: true,
+  },
   images: {
     deviceSizes: [640, 750, 1080, 1920],
     imageSizes: [16, 32, 48, 64, 96],
@@ -15,6 +19,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.supabase.in',
         pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.mux.com',
       },
     ],
   },

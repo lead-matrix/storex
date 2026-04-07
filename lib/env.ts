@@ -4,11 +4,6 @@ const criticalVars = [
     "SUPABASE_SERVICE_ROLE_KEY",
     "STRIPE_SECRET_KEY",
     "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-    "WAREHOUSE_NAME",
-    "WAREHOUSE_ADDRESS_LINE1",
-    "WAREHOUSE_CITY",
-    "WAREHOUSE_STATE",
-    "WAREHOUSE_ZIP",
 ]
 
 const secondaryVars = [
@@ -21,6 +16,12 @@ const secondaryVars = [
     "SMTP_USER",
     "SMTP_PASS",
     "SMTP_FROM",
+    // Warehouse info can also be set in Supabase site_settings (Admin > Settings > Shipping)
+    "WAREHOUSE_NAME",
+    "WAREHOUSE_ADDRESS_LINE1",
+    "WAREHOUSE_CITY",
+    "WAREHOUSE_STATE",
+    "WAREHOUSE_ZIP",
 ]
 
 export function validateEnv() {

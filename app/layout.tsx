@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { Toaster } from 'sonner';
 import { validateEnv } from "@/lib/env";
 import Script from 'next/script';
+import { getLayoutData } from "@/lib/data/layout";
 
 
 const playfair = Playfair_Display({
@@ -104,42 +105,8 @@ export default async function RootLayout({
   // produce an immediate hard error rather than a silent broken deployment.
   validateEnv();
 
-  const supabase = await createClient();
-
-  // Fetch navs
-  let headerNavItems = [];
-  let footerShopItems = [];
-  let footerLegalItems = [];
-  let socialLinks = null;
-  let logoUrl = null;
-
-  try {
-    const [headerRes, shopLinksRes, legalLinksRes, socialRes, storeInfoRes] = await Promise.allSettled([
-      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'header_main').maybeSingle(),
-      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_shop').maybeSingle(),
-      supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_legal').maybeSingle(),
-      supabase.from('site_settings').select('setting_value').eq('setting_key', 'social_media').maybeSingle(),
-      supabase.from('site_settings').select('setting_value').eq('setting_key', 'store_info').maybeSingle(),
-    ]);
-
-    if (headerRes.status === 'fulfilled' && headerRes.value.data) {
-      headerNavItems = headerRes.value.data.menu_items || [];
-    }
-    if (shopLinksRes.status === 'fulfilled' && shopLinksRes.value.data) {
-      footerShopItems = shopLinksRes.value.data.menu_items || [];
-    }
-    if (legalLinksRes.status === 'fulfilled' && legalLinksRes.value.data) {
-      footerLegalItems = legalLinksRes.value.data.menu_items || [];
-    }
-    if (socialRes.status === 'fulfilled' && socialRes.value.data) {
-      socialLinks = socialRes.value.data.setting_value;
-    }
-    if (storeInfoRes.status === 'fulfilled' && storeInfoRes.value.data) {
-      logoUrl = (storeInfoRes.value.data.setting_value as any)?.logo_url;
-    }
-  } catch (err) {
-    console.error("Critical Layout Error:", err);
-  }
+  const { headerNavItems, footerShopItems, footerLegalItems, socialLinks, logoUrl } =
+      await getLayoutData();
 
   return (
     <html lang="en" className="bg-black">

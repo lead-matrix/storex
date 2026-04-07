@@ -25,6 +25,8 @@ interface CartContextType {
     subtotal: number;
     isCartOpen: boolean;
     setIsCartOpen: (open: boolean) => void;
+    /** true once localStorage has been read — use to suppress hydration flicker */
+    isMounted: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -32,8 +34,9 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
-    // Load cart from local storage on mount
+    // Load cart from localStorage on mount — runs AFTER hydration to avoid SSR/CSR mismatch
     useEffect(() => {
         const savedCart = localStorage.getItem("lmt-cart");
         if (savedCart) {
@@ -43,12 +46,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 console.error("Failed to parse cart", e);
             }
         }
+        setIsMounted(true);
     }, []);
 
-    // Save cart to local storage on change
+    // Persist cart to localStorage whenever it changes (only after initial mount)
     useEffect(() => {
-        localStorage.setItem("lmt-cart", JSON.stringify(cart));
-    }, [cart]);
+        if (isMounted) {
+            localStorage.setItem("lmt-cart", JSON.stringify(cart));
+        }
+    }, [cart, isMounted]);
 
     const addToCart = (item: CartItem) => {
         setCart((prev) => {
@@ -94,6 +100,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 subtotal,
                 isCartOpen,
                 setIsCartOpen,
+                isMounted,
             }}
         >
             {children}

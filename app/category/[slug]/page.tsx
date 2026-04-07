@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, Tag } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300;
 
 interface Props {
     params: Promise<{ slug: string }>

@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { RelatedProducts } from "@/features/products/components/RelatedProducts";
 import { ProductClient } from "./ProductClient";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 interface PageProps {
     params: Promise<{ slug: string }>;

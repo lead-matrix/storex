@@ -34,9 +34,11 @@ interface Variant {
 export function ProductCard({
   product,
   variants = [],
+  isPriority = false,
 }: {
   product: Product;
   variants?: Variant[];
+  isPriority?: boolean;
 }) {
   const { addToCart } = useCart();
   const [hoveredVariant, setHoveredVariant] = useState<Variant | null>(null);
@@ -102,6 +104,7 @@ export function ProductCard({
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
             onError={() => setImageError(true)}
+            priority={isPriority}
           />
 
           {/* Badges */}

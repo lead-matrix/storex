@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 import { ProductCard } from '@/components/ProductCard'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300;
 
 interface Props {
     params: Promise<{ slug: string }>

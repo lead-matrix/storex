@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createShippingLabel } from "@/lib/utils/shippo";
 import { sendShippingNotificationEmail } from "@/lib/utils/email";
 
@@ -271,8 +271,8 @@ export async function adjustStock(variantId: string, delta: number) {
         const newStock = Math.max(0, (variant.stock ?? 0) + delta);
         await supabase.from('product_variants').update({ stock: newStock }).eq('id', variantId);
 
-        // Rule 49: Log movement
-        await supabase.from('inventory_movements').insert({
+        // Log movement to the correct table
+        await supabase.from('inventory_logs').insert({
             variant_id: variantId,
             change_amount: delta,
             new_stock: newStock,
@@ -291,16 +291,16 @@ export async function adjustStock(variantId: string, delta: number) {
         const newStock = Math.max(0, (prod.stock ?? 0) + delta);
         const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', variantId);
 
-        if (!error) {
-            // Rule 49: Log movement (approximate for v1)
-            await supabase.from('inventory_movements').insert({
-                product_id: variantId,
-                change_amount: delta,
-                new_stock: newStock,
-                reason: 'Manual Admin Adjustment (Legacy Product)',
-                admin_id: (await supabase.auth.getUser()).data.user?.id
-            });
-        }
+            if (!error) {
+                    // Log movement
+                    await supabase.from('inventory_logs').insert({
+                        product_id: variantId,
+                        change_amount: delta,
+                        new_stock: newStock,
+                        reason: 'Manual Admin Adjustment (Legacy Product)',
+                        admin_id: (await supabase.auth.getUser()).data.user?.id
+                    });
+                }
 
         if (error) throw new Error(error.message);
 
@@ -547,6 +547,7 @@ export async function updateStoreSettings(formData: FormData) {
 
     revalidatePath('/admin/settings');
     revalidatePath('/', 'layout');
+    revalidateTag('layout'); // bust the cached header/footer data
     return { success: true };
 }
 
@@ -622,6 +623,7 @@ export async function updateMenusAndSocials(formData: FormData) {
         }, { onConflict: 'setting_key' });
 
     revalidatePath('/', 'layout');
+    revalidateTag('layout'); // bust nav + social cache
     revalidatePath('/admin/settings');
     return { success: true };
 }
@@ -792,23 +794,23 @@ export async function bulkUpdateCatalog(updates: {
 
     try {
         if (updates.products && updates.products.length > 0) {
-            for (const item of updates.products) {
-                const { error } = await supabase
-                    .from('products')
-                    .update(item.updates)
-                    .eq('id', item.id);
-                if (error) throw error;
-            }
+            const { error } = await supabase
+                .from('products')
+                .upsert(
+                    updates.products.map(({ id, updates: u }) => ({ id, ...u })),
+                    { onConflict: 'id' }
+                );
+            if (error) throw error;
         }
 
         if (updates.variants && updates.variants.length > 0) {
-            for (const item of updates.variants) {
-                const { error } = await supabase
-                    .from('product_variants')
-                    .update(item.updates)
-                    .eq('id', item.id);
-                if (error) throw error;
-            }
+            const { error } = await supabase
+                .from('product_variants')
+                .upsert(
+                    updates.variants.map(({ id, updates: u }) => ({ id, ...u })),
+                    { onConflict: 'id' }
+                );
+            if (error) throw error;
         }
 
         revalidatePath('/admin/products');
