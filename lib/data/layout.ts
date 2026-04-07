@@ -1,14 +1,18 @@
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Cached layout data — shared by every storefront page load.
- * Revalidate every 5 minutes. Call `revalidateTag('layout')` from
- * any admin action that changes navigation menus, social links, or the logo.
+ * Revalidate every 5 minutes via TTL.
+ *
+ * IMPORTANT: Must use the admin (service-role) client here, NOT the server
+ * client. The server client calls cookies() internally, which is forbidden
+ * inside unstable_cache() and causes a prerender error at build time.
+ * Layout data (nav menus, social links, logo) is public — no RLS needed.
  */
 export const getLayoutData = unstable_cache(
     async () => {
-        const supabase = await createClient()
+        const supabase = await createAdminClient()
 
         const [headerRes, shopLinksRes, legalLinksRes, socialRes, storeInfoRes] =
             await Promise.allSettled([
@@ -35,5 +39,5 @@ export const getLayoutData = unstable_cache(
         }
     },
     ['layout-data'],
-    { revalidate: 300, tags: ['layout'] }
+    { revalidate: 300 }
 )
