@@ -14,9 +14,13 @@ type Section = {
 }
 
 const COMPONENT_TYPES = [
-  { type: "hero", label: "Hero Banner", defaultProps: { title: "New Experience", subtitle: "", badge: "", imageUrl: "", ctaText: "", ctaLink: "" } },
-  { type: "productGrid", label: "Product Grid", defaultProps: { category: "all", limit: 4 } },
+  { type: "hero", label: "Hero Banner", defaultProps: { title: "New Experience", subtitle: "", badge: "", slide1_url: "", slide2_url: "", slide3_url: "" } },
+  { type: "imageBanner", label: "Image Banner", defaultProps: { imageUrl: "", title: "", subtitle: "", badge: "", ctaText: "", ctaLink: "/shop", overlayOpacity: 0.4, height: "70vh" } },
   { type: "richText", label: "Rich Text", defaultProps: { heading: "", content: "" } },
+  { type: "productGrid", label: "Product Grid", defaultProps: { category: "all", limit: 4 } },
+  { type: "philosophyGrid", label: "Philosophy Grid", defaultProps: { items: [] } },
+  { type: "videoBlock", label: "Video Showcase", defaultProps: { videoUrl: "", title: "", subtitle: "" } },
+  { type: "contactForm", label: "Contact Form", defaultProps: { heading: "Get In Touch", subheading: "" } },
 ]
 
 function PhilosophyGridEditor({ items, onChange }: { items: any[]; onChange: (items: any[]) => void }) {
