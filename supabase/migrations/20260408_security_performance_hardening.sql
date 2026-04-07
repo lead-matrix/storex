@@ -63,7 +63,9 @@ END;
 $$;
 
 -- 1d. public.cleanup_expired_reservations
-CREATE OR REPLACE FUNCTION public.cleanup_expired_reservations()
+-- Must DROP first because CREATE OR REPLACE cannot change the return type
+DROP FUNCTION IF EXISTS public.cleanup_expired_reservations();
+CREATE FUNCTION public.cleanup_expired_reservations()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
