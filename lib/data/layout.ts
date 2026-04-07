@@ -19,7 +19,7 @@ export const getLayoutData = unstable_cache(
                 supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'header_main').maybeSingle(),
                 supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_shop').maybeSingle(),
                 supabase.from('navigation_menus').select('menu_items').eq('menu_key', 'footer_legal').maybeSingle(),
-                supabase.from('site_settings').select('setting_value').eq('setting_key', 'social_media').maybeSingle(),
+                supabase.from('frontend_content').select('content_data').eq('content_key', 'site_social_links').maybeSingle(),
                 supabase.from('site_settings').select('setting_value').eq('setting_key', 'store_info').maybeSingle(),
             ])
 
@@ -31,7 +31,7 @@ export const getLayoutData = unstable_cache(
             footerLegalItems:
                 legalLinksRes.status === 'fulfilled' ? legalLinksRes.value.data?.menu_items ?? [] : [],
             socialLinks:
-                socialRes.status === 'fulfilled' ? socialRes.value.data?.setting_value ?? null : null,
+                socialRes.status === 'fulfilled' ? socialRes.value.data?.content_data ?? null : null,
             logoUrl:
                 storeInfoRes.status === 'fulfilled'
                     ? (storeInfoRes.value.data?.setting_value as any)?.logo_url ?? null

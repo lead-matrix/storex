@@ -77,6 +77,23 @@ export function Footer({ shopLinks = [], legalLinks = [], social }: FooterProps)
                                 <Youtube size={18} strokeWidth={1.5} />
                             </Link>
                         )}
+                        {social?.pinterest && (
+                            <Link href={social.pinterest} target="_blank" className="text-textSecondary hover:text-primary transition-colors">
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
+                                    <path d="M8 8a4 4 0 0 1 8 0c0 3-2 5-4 5a2 2 0 0 0-2 2v4" />
+                                </svg>
+                            </Link>
+                        )}
                     </div>
 
                     <p className="text-[10px] uppercase tracking-widest text-textSecondary opacity-50">
