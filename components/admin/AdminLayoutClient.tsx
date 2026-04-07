@@ -41,6 +41,8 @@ interface AdminLayoutClientProps {
   children: React.ReactNode;
 }
 
+let lastFetchTime = 0;
+
 export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   const [userEmail, setUserEmail] = useState("");
   const [todayRevenue, setTodayRevenue] = useState<number | null>(null);
@@ -53,6 +55,10 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     document.body.classList.add("admin-page");
 
     const fetchUser = async () => {
+      const now = Date.now();
+      if (now - lastFetchTime < 30000) return;
+      lastFetchTime = now;
+
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) setUserEmail(user.email);

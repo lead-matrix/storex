@@ -95,11 +95,12 @@ export default async function CollectionSlugPage({ params }: Props) {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
-                        {items.map((product) => (
+                        {items.map((product, index) => (
                             <ProductCard
                                 key={product.id}
                                 product={product as any}
                                 variants={(product.product_variants as any[]) ?? []}
+                                isPriority={index < 4}
                             />
                         ))}
                     </div>

@@ -3,25 +3,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-async function ensureAdmin() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Authentication required");
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') {
-        throw new Error("Unauthorized");
-    }
-    return supabase;
-}
+import { requireAdmin } from "@/lib/auth";
+import { createClient as createAdminClient } from "@/lib/supabase/admin";
 
 export async function createCoupon(formData: FormData) {
-    const supabase = await ensureAdmin();
+    await requireAdmin();
+    const supabase = await createAdminClient();
 
     const code = (formData.get('code') as string)?.toUpperCase().trim();
     const discount_type = formData.get('discount_type') as string;
@@ -51,7 +38,8 @@ export async function createCoupon(formData: FormData) {
 }
 
 export async function toggleCouponStatus(id: string, currentStatus: string) {
-    const supabase = await ensureAdmin();
+    await requireAdmin();
+    const supabase = await createAdminClient();
     const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
 
     const { error } = await supabase
@@ -64,7 +52,8 @@ export async function toggleCouponStatus(id: string, currentStatus: string) {
 }
 
 export async function deleteCoupon(id: string) {
-    const supabase = await ensureAdmin();
+    await requireAdmin();
+    const supabase = await createAdminClient();
     const { error } = await supabase
         .from('coupons')
         .delete()

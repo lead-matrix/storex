@@ -3,35 +3,15 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-/**
- * Validates that the current user is an admin.
- * Uses the server components client for session verification.
- */
-export async function ensureAdmin() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) throw new Error("Authentication required");
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') {
-        throw new Error("Unauthorized: Admin access required");
-    }
-
-    return supabase;
-}
-
+import { requireAdmin } from "@/lib/auth"
+import { createClient as createAdminClient } from "@/lib/supabase/admin"
 /**
  * CMS PAGE ACTIONS
  */
 
 export async function createPage(title: string, slug: string) {
-    const supabase = await ensureAdmin()
+    await requireAdmin();
+    const supabase = await createAdminClient();
 
     // Standardize slug
     const cleanSlug = slug.toLowerCase()
@@ -50,7 +30,8 @@ export async function createPage(title: string, slug: string) {
 }
 
 export async function togglePagePublish(pageId: string, currentStatus: boolean) {
-    const supabase = await ensureAdmin()
+    await requireAdmin();
+    const supabase = await createAdminClient();
     const { error } = await supabase
         .from("cms_pages")
         .update({ is_published: !currentStatus })
@@ -63,7 +44,8 @@ export async function togglePagePublish(pageId: string, currentStatus: boolean) 
 }
 
 export async function deletePage(pageId: string) {
-    const supabase = await ensureAdmin()
+    await requireAdmin();
+    const supabase = await createAdminClient();
     const { error } = await supabase
         .from("cms_pages")
         .delete()
@@ -78,7 +60,8 @@ export async function deletePage(pageId: string) {
  */
 
 export async function saveSections(pageId: string, sections: any[]) {
-    const supabase = await ensureAdmin()
+    await requireAdmin();
+    const supabase = await createAdminClient();
 
     // In a production environment, we use a delete-then-insert strategy 
     // or a sophisticated upsert to handle reordering and deletions.

@@ -36,6 +36,7 @@ export function FeaturedProductsGrid({
                             <ProductCard
                                 product={product}
                                 variants={product.product_variants || []}
+                                isPriority={idx < 4}
                             />
                         </div>
                     ))}

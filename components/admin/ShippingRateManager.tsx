@@ -86,15 +86,14 @@ export default function ShippingRateManager({ initialConfig }: { initialConfig?:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(config),
         });
-        if (res.ok) {
-          toast.success("Shipping rates saved successfully");
-        } else {
-          toast.error("Failed to save — check console");
+        if (!res.ok) {
+            const err = await res.text()
+            toast.error(`Save failed: ${err || res.statusText}. Please try again.`)
+            return
         }
-      } catch {
-        // Save to localStorage as fallback
-        localStorage.setItem("shipping_config_draft", JSON.stringify(config));
-        toast.success("Draft saved locally (API not connected yet)");
+        toast.success("Shipping rates saved")
+      } catch (err) {
+        toast.error("Network error — check connection");
       }
     });
   }

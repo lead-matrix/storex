@@ -18,11 +18,12 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 w-full stagger-children">
-                    {products.slice(0, 4).map((product) => (
+                    {products.slice(0, 4).map((product, idx) => (
                         <ProductCard
                             key={product.id}
                             product={product}
                             variants={product.product_variants || []}
+                            isPriority={idx < 4}
                         />
                     ))}
                 </div>

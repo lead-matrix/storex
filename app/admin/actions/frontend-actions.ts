@@ -4,21 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
+import { requireAdmin } from "@/lib/auth";
+
 // Ensure caller is an authenticated admin
 async function ensureAdmin() {
-    const serverClient = await createClient();
-    const { data: { user } } = await serverClient.auth.getUser();
-    if (!user) throw new Error('Authentication required');
-
-    const supabase = await createAdminClient();
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') throw new Error('Unauthorized');
-    return supabase;
+    await requireAdmin();
+    return await createAdminClient();
 }
 
 // =====================================================
