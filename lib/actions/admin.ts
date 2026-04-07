@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { createShippingLabel } from "@/lib/utils/shippo";
 import { sendShippingNotificationEmail } from "@/lib/utils/email";
 
@@ -547,7 +547,6 @@ export async function updateStoreSettings(formData: FormData) {
 
     revalidatePath('/admin/settings');
     revalidatePath('/', 'layout');
-    revalidateTag('layout'); // bust the cached header/footer data
     return { success: true };
 }
 
@@ -623,7 +622,6 @@ export async function updateMenusAndSocials(formData: FormData) {
         }, { onConflict: 'setting_key' });
 
     revalidatePath('/', 'layout');
-    revalidateTag('layout'); // bust nav + social cache
     revalidatePath('/admin/settings');
     return { success: true };
 }
