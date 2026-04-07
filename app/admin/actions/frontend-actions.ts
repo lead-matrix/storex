@@ -45,7 +45,9 @@ export async function updateFrontendContent(
         return { success: false, error: error.message };
     }
 
+    revalidatePath("/", "page");
     revalidatePath("/", "layout");
+    revalidatePath("/admin/cms");
 
     return { success: true, data };
 }

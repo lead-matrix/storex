@@ -58,8 +58,7 @@ const FIELD_LABELS: Record<string, string> = {
   hero_cta_link: 'Hero Button Link (URL)',
   bestseller_heading: 'Bestsellers Section Title',
   bestseller_subheading: 'Bestsellers Subtitle',
-  announcement_text: 'Announcement Bar Text',
-  announcement_link: 'Announcement Bar Link (URL)',
+  // NOTE: Announcement bar is now managed from the Settings page (site_settings table, announcement_messages key)
   brand_story_heading: 'Brand Story Heading',
   brand_story_body: 'Brand Story Body Text',
   newsletter_heading: 'Newsletter Section Title',

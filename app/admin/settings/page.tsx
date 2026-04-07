@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { Globe, Layout, Users, Truck, DollarSign, Package } from 'lucide-react'
-import { updateStoreSettings, updateMenusAndSocials, updateShippingSettings, updateHomeSections } from '@/lib/actions/admin'
+import { updateStoreSettings, updateMenusAndSocials, updateShippingSettings, updateHomeSections, updateAnnouncementMessages } from '@/lib/actions/admin'
 import MenuEditor from '@/components/admin/MenuEditor'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 import { BrandSettings } from '@/components/admin/BrandSettings'
 import { SettingsSidebar } from '@/components/admin/SettingsSidebar'
+import AnnouncementEditor from '@/components/admin/AnnouncementEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,7 @@ export default async function AdminSettings() {
         { data: socialMedia },
         { data: shippingSettings },
         { data: homeSettings },
+        { data: announcementMsgs },
     ] = await Promise.all([
         supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
@@ -27,11 +29,13 @@ export default async function AdminSettings() {
         supabase.from('site_settings').select('*').eq('setting_key', 'social_media').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'shipping_settings').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'home_sections').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'announcement_messages').maybeSingle(),
     ])
 
     const isEnabled = storeStatus?.setting_value ?? true
     const shipping = shippingSettings?.setting_value || {}
     const homeConfig = homeSettings?.setting_value || {}
+    const announcementMessages = announcementMsgs?.setting_value?.messages || ['Free shipping on all orders over $100']
 
     return (
         <div className="space-y-12 pb-24 animate-luxury-fade">

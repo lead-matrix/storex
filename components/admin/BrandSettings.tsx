@@ -65,7 +65,16 @@ export function BrandSettings({ initialData }: BrandSettingsProps) {
                                     onChange={(url) => setLogoUrl(url)}
                                     className="w-32 h-32"
                                 />
-                                <p className="text-[8px] uppercase tracking-widest text-textsoft/60">Transparency Optimized (PNG Recommended)</p>
+                                <div className="w-full mt-2">
+                                    <input 
+                                        type="text" 
+                                        value={logoUrl} 
+                                        onChange={(e) => setLogoUrl(e.target.value)} 
+                                        placeholder="Or enter image URL manually..."
+                                        className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-2 text-xs text-white focus:border-gold outline-none transition-all shadow-inner"
+                                    />
+                                </div>
+                                <p className="text-[8px] uppercase tracking-widest text-textsoft/60 mt-1">Transparency Optimized (PNG Recommended)</p>
                             </div>
                         </div>
                     </div>

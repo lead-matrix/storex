@@ -9,7 +9,7 @@ import { useState } from 'react'
 import {
     ClipboardList, ShoppingCart, Package, Truck, Mail,
     Settings, ChevronDown, ChevronUp, CheckCircle2, AlertCircle,
-    BookOpen, Zap, Scale, HelpCircle, LayoutGrid
+    BookOpen, Zap, Scale, HelpCircle, LayoutGrid, BarChart2, Users, Video
 } from 'lucide-react'
 
 const sections = [
@@ -317,6 +317,30 @@ const sections = [
                         desc: 'Upload and manage all images used across the store. You can upload here and then reference them from product forms or CMS pages.',
                         icon: '🖼️',
                     },
+                    {
+                        title: 'Analytics',
+                        path: '/admin/analytics',
+                        desc: 'Dashboard shows revenue, orders, and top products. Full reports on revenue over time, top-selling products, and order volume.',
+                        icon: '📊',
+                    },
+                    {
+                        title: 'Users',
+                        path: '/admin/users',
+                        desc: 'Shows all registered customers. You can see their email, order history, and account status. Manual admin role assignment is possible here.',
+                        icon: '👥',
+                    },
+                    {
+                        title: 'Videos',
+                        path: '/admin/videos',
+                        desc: 'Manage video content shown on the homepage or product pages. Upload MP4 videos directly.',
+                        icon: '🎥',
+                    },
+                    {
+                        title: 'Categories',
+                        path: '/admin/categories',
+                        desc: 'Manage product categories shown in navigation and the shop page. Each has a name, slug, description, and cover image.',
+                        icon: '🗂️',
+                    },
                 ].map(item => (
                     <div key={item.title} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/[0.06] hover:border-gold/20 transition-colors">
                         <span className="text-2xl flex-shrink-0">{item.icon}</span>
@@ -329,6 +353,81 @@ const sections = [
                         </div>
                     </div>
                 ))}
+            </div>
+        )
+    },
+    {
+        id: 'analytics',
+        icon: BarChart2,
+        color: 'text-indigo-400',
+        bgColor: 'bg-indigo-500/10 border-indigo-500/20',
+        title: 'Analytics & Store Performance',
+        subtitle: 'Dashboard insights',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    Dashboard shows revenue, orders, and top products. Go to <code className="bg-white/10 px-1 rounded text-[11px]">/admin/analytics</code> for full reports — revenue over time, top-selling products, and order volume by day. Data refreshes every 60 seconds.
+                </p>
+            </div>
+        )
+    },
+    {
+        id: 'users',
+        icon: Users,
+        color: 'text-orange-400',
+        bgColor: 'bg-orange-500/10 border-orange-500/20',
+        title: 'Customer Accounts',
+        subtitle: 'User and admin roles',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    <code className="bg-white/10 px-1 rounded text-[11px]">/admin/users</code> shows all registered customers. You can see their email, order history, and account status. You can manually set a user's role to <code className="bg-white/10 px-1 rounded text-[11px]">admin</code> from this page to grant admin portal access.
+                </p>
+            </div>
+        )
+    },
+    {
+        id: 'videos',
+        icon: Video,
+        color: 'text-cyan-400',
+        bgColor: 'bg-cyan-500/10 border-cyan-500/20',
+        title: 'Video Library',
+        subtitle: 'Manage MP4 content',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    <code className="bg-white/10 px-1 rounded text-[11px]">/admin/videos</code> manages video content shown on the homepage or product pages. Upload videos directly from this section. Supported formats: MP4. Max size: 50MB. Videos are served from Supabase Storage.
+                </p>
+            </div>
+        )
+    },
+    {
+        id: 'categories',
+        icon: LayoutGrid,
+        color: 'text-fuchsia-400',
+        bgColor: 'bg-fuchsia-500/10 border-fuchsia-500/20',
+        title: 'Categories & Collections',
+        subtitle: 'Organize your catalog',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    <code className="bg-white/10 px-1 rounded text-[11px]">/admin/categories</code> manages the product categories shown in navigation and the shop page. Each category has a name, slug, description, and cover image. Changes to categories appear live immediately.
+                </p>
+            </div>
+        )
+    },
+    {
+        id: 'abandoned',
+        icon: ShoppingCart,
+        color: 'text-lime-400',
+        bgColor: 'bg-lime-500/10 border-lime-500/20',
+        title: 'Abandoned Cart Recovery',
+        subtitle: 'Recover lost sales',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    <code className="bg-white/10 px-1 rounded text-[11px]">/admin/marketing/abandoned</code> shows carts that were started but never completed. You can see the customer's email and cart contents. Use this to send manual recovery emails or analyze drop-off patterns.
+                </p>
             </div>
         )
     },

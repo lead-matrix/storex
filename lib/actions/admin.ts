@@ -626,6 +626,29 @@ export async function updateMenusAndSocials(formData: FormData) {
     return { success: true };
 }
 
+export async function updateAnnouncementMessages(formData: FormData) {
+    const supabase = await ensureAdmin();
+    const str = formData.get('messages') as string;
+    let messages: string[] = [];
+    if (str) {
+        try {
+            messages = JSON.parse(str);
+        } catch { }
+    }
+    
+    await supabase
+        .from('site_settings')
+        .upsert({
+            setting_key: 'announcement_messages',
+            setting_value: { messages },
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_key' });
+        
+    revalidatePath('/', 'page');
+    revalidatePath('/admin/settings');
+    return { success: true };
+}
+
 export async function updateShippingSettings(formData: FormData) {
     const supabase = await ensureAdmin();
 
