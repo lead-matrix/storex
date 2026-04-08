@@ -12,6 +12,8 @@ async function ensureAdmin() {
 
     if (!user) throw new Error("Authentication required");
 
+    const isOwner = user.email?.toLowerCase() === 'admin@dinacosmetic.store';
+
     const { createClient: createAdminClient } = await import('@/lib/supabase/admin');
     const adminSupabase = await createAdminClient();
 
@@ -21,7 +23,7 @@ async function ensureAdmin() {
         .eq('id', user.id)
         .single();
 
-    if (profile?.role !== 'admin') {
+    if (!isOwner && profile?.role !== 'admin') {
         throw new Error("Unauthorized: Admin access required");
     }
 

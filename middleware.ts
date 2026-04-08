@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -65,15 +65,21 @@ export async function proxy(request: NextRequest) {
             return NextResponse.redirect(new URL("/login", request.url));
         }
 
-        // Check user role from the profile table
-        const { data: profile } = await supabase
+        // Use service-role client to bypass RLS — anon client can return null
+        // profile even for valid authenticated users if the SELECT policy is missing.
+        const { createClient: createAdminDb } = await import('./lib/supabase/admin');
+        const adminDb = await createAdminDb();
+        const { data: profile } = await adminDb
             .from("profiles")
             .select("role")
             .eq("id", user.id)
             .single();
 
-        if (profile?.role !== "admin") {
-            // Logically, non-admins shouldn't even know this exists or be here
+        // Owner email absolute bypass — never block admin@dinacosmetic.store
+        const isOwnerEmail = user.email?.toLowerCase() === 'admin@dinacosmetic.store';
+        const isAdminRole  = profile?.role === 'admin';
+
+        if (!isOwnerEmail && !isAdminRole) {
             return NextResponse.redirect(new URL("/", request.url));
         }
     }
@@ -90,6 +96,6 @@ export const config = {
          * - favicon.ico (favicon file)
          * Feel free to modify this pattern to include more paths.
          */
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|css)$).*)",
     ],
 };
