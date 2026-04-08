@@ -19,7 +19,7 @@ const COMPONENT_TYPES = [
   { type: "richText", label: "Rich Text", defaultProps: { heading: "", content: "" } },
   { type: "productGrid", label: "Product Grid", defaultProps: { category: "all", limit: 4 } },
   { type: "philosophyGrid", label: "Philosophy Grid", defaultProps: { items: [] } },
-  { type: "videoBlock", label: "Video Showcase", defaultProps: { videoUrl: "", title: "", subtitle: "" } },
+  { type: "videoBlock", label: "Video Showcase", defaultProps: { playbackId: "", title: "", subtitle: "" } },
   { type: "contactForm", label: "Contact Form", defaultProps: { heading: "Get In Touch", subheading: "" } },
 ]
 
