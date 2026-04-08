@@ -80,6 +80,7 @@ END $$;
 -- §0  HELPER FUNCTIONS
 -- ───────────────────────────────────────────────────────────────
 -- is_admin(): cached per query — no per-row re-evaluation
+DROP FUNCTION IF EXISTS public.is_admin() CASCADE;
 CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER STABLE
 SET search_path = public AS $$ BEGIN RETURN EXISTS (
         SELECT 1
@@ -92,12 +93,14 @@ SET search_path = public AS $$ BEGIN RETURN EXISTS (
 END;
 $$;
 -- handle_updated_at(): auto-stamps updated_at on every update
+DROP FUNCTION IF EXISTS public.handle_updated_at() CASCADE;
 CREATE OR REPLACE FUNCTION public.handle_updated_at() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$ BEGIN NEW.updated_at = now();
 RETURN NEW;
 END;
 $$;
 -- handle_new_user(): auto-creates profile row when auth.user is created
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$ BEGIN
 INSERT INTO public.profiles (id, email, full_name, role)
@@ -2511,6 +2514,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
 --      aggregate sum of `product_variants.stock`, allowing simple
 --      queries like .gt('stock', 0) to work accurately.
 -- ================================================================
+DROP FUNCTION IF EXISTS public.sync_product_manifest() CASCADE;
 CREATE OR REPLACE FUNCTION public.sync_product_manifest() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$
 DECLARE target_id uuid;
@@ -2640,6 +2644,7 @@ CREATE TABLE IF NOT EXISTS public.inventory_logs (
     SET NULL,
         created_at timestamptz DEFAULT now()
 );
+DROP FUNCTION IF EXISTS public.log_inventory_change() CASCADE;
 CREATE OR REPLACE FUNCTION public.log_inventory_change() RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ BEGIN IF (
         OLD.stock IS DISTINCT
         FROM NEW.stock
@@ -2941,6 +2946,7 @@ CREATE POLICY "videos_write_admin"
 -- 1. Check & Reserve Inventory RPC
 -- Called by checkoutService.ts BEFORE creating a Stripe session.
 -- Returns error if stock (minus active reservations) is insufficient.
+DROP FUNCTION IF EXISTS public.check_and_reserve_inventory(jsonb, uuid, interval) CASCADE;
 CREATE OR REPLACE FUNCTION public.check_and_reserve_inventory(
     p_items jsonb,          -- Array of {product_id, variant_id, quantity}
     p_order_id uuid,
@@ -2996,6 +3002,7 @@ $$;
 
 -- 2. Enhanced process_order_atomic
 -- Modified to consume reservations if they exist.
+DROP FUNCTION IF EXISTS public.finalize_order_inventory(uuid) CASCADE;
 CREATE OR REPLACE FUNCTION public.finalize_order_inventory(
     p_order_id uuid
 ) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -3027,11 +3034,7 @@ END;
 $$;
 
 -- 3. Cleanup Crontab Helper (Optional but recommended)
-CREATE OR REPLACE FUNCTION public.cleanup_expired_reservations() 
-RETURNS integer LANGUAGE sql SECURITY DEFINER AS $$
-    DELETE FROM public.inventory_reservations WHERE expires_at < now();
-    SELECT count(*)::integer FROM public.inventory_reservations WHERE expires_at < now();
-$$;
+-- (Consolidated into Section 3 below)
 -- Set default 2oz weight for products missing weight
 UPDATE products 
 SET weight_oz = 2.0 
