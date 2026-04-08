@@ -138,6 +138,9 @@ DROP POLICY IF EXISTS "orders_admin_master"            ON public.orders;
 DROP POLICY IF EXISTS "Users can view their own orders" ON public.orders;
 DROP POLICY IF EXISTS "orders_select"                  ON public.orders;
 DROP POLICY IF EXISTS "orders_admin_write"             ON public.orders;
+DROP POLICY IF EXISTS "orders_admin_insert"            ON public.orders;
+DROP POLICY IF EXISTS "orders_admin_update"            ON public.orders;
+DROP POLICY IF EXISTS "orders_admin_delete"            ON public.orders;
 
 CREATE POLICY "orders_select"
   ON public.orders FOR SELECT TO authenticated
@@ -166,6 +169,9 @@ DROP POLICY IF EXISTS "order_items_user_email_select"    ON public.order_items;
 DROP POLICY IF EXISTS "order_items_admin_master"         ON public.order_items;
 DROP POLICY IF EXISTS "order_items_select"               ON public.order_items;
 DROP POLICY IF EXISTS "order_items_admin_write"          ON public.order_items;
+DROP POLICY IF EXISTS "order_items_admin_insert"         ON public.order_items;
+DROP POLICY IF EXISTS "order_items_admin_update"         ON public.order_items;
+DROP POLICY IF EXISTS "order_items_admin_delete"         ON public.order_items;
 
 CREATE POLICY "order_items_select"
   ON public.order_items FOR SELECT TO authenticated
@@ -203,6 +209,7 @@ DROP POLICY IF EXISTS "profiles_update"        ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_write"   ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_insert"  ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_delete"  ON public.profiles;
+DROP POLICY IF EXISTS "profiles_user_update"   ON public.profiles;
 
 CREATE POLICY "profiles_select"
   ON public.profiles FOR SELECT TO authenticated
@@ -233,9 +240,12 @@ CREATE POLICY "profiles_admin_delete"
 
 
 -- ── INVENTORY_LOGS ────────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "Admins can view inventory logs"      ON public.inventory_logs;
-DROP POLICY IF EXISTS "Service role can insert inventory logs" ON public.inventory_logs;
-DROP POLICY IF EXISTS "inventory_logs_admin_master"         ON public.inventory_logs;
+DROP POLICY IF EXISTS "Admins can view inventory logs"         ON public.inventory_logs;
+DROP POLICY IF EXISTS "Service role can insert inventory logs"  ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_admin_master"             ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_select"                   ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_insert"                   ON public.inventory_logs;
+DROP POLICY IF EXISTS "inventory_logs_delete"                   ON public.inventory_logs;
 
 CREATE POLICY "inventory_logs_select"
   ON public.inventory_logs FOR SELECT TO authenticated
@@ -253,10 +263,13 @@ CREATE POLICY "inventory_logs_delete"
 -- ── BUILDER_PAGES ─────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Admins have full access to builder pages" ON public.builder_pages;
 DROP POLICY IF EXISTS "Public can read published builder pages"  ON public.builder_pages;
-DROP POLICY IF EXISTS "builder_pages_anon_read"                 ON public.builder_pages;
-DROP POLICY IF EXISTS "builder_pages_admin_master"              ON public.builder_pages;
-DROP POLICY IF EXISTS "builder_pages_select"                    ON public.builder_pages;
-DROP POLICY IF EXISTS "builder_pages_admin_write"               ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_anon_read"                  ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_admin_master"               ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_select"                     ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_admin_write"                ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_admin_insert"               ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_admin_update"               ON public.builder_pages;
+DROP POLICY IF EXISTS "builder_pages_admin_delete"               ON public.builder_pages;
 
 -- Public can read published pages; admins can read all
 CREATE POLICY "builder_pages_select"
@@ -280,13 +293,13 @@ CREATE POLICY "builder_pages_admin_delete"
 
 
 -- ── NEWSLETTER_SUBSCRIBERS ────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "newsletter_anon_insert"              ON public.newsletter_subscribers;
-DROP POLICY IF EXISTS "newsletter_subscribers_admin_master" ON public.newsletter_subscribers;
-DROP POLICY IF EXISTS "newsletter_insert"                   ON public.newsletter_subscribers;
-DROP POLICY IF EXISTS "newsletter_admin_access"             ON public.newsletter_subscribers;
-DROP POLICY IF EXISTS "newsletter_admin_select"             ON public.newsletter_subscribers;
-DROP POLICY IF EXISTS "newsletter_admin_update"             ON public.newsletter_subscribers;
-DROP POLICY IF EXISTS "newsletter_admin_delete"             ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_anon_insert"               ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_subscribers_admin_master"  ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_insert"                    ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_admin_access"              ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_admin_select"              ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_admin_update"              ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "newsletter_admin_delete"              ON public.newsletter_subscribers;
 
 -- Anyone with a valid email can subscribe (anon or authenticated)
 CREATE POLICY "newsletter_insert"
@@ -310,13 +323,13 @@ CREATE POLICY "newsletter_admin_delete"
 
 
 -- ── VIDEOS ────────────────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "videos_read_public"  ON public.videos;
-DROP POLICY IF EXISTS "videos_write_admin"  ON public.videos;
-DROP POLICY IF EXISTS "videos_select"       ON public.videos;
-DROP POLICY IF EXISTS "videos_admin_write"  ON public.videos;
-DROP POLICY IF EXISTS "videos_admin_insert" ON public.videos;
-DROP POLICY IF EXISTS "videos_admin_update" ON public.videos;
-DROP POLICY IF EXISTS "videos_admin_delete" ON public.videos;
+DROP POLICY IF EXISTS "videos_read_public"   ON public.videos;
+DROP POLICY IF EXISTS "videos_write_admin"   ON public.videos;
+DROP POLICY IF EXISTS "videos_select"        ON public.videos;
+DROP POLICY IF EXISTS "videos_admin_write"   ON public.videos;
+DROP POLICY IF EXISTS "videos_admin_insert"  ON public.videos;
+DROP POLICY IF EXISTS "videos_admin_update"  ON public.videos;
+DROP POLICY IF EXISTS "videos_admin_delete"  ON public.videos;
 
 CREATE POLICY "videos_select"
   ON public.videos FOR SELECT
@@ -336,8 +349,12 @@ CREATE POLICY "videos_admin_delete"
 
 
 -- ── COUPONS ───────────────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "coupons_public_read"   ON public.coupons;
-DROP POLICY IF EXISTS "coupons_admin_master"  ON public.coupons;
+DROP POLICY IF EXISTS "coupons_public_read"    ON public.coupons;
+DROP POLICY IF EXISTS "coupons_admin_master"   ON public.coupons;
+DROP POLICY IF EXISTS "coupons_select"         ON public.coupons;
+DROP POLICY IF EXISTS "coupons_admin_insert"   ON public.coupons;
+DROP POLICY IF EXISTS "coupons_admin_update"   ON public.coupons;
+DROP POLICY IF EXISTS "coupons_admin_delete"   ON public.coupons;
 
 -- Customers need to read coupons to validate codes at checkout
 CREATE POLICY "coupons_select"
@@ -358,8 +375,12 @@ CREATE POLICY "coupons_admin_delete"
 
 
 -- ── FRONTEND_CONTENT ──────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "frontend_content_anon_read"    ON public.frontend_content;
-DROP POLICY IF EXISTS "frontend_content_admin_master" ON public.frontend_content;
+DROP POLICY IF EXISTS "frontend_content_anon_read"      ON public.frontend_content;
+DROP POLICY IF EXISTS "frontend_content_admin_master"    ON public.frontend_content;
+DROP POLICY IF EXISTS "frontend_content_select"          ON public.frontend_content;
+DROP POLICY IF EXISTS "frontend_content_admin_insert"    ON public.frontend_content;
+DROP POLICY IF EXISTS "frontend_content_admin_update"    ON public.frontend_content;
+DROP POLICY IF EXISTS "frontend_content_admin_delete"    ON public.frontend_content;
 
 CREATE POLICY "frontend_content_select"
   ON public.frontend_content FOR SELECT
