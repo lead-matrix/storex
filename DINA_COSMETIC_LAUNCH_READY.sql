@@ -3026,7 +3026,12 @@ BEGIN
 END;
 $$;
 
-
+-- 3. Cleanup Crontab Helper (Optional but recommended)
+CREATE OR REPLACE FUNCTION public.cleanup_expired_reservations() 
+RETURNS integer LANGUAGE sql SECURITY DEFINER AS $$
+    DELETE FROM public.inventory_reservations WHERE expires_at < now();
+    SELECT count(*)::integer FROM public.inventory_reservations WHERE expires_at < now();
+$$;
 -- Set default 2oz weight for products missing weight
 UPDATE products 
 SET weight_oz = 2.0 
