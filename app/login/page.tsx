@@ -86,7 +86,7 @@ export default function LoginPage() {
             return;
         }
 
-        const { error: authError } = await supabase.auth.signUp({
+        const { data: signUpData, error: authError } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -96,8 +96,26 @@ export default function LoginPage() {
         });
 
         if (authError) {
-            setError(authError.message);
-        } else {
+            // "Error sending confirmation email" means the account WAS created
+            // but Supabase couldn't send the email — surface a helpful message
+            const isEmailError =
+                authError.message.toLowerCase().includes("sending") ||
+                authError.message.toLowerCase().includes("email") ||
+                authError.message.toLowerCase().includes("smtp");
+
+            if (isEmailError) {
+                setSuccess(
+                    "Account created! We had trouble sending the confirmation email — " +
+                    "please contact support@dinacosmetic.store to verify your account."
+                );
+                setEmail("");
+                setPassword("");
+                setConfirmPassword("");
+                setFullName("");
+            } else {
+                setError(authError.message);
+            }
+        } else if (signUpData?.user) {
             setSuccess("Account created! Please check your email to verify your account.");
             setEmail("");
             setPassword("");
