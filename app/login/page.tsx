@@ -44,11 +44,11 @@ export default function LoginPage() {
 
         const isAdminEmail = email.toLowerCase().trim() === 'admin@dinacosmetic.store';
         if (profile?.role === "admin" || isAdminEmail) {
-            router.push("/admin");
+            window.location.href = "/admin";
         } else {
             router.push("/");
+            router.refresh();
         }
-        router.refresh();
     };
 
     const handleLogin = async (e: React.FormEvent) => {

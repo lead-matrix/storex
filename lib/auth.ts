@@ -38,8 +38,8 @@ export async function requireAdmin() {
 
     if (!user) redirect('/login')
 
-    // Immediate bypass for the owner email
-    const isAdminEmail = user.email === 'admin@dinacosmetic.store'
+    // Immediate bypass for the owner email (casing robust)
+    const isAdminEmail = user.email?.toLowerCase() === 'admin@dinacosmetic.store'
 
     // Use admin client for the profile role lookup to bypass RLS
     const adminSupabase = await createAdminClient()
