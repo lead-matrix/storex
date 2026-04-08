@@ -34,17 +34,18 @@ export default function LoginPage() {
     const supabase = createClient();
     const router = useRouter();
 
-    // ── TASK 3.2: Role-based redirect after login ─────────────────────────
-    const redirectAfterLogin = async (userId: string) => {
+    // ── Role-based redirect after login ─────────────────────────
+    const redirectAfterLogin = async (userId: string, userEmail: string) => {
         const { data: profile } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", userId)
             .single();
 
-        const isAdminEmail = email.toLowerCase().trim() === 'admin@dinacosmetic.store';
-        if (profile?.role === "admin" || isAdminEmail) {
-            window.location.href = "/admin";
+        const isAdmin = profile?.role === "admin" || userEmail.toLowerCase().trim() === 'admin@dinacosmetic.store';
+        if (isAdmin) {
+            router.push("/admin");
+            router.refresh();
         } else {
             router.push("/");
             router.refresh();
@@ -65,7 +66,7 @@ export default function LoginPage() {
             setError(authError.message);
             setLoading(false);
         } else if (data?.user) {
-            await redirectAfterLogin(data.user.id);
+            await redirectAfterLogin(data.user.id, data.user.email ?? '');
         }
     };
 

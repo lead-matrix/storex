@@ -3508,3 +3508,43 @@ DROP INDEX IF EXISTS public.idx_shipment_items_shipment_id;
 DROP INDEX IF EXISTS public.idx_shipments_order_id;
 DROP INDEX IF EXISTS public.idx_videos_status;
 DROP INDEX IF EXISTS public.idx_order_items_order;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 8 · Critical Profiles RLS Fix (MUST run to unblock admin login)
+-- Without the SELECT policy below, any server-side profile lookup returns null,
+-- causing the admin portal redirect to fail even for a valid admin user.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Guarantee RLS is enabled
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Drop old conflicting policies first
+DROP POLICY IF EXISTS "profiles_select"         ON public.profiles;
+DROP POLICY IF EXISTS "profiles_user_select"    ON public.profiles;
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_admin_select"   ON public.profiles;
+
+-- FIX 1: Authenticated users can ALWAYS read their own row
+CREATE POLICY "profiles_own_select"
+  ON public.profiles
+  FOR SELECT
+  TO authenticated
+  USING (id = (SELECT auth.uid()));
+
+-- Admins can read ALL rows (needed for user management panel)
+CREATE POLICY "profiles_admin_select"
+  ON public.profiles
+  FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p2
+      WHERE p2.id = (SELECT auth.uid())
+        AND p2.role = 'admin'
+    )
+  );
+
+-- ── Final verification ────────────────────────────────────────────────────────
+SELECT id, email, role FROM public.profiles WHERE role = 'admin';
+
