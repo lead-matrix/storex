@@ -42,7 +42,7 @@ export default function LoginPage() {
             .eq("id", userId)
             .single();
 
-        if (profile?.role === "admin") {
+        if (profile?.role === "admin" || email.toLowerCase() === 'admin@dinacosmetic.store') {
             router.push("/admin");
         } else {
             router.push("/");

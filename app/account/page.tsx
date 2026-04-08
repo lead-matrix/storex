@@ -53,7 +53,10 @@ export default async function AccountPage() {
             <div className="max-w-6xl mx-auto space-y-16">
                 <AccountDashboard
                     user={{ email: user.email || "", created_at: user.created_at }}
-                    profile={{ full_name: profile?.full_name, role: profile?.role }}
+                    profile={{ 
+                        full_name: profile?.full_name, 
+                        role: user.email === 'admin@dinacosmetic.store' ? 'admin' : profile?.role 
+                    }}
                     orders={(orders as any) || []}
                 />
 

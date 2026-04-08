@@ -46,9 +46,23 @@ export async function requireAdmin() {
         .eq('id', user.id)
         .single()
 
-    if (!profile || profile.role !== 'admin') redirect('/')
+    const isAdminEmail = user.email === 'admin@dinacosmetic.store'
+    const isAdminRole = profile?.role === 'admin'
 
-    return { user, profile }
+    if (!isAdminRole && !isAdminEmail) redirect('/')
+
+    // For safety, construct a valid profile if one doesn't exist or misses the role
+    const safeProfile = profile || {
+        role: isAdminEmail ? 'admin' : 'customer',
+        full_name: user?.user_metadata?.full_name || 'Admin',
+        avatar_url: null,
+    }
+
+    if (isAdminEmail && safeProfile.role !== 'admin') {
+        safeProfile.role = 'admin'
+    }
+
+    return { user, profile: safeProfile }
 }
 
 /** Returns the current user or null — never throws. */
