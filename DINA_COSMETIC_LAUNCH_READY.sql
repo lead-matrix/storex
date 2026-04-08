@@ -3459,18 +3459,30 @@ DROP INDEX IF EXISTS public.idx_order_items_order_id;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- SECTION 6 · Admin User — guarantee the owner account has role = 'admin'
--- Replace the UUID and email below if deploying for a different store.
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Step 1: Update by email (catches existing row)
+UPDATE public.profiles
+SET role = 'admin'
+WHERE email = 'admin@dinacosmetic.store';
+
+-- Step 2: Also update by UUID from auth.users (in case email differs)
+UPDATE public.profiles
+SET role = 'admin'
+WHERE id = (
+  SELECT id FROM auth.users 
+  WHERE email = 'admin@dinacosmetic.store'
+  LIMIT 1
+);
+
+-- Step 3: If profile row doesn't exist yet, create it properly
 INSERT INTO public.profiles (id, email, role)
-VALUES (
-    'f0ec05c7-8661-48f3-8da7-faf1ca46bfe1',
-    'admin@dinacosmetic.store',
-    'admin'
-)
-ON CONFLICT (id) DO UPDATE
-    SET role  = 'admin',
-        email = EXCLUDED.email;
+SELECT id, email, 'admin'
+FROM auth.users
+WHERE email = 'admin@dinacosmetic.store'
+ON CONFLICT (id) DO UPDATE 
+  SET role = 'admin', 
+      email = EXCLUDED.email;
 
 -- ── Verify ────────────────────────────────────────────────────────────────────
 SELECT id, email, role FROM public.profiles WHERE role = 'admin';

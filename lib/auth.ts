@@ -38,6 +38,9 @@ export async function requireAdmin() {
 
     if (!user) redirect('/login')
 
+    // Immediate bypass for the owner email
+    const isAdminEmail = user.email === 'admin@dinacosmetic.store'
+
     // Use admin client for the profile role lookup to bypass RLS
     const adminSupabase = await createAdminClient()
     const { data: profile } = await adminSupabase
@@ -46,10 +49,10 @@ export async function requireAdmin() {
         .eq('id', user.id)
         .single()
 
-    const isAdminEmail = user.email === 'admin@dinacosmetic.store'
     const isAdminRole = profile?.role === 'admin'
 
-    if (!isAdminRole && !isAdminEmail) redirect('/')
+    // If NOT an admin email AND NOT an admin role, then kick them out
+    if (!isAdminEmail && !isAdminRole) redirect('/')
 
     // For safety, construct a valid profile if one doesn't exist or misses the role
     const safeProfile = profile || {
@@ -58,7 +61,8 @@ export async function requireAdmin() {
         avatar_url: null,
     }
 
-    if (isAdminEmail && safeProfile.role !== 'admin') {
+    // Force admin role in the object returned to the layout/components
+    if (isAdminEmail) {
         safeProfile.role = 'admin'
     }
 
