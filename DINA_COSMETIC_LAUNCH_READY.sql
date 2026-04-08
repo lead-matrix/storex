@@ -3499,7 +3499,6 @@ SELECT id, email, role FROM public.profiles WHERE role = 'admin';
 -- 7a. Add missing indexes for Foreign Keys
 CREATE INDEX IF NOT EXISTS idx_nav_menus_created_by ON public.navigation_menus(created_by);
 CREATE INDEX IF NOT EXISTS idx_nav_menus_updated_by ON public.navigation_menus(updated_by);
-CREATE INDEX IF NOT EXISTS idx_managed_webhooks_account ON stripe._managed_webhooks(account);
 
 -- 7b. Drop unused / duplicate indexes (Local schema only)
 DROP INDEX IF EXISTS public.idx_inventory_logs_order_id;
