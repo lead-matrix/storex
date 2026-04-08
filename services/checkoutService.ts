@@ -206,6 +206,8 @@ export async function createCheckoutSession(
             variant_id: i.variantId ?? null,
             quantity: i.quantity,
             price: i.price,
+            product_name: i.name,
+            variant_name: i.variantId ? i.name.split(' — ')[1] || null : null,
           }))
         ),
       },

@@ -3379,6 +3379,7 @@ DROP POLICY IF EXISTS "videos_admin_write"   ON public.videos;
 DROP POLICY IF EXISTS "videos_admin_insert"  ON public.videos;
 DROP POLICY IF EXISTS "videos_admin_update"  ON public.videos;
 DROP POLICY IF EXISTS "videos_admin_delete"  ON public.videos;
+DROP POLICY IF EXISTS "videos_admin_master"  ON public.videos;
 
 CREATE POLICY "videos_select"
   ON public.videos FOR SELECT
@@ -3473,3 +3474,23 @@ ON CONFLICT (id) DO UPDATE
 
 -- ── Verify ────────────────────────────────────────────────────────────────────
 SELECT id, email, role FROM public.profiles WHERE role = 'admin';
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 7 · Performance Tuning (Indexes)
+-- Resolves remaining Supabase linter warnings for foreign keys and unused indexes.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- 7a. Add missing indexes for Foreign Keys
+CREATE INDEX IF NOT EXISTS idx_nav_menus_created_by ON public.navigation_menus(created_by);
+CREATE INDEX IF NOT EXISTS idx_nav_menus_updated_by ON public.navigation_menus(updated_by);
+CREATE INDEX IF NOT EXISTS idx_managed_webhooks_account ON stripe._managed_webhooks(account);
+
+-- 7b. Drop unused / duplicate indexes (Local schema only)
+DROP INDEX IF EXISTS public.idx_inventory_logs_order_id;
+DROP INDEX IF EXISTS public.idx_inventory_logs_variant_id;
+DROP INDEX IF EXISTS public.idx_shipment_items_order_item_id;
+DROP INDEX IF EXISTS public.idx_shipment_items_shipment_id;
+DROP INDEX IF EXISTS public.idx_shipments_order_id;
+DROP INDEX IF EXISTS public.idx_videos_status;
+DROP INDEX IF EXISTS public.idx_order_items_order;

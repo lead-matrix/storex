@@ -47,6 +47,7 @@ export async function saveSections(pageId: string, sections: any[]) {
     }
 
     revalidatePath(`/admin/cms/${pageId}`);
+    revalidatePath("/", "page");
     revalidatePath("/", "layout");
     revalidatePath("/about");
     revalidatePath("/contact");

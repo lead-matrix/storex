@@ -792,19 +792,23 @@ export async function deleteStorageFile(filePath: string) {
     revalidatePath('/admin/media');
 }
 
-export async function updateFrontendContent(contentId: string, contentData: Record<string, string>) {
-    const supabase = await ensureAdmin();
-
-    const { error } = await supabase
-        .from('frontend_content')
-        .update({ content_data: contentData, updated_at: new Date().toISOString() })
-        .eq('id', contentId);
-
-    if (error) throw new Error(`Failed to update content: ${error.message}`);
-
-    revalidatePath('/');
-    revalidatePath('/admin/media');
-    revalidatePath('/admin/settings');
+export async function updateFrontendContent(contentKey: string, contentData: Record<string, any>): Promise<{ success: boolean; error?: string }> {
+    try {
+        const supabase = await ensureAdmin();
+        const { error } = await supabase
+            .from('frontend_content')
+            .update({ content_data: contentData, updated_at: new Date().toISOString() })
+            .eq('content_key', contentKey);
+        if (error) return { success: false, error: error.message };
+        revalidatePath('/', 'page');
+        revalidatePath('/', 'layout');
+        revalidatePath('/about');
+        revalidatePath('/[slug]', 'page');
+        revalidatePath('/admin/media');
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
 }
 
 export async function bulkUpdateCatalog(updates: {

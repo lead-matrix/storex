@@ -9,7 +9,7 @@ import { NewsletterSection } from "@/features/home/components/NewsletterSection"
 import CMSRenderer from "@/components/cms/CMSRenderer"
 import type { Metadata } from "next"
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "DINA COSMETIC | Premium Beauty",
@@ -35,7 +35,6 @@ export default async function Home() {
 
     return (
       <main className="bg-[#FAFAF8]">
-        <AnnouncementBar />
         <CMSRenderer sections={sections} />
       </main>
     )
