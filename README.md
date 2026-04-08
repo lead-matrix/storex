@@ -95,9 +95,8 @@ Fill in every value. See the table below for where to find each one.
 
 ### 3. Database Setup
 1. Open **Supabase SQL Editor**
-2. Run **`MASTER.sql`** (project root) — full schema, RLS policies, seed data
-3. Run all migration files in **`supabase/migrations/`** in chronological order
-4. The scripts are **idempotent** — safe to re-run without data loss
+2. Run **`DINA_COSMETIC_LAUNCH_READY.sql`** (project root) — this is the all-in-one launch-ready script containing the full schema, all chronological migrations, RLS policies, functions, and seed data.
+3. **Safety Guarantee**: The script is **100% idempotent and non-destructive**. It strictly uses safe `IF NOT EXISTS` modifications and never touches live products, orders, or operational data. Safe to run repeatedly.
 
 ### 4. Create Your Admin Account
 ```sql
@@ -201,9 +200,8 @@ Ensure all environment variables are set in **Vercel → Project → Settings �
 │   ├── supabase/               # DB clients (server, client, admin)
 │   └── utils/                  # Helpers (email, shippo, etc.)
 ├── emails/                     # React Email templates
-├── supabase/migrations/        # All SQL migrations (chronological)
 ├── public/                     # Static assets
-├── MASTER.sql                  # 🗄️ Single source of truth for DB schema
+├── DINA_COSMETIC_LAUNCH_READY.sql # 🗄️ 100% Non-destructive launch-ready master database SQL schema
 └── .env.example                # Environment variable template
 ```
 
