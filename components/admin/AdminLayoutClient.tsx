@@ -63,16 +63,22 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) setUserEmail(user.email);
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { data: todayOrders } = await supabase
-        .from("orders")
-        .select("amount_total")
-        .in("status", ["paid", "shipped", "delivered"])
-        .gte("created_at", today.toISOString());
+      // Build local calendar date so "today" matches the admin's timezone, not UTC
+      const now = new Date();
+      const localDate = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0'),
+      ].join('-');
 
-      const revenue = todayOrders?.reduce((sum, o) => sum + (Number(o.amount_total) || 0), 0) || 0;
-      setTodayRevenue(revenue);
+      // Use the admin API route (service-role key) so RLS doesn't block the result
+      const res = await fetch(`/api/admin/today-revenue?date=${localDate}`);
+      if (res.ok) {
+        const json = await res.json();
+        setTodayRevenue(json.revenue ?? 0);
+      } else {
+        setTodayRevenue(0);
+      }
 
       const { count } = await supabase
         .from("orders")
