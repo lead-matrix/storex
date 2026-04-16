@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/admin";
 import { ShoppingBag, Clock, CheckCircle, Truck } from "lucide-react";
 import OrderList from "./OrderList";
 import type { Metadata } from "next";
