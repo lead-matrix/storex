@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth'
 
-// GET /api/admin/today-revenue?date=YYYY-MM-DD
-// `date` is the calendar date in the admin's LOCAL timezone (sent by the browser).
-// We query orders from midnight of that UTC-calendar-equivalent-day.
+// GET /api/admin/today-revenue?start=<ISO>&end=<ISO>
+// `start` and `end` are UTC ISO strings computed by the browser for
+// midnight..23:59:59 in the admin's LOCAL timezone.
+// e.g. Texas CDT (UTC-5) Apr 15 → start=2026-04-15T05:00:00.000Z  end=2026-04-16T04:59:59.999Z
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
@@ -14,25 +15,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // The browser sends its local date as YYYY-MM-DD so we match "today" correctly
-    // regardless of server timezone.
     const { searchParams } = new URL(req.url)
-    const dateParam = searchParams.get('date') // e.g. "2026-04-15"
+    const start = searchParams.get('start')
+    const end   = searchParams.get('end')
 
-    let startOfDay: string
-    let endOfDay: string
-
-    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-        startOfDay = `${dateParam}T00:00:00.000Z`
-        endOfDay   = `${dateParam}T23:59:59.999Z`
-    } else {
-        // Fallback: use UTC today
-        const now = new Date()
-        const y = now.getUTCFullYear()
-        const m = String(now.getUTCMonth() + 1).padStart(2, '0')
-        const d = String(now.getUTCDate()).padStart(2, '0')
-        startOfDay = `${y}-${m}-${d}T00:00:00.000Z`
-        endOfDay   = `${y}-${m}-${d}T23:59:59.999Z`
+    // Validate — must be valid ISO timestamps
+    if (!start || !end || isNaN(Date.parse(start)) || isNaN(Date.parse(end))) {
+        return NextResponse.json({ error: 'Invalid start/end params' }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -42,8 +31,8 @@ export async function GET(req: NextRequest) {
         .select('amount_total')
         .in('status', ['paid', 'shipped', 'delivered'])
         .neq('customer_email', 'pending@stripe')
-        .gte('created_at', startOfDay)
-        .lte('created_at', endOfDay)
+        .gte('created_at', start)
+        .lte('created_at', end)
 
     if (error) {
         console.error('[today-revenue] Supabase error:', error)

@@ -63,16 +63,19 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) setUserEmail(user.email);
 
-      // Build local calendar date so "today" matches the admin's timezone, not UTC
-      const today = new Date();
-      const localDate = [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, '0'),
-        String(today.getDate()).padStart(2, '0'),
-      ].join('-');
+      // Compute the UTC boundaries of "today" in the browser's local timezone.
+      // e.g. in CDT (UTC-5), Apr 15 local → 05:00Z..next day 04:59:59Z
+      // new Date(y, m, d) creates midnight in LOCAL time, .toISOString() gives the right UTC value.
+      const _now = new Date();
+      const startOfToday = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate(), 0, 0, 0, 0);
+      const endOfToday   = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate(), 23, 59, 59, 999);
 
       // Use the admin API route (service-role key) so RLS doesn't block the result
-      const res = await fetch(`/api/admin/today-revenue?date=${localDate}`);
+      const params = new URLSearchParams({
+        start: startOfToday.toISOString(),
+        end:   endOfToday.toISOString(),
+      });
+      const res = await fetch(`/api/admin/today-revenue?${params}`);
       if (res.ok) {
         const json = await res.json();
         setTodayRevenue(json.revenue ?? 0);
