@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/admin'
 import { AlertTriangle, Eye, TrendingUp, Package, DollarSign, Users, ShoppingCart, Activity, RefreshCw, BarChart3, Clock, ChevronRight, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -51,9 +51,9 @@ export default async function AdminDashboard() {
         { data: lowStockProducts }
     ] = await Promise.all([
         supabase.from('orders').select('amount_total').in('status', ['paid', 'shipped', 'delivered']),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).not('status', 'eq', 'pending'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['paid', 'shipped', 'delivered']),
         supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('id, customer_email, status, amount_total, created_at').not('status', 'eq', 'pending').order('created_at', { ascending: false }).limit(6),
+        supabase.from('orders').select('id, customer_email, status, amount_total, created_at').in('status', ['paid', 'shipped', 'delivered']).neq('customer_email', 'pending@stripe').order('created_at', { ascending: false }).limit(6),
         supabase.from('product_variants').select('id, name, product_id, products(title), stock').lt('stock', 10).order('stock', { ascending: true }).limit(5)
     ])
 
@@ -98,8 +98,8 @@ export default async function AdminDashboard() {
                 />
                 <KPICard
                     label="Active Orders"
-                    value={activeOrders}
-                    subtext={`${ordersCount ?? 0} Total Transactions`}
+                    value={ordersCount ?? 0}
+                    subtext={`${activeOrders} Active / Processing`}
                     icon={ShoppingCart}
                     colorClass="text-emerald-400"
                     sparkData={[20, 30, 45, 30, 50, 40, 60]}
