@@ -64,11 +64,11 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
       if (user?.email) setUserEmail(user.email);
 
       // Build local calendar date so "today" matches the admin's timezone, not UTC
-      const now = new Date();
+      const today = new Date();
       const localDate = [
-        now.getFullYear(),
-        String(now.getMonth() + 1).padStart(2, '0'),
-        String(now.getDate()).padStart(2, '0'),
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, '0'),
+        String(today.getDate()).padStart(2, '0'),
       ].join('-');
 
       // Use the admin API route (service-role key) so RLS doesn't block the result
