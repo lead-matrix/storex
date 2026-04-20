@@ -29,34 +29,61 @@ export async function POST(req: Request) {
 
   const supabase = await createAdminClient();
 
-  // ✅ STRONG idempotency (race-condition safe)
-  const { data: existingEvent } = await supabase
+  // Idempotency
+  const { data: existing } = await supabase
     .from("stripe_events")
     .select("id, processed")
     .eq("id", event.id)
     .maybeSingle();
 
-  if (existingEvent && existingEvent.processed) {
-    return NextResponse.json({ received: true, duplicate: true });
+  if (existing?.processed) {
+    return NextResponse.json({ received: true });
   }
 
-  // ✅ CRITICAL FIX: Always persist full event payload immediately on receipt
-  // This ensures we have the raw data even if processing crashes below.
-  await supabase.from("stripe_events").upsert(
-    { id: event.id, type: event.type, data: event.data, processed: false },
-    { onConflict: "id" }
-  );
+  await supabase.from("stripe_events").upsert({
+    id: event.id,
+    type: event.type,
+    data: event.data,
+    processed: false,
+  });
 
   try {
-    if (
-      event.type === "checkout.session.completed" ||
-      event.type === "checkout.session.async_payment_succeeded"
-    ) {
-      let session = event.data.object as Stripe.Checkout.Session;
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
 
-      // Expand shipping_rate to capture shipping method name
-      try {
-        session = await stripe.checkout.sessions.retrieve(session.id, {
-          expand: ['shipping_cost.shipping_rate']
-        });
-      } catch (err) {
+      const orderId = session.metadata?.order_id;
+      if (!orderId) throw new Error("Missing order_id");
+
+      // ✅ Fetch real order (source of truth)
+      const { data: order } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (!order) throw new Error("Order not found");
+
+      // ✅ Mark paid
+      await supabase
+        .from("orders")
+        .update({
+          status: "paid",
+          customer_email: session.customer_details?.email,
+          stripe_session_id: session.id,
+          amount_total: session.amount_total ? session.amount_total / 100 : null,
+        })
+        .eq("id", orderId);
+    }
+
+    await supabase
+      .from("stripe_events")
+      .update({ processed: true })
+      .eq("id", event.id);
+
+  } catch (err: any) {
+    console.error("Webhook error:", err.message);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ received: true });
+}
