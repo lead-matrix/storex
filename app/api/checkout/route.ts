@@ -212,12 +212,11 @@ export async function createCheckoutSession(
       automatic_tax: { enabled: true },
       expires_at: Math.floor(Date.now() / 1000) + 1800,
       metadata: {
+        // Avoid sending the full serialized items payload in Stripe metadata —
+        // Stripe imposes a 500-character limit per metadata value and long
+        // product names / multi-item carts can exceed that. The webhook uses
+        // order_id to look up the authoritative order/items in the DB.
         order_id:   order.id,
-        subtotal:   subtotal.toFixed(2),
-        weight_lb:  totalWeightLb.toFixed(3),
-        // Compact keys keep this under Stripe's 500-char metadata limit.
-        // Webhook reads these back using the same compact keys.
-        items: serializeCartItems(validatedItems),
       },
     },
     { idempotencyKey: `checkout_${order.id}` }
