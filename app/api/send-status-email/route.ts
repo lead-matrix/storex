@@ -12,9 +12,10 @@ export async function POST(req: Request) {
         const supabase = await createAdminClient();
 
         // Fetch order details
+        // FIX: removed non-existent 'order_id' column — orders PK is 'id'
         const { data: order, error } = await supabase
             .from('orders')
-            .select('customer_email, customer_name, amount_total, shipping_address, order_id, tracking_number')
+            .select('id, customer_email, customer_name, amount_total, shipping_address, tracking_number')
             .eq('id', orderId)
             .single();
 

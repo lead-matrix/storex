@@ -1,5 +1,4 @@
-import { createClient as createAdminClient } from '../supabase/admin';
-const supabaseAdmin = await createAdminClient();
+import { supabaseAdmin } from '../supabase/admin';
 
 export async function createShipmentItems(items: {
     shipment_id: string;

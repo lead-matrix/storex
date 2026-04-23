@@ -1,5 +1,4 @@
-import { createClient as createAdminClient } from '../supabase/admin';
-const supabaseAdmin = await createAdminClient();
+import { supabaseAdmin } from '../supabase/admin';
 
 export async function createOrderItems(items: {
     order_id: string;
@@ -8,7 +7,7 @@ export async function createOrderItems(items: {
     quantity: number;
     price: number;
     // Snapshot fields — store names at time of purchase so history never breaks
-    // if a product is renamed or deleted later (Bug #5)
+    // if a product is renamed or deleted later
     product_name?: string;
     variant_name?: string | null;
     weight?: number;
@@ -29,31 +28,27 @@ export async function getItemsByOrder(orderId: string) {
     const { data, error } = await supabaseAdmin
         .from('order_items')
         .select(`
-      *,
-      products (
-        title,
-        images,
-        weight_oz,
-        sku,
-        country_of_origin,
-        customs_value_usd
-      ),
-      product_variants (
-        weight,
-        sku
-      )
-    `)
-        // BUG #2 FIX: The column was renamed weight_grams → weight_oz by the
-        // migration in MASTER.sql. Selecting weight_grams returns null for every
-        // product, causing all weights to fall back to 2oz and all shipping rates
-        // to be wrong. Changed to weight_oz throughout.
+            *,
+            products (
+                title,
+                images,
+                weight_oz,
+                sku,
+                country_of_origin,
+                customs_value_usd
+            ),
+            product_variants (
+                weight,
+                sku
+            )
+        `)
         .eq('order_id', orderId);
 
     if (error) throw new Error(`getItemsByOrder error: ${error.message}`);
     return data;
 }
+
 export async function updateFulfilledQuantity(itemId: string, increment: number) {
-    // Current quantity fetch + update to ensure we don't exceed total
     const { data: item, error: fetchError } = await supabaseAdmin
         .from('order_items')
         .select('fulfilled_quantity, quantity')

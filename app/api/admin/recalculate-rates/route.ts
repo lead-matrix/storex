@@ -24,7 +24,8 @@ export async function POST(req: Request) {
         const weightItems = (allItems as any[]).map((item) => ({
             quantity: item.quantity,
             variant_weight_oz: item.product_variants?.weight ? Number(item.product_variants.weight) : null,
-            product_weight_oz: item.products?.weight_grams ? Number(item.products.weight_grams) : null,
+            // FIX: column is weight_oz, not weight_grams
+            product_weight_oz: item.products?.weight_oz ? Number(item.products.weight_oz) : null,
         }));
         const totalWeightLb = calculateTotalWeightLb(weightItems);
         const parcelData = getParcelForWeight(totalWeightLb);

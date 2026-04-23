@@ -22,7 +22,7 @@ export async function GET() {
                 status,
                 images,
                 category_id,
-                weight_grams,
+                weight_oz,
                 length_cm,
                 width_cm,
                 height_cm,
@@ -56,10 +56,10 @@ export async function GET() {
                 product_status: product.status,
                 images: product.images?.join(', '),
                 category_id: product.category_id,
-                weight_oz: product.weight_grams,  // column stores oz
-                length_in: product.length_cm,      // column stores inches
-                width_in: product.width_cm,        // column stores inches
-                height_in: product.height_cm,      // column stores inches
+                weight_oz: product.weight_oz,
+                length_in: product.length_cm,   // column stores inches despite name
+                width_in: product.width_cm,     // column stores inches despite name
+                height_in: product.height_cm,   // column stores inches despite name
             };
 
             if (product.product_variants && product.product_variants.length > 0) {

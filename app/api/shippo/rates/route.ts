@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         const supabase = await createClient();
 
         // Calculate total weight in ounces
-        // NOTE: weight_grams column now stores oz directly (updated product form uses oz)
+        // NOTE: products.weight_oz stores the weight in ounces
         let totalWeightOz = 0;
 
         for (const item of items) {
@@ -25,9 +25,10 @@ export async function POST(req: Request) {
             }
 
             if (!itemWeightOz || itemWeightOz <= 0) {
-                const { data: p } = await supabase.from("products").select("weight_grams").eq("id", item.productId).single();
-                if (p && p.weight_grams) {
-                    itemWeightOz = Number(p.weight_grams);
+                // FIX: column is weight_oz, not weight_grams
+                const { data: p } = await supabase.from("products").select("weight_oz").eq("id", item.productId).single();
+                if (p && p.weight_oz) {
+                    itemWeightOz = Number(p.weight_oz);
                 }
             }
 
