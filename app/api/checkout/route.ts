@@ -49,28 +49,6 @@ export type CheckoutSessionResult = {
   orderId: string;
 };
 
-function serializeCartItems(items: ValidatedCartItem[]): string {
-  const compact = items.map(i => ({
-    pid: i.productId,
-    vid: i.variantId ?? null,
-    qty: i.quantity,
-    p:   i.price,
-    n:   i.name,
-    vn:  i.variantId ? (i.name.split(' — ')[1] || null) : null,
-  }));
-
-  const json = JSON.stringify(compact);
-
-  if (json.length > 490) {
-    console.warn(
-      `[checkoutService] Serialized cart metadata is ${json.length} chars. ` +
-      `Consider switching to order_id-only metadata for very large carts.`
-    );
-  }
-
-  return json;
-}
-
 export async function createCheckoutSession(
   rawItems: { productId: string; variantId?: string | null; quantity: number }[]
 ): Promise<CheckoutSessionResult> {
@@ -120,8 +98,8 @@ export async function createCheckoutSession(
 
   const cfg = await getShippingConfig();
   const isFree = subtotal >= parseFloat(cfg.free_shipping_threshold ?? '100');
-  const stdRate    = calculateShippingRate(totalWeightLb, subtotal, cfg, 'standard');
-  const expRate    = calculateShippingRate(totalWeightLb, subtotal, cfg, 'express');
+  const stdRate     = calculateShippingRate(totalWeightLb, subtotal, cfg, 'standard');
+  const expRate     = calculateShippingRate(totalWeightLb, subtotal, cfg, 'express');
   const intlStdRate = calculateShippingRate(totalWeightLb, subtotal, cfg, 'intl_standard');
   const intlExpRate = calculateShippingRate(totalWeightLb, subtotal, cfg, 'intl_express');
 
@@ -150,14 +128,17 @@ export async function createCheckoutSession(
       p_items: validatedItems.map(i => ({
         product_id: i.productId,
         variant_id: i.variantId,
-        quantity: i.quantity
+        quantity: i.quantity,
       })),
       p_order_id: order.id,
-      p_expires_in: '30 minutes'
+      p_expires_in: '30 minutes',
     });
 
     if (reserveError) {
-      await supabase.from('orders').update({ status: 'cancelled', metadata: { error: reserveError.message } }).eq('id', order.id);
+      await supabase
+        .from('orders')
+        .update({ status: 'cancelled', metadata: { error: reserveError.message } })
+        .eq('id', order.id);
       throw new Error(`Inventory reservation failed: ${reserveError.message}`);
     }
   } catch (err: any) {
@@ -166,6 +147,7 @@ export async function createCheckoutSession(
   }
 
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dinacosmetic.store';
+
   const lineItems = validatedItems.map(item => ({
     price_data: {
       currency: 'usd',
@@ -178,6 +160,9 @@ export async function createCheckoutSession(
     quantity: item.quantity,
   }));
 
+  // NOTE: Stripe enforces a 500-character limit per metadata value.
+  // We store only order_id here — the webhook fetches cart items from the DB
+  // using order_id as the source of truth. Never serialize cart items into metadata.
   const session = await stripe.checkout.sessions.create(
     {
       payment_method_types: ['card'],
@@ -193,7 +178,7 @@ export async function createCheckoutSession(
       automatic_tax: { enabled: true },
       expires_at: Math.floor(Date.now() / 1000) + 1800,
       metadata: {
-        order_id:   order.id,
+        order_id: order.id,
       },
     },
     { idempotencyKey: `checkout_${order.id}` }
