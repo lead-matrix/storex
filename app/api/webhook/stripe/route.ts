@@ -50,6 +50,9 @@ export async function POST(req: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      // Cast to any to access fields present at runtime but not yet in the
+      // installed stripe type package (e.g. shipping_details on newer API versions)
+      const sessionAny = session as any;
 
       const orderId = session.metadata?.order_id;
       if (!orderId) throw new Error("Missing order_id in session metadata");
@@ -70,7 +73,10 @@ export async function POST(req: Request) {
       }
 
       // ── 1. Parse shipping/billing addresses from Stripe ──────────────────
-      const shippingDetails = session.shipping_details;
+      // shipping_details is available on Checkout Sessions when
+      // shipping_address_collection is enabled in the Stripe checkout config.
+      // customer_details is always present for completed sessions.
+      const shippingDetails = sessionAny.shipping_details ?? sessionAny.shipping ?? null;
       const customerDetails = session.customer_details;
 
       const shippingAddress = shippingDetails?.address
