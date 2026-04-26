@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import LiveAnalytics from '@/components/admin/LiveAnalytics'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -191,6 +192,9 @@ export default async function AnalyticsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Real-Time Web Analytics */}
+            <LiveAnalytics />
         </div>
     )
 }

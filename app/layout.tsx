@@ -11,6 +11,7 @@ import { Toaster } from 'sonner';
 import { validateEnv } from "@/lib/env";
 import Script from 'next/script';
 import { getLayoutData } from "@/lib/data/layout";
+import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 
 
 const playfair = Playfair_Display({
@@ -131,6 +132,7 @@ export default async function RootLayout({
             }}
           />
         </CartProvider>
+        <AnalyticsBeacon />
         <Analytics />
       </body>
     </html>
