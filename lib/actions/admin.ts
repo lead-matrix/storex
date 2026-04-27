@@ -593,9 +593,11 @@ export async function updateMenusAndSocials(formData: FormData) {
 
     const headerStr = formData.get('header_nav') as string;
     const footerStr = formData.get('footer_legal') as string;
-    const instagram = (formData.get('instagram') as string) || '';
-    const tiktok = (formData.get('tiktok') as string) || '';
-    const facebook = (formData.get('facebook') as string) || '';
+    const instagram  = (formData.get('instagram')  as string) || '';
+    const tiktok     = (formData.get('tiktok')     as string) || '';
+    const facebook   = (formData.get('facebook')   as string) || '';
+    const youtube    = (formData.get('youtube')    as string) || '';
+    const pinterest  = (formData.get('pinterest')  as string) || '';
 
     if (headerStr) {
         try {
@@ -615,13 +617,25 @@ export async function updateMenusAndSocials(formData: FormData) {
         } catch { /* ignore JSON parse errors */ }
     }
 
+    const socialValue = { instagram, tiktok, facebook, youtube, pinterest };
+
+    // Save to site_settings (for admin settings page to read back)
     await supabase
         .from('site_settings')
         .upsert({
             setting_key: 'social_media',
-            setting_value: { instagram, tiktok, facebook },
+            setting_value: socialValue,
             updated_at: new Date().toISOString()
         }, { onConflict: 'setting_key' });
+
+    // Also save to frontend_content (this is what the footer actually reads)
+    await supabase
+        .from('frontend_content')
+        .upsert({
+            content_key: 'site_social_links',
+            content_data: socialValue,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'content_key' });
 
     revalidatePath('/', 'layout');
     revalidatePath('/admin/settings');

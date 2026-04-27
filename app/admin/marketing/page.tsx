@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { Plus, Ticket, Trash2, ToggleLeft, ToggleRight, Calendar, Info, ShoppingCart } from 'lucide-react'
+import { createClient as createAdminClient } from '@/lib/supabase/admin'
+import { Plus, Ticket, Trash2, ToggleLeft, ToggleRight, Calendar, Info, ShoppingCart, Mail } from 'lucide-react'
 import { createCoupon, toggleCouponStatus, deleteCoupon } from '@/lib/actions/coupons'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -9,10 +10,12 @@ export const metadata: Metadata = { title: 'Coupons | Admin' }
 
 export default async function MarketingCoupons() {
     const supabase = await createClient()
-    const { data: coupons } = await supabase
-        .from('coupons')
-        .select('*')
-        .order('created_at', { ascending: false })
+    const adminSupabase = await createAdminClient()
+
+    const [{ data: coupons }, { count: subscriberCount }] = await Promise.all([
+        supabase.from('coupons').select('*').order('created_at', { ascending: false }),
+        adminSupabase.from('newsletter_subscribers').select('*', { count: 'exact', head: true }),
+    ])
 
     return (
         <div className="space-y-12 pb-24 animate-luxury-fade">
@@ -22,7 +25,19 @@ export default async function MarketingCoupons() {
                     <p className="text-luxury-subtext text-xs uppercase tracking-luxury font-medium">Discount Architecture & Coupon Codes</p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                    <Link
+                        href="/admin/marketing/subscribers"
+                        className="bg-[#0B0B0D] px-6 py-3 rounded-luxury border border-white/10 text-[10px] uppercase tracking-widest font-bold text-luxury-subtext hover:text-gold hover:border-gold/30 transition-all shadow-soft flex items-center gap-2"
+                    >
+                        <Mail size={14} />
+                        Subscribers
+                        {(subscriberCount ?? 0) > 0 && (
+                            <span className="bg-gold/20 text-gold rounded-full px-2 py-0.5 text-[9px] font-black">
+                                {subscriberCount}
+                            </span>
+                        )}
+                    </Link>
                     <Link
                         href="/admin/marketing/abandoned"
                         className="bg-[#0B0B0D] px-6 py-3 rounded-luxury border border-white/10 text-[10px] uppercase tracking-widest font-bold text-luxury-subtext hover:text-gold hover:border-gold/30 transition-all shadow-soft flex items-center gap-2"

@@ -18,7 +18,10 @@ const NAV_ITEMS = [
   { href: "/admin/products", icon: Package, label: "Products" },
   { href: "/admin/categories", icon: Layers, label: "Categories" },
   { href: "/admin/users", icon: Users, label: "Customers" },
-  { href: "/admin/marketing", icon: Ticket, label: "Marketing" },
+  { href: "/admin/marketing", icon: Ticket, label: "Marketing", children: [
+    { href: "/admin/marketing/abandoned", icon: ShoppingCart, label: "Abandoned Carts" },
+    { href: "/admin/marketing/subscribers", icon: Mail, label: "Subscribers" },
+  ]},
   { href: "/admin/media", icon: ImageIcon, label: "Media" },
   { href: "/admin/videos", icon: Film, label: "Video Manager" },
   { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },

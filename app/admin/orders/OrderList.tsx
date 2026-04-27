@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Box, MapPin, Truck, ExternalLink, ChevronDown, ShoppingBag, CheckSquare, Square, Zap, Search, X, User, Phone, Package } from 'lucide-react'
+import { Box, MapPin, Truck, ExternalLink, ChevronDown, ShoppingBag, CheckSquare, Square, Zap, Search, X, User, Phone, Package, RotateCcw } from 'lucide-react'
 import { updateOrderStatus } from '@/lib/actions/admin'
 import { generateShippingLabel } from '@/app/admin/orders/actions'
 import { FulfillmentRitual } from '@/components/admin/FulfillmentRitual'
@@ -27,11 +27,12 @@ interface OrderListProps {
 }
 
 // ── Order Detail Modal ────────────────────────────────────────────────────────
-function OrderDetailModal({ order, onClose, onStatusUpdate, onFulfill }: {
+function OrderDetailModal({ order, onClose, onStatusUpdate, onFulfill, onRefund }: {
     order: any;
     onClose: () => void;
     onStatusUpdate: (orderId: string, status: string) => void;
     onFulfill: (order: any) => void;
+    onRefund: (order: any) => void;
 }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
@@ -201,6 +202,22 @@ function OrderDetailModal({ order, onClose, onStatusUpdate, onFulfill }: {
                             Close
                         </button>
                     </div>
+
+                    {/* Refund zone — only show for paid/shipped orders */}
+                    {(order.status === 'paid' || order.status === 'shipped') && (
+                        <div className="border-t border-white/[0.06] pt-4">
+                            <button
+                                onClick={() => { onClose(); onRefund(order); }}
+                                className="w-full flex items-center justify-center gap-2 border border-red-500/20 text-red-400/70 py-3 rounded-xl text-[10px] uppercase tracking-luxury font-bold hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-400 transition-all"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Issue Full Refund via Stripe
+                            </button>
+                            <p className="text-white/20 text-[10px] text-center mt-2 leading-relaxed">
+                                This cannot be undone. The full amount will be returned to the customer's payment method.
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -215,6 +232,28 @@ export default function OrderList({ initialOrders }: OrderListProps) {
     const [isRitualOpen, setIsRitualOpen] = useState(false)
     const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
     const [statusFilter, setStatusFilter] = useState('All')
+    const [refundOrder, setRefundOrder] = useState<any>(null)
+    const [isRefunding, setIsRefunding] = useState(false)
+
+    const handleRefund = async (order: any) => {
+        if (!confirm(`Issue a full refund of $${Number(order.amount_total || 0).toFixed(2)} to ${order.customer_email}? This cannot be undone.`)) return
+        setIsRefunding(true)
+        try {
+            const res = await fetch('/api/admin/stripe-refund', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: order.id, reason: 'requested_by_customer' }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Refund failed')
+            toast.success(`Refund issued — $${(data.amount / 100).toFixed(2)} will be returned to the customer.`)
+            router.refresh()
+        } catch (err: any) {
+            toast.error(`Refund failed: ${err.message}`)
+        } finally {
+            setIsRefunding(false)
+        }
+    }
     const [searchQuery, setSearchQuery] = useState('')
 
     const filteredOrders = useMemo(() => {
@@ -590,6 +629,10 @@ export default function OrderList({ initialOrders }: OrderListProps) {
                     onFulfill={(order) => {
                         setDetailOrder(null)
                         openFulfillment(order)
+                    }}
+                    onRefund={(order) => {
+                        setDetailOrder(null)
+                        handleRefund(order)
                     }}
                 />
             )}

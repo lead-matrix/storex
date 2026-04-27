@@ -252,7 +252,7 @@ export default async function AdminSettings() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white/5 rounded-xl border border-white/5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-white/5 rounded-xl border border-white/5">
                                 <div className="space-y-2">
                                     <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Instagram</label>
                                     <input name="instagram" type="text" defaultValue={socialMedia?.setting_value?.instagram || ''} placeholder="https://instagram.com/..."
@@ -266,6 +266,16 @@ export default async function AdminSettings() {
                                 <div className="space-y-2">
                                     <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Facebook</label>
                                     <input name="facebook" type="text" defaultValue={socialMedia?.setting_value?.facebook || ''} placeholder="https://facebook.com/..."
+                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">YouTube</label>
+                                    <input name="youtube" type="text" defaultValue={socialMedia?.setting_value?.youtube || ''} placeholder="https://youtube.com/@..."
+                                        className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Pinterest</label>
+                                    <input name="pinterest" type="text" defaultValue={socialMedia?.setting_value?.pinterest || ''} placeholder="https://pinterest.com/..."
                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs text-white outline-none focus:border-gold/50 transition-all shadow-sm" />
                                 </div>
                             </div>
