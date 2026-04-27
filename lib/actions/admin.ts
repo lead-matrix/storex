@@ -633,6 +633,7 @@ export async function updateMenusAndSocials(formData: FormData) {
         .from('frontend_content')
         .upsert({
             content_key: 'site_social_links',
+            content_type: 'json',
             content_data: socialValue,
             updated_at: new Date().toISOString()
         }, { onConflict: 'content_key' });
