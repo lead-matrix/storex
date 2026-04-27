@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 
-export const runtime = 'edge';
+// Node runtime (edge removed: supabase-js requires Node crypto APIs)
+export const runtime = 'nodejs';
 
 // Free IP geolocation — no API key needed
 async function getGeoFromIP(ip: string): Promise<{ country: string; country_code: string; city: string } | null> {

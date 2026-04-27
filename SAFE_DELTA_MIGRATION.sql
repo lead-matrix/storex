@@ -222,4 +222,62 @@ ON CONFLICT (setting_key) DO NOTHING;
 --   $$DELETE FROM public.page_views WHERE created_at < now() - interval '90 days'$$);
 -- ──────────────────────────────────────────────────────────────
 
+-- ──────────────────────────────────────────────────────────────
+-- 11. SITE SETTINGS — seed home_sections + announcement_messages
+--     (needed so settings page renders correctly before first save)
+-- ──────────────────────────────────────────────────────────────
+INSERT INTO public.site_settings (setting_key, setting_value)
+VALUES (
+  'home_sections',
+  '{
+    "show_bestsellers": true,
+    "show_bestsellers_hero": false,
+    "bestseller_heading": "Bestsellers",
+    "bestseller_subheading": "Our most-loved products",
+    "show_featured": true,
+    "show_collections": true
+  }'::jsonb
+)
+ON CONFLICT (setting_key) DO NOTHING;
+
+INSERT INTO public.site_settings (setting_key, setting_value)
+VALUES (
+  'announcement_messages',
+  '{"messages": ["Free shipping on orders over $50", "New arrivals every week"]}'::jsonb
+)
+ON CONFLICT (setting_key) DO NOTHING;
+
+-- ──────────────────────────────────────────────────────────────
+-- 12. ORDER_ITEMS — ensure product_name + variant_name columns exist
+--     (snapshot columns written by the Stripe webhook)
+-- ──────────────────────────────────────────────────────────────
+ALTER TABLE public.order_items
+  ADD COLUMN IF NOT EXISTS product_name text,
+  ADD COLUMN IF NOT EXISTS variant_name text;
+
+-- Backfill any existing rows that have NULLs in snapshot columns
+UPDATE public.order_items oi
+SET
+  product_name = COALESCE(oi.product_name, p.title),
+  variant_name = COALESCE(oi.variant_name, pv.name)
+FROM public.products p
+LEFT JOIN public.product_variants pv ON pv.id = oi.variant_id
+WHERE oi.product_id = p.id
+  AND (oi.product_name IS NULL OR oi.variant_name IS NULL);
+
+-- ──────────────────────────────────────────────────────────────
+-- 13. PRODUCTS — dimension + weight columns (used by ProductForm)
+-- ──────────────────────────────────────────────────────────────
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS weight_oz numeric(10,2),
+  ADD COLUMN IF NOT EXISTS length_in numeric(10,2),
+  ADD COLUMN IF NOT EXISTS width_in  numeric(10,2),
+  ADD COLUMN IF NOT EXISTS height_in numeric(10,2);
+
+-- ──────────────────────────────────────────────────────────────
+-- 14. PRODUCT_VARIANTS — weight column (used by ShippingService)
+-- ──────────────────────────────────────────────────────────────
+ALTER TABLE public.product_variants
+  ADD COLUMN IF NOT EXISTS weight numeric(8,3);
+
 -- Done ✅
