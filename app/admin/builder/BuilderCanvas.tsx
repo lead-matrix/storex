@@ -4,7 +4,7 @@
 // Uses @dnd-kit/core + @dnd-kit/sortable.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
     DndContext, closestCenter, PointerSensor, useSensor, useSensors,
     DragEndEvent, DragOverlay, DragStartEvent
@@ -154,6 +154,7 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     filter: ['featured', 'bestsellers', 'sale', 'new'],
                     image_side: ['left', 'right'],
                     style: ['line', 'dots', 'ornament'],
+                    background_color: ['black', 'dark', 'gold'],
                 }
                 if (ENUMS[key]) return (
                     <div key={key}>
@@ -172,14 +173,25 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
-                // Image URL
+                // Image URL — with inline upload + media library picker
                 if (typeof val === 'string' && key.includes('image')) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
                         <div className='flex gap-2 items-center'>
-                            <input type='url' value={val} onChange={e => set(key, e.target.value)} placeholder='Paste image URL or click Browse' className={`${FIELD} flex-1`} />
-                            <button type='button' onClick={() => setMediaTarget(key)} className='flex-shrink-0 px-3 py-2 bg-gray-800 text-white rounded text-xs font-bold hover:bg-gray-700 whitespace-nowrap'>
-                                Browse
+                            <input type='url' value={val} onChange={e => set(key, e.target.value)} placeholder='Paste URL or use buttons →' className={`${FIELD} flex-1 min-w-0`} />
+                            <button type='button' title='Upload from device' onClick={() => {
+                                const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+                                inp.onchange = async () => {
+                                    const file = inp.files?.[0]; if(!file) return;
+                                    const fd = new FormData(); fd.append('file', file);
+                                    const r = await fetch('/api/admin/media-upload', { method: 'POST', body: fd });
+                                    if(r.ok){ const d = await r.json(); set(key, d.url); }
+                                }; inp.click();
+                            }} className='flex-shrink-0 px-2 py-2 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 whitespace-nowrap' title='Upload'>
+                                ⬆
+                            </button>
+                            <button type='button' onClick={() => setMediaTarget(key)} className='flex-shrink-0 px-2 py-2 bg-gray-800 text-white rounded text-xs font-bold hover:bg-gray-700 whitespace-nowrap'>
+                                📁
                             </button>
                         </div>
                         {val && <img src={String(val)} alt='preview' onError={e => (e.currentTarget.style.display='none')} className='mt-2 h-20 w-full object-cover rounded border border-gray-200' />}
@@ -194,6 +206,29 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                                 </div>
                             </div>
                         )}
+                    </div>
+                )
+
+                // JSON fields (icons grid items, FAQ items) — pretty editor
+                if (typeof val === 'string' && (key === 'icons' || key === 'items')) return (
+                    <div key={key}>
+                        <label className={LABEL}>{label} <span className='text-blue-400 normal-case'>(JSON)</span></label>
+                        <textarea
+                            value={(() => { try { return JSON.stringify(JSON.parse(val), null, 2) } catch { return val } })()}
+                            rows={8}
+                            onChange={e => set(key, e.target.value)}
+                            className={`${FIELD} resize-y font-mono text-xs`}
+                            spellCheck={false}
+                        />
+                        <p className='text-[9px] text-gray-400 mt-1'>Edit the JSON array directly. Each item needs the shown fields.</p>
+                    </div>
+                )
+
+                // end_date — datetime-local input
+                if (typeof val === 'string' && key === 'end_date') return (
+                    <div key={key}>
+                        <label className={LABEL}>{label}</label>
+                        <input type='datetime-local' value={val} onChange={e => set(key, e.target.value)} className={FIELD} />
                     </div>
                 )
 
@@ -470,5 +505,3 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
         </div>
     )
 }
-
-
