@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
+import { sendOrderConfirmationEmail } from "@/lib/utils/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia" as any,
@@ -122,6 +123,17 @@ export async function POST(req: Request) {
 
       if (updateError) throw new Error(`Order update failed: ${updateError.message}`);
 
+      // ── 2.5 Mark cart recovered if applicable ─────────────────────────
+      if (customerDetails?.email) {
+        await supabase.rpc("mark_cart_recovered", { p_email: customerDetails.email });
+      }
+
+      // ── 2.6 Redeem coupon if applicable ───────────────────────────────
+      const couponCode = session.metadata?.coupon_code;
+      if (couponCode) {
+        await supabase.rpc("redeem_coupon", { p_code: couponCode, p_order_id: orderId });
+      }
+
       // ── 3. Insert order_items from inventory_reservations ─────────────────
       // The checkout flow reserved inventory using the order_id as session_id.
       // We read those reservations to build order_items, then finalize inventory.
@@ -181,7 +193,21 @@ export async function POST(req: Request) {
           if (itemsInsertError) {
             throw new Error(`order_items insert failed: ${itemsInsertError.message}`);
           }
+          
+          // Send Confirmation Email
+          try {
+            await sendOrderConfirmationEmail({
+              orderId,
+              customerEmail: customerDetails?.email || "",
+              customerName: shippingDetails?.name || customerDetails?.name || "Valued Client",
+              totalAmount: session.amount_total ? session.amount_total / 100 : 0,
+              items: orderItems.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.price }))
+            });
+          } catch (emailErr) {
+            console.error("[Webhook] Email confirmation failed:", emailErr);
+          }
         }
+
 
         // ── 4. Finalize inventory: deduct stock + clear reservations ──────────
         const { error: finalizeError } = await supabase.rpc("finalize_order_inventory", {

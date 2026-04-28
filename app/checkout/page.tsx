@@ -3,13 +3,21 @@
 import { useEffect, useState, useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Package, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, Package, ShieldCheck, Mail, Ticket, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function CheckoutPage() {
-  const { cart, subtotal: cartTotal } = useCart();
+  const { cart, subtotal: cartTotal, syncAbandonedCart } = useCart();
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [freeThreshold, setFreeThreshold] = useState(100);
+  
+  // New state for abandoned cart and coupons
+  const [email, setEmail] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponData, setCouponData] = useState<any>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
 
   // Fetch just the free-shipping threshold to show the badge
   useEffect(() => {
@@ -37,6 +45,42 @@ export default function CheckoutPage() {
     }, 0) / 16;
   }, [cart]);
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setValidatingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, amount: cartTotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setCouponData(data);
+      } else {
+        setCouponError(data.message || "Invalid coupon");
+        setCouponData(null);
+      }
+    } catch (e) {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleEmailBlur = () => {
+    if (email && email.includes("@")) {
+      syncAbandonedCart(email);
+    }
+  };
+
+  const discountedTotal = useMemo(() => {
+    if (!couponData) return cartTotal;
+    return Math.max(0, cartTotal - Number(couponData.discount_amount));
+  }, [cartTotal, couponData]);
+
+
   const handleProceed = async () => {
     if (!cart.length) return;
     setLoadingCheckout(true);
@@ -45,8 +89,13 @@ export default function CheckoutPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({ 
+            items: cart,
+            email: email,
+            couponCode: couponData?.valid ? couponCode : null
+        }),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not initiate checkout.");
       if (data.url) {
@@ -131,10 +180,17 @@ export default function CheckoutPage() {
                       {isFreeShipping ? "FREE ✦" : "Calculated at checkout"}
                     </span>
                   </div>
+                  {couponData && (
+                    <div className="flex justify-between text-xs uppercase tracking-widest text-emerald-500 font-medium">
+                      <span>Discount ({couponCode})</span>
+                      <span>-${Number(couponData.discount_amount).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm uppercase tracking-widest text-white border-t border-white/10 pt-3 font-medium">
                     <span>Estimated Total</span>
-                    <span>${cartTotal.toFixed(2)}{!isFreeShipping && " + shipping"}</span>
+                    <span>${discountedTotal.toFixed(2)}{!isFreeShipping && " + shipping"}</span>
                   </div>
+
                 </div>
               </div>
             )}
@@ -168,7 +224,58 @@ export default function CheckoutPage() {
                 </p>
               )}
 
+              {/* Email Capture */}
+              <div className="space-y-3 pt-4 border-t border-white/5">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-luxury-subtext flex items-center gap-2">
+                  <Mail className="w-3 h-3 text-gold" />
+                  Your Contact Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={handleEmailBlur}
+                  placeholder="For order tracking & recovery..."
+                  className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-xs outline-none focus:border-gold/50 transition-all placeholder:text-white/20"
+                />
+              </div>
+
+              {/* Coupon Input */}
+              <div className="space-y-3 pt-4 border-t border-white/5">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-luxury-subtext flex items-center gap-2">
+                  <Ticket className="w-3 h-3 text-gold" />
+                  Privilege Code
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Enter code..."
+                    className="flex-grow bg-black/40 border border-white/10 rounded-none px-4 py-3 text-xs outline-none focus:border-gold/50 transition-all placeholder:text-white/20"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={validatingCoupon || !couponCode}
+                    className="bg-white text-black px-6 text-[10px] font-bold uppercase tracking-widest hover:bg-gold transition-all disabled:opacity-50"
+                  >
+                    {validatingCoupon ? "..." : "Apply"}
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="text-[9px] text-red-400 uppercase tracking-widest flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {couponError}
+                  </p>
+                )}
+                {couponData && (
+                  <p className="text-[9px] text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Code Applied: {couponData.discount_type === 'percentage' ? `${couponData.discount_value}%` : `$${couponData.discount_value}`} off
+                  </p>
+                )}
+              </div>
+
               {/* What happens at Stripe */}
+
               <div className="space-y-3 pt-2">
                 <p className="text-[10px] uppercase tracking-widest text-luxury-subtext">You will select your shipping method on the next screen, along with:</p>
                 <ul className="space-y-2">

@@ -3,6 +3,7 @@ import 'server-only';
 import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
 import { calculateTotalWeightLb, calculateShippingRate } from '@/lib/utils/shippo';
+import { checkoutLimiter } from '@/lib/api/rateLimit';
 import type { CartItem } from '@/types/product';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -21,20 +22,14 @@ let _shippingCacheTs = 0;
 const SHIPPING_CACHE_TTL = 5 * 60 * 1000;
 
 async function getShippingConfig(): Promise<any> {
-  const now = Date.now();
-  if (_shippingConfigCache && now - _shippingCacheTs < SHIPPING_CACHE_TTL) {
-    return _shippingConfigCache;
-  }
   const supabase = await createAdminClient();
-  const { data } = await supabase
-    .from('site_settings')
-    .select('setting_value')
-    .eq('setting_key', 'shipping_settings')
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('get_shipping_config');
 
-  _shippingConfigCache = data?.setting_value ?? {};
-  _shippingCacheTs = now;
-  return _shippingConfigCache;
+  if (error) {
+    console.error('[Shipping Config] RPC Error:', error);
+    return {};
+  }
+  return data ?? {};
 }
 
 export type ValidatedCartItem = CartItem & {
@@ -50,7 +45,8 @@ export type CheckoutSessionResult = {
 };
 
 export async function createCheckoutSession(
-  rawItems: { productId: string; variantId?: string | null; quantity: number }[]
+  rawItems: { productId: string; variantId?: string | null; quantity: number }[],
+  options: { email?: string; couponCode?: string | null } = {}
 ): Promise<CheckoutSessionResult> {
   const supabase = await createAdminClient();
   const productIds = rawItems.map(i => i.productId);
@@ -96,8 +92,23 @@ export async function createCheckoutSession(
   const totalWeightLb = calculateTotalWeightLb(validatedItems);
   const subtotal = validatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  // ── Coupon Validation ─────────────────────────────────────────────
+  let discountAmount = 0;
+  let validCouponCode = null;
+  if (options.couponCode) {
+    const { data: couponVal, error: couponError } = await supabase.rpc('validate_coupon', {
+      p_code: options.couponCode,
+      p_purchase_amount: subtotal
+    });
+    if (!couponError && couponVal?.valid) {
+      discountAmount = Number(couponVal.discount_amount);
+      validCouponCode = options.couponCode;
+    }
+  }
+
   const cfg = await getShippingConfig();
   const isFree = subtotal >= parseFloat(cfg.free_shipping_threshold ?? '100');
+
   const stdRate     = calculateShippingRate(totalWeightLb, subtotal, cfg, 'standard');
   const expRate     = calculateShippingRate(totalWeightLb, subtotal, cfg, 'express');
   const intlStdRate = calculateShippingRate(totalWeightLb, subtotal, cfg, 'intl_standard');
@@ -109,17 +120,20 @@ export async function createCheckoutSession(
     .from('orders')
     .insert({
       status: 'pending',
-      customer_email: 'pending@stripe',
-      amount_total: subtotal + stdRate.cost,
+      customer_email: options.email || 'pending@stripe',
+      amount_total: subtotal + stdRate.cost - discountAmount,
       shipping_address: null,
       metadata: {
         weight_lb: totalWeightLb.toFixed(3),
         subtotal: subtotal.toFixed(2),
         is_free_shipping: isFree,
+        coupon_code: validCouponCode,
+        discount_amount: discountAmount.toFixed(2),
       },
     })
     .select('id')
     .single();
+
 
   if (orderError) throw new Error(`Order creation failed: ${orderError.message}`);
 
@@ -160,6 +174,20 @@ export async function createCheckoutSession(
     quantity: item.quantity,
   }));
 
+  if (discountAmount > 0) {
+    lineItems.push({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: `Discount (${validCouponCode})`,
+        },
+        unit_amount: -Math.round(discountAmount * 100),
+      },
+      quantity: 1,
+    } as any);
+  }
+
+
   // NOTE: Stripe enforces a 500-character limit per metadata value.
   // We store only order_id here — the webhook fetches cart items from the DB
   // using order_id as the source of truth. Never serialize cart items into metadata.
@@ -179,10 +207,13 @@ export async function createCheckoutSession(
       expires_at: Math.floor(Date.now() / 1000) + 1800,
       metadata: {
         order_id: order.id,
+        coupon_code: validCouponCode ?? '',
       },
+      customer_email: options.email || undefined,
     },
     { idempotencyKey: `checkout_${order.id}` }
   );
+
 
   return { url: session.url!, orderId: order.id };
 }
@@ -211,9 +242,18 @@ function buildShippingOptions(
 
 export async function POST(request: Request) {
   try {
+    const rateLimitResult = await checkoutLimiter.check(request);
+    if (!rateLimitResult.success) {
+      return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
+    }
+
     const body = await request.json();
-    const result = await createCheckoutSession(body.items || []);
+    const result = await createCheckoutSession(body.items || [], {
+        email: body.email,
+        couponCode: body.couponCode
+    });
     return Response.json(result);
+
   } catch (error: any) {
     return Response.json(
       { error: error.message },

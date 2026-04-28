@@ -27,7 +27,10 @@ interface CartContextType {
     setIsCartOpen: (open: boolean) => void;
     /** true once localStorage has been read — use to suppress hydration flicker */
     isMounted: boolean;
+    /** Sync cart items to database for abandoned cart recovery */
+    syncAbandonedCart: (email: string) => Promise<void>;
 }
+
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -101,7 +104,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 isCartOpen,
                 setIsCartOpen,
                 isMounted,
+                syncAbandonedCart: async (email: string) => {
+                    if (!email || !email.includes("@")) return;
+                    try {
+                        const { createClient } = await import("@/lib/supabase/client");
+                        const supabase = createClient();
+                        await supabase.rpc("upsert_abandoned_cart", {
+                            p_email: email,
+                            p_cart_data: cart,
+                        });
+                    } catch (e) {
+                        console.error("Failed to sync abandoned cart", e);
+                    }
+                },
             }}
+
         >
             {children}
         </CartContext.Provider>

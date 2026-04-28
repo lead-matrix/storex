@@ -6,15 +6,12 @@ export async function POST(req: Request) {
     try {
         const { items } = await req.json();
         const supabase = await createClient();
+        const { data: cfg, error: rpcError } = await supabase.rpc('get_shipping_config');
 
-        // Fetch settings
-        const { data: settingsData } = await supabase
-            .from("site_settings")
-            .select("setting_value")
-            .eq("setting_key", "shipping_settings")
-            .maybeSingle();
+        if (rpcError) {
+            console.error('[Shipping Settings] RPC Error:', rpcError);
+        }
 
-        const cfg = settingsData?.setting_value || {};
 
         let standard_rate = parseFloat(cfg.standard_rate ?? "7.99");
         let express_rate = parseFloat(cfg.express_rate ?? "29.99");

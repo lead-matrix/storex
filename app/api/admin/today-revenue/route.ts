@@ -15,30 +15,19 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(req.url)
-    const start = searchParams.get('start')
-    const end   = searchParams.get('end')
-
-    // Validate — must be valid ISO timestamps
-    if (!start || !end || isNaN(Date.parse(start)) || isNaN(Date.parse(end))) {
-        return NextResponse.json({ error: 'Invalid start/end params' }, { status: 400 })
-    }
-
     const supabase = await createClient()
 
-    const { data, error } = await supabase
-        .from('orders')
-        .select('amount_total')
-        .in('status', ['paid', 'shipped', 'delivered'])
-        .neq('customer_email', 'pending@stripe')
-        .gte('created_at', start)
-        .lte('created_at', end)
+    const { data, error } = await supabase.rpc('admin_today_stats');
 
     if (error) {
         console.error('[today-revenue] Supabase error:', error)
         return NextResponse.json({ revenue: 0 })
     }
 
-    const revenue = data?.reduce((sum, o) => sum + (Number(o.amount_total) || 0), 0) || 0
-    return NextResponse.json({ revenue })
+    // RPC returns { revenue: numeric, order_count: int, ... }
+    return NextResponse.json({ 
+        revenue: Number(data?.revenue || 0),
+        order_count: data?.order_count || 0
+    })
 }
+

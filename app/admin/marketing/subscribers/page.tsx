@@ -17,12 +17,10 @@ export default async function NewsletterSubscribersPage() {
         .select('*')
         .order('created_at', { ascending: false })
 
-    const total = subscribers?.length || 0
-    const thisMonth = subscribers?.filter(s => {
-        const d = new Date(s.created_at)
-        const now = new Date()
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-    }).length || 0
+    const { data: stats } = await supabase.rpc('get_subscriber_stats')
+    const total = stats?.total_subscribers || 0
+    const thisMonth = stats?.new_this_month || 0
+
 
     return (
         <div className="space-y-10 pb-24 animate-luxury-fade">

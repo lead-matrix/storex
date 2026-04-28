@@ -44,21 +44,24 @@ export default async function AdminDashboard() {
 
     // ── DATA ACQUISITION ──
     const [
-        { data: revenueRes },
-        { count: ordersCount },
+        { data: alltimeStats },
+        { data: sparklineData },
         { count: productsCount },
         { data: recentOrders },
         { data: lowStockProducts }
     ] = await Promise.all([
-        supabase.from('orders').select('amount_total').in('status', ['paid', 'shipped', 'delivered']),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['paid', 'shipped', 'delivered']),
+        supabase.rpc('admin_alltime_stats'),
+        supabase.rpc('admin_revenue_sparkline'),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('orders').select('id, customer_email, status, amount_total, created_at').in('status', ['paid', 'shipped', 'delivered']).neq('customer_email', 'pending@stripe').order('created_at', { ascending: false }).limit(6),
         supabase.from('product_variants').select('id, name, product_id, products(title), stock').lt('stock', 10).order('stock', { ascending: true }).limit(5)
     ])
 
-    const totalRevenue = revenueRes?.reduce((sum, o) => sum + (Number(o.amount_total) || 0), 0) || 0
+    const totalRevenue = Number(alltimeStats?.total_revenue || 0)
+    const totalOrders = alltimeStats?.total_orders || 0
+    const sparkData = sparklineData?.map((d: any) => Number(d.revenue)) || [0, 0, 0, 0, 0, 0, 0]
     const activeOrders = recentOrders?.filter(o => o.status === 'paid' || o.status === 'processing').length || 0
+
 
     return (
         <div className="space-y-12 animate-luxury-fade pb-24">
@@ -94,16 +97,17 @@ export default async function AdminDashboard() {
                     subtext="All-time Registry"
                     icon={DollarSign}
                     colorClass="text-gold"
-                    sparkData={[40, 60, 50, 80, 70, 95, 100]}
+                    sparkData={sparkData}
                 />
                 <KPICard
-                    label="Active Orders"
-                    value={ordersCount ?? 0}
-                    subtext={`${activeOrders} Active / Processing`}
+                    label="Successful Orders"
+                    value={totalOrders}
+                    subtext={`${activeOrders} Recent Activity`}
                     icon={ShoppingCart}
                     colorClass="text-emerald-400"
-                    sparkData={[20, 30, 45, 30, 50, 40, 60]}
+                    sparkData={sparkData.slice(-7)} // Last 7 days
                 />
+
                 <KPICard
                     label="Product Vault"
                     value={productsCount ?? 0}
