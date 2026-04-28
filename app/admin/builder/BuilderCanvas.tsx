@@ -470,3 +470,5 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
         </div>
     )
 }
+
+
