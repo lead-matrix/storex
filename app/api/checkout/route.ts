@@ -17,10 +17,6 @@ export const INTL_COUNTRIES = [
 
 export const ALL_COUNTRIES = ['US', ...INTL_COUNTRIES] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[];
 
-let _shippingConfigCache: any = null;
-let _shippingCacheTs = 0;
-const SHIPPING_CACHE_TTL = 5 * 60 * 1000;
-
 async function getShippingConfig(): Promise<any> {
   const supabase = await createAdminClient();
   const { data, error } = await supabase.rpc('get_shipping_config');
