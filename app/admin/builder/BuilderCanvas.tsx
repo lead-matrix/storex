@@ -187,7 +187,7 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                                     const r = await fetch('/api/admin/media-upload', { method: 'POST', body: fd });
                                     if(r.ok){ const d = await r.json(); set(key, d.url); }
                                 }; inp.click();
-                            }} className='flex-shrink-0 px-2 py-2 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 whitespace-nowrap' title='Upload'>
+                            }} className='flex-shrink-0 px-2 py-2 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 whitespace-nowrap'>
                                 ⬆
                             </button>
                             <button type='button' onClick={() => setMediaTarget(key)} className='flex-shrink-0 px-2 py-2 bg-gray-800 text-white rounded text-xs font-bold hover:bg-gray-700 whitespace-nowrap'>
