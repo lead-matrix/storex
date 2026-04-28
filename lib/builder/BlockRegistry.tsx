@@ -1,7 +1,8 @@
 'use client'
 // ─────────────────────────────────────────────────────────────────────────────
 // BlockRegistry — renders every block type as a real, styled preview.
-// This is the single source of truth used in both the canvas and public pages.
+// Single source of truth used in both the canvas and public pages.
+// Updated: +5 new blocks (video_hero, countdown_timer, before_after, icon_grid, faq_accordion)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from 'react'
@@ -22,10 +23,9 @@ import {
     FaqAccordionProps,
 } from '@/lib/builder/types'
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
 const ALIGN = { left: 'text-left items-start', center: 'text-center items-center', right: 'text-right items-end' }
 
-// ── Hero ─────────────────────────────────────────────────────────────────────
+// ── Hero ──────────────────────────────────────────────────────────────────────
 function HeroBlock({ p }: { p: HeroProps }) {
     return (
         <section className="relative w-full h-[60vh] min-h-[380px] flex items-center justify-center overflow-hidden bg-black">
@@ -37,8 +37,7 @@ function HeroBlock({ p }: { p: HeroProps }) {
             <div className="relative z-10 text-center px-8 max-w-4xl mx-auto flex flex-col items-center gap-6">
                 <h1 className="text-4xl md:text-6xl font-serif text-white tracking-widest leading-tight">{p.heading}</h1>
                 <p className="text-sm text-white/70 uppercase tracking-[0.25em] max-w-xl leading-relaxed">{p.subheading}</p>
-                <a href={p.cta_link}
-                    className="inline-block border border-white text-white text-xs uppercase tracking-[0.3em] px-8 py-3 hover:bg-white hover:text-black transition-all duration-300">
+                <a href={p.cta_link} className="inline-block border border-white text-white text-xs uppercase tracking-[0.3em] px-8 py-3 hover:bg-white hover:text-black transition-all duration-300">
                     {p.cta_text}
                 </a>
             </div>
@@ -55,21 +54,20 @@ function VideoHeroBlock({ p }: { p: VideoHeroProps }) {
         <section className="relative w-full h-[60vh] min-h-[380px] flex items-center justify-center overflow-hidden bg-black">
             {videoSrc ? (
                 <video
+                    src={videoSrc}
                     autoPlay muted loop playsInline
                     className="absolute inset-0 w-full h-full object-cover"
-                    src={videoSrc}
                 />
             ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center">
-                    <span className="text-white/20 text-xs uppercase tracking-widest">Add a Mux Playback ID in settings</span>
+                    <span className="text-white/20 text-xs uppercase tracking-widest">Add Mux Playback ID in settings</span>
                 </div>
             )}
             <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${(p.overlay_opacity ?? 40) / 100})` }} />
             <div className="relative z-10 text-center px-8 max-w-4xl mx-auto flex flex-col items-center gap-6">
                 <h1 className="text-4xl md:text-6xl font-serif text-white tracking-widest leading-tight">{p.heading}</h1>
                 <p className="text-sm text-white/70 uppercase tracking-[0.25em] max-w-xl leading-relaxed">{p.subheading}</p>
-                <a href={p.cta_link}
-                    className="inline-block border border-white text-white text-xs uppercase tracking-[0.3em] px-8 py-3 hover:bg-white hover:text-black transition-all duration-300">
+                <a href={p.cta_link} className="inline-block border border-white text-white text-xs uppercase tracking-[0.3em] px-8 py-3 hover:bg-white hover:text-black transition-all duration-300">
                     {p.cta_text}
                 </a>
             </div>
@@ -109,6 +107,59 @@ function ImageBannerBlock({ p }: { p: ImageBannerProps }) {
     )
 }
 
+// ── Before / After ────────────────────────────────────────────────────────────
+function BeforeAfterBlock({ p }: { p: BeforeAfterProps }) {
+    const [sliderPos, setSliderPos] = useState(50)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const dragging = useRef(false)
+
+    const move = (clientX: number) => {
+        if (!containerRef.current) return
+        const rect = containerRef.current.getBoundingClientRect()
+        const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+        setSliderPos(pct)
+    }
+
+    return (
+        <section className="py-16 px-8 bg-black">
+            {p.heading && (
+                <h2 className="text-center text-2xl md:text-3xl font-serif text-white tracking-widest mb-10">{p.heading}</h2>
+            )}
+            <div
+                ref={containerRef}
+                className="relative max-w-3xl mx-auto aspect-[16/9] overflow-hidden rounded cursor-col-resize select-none bg-zinc-900"
+                onMouseDown={() => { dragging.current = true }}
+                onMouseUp={() => { dragging.current = false }}
+                onMouseLeave={() => { dragging.current = false }}
+                onMouseMove={e => { if (dragging.current) move(e.clientX) }}
+                onTouchMove={e => move(e.touches[0].clientX)}
+            >
+                {/* After image (full) */}
+                {p.after_image
+                    ? <img src={p.after_image} alt={p.after_label} className="absolute inset-0 w-full h-full object-cover" />
+                    : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center text-white/20 text-xs uppercase tracking-widest">{p.after_label || 'After'}</div>
+                }
+                {/* Before image (clipped) */}
+                <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
+                    {p.before_image
+                        ? <img src={p.before_image} alt={p.before_label} className="absolute inset-0 w-full h-full object-cover" style={{ width: `${10000 / sliderPos}%`, maxWidth: 'none' }} />
+                        : <div className="absolute inset-0 bg-zinc-700 flex items-center justify-center text-white/20 text-xs uppercase tracking-widest">{p.before_label || 'Before'}</div>
+                    }
+                </div>
+                {/* Slider handle */}
+                <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg" style={{ left: `${sliderPos}%` }}>
+                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white shadow-xl flex items-center justify-center">
+                        <span className="text-black text-xs font-bold select-none">↔</span>
+                    </div>
+                </div>
+                {/* Labels */}
+                <span className="absolute bottom-3 left-3 bg-black/60 text-white text-[9px] uppercase tracking-widest px-2 py-1 rounded">{p.before_label || 'Before'}</span>
+                <span className="absolute bottom-3 right-3 bg-black/60 text-white text-[9px] uppercase tracking-widest px-2 py-1 rounded">{p.after_label || 'After'}</span>
+            </div>
+        </section>
+    )
+}
+
 // ── Product Shelf ─────────────────────────────────────────────────────────────
 function ProductShelfBlock({ p }: { p: ProductShelfProps }) {
     const placeholders = Array.from({ length: Math.min(p.count, 4) })
@@ -123,7 +174,7 @@ function ProductShelfBlock({ p }: { p: ProductShelfProps }) {
                     </div>
                 ))}
             </div>
-            <p className="text-center text-[10px] text-white/20 mt-4 uppercase tracking-widest">Live products will appear here — filter: {p.filter}</p>
+            <p className="text-center text-[10px] text-white/20 mt-4 uppercase tracking-widest">Live products — filter: {p.filter}</p>
         </section>
     )
 }
@@ -154,67 +205,37 @@ function TwoColumnBlock({ p }: { p: TwoColumnProps }) {
     )
 }
 
-// ── Before / After Slider ─────────────────────────────────────────────────────
-function BeforeAfterBlock({ p }: { p: BeforeAfterProps }) {
-    const [pos, setPos] = useState(50)
-    const containerRef = useRef<HTMLDivElement>(null)
-    const dragging = useRef(false)
-
-    const updatePos = (clientX: number) => {
-        if (!containerRef.current) return
-        const rect = containerRef.current.getBoundingClientRect()
-        const pct = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100))
-        setPos(pct)
-    }
-
+// ── Icon Grid ─────────────────────────────────────────────────────────────────
+function IconGridBlock({ p }: { p: IconGridProps }) {
+    let items: { icon: string; label: string; description: string }[] = []
+    try { items = JSON.parse(p.icons) } catch { items = [] }
     return (
-        <section className="py-16 px-8 bg-black">
-            {p.heading && (
-                <h2 className="text-center text-2xl font-serif text-white tracking-widest mb-10">{p.heading}</h2>
-            )}
-            <div
-                ref={containerRef}
-                className="relative w-full max-w-3xl mx-auto aspect-[16/9] overflow-hidden rounded select-none cursor-col-resize"
-                onMouseDown={() => { dragging.current = true }}
-                onMouseUp={() => { dragging.current = false }}
-                onMouseLeave={() => { dragging.current = false }}
-                onMouseMove={e => { if (dragging.current) updatePos(e.clientX) }}
-                onTouchMove={e => updatePos(e.touches[0].clientX)}
-            >
-                {/* After image (full) */}
-                {p.after_image
-                    ? <img src={p.after_image} alt="After" className="absolute inset-0 w-full h-full object-cover" />
-                    : <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center text-white/20 text-xs uppercase tracking-widest">After Image</div>
-                }
-                {/* Before image (clipped) */}
-                <div className="absolute inset-0 overflow-hidden" style={{ width: `${pos}%` }}>
-                    {p.before_image
-                        ? <img src={p.before_image} alt="Before" className="absolute inset-0 w-full h-full object-cover" style={{ width: `${10000 / pos}%`, maxWidth: 'none' }} />
-                        : <div className="absolute inset-0 bg-zinc-700 flex items-center justify-center text-white/20 text-xs uppercase tracking-widest">Before Image</div>
-                    }
-                </div>
-                {/* Divider line */}
-                <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg z-10" style={{ left: `${pos}%` }}>
-                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white shadow-xl flex items-center justify-center">
-                        <span className="text-black text-xs font-bold">↔</span>
+        <section className="py-16 px-8 bg-black border-t border-zinc-900">
+            {p.heading && <h2 className="text-center text-xl font-serif text-white tracking-widest mb-10">{p.heading}</h2>}
+            <div className={`max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-${Math.min(items.length, 4)} gap-8`}>
+                {items.map((item, i) => (
+                    <div key={i} className="flex flex-col items-center text-center gap-3">
+                        <span className="text-4xl">{item.icon}</span>
+                        <p className="text-white font-medium text-sm uppercase tracking-widest">{item.label}</p>
+                        {item.description && <p className="text-white/40 text-xs leading-relaxed">{item.description}</p>}
                     </div>
-                </div>
-                {/* Labels */}
-                <span className="absolute bottom-3 left-3 bg-black/70 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded">{p.before_label}</span>
-                <span className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded">{p.after_label}</span>
+                ))}
             </div>
         </section>
     )
 }
 
 // ── Countdown Timer ───────────────────────────────────────────────────────────
+const BG_MAP = {
+    black: 'bg-black',
+    dark: 'bg-zinc-950',
+    gold: 'bg-[#D4AF37]',
+}
 function CountdownTimerBlock({ p }: { p: CountdownTimerProps }) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 })
-
     useEffect(() => {
         const calc = () => {
-            const diff = new Date(p.target_date).getTime() - Date.now()
-            if (diff <= 0) return setTimeLeft({ d: 0, h: 0, m: 0, s: 0 })
+            const diff = Math.max(0, new Date(p.end_date).getTime() - Date.now())
             setTimeLeft({
                 d: Math.floor(diff / 86400000),
                 h: Math.floor((diff % 86400000) / 3600000),
@@ -225,62 +246,43 @@ function CountdownTimerBlock({ p }: { p: CountdownTimerProps }) {
         calc()
         const t = setInterval(calc, 1000)
         return () => clearInterval(t)
-    }, [p.target_date])
+    }, [p.end_date])
 
-    const BG = p.bg_color === 'gold'
-        ? 'bg-[#D4AF37]'
-        : p.bg_color === 'black'
-            ? 'bg-black'
-            : 'bg-zinc-950'
-
-    const pad = (n: number) => String(n).padStart(2, '0')
+    const isGold = p.background_color === 'gold'
+    const bgCls = BG_MAP[p.background_color] ?? BG_MAP.dark
+    const textCls = isGold ? 'text-black' : 'text-white'
+    const subCls = isGold ? 'text-black/60' : 'text-white/50'
+    const numBg = isGold ? 'bg-black/10' : 'bg-white/10'
 
     return (
-        <section className={`${BG} py-16 px-8 border-t border-b border-white/10`}>
-            <div className="max-w-3xl mx-auto text-center flex flex-col items-center gap-6">
-                <h2 className={`text-2xl md:text-3xl font-serif tracking-widest ${p.bg_color === 'gold' ? 'text-black' : 'text-white'}`}>{p.heading}</h2>
-                <p className={`text-sm uppercase tracking-widest ${p.bg_color === 'gold' ? 'text-black/70' : 'text-white/50'}`}>{p.subheading}</p>
-                <div className="flex items-center gap-4 md:gap-8">
-                    {[['d', 'Days'], ['h', 'Hrs'], ['m', 'Min'], ['s', 'Sec']].map(([key, label]) => (
-                        <div key={key} className="flex flex-col items-center gap-1">
-                            <span className={`text-4xl md:text-6xl font-serif font-bold tabular-nums ${p.bg_color === 'gold' ? 'text-black' : 'text-white'}`}>
-                                {pad(timeLeft[key as keyof typeof timeLeft])}
-                            </span>
-                            <span className={`text-[9px] uppercase tracking-widest ${p.bg_color === 'gold' ? 'text-black/50' : 'text-white/30'}`}>{label}</span>
+        <section className={`py-16 px-8 ${bgCls}`}>
+            <div className="max-w-2xl mx-auto text-center flex flex-col items-center gap-6">
+                <h2 className={`text-2xl md:text-3xl font-serif tracking-widest ${textCls}`}>{p.heading}</h2>
+                {p.subheading && <p className={`text-sm leading-relaxed ${subCls}`}>{p.subheading}</p>}
+                <div className="flex gap-4 md:gap-8">
+                    {[
+                        { val: timeLeft.d, label: 'Days' },
+                        { val: timeLeft.h, label: 'Hours' },
+                        { val: timeLeft.m, label: 'Mins' },
+                        { val: timeLeft.s, label: 'Secs' },
+                    ].map(({ val, label }) => (
+                        <div key={label} className="flex flex-col items-center gap-1">
+                            <div className={`${numBg} rounded px-4 py-3 min-w-[3.5rem] text-center`}>
+                                <span className={`text-3xl md:text-4xl font-mono font-bold tabular-nums ${textCls}`}>
+                                    {String(val).padStart(2, '0')}
+                                </span>
+                            </div>
+                            <span className={`text-[9px] uppercase tracking-widest ${subCls}`}>{label}</span>
                         </div>
                     ))}
                 </div>
                 {p.cta_text && (
                     <a href={p.cta_link}
-                        className={`inline-block text-xs uppercase tracking-[0.3em] px-8 py-3 border transition-all duration-300 ${p.bg_color === 'gold' ? 'border-black text-black hover:bg-black hover:text-[#D4AF37]' : 'border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black'}`}>
+                        className={`inline-block border px-8 py-3 text-xs uppercase tracking-[0.3em] transition-all duration-300 
+                            ${isGold ? 'border-black text-black hover:bg-black hover:text-[#D4AF37]' : 'border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black'}`}>
                         {p.cta_text}
                     </a>
                 )}
-            </div>
-        </section>
-    )
-}
-
-// ── Icon Grid ─────────────────────────────────────────────────────────────────
-function IconGridBlock({ p }: { p: IconGridProps }) {
-    const items = [
-        { icon: p.icon_1, label: p.label_1 },
-        { icon: p.icon_2, label: p.label_2 },
-        { icon: p.icon_3, label: p.label_3 },
-        { icon: p.icon_4, label: p.label_4 },
-    ]
-    return (
-        <section className="py-16 px-8 bg-zinc-950 border-t border-white/5">
-            {p.heading && (
-                <h2 className="text-center text-xl font-serif text-white tracking-widest mb-10 uppercase">{p.heading}</h2>
-            )}
-            <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-                {items.map((item, i) => (
-                    <div key={i} className="flex flex-col items-center gap-3 text-center group">
-                        <span className="text-3xl group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
-                        <span className="text-white/70 text-xs uppercase tracking-[0.2em] font-medium">{item.label}</span>
-                    </div>
-                ))}
             </div>
         </section>
     )
@@ -329,31 +331,26 @@ function TestimonialBlock({ p }: { p: TestimonialProps }) {
 // ── FAQ Accordion ─────────────────────────────────────────────────────────────
 function FaqAccordionBlock({ p }: { p: FaqAccordionProps }) {
     const [open, setOpen] = useState<number | null>(null)
-    const faqs = [
-        { q: p.q1, a: p.a1 },
-        { q: p.q2, a: p.a2 },
-        { q: p.q3, a: p.a3 },
-        { q: p.q4, a: p.a4 },
-    ].filter(f => f.q)
-
+    let items: { question: string; answer: string }[] = []
+    try { items = JSON.parse(p.items) } catch { items = [] }
     return (
-        <section className="py-20 px-8 bg-black">
-            <div className="max-w-3xl mx-auto">
-                {p.heading && (
-                    <h2 className="text-center text-2xl font-serif text-white tracking-widest mb-12 uppercase">{p.heading}</h2>
-                )}
-                <div className="divide-y divide-white/10">
-                    {faqs.map((faq, i) => (
-                        <div key={i} className="py-5">
+        <section className="py-16 px-8 bg-black">
+            <div className="max-w-2xl mx-auto">
+                {p.heading && <h2 className="text-center text-2xl md:text-3xl font-serif text-white tracking-widest mb-10">{p.heading}</h2>}
+                <div className="flex flex-col divide-y divide-white/10">
+                    {items.map((item, i) => (
+                        <div key={i}>
                             <button
                                 onClick={() => setOpen(open === i ? null : i)}
-                                className="w-full flex items-center justify-between gap-4 text-left group"
+                                className="w-full flex items-center justify-between py-5 text-left gap-4 group"
                             >
-                                <span className="text-white font-medium text-sm tracking-wide group-hover:text-[#D4AF37] transition-colors">{faq.q}</span>
-                                <span className={`text-[#D4AF37] text-lg flex-shrink-0 transition-transform duration-200 ${open === i ? 'rotate-45' : ''}`}>+</span>
+                                <span className="text-white text-sm font-medium tracking-wide group-hover:text-[#D4AF37] transition-colors">{item.question}</span>
+                                <span className={`text-[#D4AF37] text-lg font-light flex-shrink-0 transition-transform duration-300 ${open === i ? 'rotate-45' : ''}`}>+</span>
                             </button>
                             {open === i && (
-                                <p className="mt-4 text-white/60 text-sm leading-relaxed">{faq.a}</p>
+                                <div className="pb-5">
+                                    <p className="text-white/50 text-sm leading-relaxed">{item.answer}</p>
+                                </div>
                             )}
                         </div>
                     ))}
@@ -367,19 +364,19 @@ function FaqAccordionBlock({ p }: { p: FaqAccordionProps }) {
 export function RenderBlock({ block }: { block: PageBlock }) {
     const p = block.props as any
     switch (block.type) {
-        case 'hero':            return <HeroBlock p={p} />
-        case 'video_hero':      return <VideoHeroBlock p={p} />
-        case 'text_block':      return <TextBlock p={p} />
-        case 'image_banner':    return <ImageBannerBlock p={p} />
-        case 'product_shelf':   return <ProductShelfBlock p={p} />
-        case 'two_column':      return <TwoColumnBlock p={p} />
-        case 'before_after':    return <BeforeAfterBlock p={p} />
-        case 'countdown_timer': return <CountdownTimerBlock p={p} />
-        case 'icon_grid':       return <IconGridBlock p={p} />
-        case 'newsletter':      return <NewsletterBlock p={p} />
-        case 'divider':         return <DividerBlock p={p} />
-        case 'testimonial':     return <TestimonialBlock p={p} />
-        case 'faq_accordion':   return <FaqAccordionBlock p={p} />
-        default:                return null
+        case 'hero':             return <HeroBlock p={p} />
+        case 'video_hero':       return <VideoHeroBlock p={p} />
+        case 'text_block':       return <TextBlock p={p} />
+        case 'image_banner':     return <ImageBannerBlock p={p} />
+        case 'before_after':     return <BeforeAfterBlock p={p} />
+        case 'product_shelf':    return <ProductShelfBlock p={p} />
+        case 'two_column':       return <TwoColumnBlock p={p} />
+        case 'icon_grid':        return <IconGridBlock p={p} />
+        case 'countdown_timer':  return <CountdownTimerBlock p={p} />
+        case 'newsletter':       return <NewsletterBlock p={p} />
+        case 'divider':          return <DividerBlock p={p} />
+        case 'testimonial':      return <TestimonialBlock p={p} />
+        case 'faq_accordion':    return <FaqAccordionBlock p={p} />
+        default:                 return null
     }
 }
