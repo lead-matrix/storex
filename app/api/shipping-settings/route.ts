@@ -9,11 +9,24 @@ export async function POST(req: Request) {
         const { data: cfg, error: rpcError } = await supabase.rpc('get_shipping_config');
 
         if (rpcError) {
-            console.error('[Shipping Settings] RPC Error:', rpcError);
+            console.error('[Shipping Settings] RPC Error:', rpcError)
+        }
+
+        // Guard: RPC may return null if no shipping config row exists yet.
+        // Fall back to safe defaults so the checkout page never crashes.
+        if (!cfg) {
+            return NextResponse.json({
+                settings: {
+                    standard_rate: '7.99',
+                    express_rate: '29.99',
+                    standard_label: 'Standard Shipping',
+                    express_label: 'Express Shipping',
+                    free_shipping_threshold: '100',
+                }
+            })
         }
 
 
-        let standard_rate = parseFloat(cfg.standard_rate ?? "7.99");
         let express_rate = parseFloat(cfg.express_rate ?? "29.99");
 
         if (items && items.length > 0) {

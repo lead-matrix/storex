@@ -2,7 +2,7 @@
 // All email templates read design settings from Supabase so Dina can
 // customise them visually from /admin/email without touching code.
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createAdminClient } from '@/lib/supabase/admin'
 
 interface OrderEmailProps {
     orderId: string
@@ -36,10 +36,7 @@ type EmailSettings = typeof EMAIL_DEFAULTS
 
 async function getEmailSettings(): Promise<EmailSettings> {
     try {
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+        const supabase = await createAdminClient()
         const { data } = await supabase
             .from('site_settings')
             .select('setting_value')

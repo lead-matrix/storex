@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'image.mux.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'stream.mux.com',
+      },
     ],
   },
   compiler: {
@@ -48,6 +52,20 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+              "frame-src https://js.stripe.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.telegram.org https://*.mux.com",
+              "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://image.mux.com",
+              "media-src 'self' https://stream.mux.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "worker-src blob:",
+            ].join('; '),
           },
         ],
       },

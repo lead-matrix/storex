@@ -56,6 +56,8 @@ function VideoHeroBlock({ p }: { p: VideoHeroProps }) {
                 <video
                     src={videoSrc}
                     autoPlay muted loop playsInline
+                    aria-hidden="true"
+                    poster={`https://image.mux.com/${p.mux_playback_id}/thumbnail.jpg?time=0`}
                     className="absolute inset-0 w-full h-full object-cover"
                 />
             ) : (

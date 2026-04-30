@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@/lib/supabase/admin';
+import { apiLimiter } from '@/lib/api/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        // Rate limit: 60 attempts / min per IP — prevents brute-force code scanning
+        const rateLimitResult = await apiLimiter.check(req)
+        if (!rateLimitResult.success) {
+            return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 })
+        }
+
         const { code, amount } = await req.json();
+
 
         if (!code) {
             return NextResponse.json({ error: 'Coupon code is required' }, { status: 400 });
