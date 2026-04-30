@@ -26,7 +26,7 @@ export async function POST(req: Request) {
             })
         }
 
-
+        let standard_rate = parseFloat(cfg.standard_rate ?? "7.99");
         let express_rate = parseFloat(cfg.express_rate ?? "29.99");
 
         if (items && items.length > 0) {
