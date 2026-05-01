@@ -78,7 +78,10 @@ export default async function AdminDashboard() {
                         <Plus size={14} />
                         New Product
                     </Link>
-                    <Link href="/admin/orders" className="flex items-center gap-2 bg-[#0B0B0D]/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/70 hover:border-white/30 transition-all font-bold">
+                    <Link href="/admin/builder" className="flex items-center gap-2 bg-purple-950/40 border border-purple-500/30 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-purple-300 hover:bg-purple-600 hover:text-white transition-all font-bold">
+                    <span>🎨</span> Page Builder
+                </Link>
+                <Link href="/admin/orders" className="flex items-center gap-2 bg-[#0B0B0D]/5 border border-white/10 px-4 py-2 rounded text-[9px] uppercase tracking-widest text-white/70 hover:border-white/30 transition-all font-bold">
                         <ShoppingCart size={14} />
                         View Orders
                     </Link>
