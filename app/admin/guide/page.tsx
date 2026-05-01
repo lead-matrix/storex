@@ -284,6 +284,50 @@ const sections = [
     // 5. CMS PAGES
     // ─────────────────────────────────────────────────────────────────────
     {
+        id: 'builder',
+        icon: Globe,
+        color: 'text-purple-400',
+        bgColor: 'bg-purple-500/10 border-purple-500/20',
+        title: 'Page Builder — 13 Blocks',
+        subtitle: 'Build any campaign page in under 5 minutes',
+        content: (
+            <div className="space-y-4">
+                <p className="text-white/60 text-sm leading-relaxed">
+                    The Page Builder lets you create fully custom landing pages, sale pages, campaign pages, and more — without writing a single line of code. Pages are saved to the database and published instantly.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                        { step: '1', title: 'Go to Admin → Page Builder', description: 'Click "Page Builder" in the left sidebar or navigate to /admin/builder.' },
+                        { step: '2', title: 'Create a New Page', description: 'Click "New Page". Give it a title and a URL slug (e.g. "summer-sale" becomes /pages/summer-sale).' },
+                        { step: '3', title: 'Drag blocks onto the canvas', description: 'Click any block from the left panel to add it. Drag the ⠿ handle to reorder. Click a block to open its props editor.' },
+                        { step: '4', title: 'Edit block properties', description: 'Click "Props" tab to edit text, images, CTAs. Upload images directly by clicking the ⬆ button on any image field.' },
+                        { step: '5', title: 'Publish', description: 'Click "Publish" in the top bar. The page goes live at /pages/[slug] instantly.' },
+                    ].map(item => (
+                        <div key={item.step} className="flex gap-3 p-3 rounded bg-purple-950/20 border border-purple-500/10">
+                            <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px] font-bold flex-shrink-0">{item.step}</div>
+                            <div>
+                                <p className="text-white text-xs font-semibold mb-1">{item.title}</p>
+                                <p className="text-white/50 text-[11px] leading-relaxed">{item.description}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-4 p-4 rounded bg-zinc-900 border border-white/10">
+                    <p className="text-[9px] uppercase tracking-widest text-purple-400 font-bold mb-2">Available Blocks (13 total)</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {['🖼️ Full Hero', '🎬 Video Hero', '📄 Text Block', '🌄 Image Banner',
+                          '🛍️ Product Shelf', '⬛⬜ Two Column', '↔️ Before / After',
+                          '⏱️ Countdown Timer', '✦ Icon Grid', '✉️ Newsletter',
+                          '💬 Testimonial', '❓ FAQ Accordion', '➖ Divider'
+                        ].map(b => (
+                            <span key={b} className="text-[10px] text-white/60 flex items-center gap-1.5">{b}</span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        ),
+    },
+    {
         id: 'cms',
         icon: FileText,
         color: 'text-rose-400',
