@@ -25,7 +25,8 @@ const NAV_ITEMS = [
   { href: "/admin/media", icon: ImageIcon, label: "Media" },
   { href: "/admin/videos", icon: Film, label: "Video Manager" },
   { href: "/admin/analytics", icon: BarChart2, label: "Analytics" },
-  { href: "/admin/cms", icon: LayoutPanelLeft, label: "CMS Pages" },
+  { href: "/admin/builder", icon: LayoutPanelLeft, label: "Page Builder" },
+  { href: "/admin/cms", icon: LayoutPanelLeft, label: "Legacy CMS" },
   { href: "/admin/email", icon: Mail, label: "Email Settings" },
   {
     href: "/admin/settings",
