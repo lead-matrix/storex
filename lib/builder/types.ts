@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Page Builder — Shared Types  (updated: +5 new blocks)
+// Page Builder — Shared Types (Updated with 5 NEW BLOCKS)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type BlockType =
@@ -17,6 +17,7 @@ export type BlockType =
     | 'icon_grid'
     | 'faq_accordion'
 
+// Per-block props maps
 export interface HeroProps {
     heading: string
     subheading: string
@@ -70,10 +71,8 @@ export interface TestimonialProps {
     role: string
 }
 
-// ── NEW BLOCKS ────────────────────────────────────────────────────────────────
-
 export interface VideoHeroProps {
-    mux_playback_id: string
+    video_url: string
     heading: string
     subheading: string
     cta_text: string
@@ -82,30 +81,36 @@ export interface VideoHeroProps {
 }
 
 export interface CountdownTimerProps {
-    heading: string
-    subheading: string
     end_date: string
+    heading: string
+    message: string
     cta_text: string
     cta_link: string
-    background_color: 'black' | 'gold' | 'dark'
 }
 
 export interface BeforeAfterProps {
-    heading: string
     before_image: string
     after_image: string
-    before_label: string
-    after_label: string
+    label_before: string
+    label_after: string
+    caption: string
 }
 
 export interface IconGridProps {
     heading: string
-    icons: string
+    items: Array<{
+        icon: string
+        label: string
+        description: string
+    }>
 }
 
 export interface FaqAccordionProps {
     heading: string
-    items: string
+    items: Array<{
+        question: string
+        answer: string
+    }>
 }
 
 export type BlockProps =
@@ -162,20 +167,6 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
         } as HeroProps,
     },
     {
-        type: 'video_hero',
-        label: 'Video Hero',
-        description: 'Autoplay background video with headline & CTA',
-        icon: '🎬',
-        defaultProps: {
-            mux_playback_id: '',
-            heading: 'The Ritual Begins',
-            subheading: 'A sensory experience crafted for excellence.',
-            cta_text: 'Shop Now',
-            cta_link: '/shop',
-            overlay_opacity: 40,
-        } as VideoHeroProps,
-    },
-    {
         type: 'text_block',
         label: 'Text Block',
         description: 'Eyebrow, headline and rich body paragraph',
@@ -197,19 +188,6 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
             caption: '',
             height: 'md',
         } as ImageBannerProps,
-    },
-    {
-        type: 'before_after',
-        label: 'Before / After',
-        description: 'Drag slider comparing two images — perfect for results',
-        icon: '↔️',
-        defaultProps: {
-            heading: 'See The Transformation',
-            before_image: '',
-            after_image: '',
-            before_label: 'Before',
-            after_label: 'After',
-        } as BeforeAfterProps,
     },
     {
         type: 'product_shelf',
@@ -237,35 +215,6 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
         } as TwoColumnProps,
     },
     {
-        type: 'icon_grid',
-        label: 'Icon Grid',
-        description: '3–4 trust icons with labels (Free Shipping, Cruelty-Free…)',
-        icon: '✨',
-        defaultProps: {
-            heading: '',
-            icons: JSON.stringify([
-                { icon: '🚚', label: 'Free Shipping', description: 'On orders over $50' },
-                { icon: '🌿', label: 'Cruelty Free', description: 'Never tested on animals' },
-                { icon: '♻️', label: 'Sustainable', description: 'Eco-conscious packaging' },
-                { icon: '💎', label: 'Premium Quality', description: 'Luxury grade ingredients' },
-            ]),
-        } as IconGridProps,
-    },
-    {
-        type: 'countdown_timer',
-        label: 'Countdown Timer',
-        description: 'Sale / launch urgency countdown with CTA',
-        icon: '⏱️',
-        defaultProps: {
-            heading: 'Limited Time Offer',
-            subheading: 'This exclusive deal ends soon. Do not miss out.',
-            end_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
-            cta_text: 'Shop The Sale',
-            cta_link: '/sale',
-            background_color: 'dark',
-        } as CountdownTimerProps,
-    },
-    {
         type: 'newsletter',
         label: 'Newsletter',
         description: 'Email capture section',
@@ -288,21 +237,6 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
         } as TestimonialProps,
     },
     {
-        type: 'faq_accordion',
-        label: 'FAQ Accordion',
-        description: 'Collapsible Q&A — reduces support tickets & boosts SEO',
-        icon: '❓',
-        defaultProps: {
-            heading: 'Frequently Asked Questions',
-            items: JSON.stringify([
-                { question: 'What makes your products different?', answer: 'We use only the finest luxury-grade ingredients sourced from around the world, formulated by expert cosmetic chemists.' },
-                { question: 'How long does shipping take?', answer: 'Standard shipping takes 3–5 business days. Express options are available at checkout.' },
-                { question: 'Do you offer refunds?', answer: 'Yes — we offer a 30-day satisfaction guarantee. Contact us and we will make it right.' },
-                { question: 'Are your products cruelty-free?', answer: 'Absolutely. All products are certified cruelty-free and never tested on animals.' },
-            ]),
-        } as FaqAccordionProps,
-    },
-    {
         type: 'divider',
         label: 'Divider',
         description: 'Visual separator between sections',
@@ -310,5 +244,83 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
         defaultProps: {
             style: 'ornament',
         } as DividerProps,
+    },
+    {
+        type: 'video_hero',
+        label: 'Video Hero',
+        description: 'Full-width Mux video background with overlay text & CTA',
+        icon: '🎬',
+        defaultProps: {
+            video_url: '',
+            heading: 'Witness The Ritual',
+            subheading: 'An intimate look at our signature creation process.',
+            cta_text: 'Shop Now',
+            cta_link: '/shop',
+            overlay_opacity: 40,
+        } as VideoHeroProps,
+    },
+    {
+        type: 'countdown_timer',
+        label: 'Countdown Timer',
+        description: 'Live countdown to a specific date with urgency messaging',
+        icon: '⏱️',
+        defaultProps: {
+            end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            heading: 'Flash Sale',
+            message: 'Ends in',
+            cta_text: 'Shop Before It\'s Gone',
+            cta_link: '/sale',
+        } as CountdownTimerProps,
+    },
+    {
+        type: 'before_after',
+        label: 'Before/After',
+        description: 'Drag slider comparing two images side by side',
+        icon: '↔️',
+        defaultProps: {
+            before_image: '',
+            after_image: '',
+            label_before: 'Before',
+            label_after: 'After',
+            caption: 'See the transformation',
+        } as BeforeAfterProps,
+    },
+    {
+        type: 'icon_grid',
+        label: 'Icon Grid',
+        description: '3–4 trust signals with icons and labels',
+        icon: '⭐',
+        defaultProps: {
+            heading: 'Why Choose Us',
+            items: [
+                { icon: '🚚', label: 'Free Shipping', description: 'On orders over $100' },
+                { icon: '🐰', label: 'Cruelty Free', description: 'Never tested on animals' },
+                { icon: '♻️', label: 'Sustainable', description: 'Eco-conscious packaging' },
+                { icon: '✨', label: 'Premium Quality', description: 'Luxury ingredients sourced globally' },
+            ],
+        } as IconGridProps,
+    },
+    {
+        type: 'faq_accordion',
+        label: 'FAQ Accordion',
+        description: 'Collapsible Q&A section for support & SEO',
+        icon: '❓',
+        defaultProps: {
+            heading: 'Frequently Asked Questions',
+            items: [
+                {
+                    question: 'What makes your products different?',
+                    answer: 'Our products are formulated with the finest ingredients sourced globally and crafted with absolute precision.',
+                },
+                {
+                    question: 'How long does shipping take?',
+                    answer: 'We ship within 1–2 business days. Standard shipping takes 5–7 business days. Express options available.',
+                },
+                {
+                    question: 'What is your return policy?',
+                    answer: 'We offer 30-day returns on all unopened products. Customer satisfaction is our absolute priority.',
+                },
+            ],
+        } as FaqAccordionProps,
     },
 ]
