@@ -12,5 +12,3 @@ export { default as TwoColumnSection } from './TwoColumnSection';
 export { default as NewsletterSection } from './NewsletterSection';
 export { default as TestimonialSection } from './TestimonialSection';
 export { default as DividerSection } from './DividerSection';
-export { default as VideoHero } from './VideoHero';
-export { default as CountdownTimer } from './CountdownTimer';
