@@ -1,35 +1,28 @@
 import Image from "next/image";
-
-interface ImageBannerProps {
-    imageUrl: string;
-    title?: string;
-    subtitle?: string;
-    ctaText?: string;
-    ctaLink?: string;
-    overlayOpacity?: number;
-    height?: string;
-}
+import { ImageBannerProps } from "@/lib/builder/types";
 
 export default function ImageBannerSection({
-    imageUrl,
-    title,
-    subtitle,
-    ctaText,
-    ctaLink,
-    overlayOpacity = 0.4,
-    height = "70vh",
+    image_url,
+    caption,
+    height = "md",
 }: ImageBannerProps) {
+    const heightCls = {
+        sm: 'h-[40vh]',
+        md: 'h-[60vh]',
+        lg: 'h-[80vh]',
+        full: 'h-screen'
+    }[height] || 'h-[60vh]';
+
     return (
-        <section className="relative w-full overflow-hidden" style={{ height }}>
+        <section className={`relative w-full overflow-hidden ${heightCls}`}>
             {/* Background Image */}
-            {imageUrl ? (
+            {image_url ? (
                 <Image
-                    src={imageUrl}
-                    alt={title || "Banner"}
+                    src={image_url}
+                    alt={caption || "Banner"}
                     fill
                     className="object-cover"
                     priority={true}
-                    fetchPriority="high"
                     sizes="100vw"
                     quality={90}
                 />
@@ -40,38 +33,16 @@ export default function ImageBannerSection({
             )}
 
             {/* Overlay */}
-            <div
-                className="absolute inset-0 bg-black"
-                style={{ opacity: overlayOpacity }}
-            />
+            <div className="absolute inset-0 bg-black/40" />
 
             {/* Content */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-                <div className="max-w-4xl space-y-6 animate-luxury-fade">
-                    {subtitle && (
-                        <p className="text-gold text-[10px] md:text-xs uppercase tracking-[0.4em] font-bold drop-shadow-md">
-                            {subtitle}
-                        </p>
-                    )}
-
-                    {title && (
-                        <h2 className="text-4xl md:text-7xl font-serif text-white tracking-tight leading-tight drop-shadow-lg">
-                            {title}
-                        </h2>
-                    )}
-
-                    {ctaText && ctaLink && (
-                        <div className="pt-8">
-                            <a
-                                href={ctaLink}
-                                className="inline-block bg-white text-black px-12 py-4 text-[11px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-500 shadow-luxury"
-                            >
-                                {ctaText}
-                            </a>
-                        </div>
-                    )}
+            {caption && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+                    <p className="text-white text-lg md:text-xl font-serif italic tracking-wide drop-shadow-lg">
+                        {caption}
+                    </p>
                 </div>
-            </div>
+            )}
 
             {/* Fine line Ornament */}
             <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
