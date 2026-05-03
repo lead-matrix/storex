@@ -53,6 +53,7 @@ function MediaPickerInline({ onSelect }: { onSelect: (url: string) => void }) {
   )
 }
 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sortable Block Shell (wrapper around each block in the canvas)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,26 +113,20 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
         onChange({ ...block, props: { ...block.props, [key]: value } })
     }
 
-    // Double cast through unknown — BlockProps is a union type so we can't cast
-    // directly; going via unknown tells TS we know what we're doing.
-    const props = block.props as unknown as Record<string, string | number | boolean>
-    const def = BLOCK_CATALOGUE.find(d => d.type === block.type)
+    const props = block.props as unknown as Record<string, unknown>
     const FIELD = 'w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
     const LABEL = 'block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1'
 
     return (
         <div className="space-y-4 p-4">
             <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
-                <span className="text-lg">{def?.icon}</span>
-                <div>
-                    <p className="text-sm font-bold text-gray-900">{def?.label}</p>
-                    <p className="text-[10px] text-gray-400">{def?.description}</p>
-                </div>
+                <p className="text-sm font-bold text-gray-900">Edit Block</p>
             </div>
+
             {Object.entries(props).map(([key, val]) => {
                 const label = key.replace(/_/g, ' ')
 
-                // Boolean
+                // BOOLEAN
                 if (typeof val === 'boolean') return (
                     <div key={key} className="flex items-center gap-3">
                         <input type="checkbox" id={key} checked={val} onChange={e => set(key, e.target.checked)} className="w-4 h-4 accent-blue-600" />
@@ -139,7 +134,7 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
-                // Number
+                // NUMBER
                 if (typeof val === 'number') return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
@@ -147,14 +142,15 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
-                // Enum fields (select)
+                // ENUM fields (select)
                 const ENUMS: Record<string, string[]> = {
                     align: ['left', 'center', 'right'],
                     height: ['sm', 'md', 'lg', 'full'],
                     filter: ['featured', 'bestsellers', 'sale', 'new'],
                     image_side: ['left', 'right'],
                     style: ['line', 'dots', 'ornament'],
-                    background_color: ['black', 'dark', 'gold'],
+                    bg_color: ['black', 'gold', 'dark_gray'],
+                    columns: ['2', '3', '4'],
                 }
                 if (ENUMS[key]) return (
                     <div key={key}>
@@ -165,15 +161,111 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
+                // DATETIME (for countdown_timer.end_date)
+                if (key === 'end_date' && typeof val === 'string') return (
+                    <div key={key}>
+                        <label className={LABEL}>{label}</label>
+                        <input
+                            type="datetime-local"
+                            value={val.slice(0, 16)}
+                            onChange={e => {
+                                const dt = new Date(e.target.value)
+                                set(key, dt.toISOString())
+                            }}
+                            className={FIELD}
+                        />
+                    </div>
+                )
+
                 // Long text (body fields)
-                if (typeof val === 'string' && (key.includes('body') || key.includes('quote') || key.includes('subheading') || key.includes('description'))) return (
+                if (typeof val === 'string' && (key.includes('body') || key.includes('quote') || key.includes('subheading') || key.includes('description') || key.includes('answer'))) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
                         <textarea value={val} rows={3} onChange={e => set(key, e.target.value)} className={`${FIELD} resize-none`} />
                     </div>
                 )
 
-                // Image URL — with inline upload + media library picker
+                // Array editor (icon_grid items, FAQ items)
+                if (Array.isArray(val)) {
+                    const arrayLabel = key === 'items' ? 'Item' : 'Element'
+                    return (
+                        <div key={key} className="space-y-2">
+                            <label className={LABEL}>{label}</label>
+                            <div className="space-y-2 bg-gray-100 p-3 rounded border border-gray-200">
+                                {(val as Array<any>).map((item, idx) => (
+                                    <div key={idx} className="bg-white p-3 rounded border border-gray-200 space-y-2">
+                                        {typeof item === 'object' && item !== null
+                                            ? Object.entries(item).map(([itemKey, itemVal]) => (
+                                                <div key={itemKey} className="space-y-1">
+                                                    <label className="block text-[9px] font-bold uppercase tracking-wide text-gray-500">
+                                                        {itemKey.replace(/_/g, ' ')}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={String(itemVal)}
+                                                        onChange={e => {
+                                                            const newArray = [...(val as Array<any>)]
+                                                            newArray[idx] = { ...newArray[idx], [itemKey]: e.target.value }
+                                                            set(key, newArray)
+                                                        }}
+                                                        className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        placeholder={itemKey}
+                                                    />
+                                                </div>
+                                            ))
+                                            : (
+                                                <input
+                                                    type="text"
+                                                    value={String(item)}
+                                                    onChange={e => {
+                                                        const newArray = [...(val as Array<any>)]
+                                                        newArray[idx] = e.target.value
+                                                        set(key, newArray)
+                                                    }}
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    placeholder={`${arrayLabel} ${idx + 1}`}
+                                                />
+                                            )}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newArray = (val as Array<any>).filter((_, i) => i !== idx)
+                                                set(key, newArray)
+                                            }}
+                                            className="w-full flex items-center justify-center gap-1.5 px-2 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 transition-colors"
+                                        >
+                                            <Trash2 className="w-3 h-3" /> Remove
+                                        </button>
+                                    </div>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newArray = [...(val as Array<any>)]
+                                        if (key === 'items') {
+                                            if ((val as Array<any>)[0] && typeof (val as Array<any>)[0] === 'object') {
+                                                const firstItem = (val as Array<any>)[0]
+                                                if ('question' in firstItem) {
+                                                    newArray.push({ question: '', answer: '' })
+                                                } else {
+                                                    newArray.push({ icon: '✨', label: '', description: '' })
+                                                }
+                                            }
+                                        }
+                                        set(key, newArray)
+                                    }}
+                                    className="w-full flex items-center justify-center gap-1.5 px-2 py-2 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add {arrayLabel}
+                                </button>
+                            </div>
+                        </div>
+                    )
+                }
+
+                // Image URL
                 if (typeof val === 'string' && key.includes('image')) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
@@ -209,29 +301,6 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
-                // JSON fields (icons grid items, FAQ items) — pretty editor
-                if (typeof val === 'string' && (key === 'icons' || key === 'items')) return (
-                    <div key={key}>
-                        <label className={LABEL}>{label} <span className='text-blue-400 normal-case'>(JSON)</span></label>
-                        <textarea
-                            value={(() => { try { return JSON.stringify(JSON.parse(val), null, 2) } catch { return val } })()}
-                            rows={8}
-                            onChange={e => set(key, e.target.value)}
-                            className={`${FIELD} resize-y font-mono text-xs`}
-                            spellCheck={false}
-                        />
-                        <p className='text-[9px] text-gray-400 mt-1'>Edit the JSON array directly. Each item needs the shown fields.</p>
-                    </div>
-                )
-
-                // end_date — datetime-local input
-                if (typeof val === 'string' && key === 'end_date') return (
-                    <div key={key}>
-                        <label className={LABEL}>{label}</label>
-                        <input type='datetime-local' value={val} onChange={e => set(key, e.target.value)} className={FIELD} />
-                    </div>
-                )
-
                 // Default text input
                 return (
                     <div key={key}>
@@ -243,6 +312,7 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
         </div>
     )
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main BuilderCanvas
