@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PageBlock, BLOCK_CATALOGUE } from '@/lib/builder/types-extended'
 import { X, Plus, Upload } from 'lucide-react'
 
@@ -14,7 +14,7 @@ function MediaPickerInline({ onSelect }: { onSelect: (url: string) => void }) {
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
 
-    useState(() => {
+    useEffect(() => {
         fetch('/api/admin/media-list')
             .then(r => r.json())
             .then(data => { setImages(data); setLoading(false) })
