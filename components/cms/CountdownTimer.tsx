@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { CountdownTimerProps } from '@/lib/builder/types'
 
-const BG_MAP = {
+const BG_MAP: Record<string, string> = {
     black: 'bg-black',
-    dark: 'bg-zinc-950',
+    dark_gray: 'bg-zinc-950',
     gold: 'bg-[#D4AF37]',
 }
 
-export default function CountdownTimer({ heading, subheading, end_date, cta_text, cta_link, background_color }: CountdownTimerProps) {
+export default function CountdownTimer({ heading, subheading, end_date, cta_text, cta_link, bg_color }: CountdownTimerProps) {
     const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 })
     useEffect(() => {
         const calc = () => {
@@ -26,8 +26,8 @@ export default function CountdownTimer({ heading, subheading, end_date, cta_text
         return () => clearInterval(t)
     }, [end_date])
 
-    const isGold = background_color === 'gold'
-    const bgCls = BG_MAP[background_color] ?? BG_MAP.dark
+    const isGold = bg_color === 'gold'
+    const bgCls = BG_MAP[bg_color] ?? BG_MAP.dark_gray
     const textCls = isGold ? 'text-black' : 'text-white'
     const subCls = isGold ? 'text-black/60' : 'text-white/50'
     const numBg = isGold ? 'bg-black/10' : 'bg-white/10'
