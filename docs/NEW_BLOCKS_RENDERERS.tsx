@@ -63,11 +63,11 @@ function CountdownTimer({ p }: { p: any }) {
         return () => clearInterval(interval)
     }, [p.end_date])
 
-    const colorClass = {
+    const colorClass = (({
         red: 'bg-red-600',
         orange: 'bg-orange-600',
         gold: 'bg-yellow-600',
-    }[p.urgent_color || 'gold']
+    }) as Record<string, string>)[p.urgent_color || 'gold']
 
     return (
         <section className="py-20 px-8 bg-gradient-to-b from-black to-zinc-900 text-center">
@@ -99,11 +99,11 @@ function CountdownTimer({ p }: { p: any }) {
 function BeforeAfter({ p }: { p: any }) {
     const [sliderPos, setSliderPos] = useState(50)
 
-    const heightClass = {
+    const heightClass = (({
         sm: 'h-64',
         md: 'h-96',
         lg: 'h-[500px]',
-    }[p.height || 'md']
+    }) as Record<string, string>)[p.height || 'md']
 
     return (
         <section className="py-20 px-8 bg-black flex justify-center">
@@ -155,11 +155,11 @@ function BeforeAfter({ p }: { p: any }) {
 // 4. ICON GRID (Trust Signals)
 // ─────────────────────────────────────────────────────────────────────────────
 function IconGrid({ p }: { p: any }) {
-    const cols = {
+    const cols = (({
         2: 'grid-cols-2',
         3: 'grid-cols-3',
         4: 'grid-cols-4',
-    }[p.columns || 4]
+    }) as Record<string, string>)[p.columns || 4]
 
     return (
         <section className="py-20 px-8 bg-black border-y border-white/10">
