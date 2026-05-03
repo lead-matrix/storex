@@ -12,7 +12,7 @@ import { validateEnv } from "@/lib/env";
 import Script from 'next/script';
 import { getLayoutData } from "@/lib/data/layout";
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -134,6 +134,7 @@ export default async function RootLayout({
         </CartProvider>
         <AnalyticsBeacon />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
