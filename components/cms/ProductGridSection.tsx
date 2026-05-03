@@ -20,7 +20,7 @@ export default function ProductGridSection({ heading, filter, count }: ProductSh
                     </p>
                 </div>
 
-                <ProductGrid limit={count} />
+                <ProductGrid limit={count} filter={filter} />
             </div>
         </section>
     )

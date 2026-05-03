@@ -31,9 +31,10 @@ interface Product {
 interface ProductGridProps {
     categoryId?: string;
     filter?: string;
+    limit?: number;
 }
 
-export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
+export function ProductGrid({ categoryId, filter, limit }: ProductGridProps = {}) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -52,6 +53,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
                 if (categoryId && categoryId !== "all") query = query.eq("category_id", categoryId);
                 if (filter === 'sale') query = query.not("sale_price", "is", null).eq("on_sale", true);
                 if (filter === 'bestsellers') query = query.eq("is_bestseller", true);
+                if (limit) query = query.limit(limit);
 
                 const { data, error } = await query;
 
@@ -98,7 +100,7 @@ export function ProductGrid({ categoryId, filter }: ProductGridProps = {}) {
         return () => {
             supabase.removeChannel(productChannel);
         };
-    }, [categoryId, filter]);
+    }, [categoryId, filter, limit]);
 
     if (loading) {
         return (
