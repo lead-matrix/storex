@@ -1,17 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { VideoHeroProps, CountdownTimerProps, BeforeAfterProps, IconGridProps, FAQAccordionProps } from './types'
 
 // ────────────────────────────────────────────────────────────────────────────
 // VIDEO HERO — Autoplay Mux video background
 // ────────────────────────────────────────────────────────────────────────────
 export function VideoHero({ mux_video_url, heading, subheading, cta_text, cta_link, overlay_opacity }: VideoHeroProps) {
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.defaultMuted = true
+            videoRef.current.muted = true
+            videoRef.current.play().catch(e => console.error("VideoHero autoplay failed:", e))
+        }
+    }, [mux_video_url])
+
     return (
         <section className="relative w-full h-[60vh] min-h-[380px] flex items-center justify-center overflow-hidden bg-black">
             {/* Video background */}
             {mux_video_url && (
                 <video
+                    ref={videoRef}
                     src={mux_video_url}
                     autoPlay
                     muted

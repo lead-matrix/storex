@@ -54,6 +54,8 @@ export default function VideoPlayer({
             // Safari / native support
             video.src = streamUrl
             if (autoPlay) {
+                video.defaultMuted = true
+                video.muted = true
                 video.play().catch(e => console.log('Autoplay prevented:', e))
             }
         } else if (Hls.isSupported()) {
@@ -63,6 +65,8 @@ export default function VideoPlayer({
             hls.attachMedia(video)
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 if (autoPlay) {
+                    video.defaultMuted = true
+                    video.muted = true
                     video.play().catch(e => console.log('Autoplay prevented:', e))
                 }
             })
