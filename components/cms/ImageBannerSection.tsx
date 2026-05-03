@@ -1,25 +1,48 @@
 import Image from "next/image";
-import { ImageBannerProps } from "@/lib/builder/types";
 
-export default function ImageBannerSection({
-    image_url,
-    caption,
-    height = "md",
-}: ImageBannerProps) {
+// Accepts BOTH naming conventions:
+// - New builder (lib/builder/types.ts): image_url, caption, height
+// - Legacy CMSRenderer (stored in DB): imageUrl, title, subtitle, ctaText, ctaLink, overlayOpacity
+interface ImageBannerSectionProps {
+    // New builder props
+    image_url?: string
+    caption?: string
+    height?: 'sm' | 'md' | 'lg' | 'full'
+    // Legacy CMS DB props
+    imageUrl?: string
+    title?: string
+    subtitle?: string
+    ctaText?: string
+    ctaLink?: string
+    overlayOpacity?: number
+}
+
+export default function ImageBannerSection(props: ImageBannerSectionProps) {
+    const {
+        image_url, caption, height,
+        imageUrl, title, subtitle, ctaText, ctaLink, overlayOpacity,
+    } = props
+
+    const resolvedImage = image_url || imageUrl || ""
+    const resolvedCaption = caption || subtitle || ""
+    const resolvedTitle = title || ""
+    const resolvedOverlay = overlayOpacity ?? 0.4
+    const resolvedCtaText = ctaText || ""
+    const resolvedCtaLink = ctaLink || "/shop"
+
     const heightCls = {
         sm: 'h-[40vh]',
         md: 'h-[60vh]',
         lg: 'h-[80vh]',
         full: 'h-screen'
-    }[height] || 'h-[60vh]';
+    }[height || 'md'] || 'h-[60vh]';
 
     return (
         <section className={`relative w-full overflow-hidden ${heightCls}`}>
-            {/* Background Image */}
-            {image_url ? (
+            {resolvedImage ? (
                 <Image
-                    src={image_url}
-                    alt={caption || "Banner"}
+                    src={resolvedImage}
+                    alt={resolvedTitle || resolvedCaption || "Banner"}
                     fill
                     className="object-cover"
                     priority={true}
@@ -33,16 +56,33 @@ export default function ImageBannerSection({
             )}
 
             {/* Overlay */}
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-black" style={{ opacity: resolvedOverlay }} />
 
             {/* Content */}
-            {caption && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-                    <p className="text-white text-lg md:text-xl font-serif italic tracking-wide drop-shadow-lg">
-                        {caption}
-                    </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+                <div className="max-w-4xl space-y-6">
+                    {resolvedCaption && (
+                        <p className="text-gold text-[10px] md:text-xs uppercase tracking-[0.4em] font-bold drop-shadow-md">
+                            {resolvedCaption}
+                        </p>
+                    )}
+                    {resolvedTitle && (
+                        <h2 className="text-4xl md:text-7xl font-serif text-white tracking-tight leading-tight drop-shadow-lg">
+                            {resolvedTitle}
+                        </h2>
+                    )}
+                    {resolvedCtaText && resolvedCtaLink && (
+                        <div className="pt-8">
+                            <a
+                                href={resolvedCtaLink}
+                                className="inline-block bg-white text-black px-12 py-4 text-[11px] font-bold uppercase tracking-widest hover:bg-gold transition-all duration-500"
+                            >
+                                {resolvedCtaText}
+                            </a>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Fine line Ornament */}
             <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
