@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 export async function POST(req: NextRequest) {
     try {
@@ -39,6 +40,11 @@ export async function POST(req: NextRequest) {
             console.error('[Shipping Config] DB Error:', error);
             return NextResponse.json({ error: 'Failed to update shipping configuration' }, { status: 500 });
         }
+
+        // Revalidate relevant paths
+        revalidatePath('/checkout');
+        revalidatePath('/admin/settings');
+        revalidatePath('/admin/settings/shipping');
 
         return NextResponse.json({ success: true, message: 'Shipping configuration saved' });
     } catch (err: any) {

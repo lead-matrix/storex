@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Package, Truck, Globe, Plus, Trash2, Save, Loader2,
@@ -58,6 +59,7 @@ function uid() {
 }
 
 export default function ShippingRateManager({ initialConfig }: { initialConfig?: Partial<ShippingConfig> }) {
+  const router = useRouter();
   const [config, setConfig] = useState<ShippingConfig>({ ...DEFAULT_CONFIG, ...initialConfig });
   const [activeTab, setActiveTab] = useState<"domestic" | "international" | "zones">("domestic");
   const [isPending, startTransition] = useTransition();
@@ -92,6 +94,7 @@ export default function ShippingRateManager({ initialConfig }: { initialConfig?:
             return
         }
         toast.success("Shipping rates saved")
+        router.refresh()
       } catch (err) {
         toast.error("Network error — check connection");
       }
