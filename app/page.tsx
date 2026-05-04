@@ -97,7 +97,7 @@ export default async function Home() {
       <SplitHero />
 
       {/* Trust bar — 4 signals */}
-      {homeConfig.show_trust_bar !== false && <TrustBar variant="light" items={trustBarItems} />}
+      {homeConfig.show_trust_bar !== false && <TrustBar variant="light" items={trustBarItems || undefined} />}
 
       {/* Category navigation */}
       {categories.length > 0 && homeConfig.show_collections !== false && (
