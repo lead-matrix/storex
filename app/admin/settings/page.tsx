@@ -21,6 +21,7 @@ export default async function AdminSettings() {
         { data: shippingSettings },
         { data: homeSettings },
         { data: announcementMsgs },
+        { data: trustBarItems },
     ] = await Promise.all([
         supabase.from('site_settings').select('*').eq('setting_key', 'store_info').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'store_enabled').maybeSingle(),
@@ -30,12 +31,14 @@ export default async function AdminSettings() {
         supabase.from('site_settings').select('*').eq('setting_key', 'shipping_settings').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'home_sections').maybeSingle(),
         supabase.from('site_settings').select('*').eq('setting_key', 'announcement_messages').maybeSingle(),
+        supabase.from('site_settings').select('*').eq('setting_key', 'trust_bar_items').maybeSingle(),
     ])
 
     const isEnabled = storeStatus?.setting_value ?? true
     const shipping = shippingSettings?.setting_value || {}
     const homeConfig = homeSettings?.setting_value || {}
     const announcementMessages = announcementMsgs?.setting_value?.messages || ['Free shipping on all orders over $100']
+    const trustBarConfig = trustBarItems?.setting_value || { items: [] }
 
     return (
         <div className="space-y-12 pb-24 animate-luxury-fade">
@@ -118,17 +121,99 @@ export default async function AdminSettings() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Carousel Heading</label>
-                                            <input name="bestseller_heading" type="text" defaultValue={homeConfig.bestseller_heading || 'Obsidian Bestsellers'}
-                                                className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Carousel Subheading</label>
-                                            <input name="bestseller_subheading" type="text" defaultValue={homeConfig.bestseller_subheading || 'Most-loved by our community'}
-                                                className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
-                                        </div>
-                                    </div>
+                                         <div className="space-y-2">
+                                             <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Carousel Heading</label>
+                                             <input name="bestseller_heading" type="text" defaultValue={homeConfig.bestseller_heading || 'Obsidian Bestsellers'}
+                                                 className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                         </div>
+                                         <div className="space-y-2">
+                                             <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Carousel Subheading</label>
+                                             <input name="bestseller_subheading" type="text" defaultValue={homeConfig.bestseller_subheading || 'Most-loved by our community'}
+                                                 className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                         </div>
+                                     </div>
+
+                                     <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                                         <div className="space-y-1">
+                                             <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Trust Bar Signals</p>
+                                             <p className="text-[9px] text-luxury-subtext leading-relaxed">Show the 4 trust signals (Secure, Shipping, Returns, Reviews).</p>
+                                         </div>
+                                         <label className="relative inline-flex items-center cursor-pointer">
+                                             <input type="checkbox" name="show_trust_bar" defaultChecked={homeConfig.show_trust_bar !== false} className="sr-only peer" />
+                                             <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                         </label>
+                                     </div>
+
+                                     <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                                         <div className="space-y-1">
+                                             <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Social Proof / Reviews</p>
+                                             <p className="text-[9px] text-luxury-subtext leading-relaxed">Show the customer reviews and testimonials section.</p>
+                                         </div>
+                                         <label className="relative inline-flex items-center cursor-pointer">
+                                             <input type="checkbox" name="show_social_proof" defaultChecked={homeConfig.show_social_proof !== false} className="sr-only peer" />
+                                             <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                         </label>
+                                     </div>
+
+                                     <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                                         <div className="space-y-1">
+                                             <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Newsletter Signup</p>
+                                             <p className="text-[9px] text-luxury-subtext leading-relaxed">Show the footer newsletter subscription section.</p>
+                                         </div>
+                                         <label className="relative inline-flex items-center cursor-pointer">
+                                             <input type="checkbox" name="show_newsletter" defaultChecked={homeConfig.show_newsletter !== false} className="sr-only peer" />
+                                             <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                         </label>
+                                     </div>
+
+                                     <div className="space-y-6 border-t border-white/5 pt-6">
+                                         <div className="flex items-center justify-between">
+                                             <div className="space-y-1">
+                                                 <p className="text-[11px] uppercase tracking-luxury font-bold text-white">Editorial Quote Section</p>
+                                                 <p className="text-[9px] text-luxury-subtext leading-relaxed">Show the "Obsidian Standard" italic quote and story link.</p>
+                                             </div>
+                                             <label className="relative inline-flex items-center cursor-pointer">
+                                                 <input type="checkbox" name="show_editorial" defaultChecked={homeConfig.show_editorial !== false} className="sr-only peer" />
+                                                 <div className="w-11 h-6 bg-[#121214] peer-focus:outline-none rounded-full border border-white/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-charcoal/30 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold shadow-inner group transition-all"></div>
+                                             </label>
+                                         </div>
+
+                                         <div className="grid grid-cols-1 gap-4 bg-black/20 p-4 rounded-lg">
+                                             <div className="space-y-2">
+                                                 <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Small Heading</label>
+                                                 <input name="editorial_heading" type="text" defaultValue={homeConfig.editorial_heading || 'The Obsidian Standard'}
+                                                     className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                             </div>
+                                             <div className="space-y-2">
+                                                 <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">The Quote (Italic)</label>
+                                                 <textarea name="editorial_quote" defaultValue={homeConfig.editorial_quote || '"Beauty is the illumination of your soul"'}
+                                                     className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" rows={2} />
+                                             </div>
+                                             <div className="space-y-2">
+                                                 <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Body Text</label>
+                                                 <textarea name="editorial_body" defaultValue={homeConfig.editorial_body || 'Every DINA COSMETIC formulation is crafted for those who see beauty as a ritual, not a routine.'}
+                                                     className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" rows={2} />
+                                             </div>
+                                             <div className="grid grid-cols-2 gap-4">
+                                                 <div className="space-y-2">
+                                                     <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">CTA Button Text</label>
+                                                     <input name="editorial_cta_text" type="text" defaultValue={homeConfig.editorial_cta_text || 'Our Story'}
+                                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                                 </div>
+                                                 <div className="space-y-2">
+                                                     <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">CTA Button Link</label>
+                                                     <input name="editorial_cta_link" type="text" defaultValue={homeConfig.editorial_cta_link || '/about'}
+                                                         className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-sm text-white focus:border-gold/50 outline-none transition-all" />
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     <div className="space-y-2 border-t border-white/5 pt-6">
+                                         <label className="text-[9px] uppercase tracking-luxury text-luxury-subtext font-medium">Trust Bar JSON (Icons: ShieldCheck, Truck, RotateCcw, Star)</label>
+                                         <textarea name="trust_bar_items" defaultValue={JSON.stringify(trustBarConfig.items || [], null, 2)}
+                                             className="w-full bg-[#0B0B0D] border border-white/10 rounded-md px-4 py-3 text-xs font-mono text-white focus:border-gold/50 outline-none transition-all" rows={6} />
+                                         <p className="text-[8px] text-luxury-subtext/60 italic">Format: [ {"{"} "icon": "Truck", "text": "...", "sub": "...", "gold": true {"}"} ]</p>
+                                     </div>
                                 </div>
                             </div>
                         </SettingsForm>

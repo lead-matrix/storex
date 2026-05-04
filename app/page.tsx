@@ -45,10 +45,11 @@ export default async function Home() {
   let categories: any[] = []
   let announcementMessages: string[] | undefined
   let homeConfig: any = {}
+  let trustBarItems: any[] | null = null
 
   try {
-    const [productsRes, categoriesRes, announcementRes, homeSectionsRes] = await Promise.all([
-      // Fetch based on curation settings
+    const [productsRes, categoriesRes, announcementRes, trustBarRes] = await Promise.all([
+      // Fetch products (also pre-loads homeConfig as a side-effect)
       (async () => {
         const { data: hConfig } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'home_sections').maybeSingle();
         const config = hConfig?.setting_value || {};
@@ -71,20 +72,14 @@ export default async function Home() {
 
         return query.order("created_at", { ascending: false }).limit(8);
       })(),
-      supabase
-        .from("categories")
-        .select("id, name, slug, description, image_url")
-        .limit(6),
-      supabase
-        .from("site_settings")
-        .select("setting_value")
-        .eq("setting_key", "announcement_messages")
-        .maybeSingle(),
-      supabase.from('site_settings').select('setting_value').eq('setting_key', 'home_sections').maybeSingle()
+      supabase.from("categories").select("id, name, slug, description, image_url").limit(6),
+      supabase.from("site_settings").select("setting_value").eq("setting_key", "announcement_messages").maybeSingle(),
+      supabase.from('site_settings').select('setting_value').eq('setting_key', 'trust_bar_items').maybeSingle()
     ])
 
     products = (productsRes as any).data || []
     categories = categoriesRes.data || []
+    trustBarItems = trustBarRes?.data?.setting_value?.items || null
 
     if (announcementRes.data?.setting_value?.messages) {
       announcementMessages = announcementRes.data.setting_value.messages
@@ -102,10 +97,10 @@ export default async function Home() {
       <SplitHero />
 
       {/* Trust bar — 4 signals */}
-      <TrustBar variant="light" />
+      {homeConfig.show_trust_bar !== false && <TrustBar variant="light" items={trustBarItems} />}
 
       {/* Category navigation */}
-      {categories.length > 0 && (
+      {categories.length > 0 && homeConfig.show_collections !== false && (
         <section className="bg-white py-16 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-10">
@@ -118,21 +113,27 @@ export default async function Home() {
       )}
 
       {/* Featured products — light background */}
-      <section className="bg-[#FAFAF8] py-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-[11px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-3">Bestsellers</p>
-            <h2 className="text-3xl md:text-4xl font-serif text-[#1A1A1A]">Featured Products</h2>
+      {homeConfig.show_featured !== false && (
+        <section className="bg-[#FAFAF8] py-16 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-[#D4AF37] font-bold mb-3">
+                {homeConfig.bestseller_heading || (homeConfig.show_bestsellers_hero ? 'Bestsellers' : 'Featured')}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-serif text-[#1A1A1A]">
+                {homeConfig.bestseller_subheading || 'Featured Products'}
+              </h2>
+            </div>
+            <FeaturedProductsGrid products={products.slice(0, 4)} />
           </div>
-          <FeaturedProductsGrid products={products.slice(0, 4)} />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Social proof — reviews + press */}
-      <SocialProof />
+      {homeConfig.show_social_proof !== false && <SocialProof />}
 
       {/* Second product row */}
-      {products.length > 4 && (
+      {products.length > 4 && homeConfig.show_featured !== false && (
         <section className="bg-white py-16 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-10">
@@ -145,26 +146,30 @@ export default async function Home() {
       )}
 
       {/* Editorial banner */}
-      <section className="bg-[#1A1A1A] py-20 px-6 text-center">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <p className="text-[11px] uppercase tracking-[0.5em] text-[#D4AF37] font-bold">The Obsidian Standard</p>
-          <h2 className="text-4xl md:text-5xl font-serif text-white leading-tight italic">
-            "Beauty is the illumination of your soul"
-          </h2>
-          <p className="text-[#FFFFFF]/60 leading-relaxed">
-            Every DINA COSMETIC formulation is crafted for those who see beauty as a ritual, not a routine.
-          </p>
-          <a
-            href="/about"
-            className="inline-flex items-center gap-3 border border-[#D4AF37] text-[#D4AF37] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#D4AF37] hover:text-black transition-all duration-300"
-          >
-            Our Story
-          </a>
-        </div>
-      </section>
+      {homeConfig.show_editorial !== false && (
+        <section className="bg-[#1A1A1A] py-20 px-6 text-center">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <p className="text-[11px] uppercase tracking-[0.5em] text-[#D4AF37] font-bold">
+              {homeConfig.editorial_heading || 'The Obsidian Standard'}
+            </p>
+            <h2 className="text-4xl md:text-5xl font-serif text-white leading-tight italic">
+              {homeConfig.editorial_quote || '"Beauty is the illumination of your soul"'}
+            </h2>
+            <p className="text-[#FFFFFF]/60 leading-relaxed">
+              {homeConfig.editorial_body || 'Every DINA COSMETIC formulation is crafted for those who see beauty as a ritual, not a routine.'}
+            </p>
+            <a
+              href={homeConfig.editorial_cta_link || '/about'}
+              className="inline-flex items-center gap-3 border border-[#D4AF37] text-[#D4AF37] px-8 py-3.5 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-[#D4AF37] hover:text-black transition-all duration-300"
+            >
+              {homeConfig.editorial_cta_text || 'Our Story'}
+            </a>
+          </div>
+        </section>
+      )}
 
       {/* Newsletter */}
-      <NewsletterSection />
+      {homeConfig.show_newsletter !== false && <NewsletterSection />}
     </div>
   )
 }

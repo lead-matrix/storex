@@ -740,6 +740,50 @@ export async function updateHomeSections(formData: FormData) {
     if (formData.has('show_collections')) {
         newValue.show_collections = formData.get('show_collections') === 'on' || formData.get('show_collections') === 'true';
     }
+    if (formData.has('show_trust_bar')) {
+        newValue.show_trust_bar = formData.get('show_trust_bar') === 'on' || formData.get('show_trust_bar') === 'true';
+    }
+    if (formData.has('show_social_proof')) {
+        newValue.show_social_proof = formData.get('show_social_proof') === 'on' || formData.get('show_social_proof') === 'true';
+    }
+    if (formData.has('show_editorial')) {
+        newValue.show_editorial = formData.get('show_editorial') === 'on' || formData.get('show_editorial') === 'true';
+    }
+    if (formData.has('show_newsletter')) {
+        newValue.show_newsletter = formData.get('show_newsletter') === 'on' || formData.get('show_newsletter') === 'true';
+    }
+
+    // Editorial Content
+    if (formData.has('editorial_heading')) {
+        newValue.editorial_heading = (formData.get('editorial_heading') as string)?.trim();
+    }
+    if (formData.has('editorial_quote')) {
+        newValue.editorial_quote = (formData.get('editorial_quote') as string)?.trim();
+    }
+    if (formData.has('editorial_body')) {
+        newValue.editorial_body = (formData.get('editorial_body') as string)?.trim();
+    }
+    if (formData.has('editorial_cta_text')) {
+        newValue.editorial_cta_text = (formData.get('editorial_cta_text') as string)?.trim();
+    }
+    if (formData.has('editorial_cta_link')) {
+        newValue.editorial_cta_link = (formData.get('editorial_cta_link') as string)?.trim();
+    }
+
+    if (formData.has('trust_bar_items')) {
+        try {
+            const itemsStr = formData.get('trust_bar_items') as string;
+            const items = JSON.parse(itemsStr);
+            await supabase
+                .from('site_settings')
+                .upsert({
+                    setting_key: 'trust_bar_items',
+                    setting_value: { items },
+                }, { onConflict: 'setting_key' });
+        } catch (e) {
+            console.error("Trust Bar items JSON error:", e);
+        }
+    }
 
     const { error } = await supabase
         .from('site_settings')

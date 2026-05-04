@@ -60,7 +60,7 @@ export default async function AnalyticsPage() {
             .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).order('created_at', { ascending: true }),
         supabase.from('orders').select('amount_total, created_at')
             .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString()).order('created_at', { ascending: true }),
-        supabase.from('order_items').select('product_id, quantity, products(title)').limit(100),
+        supabase.from('order_items').select('product_id, quantity, unit_price, products(title)').limit(200),
     ])
 
     const grossRevenue = paidOrders?.reduce((s, o) => s + (o.amount_total || 0), 0) ?? 0
@@ -75,15 +75,16 @@ export default async function AnalyticsPage() {
     const chartW = buildDailyTotals((weekly ?? []) as { amount_total: number; created_at: string }[], 7)
     const chartM = buildDailyTotals((monthly ?? []) as { amount_total: number; created_at: string }[], 30)
 
-    // Top products
-    const pMap: Record<string, { title: string; qty: number }> = {}
+    // Top products — by units and revenue
+    const pMap: Record<string, { title: string; qty: number; revenue: number }> = {}
     topItems?.forEach((item: any) => {
         if (!item.product_id) return
         const title = Array.isArray(item.products) ? item.products[0]?.title : item.products?.title ?? 'Unknown'
-        if (!pMap[item.product_id]) pMap[item.product_id] = { title, qty: 0 }
+        if (!pMap[item.product_id]) pMap[item.product_id] = { title, qty: 0, revenue: 0 }
         pMap[item.product_id].qty += Number(item.quantity) || 0
+        pMap[item.product_id].revenue += (Number(item.quantity) || 0) * (Number(item.unit_price) || 0)
     })
-    const topProds = Object.entries(pMap).sort(([, a], [, b]) => b.qty - a.qty).slice(0, 8)
+    const topProds = Object.entries(pMap).sort(([, a], [, b]) => b.revenue - a.revenue).slice(0, 8)
 
     const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
@@ -167,14 +168,15 @@ export default async function AnalyticsPage() {
                                         <tr className="border-b border-white/5">
                                             <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Rank</th>
                                             <th className="text-left font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Product</th>
+                                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Revenue</th>
                                             <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Units</th>
-                                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Share</th>
+                                            <th className="text-right font-medium text-[9px] uppercase tracking-luxury text-luxury-subtext p-4">Rev Share</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {topProds.map(([, p], i) => {
-                                            const total = topProds.reduce((s, [, v]) => s + v.qty, 0) || 1
-                                            const pct = Math.round((p.qty / total) * 100)
+                                            const totalRevenue = topProds.reduce((s, [, v]) => s + v.revenue, 0) || 1
+                                            const pct = Math.round((p.revenue / totalRevenue) * 100)
                                             return (
                                                 <tr key={i} className="border-b border-white/5 last:border-none hover:bg-white/[0.02] transition-colors">
                                                     <td className="p-4"><span className="font-serif text-gold text-sm font-medium">{ROMAN[i]}</span></td>
@@ -186,7 +188,10 @@ export default async function AnalyticsPage() {
                                                             <span className="text-white font-medium text-xs">{p.title}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="text-right p-4 font-mono text-gold text-xs">{p.qty}</td>
+                                                    <td className="text-right p-4 font-mono text-gold text-xs font-semibold">
+                                                        ${p.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </td>
+                                                    <td className="text-right p-4 font-mono text-white/60 text-xs">{p.qty}</td>
                                                     <td className="text-right p-4 font-mono text-luxury-subtext text-xs">{pct}%</td>
                                                 </tr>
                                             )
