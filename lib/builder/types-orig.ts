@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// STOREX CMS — EXTENDED BLOCK TYPES (13 total = 8 original + 5 new)
+// Page Builder — Shared Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type BlockType =
@@ -11,17 +11,13 @@ export type BlockType =
     | 'newsletter'
     | 'divider'
     | 'testimonial'
-    // ──── NEW BLOCKS ────
     | 'video_hero'
     | 'countdown_timer'
     | 'before_after'
     | 'icon_grid'
     | 'faq_accordion'
 
-// ──────────────────────────────────────────────────────────────────────────────
-// ORIGINAL 8 BLOCK TYPES
-// ──────────────────────────────────────────────────────────────────────────────
-
+// Per-block props maps
 export interface HeroProps {
     heading: string
     subheading: string
@@ -75,60 +71,53 @@ export interface TestimonialProps {
     role: string
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// NEW 5 BLOCK TYPES
-// ──────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// 5 NEW BLOCKS
+// ────────────────────────────────────────────────────────────────────────────
 
 export interface VideoHeroProps {
-    video_url: string // Mux video URL
     heading: string
     subheading: string
     cta_text: string
     cta_link: string
+    mux_video_url: string // Mux streaming URL
     overlay_opacity: number // 0–100
     autoplay: boolean
-    muted: boolean
 }
 
 export interface CountdownTimerProps {
-    end_date: string // ISO 8601 datetime
     heading: string
     subheading: string
-    background_color: string // hex color
-    text_color: string // hex color
-    show_labels: boolean
+    end_date: string // ISO 8601 format: "2024-12-25T23:59:59"
+    cta_text: string
+    cta_link: string
+    bg_color: 'black' | 'gold' | 'dark_gray'
 }
 
 export interface BeforeAfterProps {
     before_image: string
     after_image: string
-    before_label: string
-    after_label: string
-    initial_position: number // 0–100, where slider starts
+    caption: string
+    height: 'sm' | 'md' | 'lg'
 }
 
 export interface IconGridProps {
+    heading: string
+    columns: number // 2, 3, or 4
     items: Array<{
-        id: string
         icon: string // emoji or icon name
         label: string
-        description?: string
+        description: string
     }>
-    columns: 2 | 3 | 4
 }
 
 export interface FAQAccordionProps {
     heading: string
     items: Array<{
-        id: string
         question: string
         answer: string
     }>
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// UNION TYPES
-// ──────────────────────────────────────────────────────────────────────────────
 
 export type BlockProps =
     | HeroProps
@@ -160,6 +149,7 @@ export interface PageDocument {
     updated_at: string
 }
 
+// Catalogue of available blocks shown in the sidebar
 export interface BlockDefinition {
     type: BlockType
     label: string
@@ -168,12 +158,7 @@ export interface BlockDefinition {
     defaultProps: BlockProps
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// BLOCK CATALOGUE (13 blocks)
-// ──────────────────────────────────────────────────────────────────────────────
-
 export const BLOCK_CATALOGUE: BlockDefinition[] = [
-    // ──── ORIGINAL 8 ────
     {
         type: 'hero',
         label: 'Full Hero',
@@ -187,6 +172,77 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
             image_url: '',
             overlay_opacity: 50,
         } as HeroProps,
+    },
+    {
+        type: 'video_hero',
+        label: 'Video Hero',
+        description: 'Autoplay video background with text overlay',
+        icon: '🎬',
+        defaultProps: {
+            heading: 'The Ritual Experience',
+            subheading: 'Watch the transformation unfold.',
+            cta_text: 'Shop Now',
+            cta_link: '/shop',
+            mux_video_url: '',
+            overlay_opacity: 40,
+            autoplay: true,
+        } as VideoHeroProps,
+    },
+    {
+        type: 'countdown_timer',
+        label: 'Countdown Timer',
+        description: 'Live countdown to sale end with urgency messaging',
+        icon: '⏱️',
+        defaultProps: {
+            heading: 'The Obsidian Sale',
+            subheading: 'Limited time. Exclusive access.',
+            end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T23:59:59',
+            cta_text: 'Shop Before It Ends',
+            cta_link: '/sale',
+            bg_color: 'black',
+        } as CountdownTimerProps,
+    },
+    {
+        type: 'before_after',
+        label: 'Before/After Slider',
+        description: 'Drag slider to compare two images (perfect for cosmetics results)',
+        icon: '↔️',
+        defaultProps: {
+            before_image: '',
+            after_image: '',
+            caption: 'Results after 30 days',
+            height: 'md',
+        } as BeforeAfterProps,
+    },
+    {
+        type: 'icon_grid',
+        label: 'Icon Grid',
+        description: 'Trust signals with icons (Free Shipping, Cruelty Free, etc.)',
+        icon: '⭐',
+        defaultProps: {
+            heading: 'Why Choose Us',
+            columns: 4,
+            items: [
+                { icon: '🚚', label: 'Free Shipping', description: 'On orders over $50' },
+                { icon: '🐰', label: 'Cruelty Free', description: 'Never tested on animals' },
+                { icon: '♻️', label: 'Sustainable', description: 'Eco-friendly packaging' },
+                { icon: '✨', label: 'Luxury Quality', description: 'Premium ingredients' },
+            ],
+        } as IconGridProps,
+    },
+    {
+        type: 'faq_accordion',
+        label: 'FAQ Accordion',
+        description: 'Collapsible questions & answers (reduces support, good for SEO)',
+        icon: '❓',
+        defaultProps: {
+            heading: 'Frequently Asked Questions',
+            items: [
+                { question: 'How long does shipping take?', answer: 'We ship within 2-3 business days. Standard delivery is 5-7 days. Express available.' },
+                { question: 'Is this product vegan?', answer: 'Yes, all our products are 100% vegan and cruelty-free.' },
+                { question: 'What if I\'m not satisfied?', answer: 'We offer a 30-day money-back guarantee on all purchases.' },
+            ],
+        } as FAQAccordionProps,
     },
     {
         type: 'text_block',
@@ -266,90 +322,5 @@ export const BLOCK_CATALOGUE: BlockDefinition[] = [
         defaultProps: {
             style: 'ornament',
         } as DividerProps,
-    },
-    // ──── NEW 5 BLOCKS ────
-    {
-        type: 'video_hero',
-        label: 'Video Hero',
-        description: 'Full-screen Mux video with autoplay & overlay text',
-        icon: '🎬',
-        defaultProps: {
-            video_url: '',
-            heading: 'Our Story in Motion',
-            subheading: 'Experience the ritual.',
-            cta_text: 'Shop Now',
-            cta_link: '/shop',
-            overlay_opacity: 40,
-            autoplay: true,
-            muted: true,
-        } as VideoHeroProps,
-    },
-    {
-        type: 'countdown_timer',
-        label: 'Countdown Timer',
-        description: 'Live countdown to a specific date (creates urgency)',
-        icon: '⏱️',
-        defaultProps: {
-            end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            heading: 'Flash Sale Ends Soon',
-            subheading: 'Limited time only',
-            background_color: '#1a1a1a',
-            text_color: '#D4AF37',
-            show_labels: true,
-        } as CountdownTimerProps,
-    },
-    {
-        type: 'before_after',
-        label: 'Before/After Slider',
-        description: 'Drag slider to compare two images (perfect for skincare)',
-        icon: '↔️',
-        defaultProps: {
-            before_image: '',
-            after_image: '',
-            before_label: 'Before',
-            after_label: 'After',
-            initial_position: 50,
-        } as BeforeAfterProps,
-    },
-    {
-        type: 'icon_grid',
-        label: 'Icon Grid',
-        description: 'Trust signals: Free Shipping, Cruelty Free, Vegan, etc.',
-        icon: '⭐',
-        defaultProps: {
-            items: [
-                { id: '1', icon: '🚚', label: 'Free Shipping', description: 'On orders over $100' },
-                { id: '2', icon: '🐰', label: 'Cruelty Free', description: 'Never tested on animals' },
-                { id: '3', icon: '🌱', label: 'Vegan', description: 'Plant-based ingredients' },
-                { id: '4', icon: '♻️', label: 'Sustainable', description: 'Eco-friendly packaging' },
-            ],
-            columns: 4,
-        } as IconGridProps,
-    },
-    {
-        type: 'faq_accordion',
-        label: 'FAQ Accordion',
-        description: 'Collapsible Q&A section (reduces support emails)',
-        icon: '❓',
-        defaultProps: {
-            heading: 'Frequently Asked Questions',
-            items: [
-                {
-                    id: '1',
-                    question: 'What is the shipping timeline?',
-                    answer: 'Orders ship within 2 business days. Standard shipping arrives in 5-7 business days. Expedited shipping available.',
-                },
-                {
-                    id: '2',
-                    question: 'Are your products suitable for sensitive skin?',
-                    answer: 'Yes! All products are dermatologist-tested and hypoallergenic. Always do a patch test first.',
-                },
-                {
-                    id: '3',
-                    question: 'What is your return policy?',
-                    answer: '30-day money-back guarantee on all products. No questions asked.',
-                },
-            ],
-        } as FAQAccordionProps,
     },
 ]
