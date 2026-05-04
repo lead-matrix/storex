@@ -1,258 +1,250 @@
 'use client'
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW 5 BLOCK RENDERERS (Video Hero, Countdown, Before/After, Icon Grid, FAQ)
+// ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useRef } from 'react'
-import { VideoHeroProps, CountdownTimerProps, BeforeAfterProps, IconGridProps, FAQAccordionProps } from './types'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 
-// ────────────────────────────────────────────────────────────────────────────
-// VIDEO HERO — Autoplay Mux video background
-// ────────────────────────────────────────────────────────────────────────────
-export function VideoHero({ mux_video_url, heading, subheading, cta_text, cta_link, overlay_opacity }: VideoHeroProps) {
-    const videoRef = useRef<HTMLVideoElement>(null)
+import {
+    VideoHeroProps,
+    CountdownTimerProps,
+    BeforeAfterProps,
+    IconGridProps,
+    FAQAccordionProps,
+} from './types-extended'
 
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.defaultMuted = true
-            videoRef.current.muted = true
-            videoRef.current.play().catch(e => console.error("VideoHero autoplay failed:", e))
-        }
-    }, [mux_video_url])
-
+// ──────────────────────────────────────────────────────────────────────────────
+// VIDEO HERO — Mux autoplay video with overlay text + CTA
+// ──────────────────────────────────────────────────────────────────────────────
+export function VideoHero({ p }: { p: VideoHeroProps }) {
     return (
-        <section className="relative w-full h-[60vh] min-h-[380px] flex items-center justify-center overflow-hidden bg-black">
-            {/* Video background */}
-            {mux_video_url && (
+        <section className="relative w-full h-[70vh] min-h-[400px] bg-black overflow-hidden flex items-center justify-center">
+            {/* Video Background */}
+            {p.video_url && (
                 <video
-                    ref={videoRef}
-                    src={mux_video_url}
-                    autoPlay
-                    muted
+                    src={p.video_url}
+                    autoPlay={p.autoplay}
+                    muted={p.muted}
                     loop
                     playsInline
                     className="absolute inset-0 w-full h-full object-cover"
                 />
             )}
-            
+
             {/* Overlay */}
             <div
-                className="absolute inset-0 bg-black/50"
-                style={{ opacity: (overlay_opacity || 40) / 100 }}
+                className="absolute inset-0 bg-black"
+                style={{ opacity: p.overlay_opacity / 100 }}
             />
-            
+
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-center justify-center text-center px-8 max-w-2xl">
-                {subheading && (
-                    <p className="text-gold text-[10px] uppercase tracking-[0.4em] font-medium mb-4">
-                        {subheading}
+            <div className="relative z-10 text-center text-white px-8 max-w-3xl mx-auto">
+                {p.heading && (
+                    <h1 className="text-4xl md:text-6xl font-serif mb-4 font-bold tracking-tight">
+                        {p.heading}
+                    </h1>
+                )}
+                {p.subheading && (
+                    <p className="text-lg md:text-xl mb-8 text-white/80 font-light">
+                        {p.subheading}
                     </p>
                 )}
-                <h1 className="text-5xl md:text-6xl font-serif text-white uppercase tracking-wide mb-8">
-                    {heading}
-                </h1>
-                {cta_text && (
-                    <a
-                        href={cta_link || '/shop'}
-                        className="inline-block border border-white text-white text-xs uppercase tracking-[0.3em] px-8 py-3 hover:bg-white hover:text-black transition-all duration-300"
+                {p.cta_text && p.cta_link && (
+                    <Link
+                        href={p.cta_link}
+                        className="inline-block bg-white text-black px-8 py-3 font-bold text-sm uppercase tracking-widest hover:bg-gray-200 transition-all"
                     >
-                        {cta_text}
-                    </a>
+                        {p.cta_text}
+                    </Link>
                 )}
             </div>
         </section>
     )
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// COUNTDOWN TIMER
-// ────────────────────────────────────────────────────────────────────────────
-export function CountdownTimer({ heading, subheading, end_date, cta_text, cta_link, bg_color }: CountdownTimerProps) {
-    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+// ──────────────────────────────────────────────────────────────────────────────
+// COUNTDOWN TIMER — Live countdown (days/hours/mins/secs)
+// ──────────────────────────────────────────────────────────────────────────────
+export function CountdownTimer({ p }: { p: CountdownTimerProps }) {
+    const [time, setTime] = useState({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+    })
 
     useEffect(() => {
-        const updateCountdown = () => {
+        const interval = setInterval(() => {
             const now = new Date().getTime()
-            const endTime = new Date(end_date).getTime()
-            const distance = endTime - now
+            const endTime = new Date(p.end_date).getTime()
+            const diff = endTime - now
 
-            if (distance > 0) {
-                setTimeLeft({
-                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-                    seconds: Math.floor((distance % (1000 * 60)) / 1000),
+            if (diff <= 0) {
+                setTime({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+            } else {
+                setTime({
+                    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((diff / 1000 / 60) % 60),
+                    seconds: Math.floor((diff / 1000) % 60),
                 })
             }
-        }
+        }, 1000)
 
-        updateCountdown()
-        const interval = setInterval(updateCountdown, 1000)
         return () => clearInterval(interval)
-    }, [end_date])
-
-    const bgClasses = {
-        black: 'bg-black',
-        gold: 'bg-amber-900',
-        dark_gray: 'bg-zinc-900',
-    }
+    }, [p.end_date])
 
     return (
-        <section className={`${bgClasses[bg_color] || 'bg-black'} py-20 px-8 text-center border-b border-white/10`}>
+        <section
+            className="py-16 px-8 text-center"
+            style={{ backgroundColor: p.background_color }}
+        >
             <div className="max-w-3xl mx-auto">
-                {subheading && (
-                    <p className="text-gold text-[10px] uppercase tracking-[0.4em] font-medium mb-4">
-                        {subheading}
+                {p.heading && (
+                    <h2 className="text-3xl md:text-4xl font-bold mb-2" style={{ color: p.text_color }}>
+                        {p.heading}
+                    </h2>
+                )}
+                {p.subheading && (
+                    <p className="mb-8 opacity-80" style={{ color: p.text_color }}>
+                        {p.subheading}
                     </p>
                 )}
-                <h2 className="text-4xl md:text-5xl font-serif text-white uppercase tracking-wide mb-8">
-                    {heading}
-                </h2>
 
-                {/* Countdown display */}
-                <div className="grid grid-cols-4 gap-4 mb-8 max-w-xl mx-auto">
+                {/* Countdown Display */}
+                <div className="flex justify-center gap-4 md:gap-8 flex-wrap">
                     {[
-                        { value: timeLeft.days, label: 'Days' },
-                        { value: timeLeft.hours, label: 'Hours' },
-                        { value: timeLeft.minutes, label: 'Minutes' },
-                        { value: timeLeft.seconds, label: 'Seconds' },
-                    ].map(({ value, label }) => (
-                        <div key={label} className="bg-white/5 border border-white/10 rounded p-4">
-                            <div className="text-3xl md:text-4xl font-serif text-gold font-bold">
-                                {String(value).padStart(2, '0')}
+                        { label: 'DAYS', value: time.days },
+                        { label: 'HOURS', value: time.hours },
+                        { label: 'MINS', value: time.minutes },
+                        { label: 'SECS', value: time.seconds },
+                    ].map((unit) => (
+                        <div
+                            key={unit.label}
+                            className="flex flex-col items-center p-4 border"
+                            style={{ borderColor: p.text_color }}
+                        >
+                            <div
+                                className="text-4xl md:text-5xl font-bold mb-2 font-mono"
+                                style={{ color: p.text_color }}
+                            >
+                                {String(unit.value).padStart(2, '0')}
                             </div>
-                            <div className="text-[10px] uppercase tracking-widest text-white/60 mt-2">
-                                {label}
-                            </div>
+                            {p.show_labels && (
+                                <div
+                                    className="text-xs uppercase tracking-widest"
+                                    style={{ color: p.text_color, opacity: 0.7 }}
+                                >
+                                    {unit.label}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
-
-                {cta_text && (
-                    <a
-                        href={cta_link || '/sale'}
-                        className="inline-block border border-gold text-gold text-xs uppercase tracking-[0.3em] px-8 py-3 hover:bg-gold hover:text-black transition-all duration-300 font-bold"
-                    >
-                        {cta_text}
-                    </a>
-                )}
             </div>
         </section>
     )
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// BEFORE/AFTER SLIDER
-// ────────────────────────────────────────────────────────────────────────────
-export function BeforeAfter({ before_image, after_image, caption, height }: BeforeAfterProps) {
-    const [sliderPos, setSliderPos] = useState(50)
+// ──────────────────────────────────────────────────────────────────────────────
+// BEFORE/AFTER SLIDER — Drag to compare two images
+// ──────────────────────────────────────────────────────────────────────────────
+export function BeforeAfterSlider({ p }: { p: BeforeAfterProps }) {
+    const [position, setPosition] = useState(p.initial_position)
     const [isDragging, setIsDragging] = useState(false)
-
-    const heightClasses = {
-        sm: 'h-72',
-        md: 'h-96',
-        lg: 'h-screen',
-    }
 
     const handleMouseDown = () => setIsDragging(true)
     const handleMouseUp = () => setIsDragging(false)
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isDragging) return
-        const rect = e.currentTarget.getBoundingClientRect()
-        const newPos = ((e.clientX - rect.left) / rect.width) * 100
-        setSliderPos(Math.max(0, Math.min(100, newPos)))
+
+        const container = e.currentTarget
+        const rect = container.getBoundingClientRect()
+        const newPosition = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+        setPosition(newPosition)
     }
 
     return (
-        <section className="py-12 px-8 bg-black">
+        <section className="py-20 px-8 bg-white">
             <div className="max-w-4xl mx-auto">
                 <div
-                    className={`relative ${heightClasses[height] || 'h-96'} overflow-hidden bg-zinc-900 rounded-lg`}
+                    className="relative overflow-hidden rounded-lg select-none"
                     onMouseMove={handleMouseMove}
                     onMouseLeave={() => setIsDragging(false)}
+                    onMouseUp={handleMouseUp}
                 >
-                    {/* After image (background) */}
-                    {after_image && (
-                        <img
-                            src={after_image}
-                            alt="After"
-                            className="absolute inset-0 w-full h-full object-cover"
-                        />
-                    )}
+                    {/* After Image (Base) */}
+                    <img
+                        src={p.after_image}
+                        alt={p.after_label}
+                        className="w-full h-auto block"
+                    />
 
-                    {/* Before image (foreground, clipped) */}
-                    {before_image && (
-                        <div
-                            className="absolute inset-0 overflow-hidden"
-                            style={{ width: `${sliderPos}%` }}
-                        >
-                            <img
-                                src={before_image}
-                                alt="Before"
-                                className="absolute inset-0 w-full h-full object-cover"
-                                style={{ width: `${(100 / sliderPos) * 100}%` }}
-                            />
-                        </div>
-                    )}
-
-                    {/* Slider handle */}
+                    {/* Before Image (Overlay) */}
                     <div
-                        className="absolute top-0 bottom-0 w-1 bg-white cursor-col-resize select-none"
-                        style={{ left: `${sliderPos}%` }}
+                        className="absolute top-0 left-0 h-full overflow-hidden"
+                        style={{ width: `${position}%` }}
+                    >
+                        <img
+                            src={p.before_image}
+                            alt={p.before_label}
+                            className="w-screen h-full object-cover"
+                            style={{ width: `calc(100vw * (100/${position}))` }}
+                        />
+                    </div>
+
+                    {/* Slider Handle */}
+                    <div
+                        className="absolute top-0 bottom-0 w-1 bg-white cursor-col-resize group"
+                        style={{ left: `${position}%` }}
                         onMouseDown={handleMouseDown}
                     >
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
-                            <div className="text-xs font-bold text-black">↔</div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-3 py-2 rounded text-black text-xs font-bold">
+                            ↔
                         </div>
                     </div>
 
                     {/* Labels */}
-                    <span className="absolute bottom-4 left-4 text-xs font-bold uppercase tracking-widest bg-black/50 text-white px-3 py-1 rounded">
-                        Before
-                    </span>
-                    <span className="absolute bottom-4 right-4 text-xs font-bold uppercase tracking-widest bg-black/50 text-white px-3 py-1 rounded">
-                        After
-                    </span>
+                    <div className="absolute top-4 left-4 bg-black/60 text-white px-3 py-1 rounded text-xs font-bold">
+                        {p.before_label}
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded text-xs font-bold">
+                        {p.after_label}
+                    </div>
                 </div>
-
-                {caption && (
-                    <p className="text-center text-white/60 text-sm mt-4 italic">
-                        {caption}
-                    </p>
-                )}
             </div>
         </section>
     )
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// ICON GRID — Trust signals
-// ────────────────────────────────────────────────────────────────────────────
-export function IconGrid({ heading, columns, items }: IconGridProps) {
-    const colClasses = {
+// ──────────────────────────────────────────────────────────────────────────────
+// ICON GRID — Trust signals (shipping, cruelty-free, vegan, etc.)
+// ──────────────────────────────────────────────────────────────────────────────
+export function IconGrid({ p }: { p: IconGridProps }) {
+    const gridClass = {
         2: 'grid-cols-2',
         3: 'grid-cols-3',
         4: 'grid-cols-4',
-    }
+    }[p.columns] || 'grid-cols-4'
 
     return (
-        <section className="py-16 px-8 bg-black border-t border-white/5">
+        <section className="py-16 px-8 bg-black">
             <div className="max-w-6xl mx-auto">
-                {heading && (
-                    <h2 className="text-3xl md:text-4xl font-serif text-white text-center mb-12 uppercase tracking-wide">
-                        {heading}
-                    </h2>
-                )}
-
-                <div className={`grid ${colClasses[columns as keyof typeof colClasses] || 'grid-cols-4'} gap-8`}>
-                    {items && items.map((item, idx) => (
-                        <div key={idx} className="flex flex-col items-center text-center group">
-                            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                                {item.icon}
-                            </div>
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">
+                <div className={`grid ${gridClass} gap-8`}>
+                    {p.items.map((item) => (
+                        <div
+                            key={item.id}
+                            className="text-center text-white flex flex-col items-center p-6 border border-white/10 rounded-lg hover:border-white/30 transition-all"
+                        >
+                            <div className="text-5xl mb-4">{item.icon}</div>
+                            <h3 className="font-bold text-sm uppercase tracking-widest mb-2">
                                 {item.label}
                             </h3>
-                            <p className="text-xs text-white/60 leading-relaxed">
-                                {item.description}
-                            </p>
+                            {item.description && (
+                                <p className="text-xs text-white/60">{item.description}</p>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -261,44 +253,45 @@ export function IconGrid({ heading, columns, items }: IconGridProps) {
     )
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// FAQ ACCORDION
-// ────────────────────────────────────────────────────────────────────────────
-export function FAQAccordion({ heading, items }: FAQAccordionProps) {
-    const [openIdx, setOpenIdx] = useState<number | null>(null)
+// ──────────────────────────────────────────────────────────────────────────────
+// FAQ ACCORDION — Collapsible Q&A
+// ──────────────────────────────────────────────────────────────────────────────
+export function FAQAccordion({ p }: { p: FAQAccordionProps }) {
+    const [expanded, setExpanded] = useState<string | null>(null)
 
     return (
-        <section className="py-16 px-8 bg-black border-t border-white/5">
-            <div className="max-w-2xl mx-auto">
-                {heading && (
-                    <h2 className="text-3xl md:text-4xl font-serif text-white text-center mb-12 uppercase tracking-wide">
-                        {heading}
+        <section className="py-20 px-8 bg-white">
+            <div className="max-w-3xl mx-auto">
+                {p.heading && (
+                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-black">
+                        {p.heading}
                     </h2>
                 )}
 
-                <div className="space-y-3">
-                    {items && items.map((item, idx) => (
+                <div className="space-y-4">
+                    {p.items.map((item) => (
                         <div
-                            key={idx}
-                            className="border border-white/10 rounded overflow-hidden bg-white/[0.02] hover:border-gold/30 transition-colors"
+                            key={item.id}
+                            className="border border-gray-200 rounded-lg overflow-hidden"
                         >
                             <button
-                                onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
-                                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+                                onClick={() =>
+                                    setExpanded(expanded === item.id ? null : item.id)
+                                }
+                                className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-all text-left"
                             >
-                                <h3 className="font-medium text-white text-sm">
+                                <h3 className="font-bold text-black text-sm md:text-base">
                                     {item.question}
                                 </h3>
-                                <span className={`text-gold text-lg transition-transform duration-300 ${openIdx === idx ? 'rotate-180' : ''}`}>
-                                    ▼
-                                </span>
+                                <ChevronDown
+                                    className={`w-5 h-5 text-gray-600 transition-transform ${
+                                        expanded === item.id ? 'transform rotate-180' : ''
+                                    }`}
+                                />
                             </button>
-
-                            {openIdx === idx && (
-                                <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5">
-                                    <p className="text-white/70 text-sm leading-relaxed">
-                                        {item.answer}
-                                    </p>
+                            {expanded === item.id && (
+                                <div className="px-6 py-4 bg-white text-gray-700 text-sm leading-relaxed border-t border-gray-200">
+                                    {item.answer}
                                 </div>
                             )}
                         </div>
