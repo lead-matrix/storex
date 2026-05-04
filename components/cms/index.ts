@@ -1,4 +1,3 @@
-
 export { default as HeroSection } from './HeroSection';
 export { default as ProductGridSection } from './ProductGridSection';
 export { default as ImageBannerSection } from './ImageBannerSection';
@@ -12,3 +11,6 @@ export { default as TwoColumnSection } from './TwoColumnSection';
 export { default as NewsletterSection } from './NewsletterSection';
 export { default as TestimonialSection } from './TestimonialSection';
 export { default as DividerSection } from './DividerSection';
+
+// New Blocks from the Page Builder
+export * from './NewBlocks';

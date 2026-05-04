@@ -6,6 +6,7 @@ import ImageBannerSection from "./ImageBannerSection";
 import PhilosophyGrid from "./PhilosophyGrid";
 import ContactSection from "./ContactSection";
 import VideoShowcaseSection from "./VideoShowcaseSection";
+import { VideoHero, CountdownTimer, BeforeAfter, IconGrid, FAQAccordion } from "./NewBlocks";
 
 interface Section {
     type: string
@@ -20,6 +21,12 @@ const COMPONENT_MAP: Record<string, React.FC<any>> = {
     philosophyGrid: PhilosophyGrid,
     contactForm: ContactSection,
     videoBlock: VideoShowcaseSection,
+    // New builder blocks
+    videoHero: VideoHero,
+    countdownTimer: CountdownTimer,
+    beforeAfter: BeforeAfter,
+    iconGrid: IconGrid,
+    faqAccordion: FAQAccordion,
 };
 
 export default function CMSRenderer({ sections }: { sections: Section[] }) {
