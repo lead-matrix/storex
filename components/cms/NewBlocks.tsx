@@ -29,21 +29,13 @@ export function VideoHero({
         <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-black">
             {/* Video background */}
             {mux_video_url && (
-                <iframe
+                <video
                     src={mux_video_url}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                    }}
-                    allow="autoplay; muted"
-                    muted
                     autoPlay={autoplay}
+                    muted
                     loop
-                    className="absolute inset-0"
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
                 />
             )}
 
