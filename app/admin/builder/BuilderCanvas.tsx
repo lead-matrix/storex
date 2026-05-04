@@ -107,26 +107,101 @@ function SortableBlockShell({
 // ─────────────────────────────────────────────────────────────────────────────
 // Prop Editor — auto-generates form fields from block props
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PropEditor — IMPROVED VERSION with drag-drop uploads + array field editor
+// ────────────────────────────────────────────────────────────────────────────
 function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated: PageBlock) => void }) {
-    const [mediaTarget, setMediaTarget] = useState<string|null>(null)
+    const [dragOverKey, setDragOverKey] = useState<string | null>(null)
+    const [uploading, setUploading] = useState(false)
+
     const set = (key: string, value: unknown) => {
         onChange({ ...block, props: { ...block.props, [key]: value } })
     }
 
-    const props = block.props as unknown as Record<string, unknown>
+    const props = block.props as unknown as Record<string, any>
     const FIELD = 'w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
     const LABEL = 'block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1'
 
+    // Handle file upload (drag or click)
+    const handleFileUpload = async (file: File, key: string) => {
+        setUploading(true)
+        try {
+            const fd = new FormData()
+            fd.append('file', file)
+            const r = await fetch('/api/admin/media-upload', { method: 'POST', body: fd })
+            const data = await r.json()
+            if (data.url) {
+                set(key, data.url)
+                toast.success('Image uploaded')
+            } else {
+                toast.error('Upload failed')
+            }
+        } catch (e) {
+            toast.error('Upload error: ' + String(e))
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    // Array field editor (FAQ items, icon grid items)
+    const renderArrayField = (key: string, items: any[], itemSchema: string) => {
+        if (itemSchema === 'faq') {
+            return (
+                <div key={key} className="space-y-2">
+                    <label className={LABEL}>{key.replace(/_/g, ' ')}</label>
+                    {items.map((item, i) => (
+                        <div key={i} className="bg-gray-100 p-3 rounded border border-gray-300 space-y-2">
+                            <input type="text" placeholder="Question" value={item.question || ''} onChange={e => { const updated = [...items]; updated[i].question = e.target.value; set(key, updated) }} className={FIELD} />
+                            <textarea placeholder="Answer" rows={2} value={item.answer || ''} onChange={e => { const updated = [...items]; updated[i].answer = e.target.value; set(key, updated) }} className={`${FIELD} resize-none`} />
+                            <button onClick={() => set(key, items.filter((_, idx) => idx !== i))} className="w-full flex items-center justify-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded text-xs font-bold hover:bg-red-200">
+                                <Trash2 className="w-3.5 h-3.5" /> Remove
+                            </button>
+                        </div>
+                    ))}
+                    <button onClick={() => set(key, [...items, { question: '', answer: '' }])} className="w-full flex items-center justify-center gap-2 bg-blue-100 text-blue-700 px-3 py-2 rounded text-xs font-bold hover:bg-blue-200">
+                        <Plus className="w-3.5 h-3.5" /> Add Item
+                    </button>
+                </div>
+            )
+        }
+
+        if (itemSchema === 'icon_grid') {
+            return (
+                <div key={key} className="space-y-2">
+                    <label className={LABEL}>{key.replace(/_/g, ' ')}</label>
+                    {items.map((item, i) => (
+                        <div key={i} className="bg-gray-100 p-3 rounded border border-gray-300 space-y-2">
+                            <input type="text" placeholder="Icon (emoji)" value={item.icon || ''} maxLength={2} onChange={e => { const updated = [...items]; updated[i].icon = e.target.value; set(key, updated) }} className={`${FIELD} text-center`} />
+                            <input type="text" placeholder="Label" value={item.label || ''} onChange={e => { const updated = [...items]; updated[i].label = e.target.value; set(key, updated) }} className={FIELD} />
+                            <input type="text" placeholder="Description" value={item.description || ''} onChange={e => { const updated = [...items]; updated[i].description = e.target.value; set(key, updated) }} className={FIELD} />
+                            <button onClick={() => set(key, items.filter((_, idx) => idx !== i))} className="w-full flex items-center justify-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded text-xs font-bold hover:bg-red-200">
+                                <Trash2 className="w-3.5 h-3.5" /> Remove
+                            </button>
+                        </div>
+                    ))}
+                    <button onClick={() => set(key, [...items, { icon: '⭐', label: '', description: '' }])} className="w-full flex items-center justify-center gap-2 bg-blue-100 text-blue-700 px-3 py-2 rounded text-xs font-bold hover:bg-blue-200">
+                        <Plus className="w-3.5 h-3.5" /> Add Item
+                    </button>
+                </div>
+            )
+        }
+    }
+
     return (
         <div className="space-y-4 p-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
-                <p className="text-sm font-bold text-gray-900">Edit Block</p>
-            </div>
-
             {Object.entries(props).map(([key, val]) => {
+                if (['id', 'type', 'created_at', 'updated_at'].includes(key)) return null
                 const label = key.replace(/_/g, ' ')
 
-                // BOOLEAN
+                // Array fields
+                if (Array.isArray(val)) {
+                    if (key === 'items' && val.length > 0 && 'question' in val[0]) return renderArrayField(key, val, 'faq')
+                    if (key === 'items' && val.length > 0 && 'icon' in val[0]) return renderArrayField(key, val, 'icon_grid')
+                    return null
+                }
+
+                // Boolean
                 if (typeof val === 'boolean') return (
                     <div key={key} className="flex items-center gap-3">
                         <input type="checkbox" id={key} checked={val} onChange={e => set(key, e.target.checked)} className="w-4 h-4 accent-blue-600" />
@@ -134,50 +209,61 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
-                // NUMBER
-                if (typeof val === 'number') return (
-                    <div key={key}>
-                        <label className={LABEL}>{label}</label>
-                        <input type="number" value={val} onChange={e => set(key, Number(e.target.value))} className={FIELD} />
-                    </div>
-                )
+                // Number
+                if (typeof val === 'number') {
+                    if (key.includes('opacity')) return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <div className="flex items-center gap-3">
+                                <input type="range" min="0" max="100" value={val} onChange={e => set(key, Number(e.target.value))} className="flex-1" />
+                                <span className="text-xs font-bold text-gray-600">{val}%</span>
+                            </div>
+                        </div>
+                    )
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <input type="number" value={val} onChange={e => set(key, Number(e.target.value))} className={FIELD} />
+                        </div>
+                    )
+                }
 
-                // ENUM fields (select)
+                // Enums
                 const ENUMS: Record<string, string[]> = {
                     align: ['left', 'center', 'right'],
                     height: ['sm', 'md', 'lg', 'full'],
                     filter: ['featured', 'bestsellers', 'sale', 'new'],
                     image_side: ['left', 'right'],
                     style: ['line', 'dots', 'ornament'],
-                    bg_color: ['black', 'gold', 'dark_gray'],
                     columns: ['2', '3', '4'],
+                    bg_color: ['black', 'gold', 'dark_gray'],
                 }
                 if (ENUMS[key]) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
-                        <select value={String(val)} onChange={e => set(key, e.target.value)} className={FIELD}>
+                        <select value={String(val)} onChange={e => set(key, isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value))} className={FIELD}>
                             {ENUMS[key].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                     </div>
                 )
 
-                // DATETIME (for countdown_timer.end_date)
+                // DateTime picker
                 if (key === 'end_date' && typeof val === 'string') return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
-                        <input
-                            type="datetime-local"
-                            value={val.slice(0, 16)}
-                            onChange={e => {
-                                const dt = new Date(e.target.value)
-                                set(key, dt.toISOString())
-                            }}
-                            className={FIELD}
-                        />
+                        <input type="datetime-local" value={val.slice(0, 16)} onChange={e => set(key, e.target.value + ':00')} className={FIELD} />
                     </div>
                 )
 
-                // Long text (body fields)
+                // Color picker
+                if ((key.includes('color') || key.includes('bg')) && typeof val === 'string' && !ENUMS[key]) return (
+                    <div key={key}>
+                        <label className={LABEL}>{label}</label>
+                        <input type="color" value={val || '#000000'} onChange={e => set(key, e.target.value)} className="w-full h-10 rounded cursor-pointer border border-gray-200" />
+                    </div>
+                )
+
+                // Textarea
                 if (typeof val === 'string' && (key.includes('body') || key.includes('quote') || key.includes('subheading') || key.includes('description') || key.includes('answer'))) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
@@ -185,123 +271,21 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
                     </div>
                 )
 
-                // Array editor (icon_grid items, FAQ items)
-                if (Array.isArray(val)) {
-                    const arrayLabel = key === 'items' ? 'Item' : 'Element'
-                    return (
-                        <div key={key} className="space-y-2">
-                            <label className={LABEL}>{label}</label>
-                            <div className="space-y-2 bg-gray-100 p-3 rounded border border-gray-200">
-                                {(val as Array<any>).map((item, idx) => (
-                                    <div key={idx} className="bg-white p-3 rounded border border-gray-200 space-y-2">
-                                        {typeof item === 'object' && item !== null
-                                            ? Object.entries(item).map(([itemKey, itemVal]) => (
-                                                <div key={itemKey} className="space-y-1">
-                                                    <label className="block text-[9px] font-bold uppercase tracking-wide text-gray-500">
-                                                        {itemKey.replace(/_/g, ' ')}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={String(itemVal)}
-                                                        onChange={e => {
-                                                            const newArray = [...(val as Array<any>)]
-                                                            newArray[idx] = { ...newArray[idx], [itemKey]: e.target.value }
-                                                            set(key, newArray)
-                                                        }}
-                                                        className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                        placeholder={itemKey}
-                                                    />
-                                                </div>
-                                            ))
-                                            : (
-                                                <input
-                                                    type="text"
-                                                    value={String(item)}
-                                                    onChange={e => {
-                                                        const newArray = [...(val as Array<any>)]
-                                                        newArray[idx] = e.target.value
-                                                        set(key, newArray)
-                                                    }}
-                                                    className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    placeholder={`${arrayLabel} ${idx + 1}`}
-                                                />
-                                            )}
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newArray = (val as Array<any>).filter((_, i) => i !== idx)
-                                                set(key, newArray)
-                                            }}
-                                            className="w-full flex items-center justify-center gap-1.5 px-2 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 transition-colors"
-                                        >
-                                            <Trash2 className="w-3 h-3" /> Remove
-                                        </button>
-                                    </div>
-                                ))}
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newArray = [...(val as Array<any>)]
-                                        if (key === 'items') {
-                                            if ((val as Array<any>)[0] && typeof (val as Array<any>)[0] === 'object') {
-                                                const firstItem = (val as Array<any>)[0]
-                                                if ('question' in firstItem) {
-                                                    newArray.push({ question: '', answer: '' })
-                                                } else {
-                                                    newArray.push({ icon: '✨', label: '', description: '' })
-                                                }
-                                            }
-                                        }
-                                        set(key, newArray)
-                                    }}
-                                    className="w-full flex items-center justify-center gap-1.5 px-2 py-2 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> Add {arrayLabel}
-                                </button>
-                            </div>
-                        </div>
-                    )
-                }
-
-                // Image URL
+                // Image URL with drag-drop
                 if (typeof val === 'string' && key.includes('image')) return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
-                        <div className='flex gap-2 items-center'>
-                            <input type='url' value={val} onChange={e => set(key, e.target.value)} placeholder='Paste URL or use buttons →' className={`${FIELD} flex-1 min-w-0`} />
-                            <button type='button' title='Upload from device' onClick={() => {
-                                const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-                                inp.onchange = async () => {
-                                    const file = inp.files?.[0]; if(!file) return;
-                                    const fd = new FormData(); fd.append('file', file);
-                                    const r = await fetch('/api/admin/media-upload', { method: 'POST', body: fd });
-                                    if(r.ok){ const d = await r.json(); set(key, d.url); }
-                                }; inp.click();
-                            }} className='flex-shrink-0 px-2 py-2 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 whitespace-nowrap'>
-                                ⬆
-                            </button>
-                            <button type='button' onClick={() => setMediaTarget(key)} className='flex-shrink-0 px-2 py-2 bg-gray-800 text-white rounded text-xs font-bold hover:bg-gray-700 whitespace-nowrap'>
-                                📁
-                            </button>
+                        <div onDragOver={e => { e.preventDefault(); setDragOverKey(key) }} onDragLeave={() => setDragOverKey(null)} onDrop={e => { e.preventDefault(); setDragOverKey(null); const file = e.dataTransfer.files[0]; if (file) handleFileUpload(file, key) }} className={`relative border-2 border-dashed rounded p-4 text-center transition ${dragOverKey === key ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'}`}>
+                            <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
+                            <p className="text-xs text-gray-600 font-medium">Drag image or <button type="button" onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = e => { const file = (e.target as HTMLInputElement).files?.[0]; if (file) handleFileUpload(file, key) }; input.click() }} className="text-blue-600 font-bold hover:underline">browse</button></p>
+                            {uploading && <p className="text-[11px] text-blue-600 mt-1">Uploading...</p>}
                         </div>
-                        {val && <img src={String(val)} alt='preview' onError={e => (e.currentTarget.style.display='none')} className='mt-2 h-20 w-full object-cover rounded border border-gray-200' />}
-                        {mediaTarget === key && (
-                            <div className='fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4' onClick={() => setMediaTarget(null)}>
-                                <div className='bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-auto' onClick={e => e.stopPropagation()}>
-                                    <div className='flex justify-between mb-4'>
-                                        <h3 className='font-bold text-gray-900'>Choose from Media Library</h3>
-                                        <button onClick={() => setMediaTarget(null)}>✕</button>
-                                    </div>
-                                    <MediaPickerInline onSelect={url => { set(key, url); setMediaTarget(null) }} />
-                                </div>
-                            </div>
-                        )}
+                        <input type="url" value={val} onChange={e => set(key, e.target.value)} placeholder="Or paste image URL" className={`${FIELD} mt-2 text-xs`} />
+                        {val && <div className="mt-2 relative"><img src={val} alt="preview" onError={e => (e.currentTarget.style.display = 'none')} className="h-24 w-full object-cover rounded border border-gray-200" /><button type="button" onClick={() => set(key, '')} className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded hover:bg-red-700"><X className="w-3.5 h-3.5" /></button></div>}
                     </div>
                 )
 
-                // Default text input
+                // Default
                 return (
                     <div key={key}>
                         <label className={LABEL}>{label}</label>
@@ -313,210 +297,6 @@ function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated:
     )
 }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Main BuilderCanvas
-// ─────────────────────────────────────────────────────────────────────────────
-interface BuilderCanvasProps {
-    pageId: string
-    slug: string
-    title: string
-    initialBlocks: PageBlock[]
-    published: boolean
-}
-
-export default function BuilderCanvas({ pageId, slug, title: initialTitle, initialBlocks, published: initPublished }: BuilderCanvasProps) {
-    const [blocks, setBlocks] = useState<PageBlock[]>(initialBlocks)
-    const [selected, setSelected] = useState<string | null>(null)
-    const [title, setTitle] = useState(initialTitle)
-    const [pageSlug, setPageSlug] = useState(slug)
-    const [published, setPublished] = useState(initPublished)
-    const [sidebarMode, setSidebarMode] = useState<'blocks' | 'props'>('blocks')
-    const [saving, setSaving] = useState(false)
-    const [draggingId, setDraggingId] = useState<string | null>(null)
-    const [rightOpen, setRightOpen] = useState(true)
-    const [mobileTab, setMobileTab] = useState<'blocks'|'canvas'|'props'>('canvas')
-
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
-
-    const selectedBlock = blocks.find(b => b.id === selected) ?? null
-
-    const addBlock = useCallback((def: BlockDefinition) => {
-        const newBlock: PageBlock = { id: newId(), type: def.type, props: { ...def.defaultProps } }
-        setBlocks(prev => [...prev, newBlock])
-        setSelected(newBlock.id)
-        setSidebarMode('props')
-        if (window.innerWidth < 768) setMobileTab('canvas')
-    }, [])
-
-    const updateBlock = useCallback((updated: PageBlock) => {
-        setBlocks(prev => prev.map(b => b.id === updated.id ? updated : b))
-    }, [])
-
-    const deleteBlock = useCallback((id: string) => {
-        setBlocks(prev => prev.filter(b => b.id !== id))
-        setSelected(null)
-        setSidebarMode('blocks')
-    }, [])
-
-    const handleDragStart = (e: DragStartEvent) => setDraggingId(String(e.active.id))
-    const handleDragEnd = (e: DragEndEvent) => {
-        setDraggingId(null)
-        const { active, over } = e
-        if (over && active.id !== over.id) {
-            setBlocks(prev => {
-                const oldIdx = prev.findIndex(b => b.id === active.id)
-                const newIdx = prev.findIndex(b => b.id === over.id)
-                return arrayMove(prev, oldIdx, newIdx)
-            })
-        }
-    }
-
-    const handleSave = async (pub: boolean) => {
-        setSaving(true)
-        const result = await savePage({ id: pageId, slug: pageSlug, title, blocks, published: pub })
-        setSaving(false)
-        if (result.success) {
-            setPublished(pub)
-            toast.success(pub ? `Published at /pages/${pageSlug}` : 'Draft saved.')
-        } else {
-            toast.error(result.error ?? 'Save failed.')
-        }
-    }
-
-    const draggingBlock = draggingId ? blocks.find(b => b.id === draggingId) : null
-
-    return (
-        <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100" id="builder-root">
-            <div className='flex md:hidden border-b border-gray-200 bg-white sticky top-0 z-30 flex-shrink-0'>
-                {(['blocks','canvas','props'] as const).map(tab => (
-                    <button key={tab} type='button'
-                        onClick={() => { 
-                            setMobileTab(tab); 
-                            if(tab==='props' && !selected) setMobileTab('canvas');
-                            else if(tab==='blocks') setSidebarMode('blocks');
-                            else if(tab==='props') setSidebarMode('props');
-                        }}
-                        className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider transition-colors ${
-                            mobileTab===tab
-                                ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50'
-                                : 'text-gray-400 hover:text-gray-600'
-                        }`}>
-                        {tab==='blocks' ? '⊞ Blocks' : tab==='canvas' ? '⬜ Preview' : '⚙ Settings'}
-                    </button>
-                ))}
-            </div>
-            {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
-            <aside className={`w-full md:w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0 z-20 overflow-y-auto ${mobileTab === 'blocks' || mobileTab === 'props' ? 'flex' : 'hidden md:flex'}`}>
-                <div className="px-4 py-4 border-b border-gray-200">
-                    <p className="text-[9px] uppercase font-bold tracking-widest text-gray-400 mb-1">Page Title</p>
-                    <input
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                        className="w-full text-sm font-semibold text-gray-900 bg-transparent border-b border-gray-200 pb-1 outline-none focus:border-blue-500 transition-colors"
-                    />
-                    <p className="text-[9px] uppercase font-bold tracking-widest text-gray-400 mt-3 mb-1">URL Slug</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <span className="text-gray-400">/pages/</span>
-                        <input
-                            value={pageSlug}
-                            onChange={e => setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                            className="flex-1 bg-transparent border-b border-gray-200 pb-1 outline-none focus:border-blue-500 text-gray-900 transition-colors"
-                        />
-                    </div>
-                </div>
-
-                <div className="flex border-b border-gray-200">
-                    <button onClick={() => setSidebarMode('blocks')} className={`flex-1 py-2.5 text-[10px] uppercase font-bold tracking-wide flex items-center justify-center gap-1.5 transition-colors ${sidebarMode === 'blocks' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                        <Plus className="w-3 h-3" /> Blocks
-                    </button>
-                    <button onClick={() => setSidebarMode('props')} disabled={!selectedBlock} className={`flex-1 py-2.5 text-[10px] uppercase font-bold tracking-wide flex items-center justify-center gap-1.5 transition-colors ${sidebarMode === 'props' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600 disabled:opacity-30'}`}>
-                        <Settings2 className="w-3 h-3" /> Props
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto">
-                    {sidebarMode === 'blocks' ? (
-                        <div className="p-3 space-y-1.5">
-                            <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold px-1 pt-2 pb-1">Drag or click to add</p>
-                            {BLOCK_CATALOGUE.map(def => (
-                                <button
-                                    key={def.type}
-                                    onClick={() => addBlock(def)}
-                                    className="w-full text-left p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group flex items-start gap-3"
-                                >
-                                    <span className="text-xl flex-shrink-0 mt-0.5">{def.icon}</span>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-700">{def.label}</p>
-                                        <p className="text-[10px] text-gray-400 leading-snug">{def.description}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    ) : selectedBlock ? (
-                        <PropEditor block={selectedBlock} onChange={updated => { updateBlock(updated); }} />
-                    ) : (
-                        <div className="p-6 text-center text-gray-400 text-xs mt-8">
-                            <Settings2 className="w-6 h-6 mx-auto mb-3 opacity-30" />
-                            Select a block on the canvas to edit its properties.
-                        </div>
-                    )}
-                </div>
-
-                {/* Page structure mini-map */}
-                <div className="border-t border-gray-200 px-3 py-3">
-                    <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold mb-2 flex items-center gap-1.5"><Layers className="w-3 h-3" /> Structure ({blocks.length})</p>
-                    <div className="space-y-1 max-h-36 overflow-y-auto">
-                        {blocks.map((b, i) => {
-                            const def = BLOCK_CATALOGUE.find(d => d.type === b.type)
-                            return (
-                                <button
-                                    key={b.id}
-                                    onClick={() => { setSelected(b.id); setSidebarMode('props') }}
-                                    className={`w-full text-left flex items-center gap-2 px-2 py-1.5 rounded text-[10px] transition-colors ${selected === b.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
-                                >
-                                    <span className="text-xs flex-shrink-0">{def?.icon}</span>
-                                    <span className="truncate">{i + 1}. {def?.label}</span>
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-            </aside>
-
-            {/* ── MAIN CANVAS ─────────────────────────────────────────────── */}
-            <main className={`flex-1 flex flex-col overflow-hidden ${mobileTab === 'canvas' ? 'flex' : 'hidden md:flex'}`}>
-                {/* Top Bar */}
-                <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 flex-shrink-0 z-10">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 flex-1">
-                        <span className="font-medium text-gray-900">{title || 'Untitled Page'}</span>
-                        <span className="text-gray-300">/</span>
-                        <span className="font-mono text-xs text-gray-400">/pages/{pageSlug}</span>
-                        {published
-                            ? <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">● Live</span>
-                            : <span className="bg-gray-100 text-gray-500 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">Draft</span>
-                        }
-                    </div>
-                    {published && (
-                        <a href={`/pages/${pageSlug}`} target="_blank" rel="noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors">
-                            <Eye className="w-3.5 h-3.5" /> Preview
-                        </a>
-                    )}
-                    <button onClick={() => handleSave(false)} disabled={saving}
-                        className="px-4 py-2 text-xs font-semibold border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40">
-                        Save Draft
-                    </button>
-                    <button onClick={() => handleSave(true)} disabled={saving}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40 shadow">
-                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
-                        Publish
-                    </button>
-                </div>
-
-                {/* Canvas */}
-                <div
-                    className="flex-1 overflow-y-auto bg-gray-200"
                     onClick={() => { setSelected(null); setSidebarMode('blocks') }}
                 >
                     {/* Simulated browser frame */}
