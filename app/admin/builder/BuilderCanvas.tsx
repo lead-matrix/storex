@@ -1,10 +1,10 @@
-﻿'use client'
+'use client'
 // ─────────────────────────────────────────────────────────────────────────────
-// BuilderCanvas — full drag-and-drop editor with inline property panel.
-// Uses @dnd-kit/core + @dnd-kit/sortable.
+// BuilderCanvas — full drag-and-drop editor with IMPROVED PropEditor
+// Features: drag-drop image upload, color picker, datetime picker, array editing
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
     DndContext, closestCenter, PointerSensor, useSensor, useSensors,
     DragEndEvent, DragOverlay, DragStartEvent
@@ -14,15 +14,14 @@ import {
     useSortable, arrayMove
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Trash2, Layers, Loader2, Globe, Eye, Plus, Settings2 } from 'lucide-react'
+import { GripVertical, Trash2, Layers, Loader2, Globe, Eye, Plus, Settings2, Upload } from 'lucide-react'
 
 import { PageBlock, BlockDefinition, BLOCK_CATALOGUE } from '@/lib/builder/types'
-import { PropEditor } from './PropEditor-improved'
 import { RenderBlock } from '@/lib/builder/BlockRegistry'
 import { savePage } from './actions'
 import { toast } from 'sonner'
 
-// ── uuid shim (next.js edge-compatible) ────────────────────────────────────-
+// ── uuid shim ────────────────────────────────────────────────────────────
 function newId() {
     return typeof crypto !== 'undefined'
         ? crypto.randomUUID()
@@ -30,7 +29,274 @@ function newId() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sortable Block Shell (wrapper around each block in the canvas)
+// IMPROVED PropEditor with drag-drop, color, datetime, array editing
+// ─────────────────────────────────────────────────────────────────────────────
+function PropEditor({ block, onChange }: { block: PageBlock; onChange: (updated: PageBlock) => void }) {
+    const [dragActive, setDragActive] = useState(false)
+
+    const set = (key: string, value: unknown) => {
+        onChange({ ...block, props: { ...block.props, [key]: value } })
+    }
+
+    const updateArrayItem = (key: string, index: number, itemKey: string, value: unknown) => {
+        const arr = (block.props as any)[key] || []
+        const updated = [...arr]
+        updated[index] = { ...updated[index], [itemKey]: value }
+        set(key, updated)
+    }
+
+    const addArrayItem = (key: string, template: Record<string, unknown>) => {
+        const arr = (block.props as any)[key] || []
+        set(key, [...arr, { ...template }])
+    }
+
+    const removeArrayItem = (key: string, index: number) => {
+        const arr = (block.props as any)[key] || []
+        set(key, arr.filter((_: any, i: number) => i !== index))
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        setDragActive(true)
+    }
+
+    const handleDragLeave = () => {
+        setDragActive(false)
+    }
+
+    const handleDrop = async (e: React.DragEvent, key: string) => {
+        e.preventDefault()
+        setDragActive(false)
+        const files = e.dataTransfer.files
+        if (files.length > 0) {
+            await uploadImage(files[0], key)
+        }
+    }
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+        if (e.target.files && e.target.files.length > 0) {
+            await uploadImage(e.target.files[0], key)
+        }
+    }
+
+    const uploadImage = async (file: File, key: string) => {
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+            const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData })
+            const data = await res.json()
+            if (data.url) {
+                set(key, data.url)
+                toast.success('Image uploaded')
+            }
+        } catch (err) {
+            console.error('Upload failed', err)
+            toast.error('Upload failed')
+        }
+    }
+
+    const props = (block.props as any) as Record<string, unknown>
+    const FIELD = 'w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
+    const LABEL = 'block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1'
+
+    return (
+        <div className="space-y-4 p-4 max-h-96 overflow-y-auto">
+            {Object.entries(props).map(([key, val]) => {
+                const label = key.replace(/_/g, ' ')
+
+                // BOOLEAN
+                if (typeof val === 'boolean') {
+                    return (
+                        <div key={key} className="flex items-center gap-3">
+                            <input type="checkbox" id={key} checked={val} onChange={e => set(key, e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                            <label htmlFor={key} className="text-xs text-gray-700 capitalize cursor-pointer">{label}</label>
+                        </div>
+                    )
+                }
+
+                // NUMBER
+                if (typeof val === 'number') {
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <input type="number" value={val} onChange={e => set(key, Number(e.target.value))} className={FIELD} />
+                        </div>
+                    )
+                }
+
+                // ENUM SELECTS
+                const ENUMS: Record<string, string[]> = {
+                    align: ['left', 'center', 'right'],
+                    height: ['sm', 'md', 'lg', 'full'],
+                    filter: ['featured', 'bestsellers', 'sale', 'new'],
+                    image_side: ['left', 'right'],
+                    style: ['line', 'dots', 'ornament'],
+                    columns: ['2', '3', '4'],
+                }
+                if (ENUMS[key]) {
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <select value={String(val)} onChange={e => set(key, e.target.value)} className={FIELD}>
+                                {ENUMS[key].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                        </div>
+                    )
+                }
+
+                // COLOR PICKER
+                if (typeof val === 'string' && key.includes('color')) {
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <div className="flex gap-2">
+                                <input type="color" value={val} onChange={e => set(key, e.target.value)} className="w-12 h-10 rounded cursor-pointer border border-gray-200" />
+                                <input type="text" value={val} onChange={e => set(key, e.target.value)} placeholder="#000000" className={`${FIELD} flex-1`} />
+                            </div>
+                        </div>
+                    )
+                }
+
+                // DATETIME PICKER
+                if (typeof val === 'string' && key.includes('end_date')) {
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <input
+                                type="datetime-local"
+                                value={val ? new Date(val).toISOString().slice(0, 16) : ''}
+                                onChange={e => set(key, new Date(e.target.value).toISOString())}
+                                className={FIELD}
+                            />
+                        </div>
+                    )
+                }
+
+                // IMAGE FIELD WITH DRAG-DROP
+                if (typeof val === 'string' && key.includes('image')) {
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <div
+                                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
+                                    dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                                }`}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => handleDrop(e, key)}
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleFileSelect(e, key)}
+                                    className="hidden"
+                                    id={`file-${key}`}
+                                />
+                                <label htmlFor={`file-${key}`} className="cursor-pointer block">
+                                    <Upload className="w-5 h-5 mx-auto mb-2 text-gray-400" />
+                                    <p className="text-xs text-gray-600">Drag here or click to upload</p>
+                                </label>
+                            </div>
+                            {val && (
+                                <div className="mt-2 relative">
+                                    <img src={val} alt="preview" className="w-full h-24 object-cover rounded border border-gray-200" />
+                                    <button
+                                        type="button"
+                                        onClick={() => set(key, '')}
+                                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded text-xs hover:bg-red-600"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )
+                }
+
+                // TEXTAREA
+                if (typeof val === 'string' && (key.includes('body') || key.includes('quote') || key.includes('subheading') || key.includes('description') || key.includes('answer'))) {
+                    return (
+                        <div key={key}>
+                            <label className={LABEL}>{label}</label>
+                            <textarea value={val} rows={2} onChange={e => set(key, e.target.value)} className={`${FIELD} resize-none`} />
+                        </div>
+                    )
+                }
+
+                // ARRAY ITEMS (FAQ, Icon Grid)
+                if (Array.isArray(val) && key === 'items' && val.length > 0 && typeof val[0] === 'object') {
+                    const itemKeys = Object.keys(val[0])
+                    return (
+                        <div key={key} className="border-t border-gray-200 pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <label className={LABEL}>{label}</label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const template = itemKeys.reduce((acc, k) => ({ ...acc, [k]: '' }), {})
+                                        addArrayItem(key, template)
+                                    }}
+                                    className="flex items-center gap-1 text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                                >
+                                    <Plus className="w-3 h-3" /> Add
+                                </button>
+                            </div>
+                            <div className="space-y-3">
+                                {(val as any[]).map((item, idx) => (
+                                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase">Item {idx + 1}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeArrayItem(key, idx)}
+                                                className="text-red-600 hover:text-red-700"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {itemKeys.map(itemKey => (
+                                                <div key={itemKey}>
+                                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-0.5">{itemKey}</label>
+                                                    {typeof item[itemKey] === 'string' && (itemKey.includes('answer') || itemKey.includes('description')) ? (
+                                                        <textarea
+                                                            value={item[itemKey] || ''}
+                                                            onChange={e => updateArrayItem(key, idx, itemKey, e.target.value)}
+                                                            rows={2}
+                                                            className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        />
+                                                    ) : (
+                                                        <input
+                                                            type="text"
+                                                            value={item[itemKey] || ''}
+                                                            onChange={e => updateArrayItem(key, idx, itemKey, e.target.value)}
+                                                            className="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )
+                }
+
+                // TEXT INPUT (default)
+                return (
+                    <div key={key}>
+                        <label className={LABEL}>{label}</label>
+                        <input type="text" value={String(val)} onChange={e => set(key, e.target.value)} className={FIELD} />
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sortable Block Shell
 // ─────────────────────────────────────────────────────────────────────────────
 function SortableBlockShell({
     block, isSelected, onSelect, onDelete
@@ -51,7 +317,6 @@ function SortableBlockShell({
                 ${isSelected ? 'border-blue-500 shadow-lg shadow-blue-500/20' : 'border-transparent hover:border-white/20'}`}
             onClick={onSelect}
         >
-            {/* Drag handle + label + delete — shown on hover/selection */}
             <div className={`absolute top-2 left-2 z-50 flex items-center gap-1.5 transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 <button
                     {...attributes} {...listeners}
@@ -71,15 +336,12 @@ function SortableBlockShell({
                 <Trash2 className="w-3.5 h-3.5" />
             </button>
 
-            {/* Block preview */}
             <div className="pointer-events-none select-none">
                 <RenderBlock block={block} />
             </div>
         </div>
     )
 }
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main BuilderCanvas
@@ -154,191 +416,101 @@ export default function BuilderCanvas({ pageId, slug, title: initialTitle, initi
     const draggingBlock = draggingId ? blocks.find(b => b.id === draggingId) : null
 
     return (
-        <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-100" id="builder-root">
-            <div className='flex md:hidden border-b border-gray-200 bg-white sticky top-0 z-30 flex-shrink-0'>
-                {(['blocks','canvas','props'] as const).map(tab => (
-                    <button key={tab} type='button'
-                        onClick={() => { 
-                            setMobileTab(tab); 
-                            if(tab==='props' && !selected) setMobileTab('canvas');
-                            else if(tab==='blocks') setSidebarMode('blocks');
-                            else if(tab==='props') setSidebarMode('props');
-                        }}
-                        className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider transition-colors ${
-                            mobileTab===tab
-                                ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50'
-                                : 'text-gray-400 hover:text-gray-600'
-                        }`}>
-                        {tab==='blocks' ? '⊞ Blocks' : tab==='canvas' ? '⬜ Preview' : '⚙ Settings'}
-                    </button>
-                ))}
+        <div className="flex h-screen bg-gray-900 text-white">
+            {/* LEFT SIDEBAR — Block catalogue */}
+            <div className={`w-64 bg-gray-800 border-r border-gray-700 p-4 overflow-y-auto flex flex-col ${mobileTab !== 'blocks' ? 'max-md:hidden' : ''}`}>
+                <h3 className="font-bold mb-4 uppercase text-sm">Add Block</h3>
+                <div className="space-y-2 flex-1">
+                    {BLOCK_CATALOGUE.map(def => (
+                        <button
+                            key={def.type}
+                            onClick={() => addBlock(def)}
+                            className="w-full text-left text-xs bg-gray-700 hover:bg-gray-600 p-3 rounded transition-colors border border-gray-600 hover:border-blue-500"
+                        >
+                            <div className="font-bold">{def.icon} {def.label}</div>
+                            <div className="text-[11px] text-gray-400 mt-1">{def.description}</div>
+                        </button>
+                    ))}
+                </div>
             </div>
-            {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
-            <aside className={`w-full md:w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0 z-20 overflow-y-auto ${mobileTab === 'blocks' || mobileTab === 'props' ? 'flex' : 'hidden md:flex'}`}>
-                <div className="px-4 py-4 border-b border-gray-200">
-                    <p className="text-[9px] uppercase font-bold tracking-widest text-gray-400 mb-1">Page Title</p>
-                    <input
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                        className="w-full text-sm font-semibold text-gray-900 bg-transparent border-b border-gray-200 pb-1 outline-none focus:border-blue-500 transition-colors"
-                    />
-                    <p className="text-[9px] uppercase font-bold tracking-widest text-gray-400 mt-3 mb-1">URL Slug</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <span className="text-gray-400">/pages/</span>
+
+            {/* CANVAS — Centre content */}
+            <div className={`flex-1 bg-gray-950 overflow-y-auto flex flex-col ${mobileTab !== 'canvas' ? 'max-md:hidden' : ''}`}>
+                <div className="sticky top-0 z-40 bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <input
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="Page title"
+                            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <input
+                            type="text"
                             value={pageSlug}
-                            onChange={e => setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                            className="flex-1 bg-transparent border-b border-gray-200 pb-1 outline-none focus:border-blue-500 text-gray-900 transition-colors"
+                            onChange={e => setPageSlug(e.target.value)}
+                            placeholder="slug"
+                            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
                         />
                     </div>
-                </div>
-
-                <div className="flex border-b border-gray-200">
-                    <button onClick={() => setSidebarMode('blocks')} className={`flex-1 py-2.5 text-[10px] uppercase font-bold tracking-wide flex items-center justify-center gap-1.5 transition-colors ${sidebarMode === 'blocks' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                        <Plus className="w-3 h-3" /> Blocks
-                    </button>
-                    <button onClick={() => setSidebarMode('props')} disabled={!selectedBlock} className={`flex-1 py-2.5 text-[10px] uppercase font-bold tracking-wide flex items-center justify-center gap-1.5 transition-colors ${sidebarMode === 'props' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600 disabled:opacity-30'}`}>
-                        <Settings2 className="w-3 h-3" /> Props
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto">
-                    {sidebarMode === 'blocks' ? (
-                        <div className="p-3 space-y-1.5">
-                            <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold px-1 pt-2 pb-1">Drag or click to add</p>
-                            {BLOCK_CATALOGUE.map(def => (
-                                <button
-                                    key={def.type}
-                                    onClick={() => addBlock(def)}
-                                    className="w-full text-left p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group flex items-start gap-3"
-                                >
-                                    <span className="text-xl flex-shrink-0 mt-0.5">{def.icon}</span>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-700">{def.label}</p>
-                                        <p className="text-[10px] text-gray-400 leading-snug">{def.description}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    ) : selectedBlock ? (
-                        <PropEditor block={selectedBlock} onChange={updated => { updateBlock(updated); }} />
-                    ) : (
-                        <div className="p-6 text-center text-gray-400 text-xs mt-8">
-                            <Settings2 className="w-6 h-6 mx-auto mb-3 opacity-30" />
-                            Select a block on the canvas to edit its properties.
-                        </div>
-                    )}
-                </div>
-
-                {/* Page structure mini-map */}
-                <div className="border-t border-gray-200 px-3 py-3">
-                    <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold mb-2 flex items-center gap-1.5"><Layers className="w-3 h-3" /> Structure ({blocks.length})</p>
-                    <div className="space-y-1 max-h-36 overflow-y-auto">
-                        {blocks.map((b, i) => {
-                            const def = BLOCK_CATALOGUE.find(d => d.type === b.type)
-                            return (
-                                <button
-                                    key={b.id}
-                                    onClick={() => { setSelected(b.id); setSidebarMode('props') }}
-                                    className={`w-full text-left flex items-center gap-2 px-2 py-1.5 rounded text-[10px] transition-colors ${selected === b.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'}`}
-                                >
-                                    <span className="text-xs flex-shrink-0">{def?.icon}</span>
-                                    <span className="truncate">{i + 1}. {def?.label}</span>
-                                </button>
-                            )
-                        })}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => handleSave(false)}
+                            disabled={saving}
+                            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded text-sm font-bold disabled:opacity-50"
+                        >
+                            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                            Save Draft
+                        </button>
+                        <button
+                            onClick={() => handleSave(true)}
+                            disabled={saving}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm font-bold disabled:opacity-50"
+                        >
+                            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                            Publish
+                        </button>
+                        {published && <span className="text-green-400 text-xs uppercase font-bold">Published</span>}
                     </div>
                 </div>
-            </aside>
 
-            {/* ── MAIN CANVAS ─────────────────────────────────────────────── */}
-            <main className={`flex-1 flex flex-col overflow-hidden ${mobileTab === 'canvas' ? 'flex' : 'hidden md:flex'}`}>
-                {/* Top Bar */}
-                <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 flex-shrink-0 z-10">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 flex-1">
-                        <span className="font-medium text-gray-900">{title || 'Untitled Page'}</span>
-                        <span className="text-gray-300">/</span>
-                        <span className="font-mono text-xs text-gray-400">/pages/{pageSlug}</span>
-                        {published
-                            ? <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">● Live</span>
-                            : <span className="bg-gray-100 text-gray-500 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full">Draft</span>
-                        }
-                    </div>
-                    {published && (
-                        <a href={`/pages/${pageSlug}`} target="_blank" rel="noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors">
-                            <Eye className="w-3.5 h-3.5" /> Preview
-                        </a>
-                    )}
-                    <button onClick={() => handleSave(false)} disabled={saving}
-                        className="px-4 py-2 text-xs font-semibold border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40">
-                        Save Draft
-                    </button>
-                    <button onClick={() => handleSave(true)} disabled={saving}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40 shadow">
-                        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
-                        Publish
-                    </button>
-                </div>
-
-                {/* Canvas */}
-                <div
-                    className="flex-1 overflow-y-auto bg-gray-200"
-                    onClick={() => { setSelected(null); setSidebarMode('blocks') }}
-                >
-                    {/* Simulated browser frame */}
-                    <div className="max-w-5xl mx-auto my-6 shadow-2xl rounded-lg overflow-hidden">
-                        <div className="bg-gray-800 px-4 py-2.5 flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-red-500" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                            <div className="w-3 h-3 rounded-full bg-green-500" />
-                            <div className="flex-1 mx-3 bg-gray-700 rounded text-[10px] text-gray-400 px-3 py-1 text-center">
-                                dinacosmetic.store/pages/{pageSlug}
-                            </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                    <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                        <div className="flex-1 p-6 space-y-4">
+                            {blocks.length === 0 ? (
+                                <div className="text-center text-gray-500 py-12">
+                                    <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                    <p className="text-sm">No blocks. Add one from the left.</p>
+                                </div>
+                            ) : (
+                                blocks.map(block => (
+                                    <SortableBlockShell
+                                        key={block.id}
+                                        block={block}
+                                        isSelected={selected === block.id}
+                                        onSelect={() => { setSelected(block.id); setSidebarMode('props') }}
+                                        onDelete={() => deleteBlock(block.id)}
+                                    />
+                                ))
+                            )}
                         </div>
+                    </SortableContext>
+                    <DragOverlay>
+                        {draggingBlock && <RenderBlock block={draggingBlock} />}
+                    </DragOverlay>
+                </DndContext>
+            </div>
 
-                        <div className="min-h-[600px] bg-black" onClick={e => e.stopPropagation()}>
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCenter}
-                                onDragStart={handleDragStart}
-                                onDragEnd={handleDragEnd}
-                            >
-                                <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
-                                    {blocks.length === 0 ? (
-                                        <div className="h-[600px] flex flex-col items-center justify-center gap-4 text-white/20">
-                                            <Layers className="w-12 h-12" />
-                                            <p className="text-sm uppercase tracking-widest">Canvas is empty</p>
-                                            <p className="text-xs">Click a block in the left panel to add it here</p>
-                                        </div>
-                                    ) : (
-                                        blocks.map(block => (
-                                            <SortableBlockShell
-                                                key={block.id}
-                                                block={block}
-                                                isSelected={selected === block.id}
-                                                onSelect={() => { 
-                                                    setSelected(block.id); 
-                                                    setSidebarMode('props');
-                                                    if (window.innerWidth < 768) setMobileTab('props');
-                                                }}
-                                                onDelete={() => deleteBlock(block.id)}
-                                            />
-                                        ))
-                                    )}
-                                </SortableContext>
-                                <DragOverlay>
-                                    {draggingBlock ? (
-                                        <div className="opacity-90 shadow-2xl pointer-events-none scale-95 transition-transform">
-                                            <RenderBlock block={draggingBlock} />
-                                        </div>
-                                    ) : null}
-                                </DragOverlay>
-                            </DndContext>
-                        </div>
+            {/* RIGHT SIDEBAR — Props editor */}
+            {rightOpen && selectedBlock && (
+                <div className={`w-72 bg-gray-800 border-l border-gray-700 flex flex-col ${mobileTab !== 'props' ? 'max-md:hidden' : ''}`}>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+                        <h3 className="font-bold text-sm uppercase">Edit Block</h3>
+                        <button onClick={() => setRightOpen(false)} className="text-gray-400 hover:text-white">✕</button>
                     </div>
+                    <PropEditor block={selectedBlock} onChange={updateBlock} />
                 </div>
-            </main>
+            )}
         </div>
     )
 }

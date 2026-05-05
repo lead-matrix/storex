@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Page Builder — Shared Types (UPDATED with 5 new blocks)
+// STOREX CMS — EXTENDED BLOCK TYPES (13 total = 8 original + 5 new)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type BlockType =
@@ -11,20 +11,24 @@ export type BlockType =
     | 'newsletter'
     | 'divider'
     | 'testimonial'
+    // ──── NEW BLOCKS ────
     | 'video_hero'
     | 'countdown_timer'
     | 'before_after'
     | 'icon_grid'
-    | 'faq'
+    | 'faq_accordion'
 
-// Original block props
+// ──────────────────────────────────────────────────────────────────────────────
+// ORIGINAL 8 BLOCK TYPES
+// ──────────────────────────────────────────────────────────────────────────────
+
 export interface HeroProps {
     heading: string
     subheading: string
     cta_text: string
     cta_link: string
     image_url: string
-    overlay_opacity: number
+    overlay_opacity: number // 0–100
 }
 
 export interface TextBlockProps {
@@ -71,60 +75,61 @@ export interface TestimonialProps {
     role: string
 }
 
-// NEW: Video Hero block
+// ──────────────────────────────────────────────────────────────────────────────
+// NEW 5 BLOCK TYPES
+// ──────────────────────────────────────────────────────────────────────────────
+
 export interface VideoHeroProps {
-    video_url: string
+    video_url: string // Mux video URL
     heading: string
     subheading: string
     cta_text: string
     cta_link: string
-    overlay_opacity: number
+    overlay_opacity: number // 0–100
+    autoplay: boolean
+    muted: boolean
 }
 
-// NEW: Countdown Timer block
 export interface CountdownTimerProps {
-    end_date: string
+    end_date: string // ISO 8601 datetime
     heading: string
     subheading: string
-    button_text: string
-    button_link: string
-    background_color: string
+    background_color: string // hex color
+    text_color: string // hex color
+    show_labels: boolean
 }
 
-// NEW: Before/After Slider block
 export interface BeforeAfterProps {
     before_image: string
     after_image: string
     before_label: string
     after_label: string
-    height: 'sm' | 'md' | 'lg'
-}
-
-// NEW: Icon Grid block
-export interface IconGridItem {
-    icon: string
-    title: string
-    description: string
+    initial_position: number // 0–100, where slider starts
 }
 
 export interface IconGridProps {
-    heading: string
+    items: Array<{
+        id: string
+        icon: string // emoji or icon name
+        label: string
+        description?: string
+    }>
     columns: 2 | 3 | 4
-    items: IconGridItem[]
 }
 
-// NEW: FAQ Accordion block
-export interface FAQItem {
-    question: string
-    answer: string
-}
-
-export interface FAQProps {
+export interface FAQAccordionProps {
     heading: string
-    items: FAQItem[]
+    items: Array<{
+        id: string
+        question: string
+        answer: string
+    }>
 }
 
-// Union of all block props
+// ──────────────────────────────────────────────────────────────────────────────
+// UNION TYPES
+// ──────────────────────────────────────────────────────────────────────────────
+
 export type BlockProps =
     | HeroProps
     | TextBlockProps
@@ -138,7 +143,7 @@ export type BlockProps =
     | CountdownTimerProps
     | BeforeAfterProps
     | IconGridProps
-    | FAQProps
+    | FAQAccordionProps
 
 export interface PageBlock {
     id: string
@@ -163,8 +168,12 @@ export interface BlockDefinition {
     defaultProps: BlockProps
 }
 
-// BLOCK CATALOGUE — original 8 blocks
-const ORIGINAL_BLOCKS: BlockDefinition[] = [
+// ──────────────────────────────────────────────────────────────────────────────
+// BLOCK CATALOGUE (13 blocks)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export const BLOCK_CATALOGUE: BlockDefinition[] = [
+    // ──── ORIGINAL 8 ────
     {
         type: 'hero',
         label: 'Full Hero',
@@ -258,81 +267,89 @@ const ORIGINAL_BLOCKS: BlockDefinition[] = [
             style: 'ornament',
         } as DividerProps,
     },
-]
-
-// NEW: 5 new blocks
-const NEW_BLOCKS: BlockDefinition[] = [
+    // ──── NEW 5 BLOCKS ────
     {
         type: 'video_hero',
         label: 'Video Hero',
-        description: 'Autoplay background video with text overlay and CTA',
+        description: 'Full-screen Mux video with autoplay & overlay text',
         icon: '🎬',
         defaultProps: {
             video_url: '',
-            heading: 'Immersive Experience',
-            subheading: 'See the ritual in motion.',
-            cta_text: 'Watch Full Video',
+            heading: 'Our Story in Motion',
+            subheading: 'Experience the ritual.',
+            cta_text: 'Shop Now',
             cta_link: '/shop',
             overlay_opacity: 40,
+            autoplay: true,
+            muted: true,
         } as VideoHeroProps,
     },
     {
         type: 'countdown_timer',
         label: 'Countdown Timer',
-        description: 'Live countdown to create urgency (days, hours, minutes, seconds)',
+        description: 'Live countdown to a specific date (creates urgency)',
         icon: '⏱️',
         defaultProps: {
             end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            heading: 'Flash Sale',
-            subheading: 'Limited time offer ending soon',
-            button_text: 'Shop Now',
-            button_link: '/sale',
+            heading: 'Flash Sale Ends Soon',
+            subheading: 'Limited time only',
             background_color: '#1a1a1a',
+            text_color: '#D4AF37',
+            show_labels: true,
         } as CountdownTimerProps,
     },
     {
         type: 'before_after',
         label: 'Before/After Slider',
-        description: 'Drag slider to compare two images side-by-side',
+        description: 'Drag slider to compare two images (perfect for skincare)',
         icon: '↔️',
         defaultProps: {
             before_image: '',
             after_image: '',
             before_label: 'Before',
             after_label: 'After',
-            height: 'md',
+            initial_position: 50,
         } as BeforeAfterProps,
     },
     {
         type: 'icon_grid',
         label: 'Icon Grid',
-        description: 'Trust signals: free shipping, cruelty-free, vegan, sustainable, etc.',
+        description: 'Trust signals: Free Shipping, Cruelty Free, Vegan, etc.',
         icon: '⭐',
         defaultProps: {
-            heading: 'Why Choose Us',
-            columns: 4,
             items: [
-                { icon: '🚚', title: 'Free Shipping', description: 'Orders over $50' },
-                { icon: '✓', title: 'Cruelty-Free', description: '100% vegan formulas' },
-                { icon: '🌿', title: 'Sustainable', description: 'Eco-friendly packaging' },
-                { icon: '🔒', title: 'Secure', description: 'Encrypted checkout' },
+                { id: '1', icon: '🚚', label: 'Free Shipping', description: 'On orders over $100' },
+                { id: '2', icon: '🐰', label: 'Cruelty Free', description: 'Never tested on animals' },
+                { id: '3', icon: '🌱', label: 'Vegan', description: 'Plant-based ingredients' },
+                { id: '4', icon: '♻️', label: 'Sustainable', description: 'Eco-friendly packaging' },
             ],
+            columns: 4,
         } as IconGridProps,
     },
     {
-        type: 'faq',
+        type: 'faq_accordion',
         label: 'FAQ Accordion',
-        description: 'Collapsible Q&A section — reduces support emails, good for SEO',
+        description: 'Collapsible Q&A section (reduces support emails)',
         icon: '❓',
         defaultProps: {
             heading: 'Frequently Asked Questions',
             items: [
-                { question: 'How long does shipping take?', answer: 'Standard shipping is 3-5 business days. Express shipping available.' },
-                { question: 'Is this cruelty-free?', answer: 'Yes, 100% cruelty-free and vegan.' },
-                { question: 'What if I don\'t love it?', answer: '30-day money-back guarantee. No questions asked.' },
+                {
+                    id: '1',
+                    question: 'What is the shipping timeline?',
+                    answer: 'Orders ship within 2 business days. Standard shipping arrives in 5-7 business days. Expedited shipping available.',
+                },
+                {
+                    id: '2',
+                    question: 'Are your products suitable for sensitive skin?',
+                    answer: 'Yes! All products are dermatologist-tested and hypoallergenic. Always do a patch test first.',
+                },
+                {
+                    id: '3',
+                    question: 'What is your return policy?',
+                    answer: '30-day money-back guarantee on all products. No questions asked.',
+                },
             ],
-        } as FAQProps,
+        } as FAQAccordionProps,
     },
 ]
-
-export const BLOCK_CATALOGUE: BlockDefinition[] = [...ORIGINAL_BLOCKS, ...NEW_BLOCKS]
