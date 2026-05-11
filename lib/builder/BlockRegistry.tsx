@@ -5,7 +5,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { PageBlock } from './types'
-import { Hero, TextBlock, ImageBanner, ProductShelf, TwoColumn, Newsletter, Testimonial, Divider } from '@/components/cms'
+import {
+  HeroSection as Hero,
+  TextBlock,
+  ImageBannerSection as ImageBanner,
+  ProductGridSection as ProductShelf,
+  TwoColumnSection as TwoColumn,
+  NewsletterSection as Newsletter,
+  TestimonialSection as Testimonial,
+  DividerSection as Divider,
+} from '@/components/cms'
 import { VideoHero, CountdownTimer, BeforeAfterSlider, IconGrid, FAQAccordion } from './blocks-new'
 
 export function RenderBlock({ block }: { block: PageBlock }) {
