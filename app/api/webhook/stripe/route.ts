@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       // Cast to any to access fields present at runtime but not yet in the
-      // installed stripe type package (e.g. shipping_details on newer API versions)
+      // installed stripe type package (e.g. collected_information on newer API versions)
       const sessionAny = session as any;
 
       const orderId = session.metadata?.order_id;
@@ -74,10 +74,19 @@ export async function POST(req: Request) {
       }
 
       // ── 1. Parse shipping/billing addresses from Stripe ──────────────────
-      // shipping_details is available on Checkout Sessions when
-      // shipping_address_collection is enabled in the Stripe checkout config.
-      // customer_details is always present for completed sessions.
-      const shippingDetails = sessionAny.shipping_details ?? sessionAny.shipping ?? null;
+      // Stripe moved the shipping address to collected_information.shipping_details
+      // in newer API versions. We fall back to the legacy fields for older sessions.
+      //
+      // Priority:
+      //   1. collected_information.shipping_details  ← current Stripe API
+      //   2. shipping_details                        ← intermediate field
+      //   3. shipping                                ← legacy field
+      const shippingDetails =
+        sessionAny.collected_information?.shipping_details ??
+        sessionAny.shipping_details ??
+        sessionAny.shipping ??
+        null;
+
       const customerDetails = session.customer_details;
 
       const shippingAddress = shippingDetails?.address
@@ -193,7 +202,7 @@ export async function POST(req: Request) {
           if (itemsInsertError) {
             throw new Error(`order_items insert failed: ${itemsInsertError.message}`);
           }
-          
+
           // Send Confirmation Email
           try {
             await sendOrderConfirmationEmail({
@@ -207,7 +216,6 @@ export async function POST(req: Request) {
             console.error("[Webhook] Email confirmation failed:", emailErr);
           }
         }
-
 
         // ── 4. Finalize inventory: deduct stock + clear reservations ──────────
         const { error: finalizeError } = await supabase.rpc("finalize_order_inventory", {
