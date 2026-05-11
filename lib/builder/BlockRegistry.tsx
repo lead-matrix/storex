@@ -22,32 +22,32 @@ export function RenderBlock({ block }: { block: PageBlock }) {
 
     switch (block.type) {
         case 'hero':
-            return <Hero p={p} />
+            return <Hero {...p} />
         case 'text_block':
-            return <TextBlock p={p} />
+            return <TextBlock {...p} />
         case 'image_banner':
-            return <ImageBanner p={p} />
+            return <ImageBanner {...p} />
         case 'product_shelf':
-            return <ProductShelf p={p} />
+            return <ProductShelf {...p} />
         case 'two_column':
-            return <TwoColumn p={p} />
+            return <TwoColumn {...p} />
         case 'newsletter':
-            return <Newsletter p={p} />
+            return <Newsletter {...p} />
         case 'testimonial':
-            return <Testimonial p={p} />
+            return <Testimonial {...p} />
         case 'divider':
-            return <Divider p={p} />
+            return <Divider {...p} />
         // NEW BLOCKS
         case 'video_hero':
-            return <VideoHero p={p} />
+            return <VideoHero {...p} />
         case 'countdown_timer':
-            return <CountdownTimer p={p} />
+            return <CountdownTimer {...p} />
         case 'before_after':
-            return <BeforeAfterSlider p={p} />
+            return <BeforeAfterSlider {...p} />
         case 'icon_grid':
-            return <IconGrid p={p} />
+            return <IconGrid {...p} />
         case 'faq':
-            return <FAQAccordion p={p} />
+            return <FAQAccordion {...p} />
         default:
             return <div className="text-red-500 p-4">Unknown block type: {block.type}</div>
     }
