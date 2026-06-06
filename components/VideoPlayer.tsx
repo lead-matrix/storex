@@ -56,7 +56,6 @@ export default function VideoPlayer({
             if (autoPlay) {
                 video.defaultMuted = true
                 video.muted = true
-                video.play().catch(e => console.log('Autoplay prevented:', e))
             }
         } else if (Hls.isSupported()) {
             // Chrome / Firefox
@@ -67,7 +66,6 @@ export default function VideoPlayer({
                 if (autoPlay) {
                     video.defaultMuted = true
                     video.muted = true
-                    video.play().catch(e => console.log('Autoplay prevented:', e))
                 }
             })
         }
@@ -78,6 +76,36 @@ export default function VideoPlayer({
             }
         }
     }, [playbackId, streamUrl, autoPlay])
+
+    // Autoplay / pause on scroll (IntersectionObserver)
+    useEffect(() => {
+        if (!autoPlay || !playbackId || playbackId === 'pending') return
+        const video = videoRef.current
+        if (!video) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        video.defaultMuted = true
+                        video.muted = true
+                        video.play().catch((e) => {
+                            console.log('Autoplay on scroll prevented:', e)
+                        })
+                    } else {
+                        video.pause()
+                    }
+                })
+            },
+            { threshold: 0.15 } // Play when 15% of the video is in viewport
+        )
+
+        observer.observe(video)
+
+        return () => {
+            observer.disconnect()
+        }
+    }, [autoPlay, playbackId])
 
     if (!playbackId || playbackId === 'pending') return null
 
