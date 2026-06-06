@@ -2905,7 +2905,7 @@ CREATE TABLE IF NOT EXISTS public.videos (
   id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   title            TEXT,
   description      TEXT,
-  mux_asset_id     TEXT        NOT NULL,
+  mux_asset_id     TEXT        NOT NULL UNIQUE,
   mux_playback_id  TEXT        NOT NULL,
   mux_upload_id    TEXT,                  -- Direct Upload tracking ID
   thumbnail_url    TEXT,

@@ -23,10 +23,10 @@ export async function checkRateLimit(
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc('check_rate_limit', {
-      p_ip: ip,
-      p_endpoint: endpoint,
-      p_limit: limit,
-      p_window_seconds: windowSeconds
+      p_identifier: ip,
+      p_action: endpoint,
+      p_max_calls: limit,
+      p_window_sec: windowSeconds
     });
 
     if (error) {
