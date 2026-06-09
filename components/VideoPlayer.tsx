@@ -50,32 +50,42 @@ export default function VideoPlayer({
 
         let hls: Hls | null = null;
 
+        // Force muted properties programmatically to satisfy browser autoplay policy
+        if (autoPlay || muted) {
+            video.defaultMuted = true
+            video.muted = true
+        }
+
+        const startPlayback = () => {
+            if (autoPlay) {
+                video.play().catch((e) => {
+                    console.log('Autoplay execution failed/prevented:', e)
+                })
+            }
+        }
+
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
             // Safari / native support
             video.src = streamUrl
-            if (autoPlay) {
-                video.defaultMuted = true
-                video.muted = true
-            }
+            video.addEventListener('loadedmetadata', startPlayback)
+            startPlayback()
         } else if (Hls.isSupported()) {
             // Chrome / Firefox
-            hls = new Hls()
+            hls = new Hls({
+                maxMaxBufferLength: 10,
+            })
             hls.loadSource(streamUrl)
             hls.attachMedia(video)
-            hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                if (autoPlay) {
-                    video.defaultMuted = true
-                    video.muted = true
-                }
-            })
+            hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
         }
 
         return () => {
             if (hls) {
                 hls.destroy()
             }
+            video.removeEventListener('loadedmetadata', startPlayback)
         }
-    }, [playbackId, streamUrl, autoPlay])
+    }, [playbackId, streamUrl, autoPlay, muted])
 
     // Autoplay / pause on scroll (IntersectionObserver)
     useEffect(() => {

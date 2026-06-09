@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
+import Hls from 'hls.js'
 
 // ────────────────────────────────────────────────────────────────────────────
 // 1. VIDEO HERO — Mux autoplay background with text overlay
@@ -25,12 +26,69 @@ export function VideoHero({
     overlay_opacity: number
     autoplay: boolean
 }) {
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    useEffect(() => {
+        if (!mux_video_url) return
+        const video = videoRef.current
+        if (!video) return
+
+        let hls: Hls | null = null
+        const isHls = mux_video_url.includes('.m3u8') || mux_video_url.includes('stream.mux.com') || (!mux_video_url.includes('://') && !mux_video_url.startsWith('//') && mux_video_url.length > 5)
+        const streamUrl = isHls && !mux_video_url.includes('://') && !mux_video_url.startsWith('//')
+            ? `https://stream.mux.com/${mux_video_url}.m3u8`
+            : mux_video_url
+
+        // Force muted properties programmatically to satisfy browser autoplay policy
+        if (autoplay) {
+            video.defaultMuted = true
+            video.muted = true
+        }
+
+        const startPlayback = () => {
+            if (autoplay) {
+                video.play().catch((e) => {
+                    console.log('VideoHero autoplay failed:', e)
+                })
+            }
+        }
+
+        if (isHls) {
+            if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Safari / native support
+                video.src = streamUrl
+                video.addEventListener('loadedmetadata', startPlayback)
+                startPlayback()
+            } else if (Hls.isSupported()) {
+                // Chrome / Firefox
+                hls = new Hls({
+                    maxMaxBufferLength: 10,
+                })
+                hls.loadSource(streamUrl)
+                hls.attachMedia(video)
+                hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
+            }
+        } else {
+            // Regular MP4 or non-HLS URL
+            video.src = streamUrl
+            video.addEventListener('loadedmetadata', startPlayback)
+            startPlayback()
+        }
+
+        return () => {
+            if (hls) {
+                hls.destroy()
+            }
+            video.removeEventListener('loadedmetadata', startPlayback)
+        }
+    }, [mux_video_url, autoplay])
+
     return (
         <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-black">
             {/* Video background */}
             {mux_video_url && (
                 <video
-                    src={mux_video_url}
+                    ref={videoRef}
                     autoPlay={autoplay}
                     muted
                     loop
