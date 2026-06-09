@@ -208,19 +208,20 @@ export async function createShippingLabel(order: any) {
             .eq('setting_key', 'warehouse_info')
             .maybeSingle();
 
-        const warehouse = settings?.setting_value || {
-            name: "Dina Cosmetic",
-            street1: "5430 FM 359 Rd S Ste 400 PMB 1013",
-            city: "Brookshire",
-            state: "TX",
-            zip: "77423",
-            country: "US",
-            phone: "+12816877609",
-            email: "dinaecosmetic@gmail.com"
+        const warehouse = settings?.setting_value as any || {};
+        const addressFrom = {
+            name: warehouse.name || "Dina Cosmetic",
+            street1: warehouse.street1 || "5430 FM 359 Rd S Ste 400 PMB 1013",
+            city: warehouse.city || "Brookshire",
+            state: warehouse.state || "TX",
+            zip: warehouse.zip || "77423",
+            country: warehouse.country || "US",
+            phone: warehouse.phone || "+12816877609",
+            email: warehouse.email || process.env.WAREHOUSE_EMAIL || "dinaecosmetic@gmail.com",
         };
 
         const shipment = await shippo.shipments.create({
-            addressFrom: warehouse,
+            addressFrom,
             addressTo: {
                 name: order.shipping_address?.name || order.billing_address?.name || "Valued client",
                 street1: order.shipping_address?.address?.line1 || order.shipping_address?.line1 || order.billing_address?.line1 || order.billing_address?.address?.line1 || order.billing_address?.street1,

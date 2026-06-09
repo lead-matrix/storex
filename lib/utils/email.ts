@@ -161,6 +161,55 @@ export async function sendOrderConfirmationEmail({
     })
 }
 
+export async function sendAdminOrderNotificationEmail({
+    orderId,
+    customerEmail,
+    customerName,
+    totalAmount,
+    items = []
+}: OrderEmailProps) {
+    const s = await getEmailSettings()
+    
+    const itemsHtml = items.length > 0 ? `
+    <div style="margin:20px 40px; border-bottom:1px solid ${s.accent_color}20; padding-bottom:10px;">
+        ${items.map(item => `
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
+                <span>${item.name || item.title || 'Artifact'} x ${item.quantity}</span>
+                <span>$${parseFloat(item.price).toFixed(2)}</span>
+            </div>
+        `).join('')}
+    </div>` : ''
+
+    const body = `
+    <div style="padding:24px 40px 0;">
+        <p style="text-transform:uppercase;letter-spacing:3px;font-size:10px;color:${s.accent_color}80;margin:0;">New Order Notification (Admin)</p>
+    </div>
+    <div style="padding:20px 40px 10px;">
+        <h2 style="font-weight:normal;font-size:20px;margin:0 0 16px;">A New Order Has Been Placed</h2>
+        <p style="line-height:1.7;color:${s.text_color}cc;margin:0;">
+            A new selection has been registered at The Obsidian Palace. 
+            Here are the details of the order:
+        </p>
+        <p style="line-height:1.7;color:${s.text_color}cc;margin:10px 0 0;">
+            <strong>Customer:</strong> ${customerName} (${customerEmail})
+        </p>
+    </div>
+    ${itemsHtml}
+    <div style="margin:0 40px 30px;background:${s.accent_color}10;border:1px solid ${s.accent_color}30;padding:20px;">
+        <p style="margin:0;font-size:10px;color:${s.accent_color};text-transform:uppercase;letter-spacing:1px;">Reference ID</p>
+        <p style="margin:6px 0 16px;font-family:monospace;">${orderId}</p>
+        <p style="margin:0;font-size:10px;color:${s.accent_color};text-transform:uppercase;letter-spacing:1px;">Total Paid</p>
+        <p style="margin:6px 0 0;font-size:18px;">$${totalAmount.toFixed(2)}</p>
+    </div>`
+
+    await sendMail({
+        to: 'dinaecosmetic@gmail.com',
+        subject: `[New Order] Reference ID: ${orderId.slice(0, 8)} — $${totalAmount.toFixed(2)}`,
+        html: buildHtml(s, body),
+        fromName: s.brand_name
+    })
+}
+
 export async function sendShippingNotificationEmail({
     customerEmail,
     customerName,

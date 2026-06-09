@@ -57,6 +57,7 @@ export async function POST(req: Request) {
             zip: warehouseInfo?.zip || process.env.WAREHOUSE_ZIP || '',
             country: warehouseInfo?.country || process.env.WAREHOUSE_COUNTRY || 'US',
             phone: warehouseInfo?.phone || process.env.WAREHOUSE_PHONE || '',
+            email: warehouseInfo?.email || process.env.WAREHOUSE_EMAIL || 'dinaecosmetic@gmail.com',
         };
 
         const shipmentDto: any = {

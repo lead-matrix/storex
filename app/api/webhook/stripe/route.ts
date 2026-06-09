@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
-import { sendOrderConfirmationEmail } from "@/lib/utils/email";
+import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } from "@/lib/utils/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia" as any,
@@ -214,6 +214,19 @@ export async function POST(req: Request) {
             });
           } catch (emailErr) {
             console.error("[Webhook] Email confirmation failed:", emailErr);
+          }
+
+          // Send Admin Notification Email
+          try {
+            await sendAdminOrderNotificationEmail({
+              orderId,
+              customerEmail: customerDetails?.email || "",
+              customerName: shippingDetails?.name || customerDetails?.name || "Valued Client",
+              totalAmount: session.amount_total ? session.amount_total / 100 : 0,
+              items: orderItems.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.price }))
+            });
+          } catch (adminEmailErr) {
+            console.error("[Webhook] Admin email notification failed:", adminEmailErr);
           }
         }
 

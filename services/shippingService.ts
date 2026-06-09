@@ -102,6 +102,7 @@ export async function getShippingRates(orderId: string, itemsToFulfill?: { id: s
             zip: warehouse.zip,
             country: warehouse.country,
             phone: warehouse.phone,
+            email: warehouse.email || process.env.WAREHOUSE_EMAIL || 'dinaecosmetic@gmail.com',
         };
 
         // International Customs Handling
