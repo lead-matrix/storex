@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
-import Hls from 'hls.js'
+import MuxPlayer from '@mux/mux-player-react'
 
 // ────────────────────────────────────────────────────────────────────────────
 // 1. VIDEO HERO — Mux autoplay background with text overlay
@@ -26,95 +26,39 @@ export function VideoHero({
     overlay_opacity: number
     autoplay: boolean
 }) {
-    const videoRef = useRef<HTMLVideoElement>(null)
-
-    // Callback ref to guarantee muted state programmatically as soon as DOM node is created,
-    // bypassing any React muted hydration/re-render bugs.
-    const setVideoRef = (el: HTMLVideoElement | null) => {
-        (videoRef as any).current = el
-        if (el) {
-            if (autoplay) {
-                el.defaultMuted = true
-                el.muted = true
-            }
-        }
+    // Extract playbackId from any format:
+    // - Raw Mux playback ID (e.g. "abc123xyz")
+    // - stream.mux.com URL (e.g. "https://stream.mux.com/abc123xyz.m3u8")
+    // - Full URL with ID segment
+    let playbackId = mux_video_url || ''
+    if (playbackId.includes('stream.mux.com/')) {
+        playbackId = playbackId.split('stream.mux.com/')[1].replace('.m3u8', '')
+    } else if (playbackId.includes('mux.com/')) {
+        playbackId = playbackId.split('mux.com/')[1].split('/')[0].replace('.m3u8', '')
     }
-
-    useEffect(() => {
-        if (!mux_video_url) return
-        const video = videoRef.current
-        if (!video) return
-
-        let hls: Hls | null = null
-        const isHls = mux_video_url.includes('.m3u8') || mux_video_url.includes('stream.mux.com') || (!mux_video_url.includes('://') && !mux_video_url.startsWith('//') && mux_video_url.length > 5)
-        const streamUrl = isHls && !mux_video_url.includes('://') && !mux_video_url.startsWith('//')
-            ? `https://stream.mux.com/${mux_video_url}.m3u8`
-            : mux_video_url
-
-        // Force muted properties programmatically to satisfy browser autoplay policy
-        if (autoplay) {
-            video.defaultMuted = true
-            video.muted = true
-        }
-
-        const startPlayback = () => {
-            if (autoplay) {
-                video.play().catch((e) => {
-                    console.log('VideoHero autoplay failed:', e)
-                })
-            }
-        }
-
-        if (isHls) {
-            if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Safari / native support
-                video.src = streamUrl
-                video.addEventListener('loadedmetadata', startPlayback)
-                video.addEventListener('canplay', startPlayback)
-                startPlayback()
-            } else if (Hls.isSupported()) {
-                // Chrome / Firefox
-                hls = new Hls({
-                    maxMaxBufferLength: 10,
-                })
-                hls.loadSource(streamUrl)
-                hls.attachMedia(video)
-                hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
-                video.addEventListener('canplay', startPlayback)
-            }
-        } else {
-            // Regular MP4 or non-HLS URL
-            video.src = streamUrl
-            video.addEventListener('loadedmetadata', startPlayback)
-            video.addEventListener('canplay', startPlayback)
-            startPlayback()
-        }
-
-        // Safety fallback: force play after 1s in case browser blocked initial calls
-        const timeoutId = setTimeout(startPlayback, 1000)
-
-        return () => {
-            if (hls) {
-                hls.destroy()
-            }
-            video.removeEventListener('loadedmetadata', startPlayback)
-            video.removeEventListener('canplay', startPlayback)
-            clearTimeout(timeoutId)
-        }
-    }, [mux_video_url, autoplay])
+    playbackId = playbackId.split('?')[0].trim()
 
     return (
         <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-black">
-            {/* Video background */}
-            {mux_video_url && (
-                <video
-                    ref={setVideoRef}
-                    autoPlay={autoplay}
-                    muted={autoplay}
-                    loop={autoplay}
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                />
+            {/* Video background using official MuxPlayer — handles HLS, autoplay, blob: URLs natively */}
+            {playbackId && (
+                <div className="absolute inset-0">
+                    <MuxPlayer
+                        playbackId={playbackId}
+                        streamType="on-demand"
+                        autoPlay={autoplay ? 'muted' : false}
+                        muted
+                        loop
+                        playsInline
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            '--controls': 'none',
+                        } as any}
+                    />
+                </div>
             )}
 
             {/* Dark overlay */}

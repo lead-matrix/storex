@@ -1,4 +1,4 @@
-import VideoPlayer from "../VideoPlayer";
+import MuxPlayer from '@mux/mux-player-react'
 
 interface VideoShowcaseProps {
     playbackId: string;
@@ -13,6 +13,8 @@ export default function VideoShowcaseSection({
     subtitle,
     autoPlay = 1,
 }: VideoShowcaseProps) {
+    const isAutoPlay = !!autoPlay
+
     return (
         <section className="relative w-full overflow-hidden bg-black/95 py-24 border-y border-white/5">
             <div className="max-w-[1400px] mx-auto px-6">
@@ -33,14 +35,24 @@ export default function VideoShowcaseSection({
                 
                 <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group max-w-5xl mx-auto">
                     {playbackId ? (
-                        <VideoPlayer
-                            playbackId={playbackId}
-                            autoPlay={!!autoPlay}
-                            muted={!!autoPlay}
-                            loop={!!autoPlay}
-                            controls={!autoPlay}
-                            aspectClass="aspect-video"
-                        />
+                        <div className="aspect-video w-full">
+                            <MuxPlayer
+                                playbackId={playbackId}
+                                streamType="on-demand"
+                                autoPlay={isAutoPlay ? 'muted' : false}
+                                muted={isAutoPlay}
+                                loop={isAutoPlay}
+                                playsInline
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    ...(!isAutoPlay ? {} : {
+                                        '--controls': 'none',
+                                    }),
+                                } as any}
+                            />
+                        </div>
                     ) : (
                         <div className="aspect-video w-full bg-neutral-950 flex flex-col items-center justify-center space-y-3">
                             <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/20">
