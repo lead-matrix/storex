@@ -43,6 +43,21 @@ export default function VideoPlayer({
     const streamUrl = `https://stream.mux.com/${playbackId}.m3u8`
     const thumbnailUrl = poster ?? `https://image.mux.com/${playbackId}/thumbnail.jpg`
 
+    const isMuted = autoPlay || muted
+    const isLooping = autoPlay || loop
+
+    // Callback ref to guarantee muted state programmatically as soon as DOM node is created,
+    // bypassing any React muted hydration/re-render bugs.
+    const setVideoRef = (el: HTMLVideoElement | null) => {
+        (videoRef as any).current = el
+        if (el) {
+            if (isMuted) {
+                el.defaultMuted = true
+                el.muted = true
+            }
+        }
+    }
+
     useEffect(() => {
         if (!playbackId || playbackId === 'pending') return
         const video = videoRef.current
@@ -51,7 +66,7 @@ export default function VideoPlayer({
         let hls: Hls | null = null;
 
         // Force muted properties programmatically to satisfy browser autoplay policy
-        if (autoPlay || muted) {
+        if (isMuted) {
             video.defaultMuted = true
             video.muted = true
         }
@@ -68,6 +83,7 @@ export default function VideoPlayer({
             // Safari / native support
             video.src = streamUrl
             video.addEventListener('loadedmetadata', startPlayback)
+            video.addEventListener('canplay', startPlayback)
             startPlayback()
         } else if (Hls.isSupported()) {
             // Chrome / Firefox
@@ -77,56 +93,32 @@ export default function VideoPlayer({
             hls.loadSource(streamUrl)
             hls.attachMedia(video)
             hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
+            video.addEventListener('canplay', startPlayback)
         }
+
+        // Safety fallback: force play after 1s in case browser blocked initial calls
+        const timeoutId = setTimeout(startPlayback, 1000)
 
         return () => {
             if (hls) {
                 hls.destroy()
             }
             video.removeEventListener('loadedmetadata', startPlayback)
+            video.removeEventListener('canplay', startPlayback)
+            clearTimeout(timeoutId)
         }
-    }, [playbackId, streamUrl, autoPlay, muted])
-
-    // Autoplay / pause on scroll (IntersectionObserver)
-    useEffect(() => {
-        if (!autoPlay || !playbackId || playbackId === 'pending') return
-        const video = videoRef.current
-        if (!video) return
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        video.defaultMuted = true
-                        video.muted = true
-                        video.play().catch((e) => {
-                            console.log('Autoplay on scroll prevented:', e)
-                        })
-                    } else {
-                        video.pause()
-                    }
-                })
-            },
-            { threshold: 0.15 } // Play when 15% of the video is in viewport
-        )
-
-        observer.observe(video)
-
-        return () => {
-            observer.disconnect()
-        }
-    }, [autoPlay, playbackId])
+    }, [playbackId, streamUrl, autoPlay, isMuted])
 
     if (!playbackId || playbackId === 'pending') return null
 
     return (
         <div className={`w-full overflow-hidden flex items-center justify-center bg-black ${aspectClass} ${className}`}>
             <video
-                ref={videoRef}
+                ref={setVideoRef}
                 className="w-full h-full object-contain"
                 autoPlay={autoPlay}
-                muted={muted}
-                loop={loop}
+                muted={isMuted}
+                loop={isLooping}
                 controls={controls}
                 playsInline
                 poster={thumbnailUrl}

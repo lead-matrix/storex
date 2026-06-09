@@ -28,6 +28,18 @@ export function VideoHero({
 }) {
     const videoRef = useRef<HTMLVideoElement>(null)
 
+    // Callback ref to guarantee muted state programmatically as soon as DOM node is created,
+    // bypassing any React muted hydration/re-render bugs.
+    const setVideoRef = (el: HTMLVideoElement | null) => {
+        (videoRef as any).current = el
+        if (el) {
+            if (autoplay) {
+                el.defaultMuted = true
+                el.muted = true
+            }
+        }
+    }
+
     useEffect(() => {
         if (!mux_video_url) return
         const video = videoRef.current
@@ -58,6 +70,7 @@ export function VideoHero({
                 // Safari / native support
                 video.src = streamUrl
                 video.addEventListener('loadedmetadata', startPlayback)
+                video.addEventListener('canplay', startPlayback)
                 startPlayback()
             } else if (Hls.isSupported()) {
                 // Chrome / Firefox
@@ -67,19 +80,26 @@ export function VideoHero({
                 hls.loadSource(streamUrl)
                 hls.attachMedia(video)
                 hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
+                video.addEventListener('canplay', startPlayback)
             }
         } else {
             // Regular MP4 or non-HLS URL
             video.src = streamUrl
             video.addEventListener('loadedmetadata', startPlayback)
+            video.addEventListener('canplay', startPlayback)
             startPlayback()
         }
+
+        // Safety fallback: force play after 1s in case browser blocked initial calls
+        const timeoutId = setTimeout(startPlayback, 1000)
 
         return () => {
             if (hls) {
                 hls.destroy()
             }
             video.removeEventListener('loadedmetadata', startPlayback)
+            video.removeEventListener('canplay', startPlayback)
+            clearTimeout(timeoutId)
         }
     }, [mux_video_url, autoplay])
 
@@ -88,10 +108,10 @@ export function VideoHero({
             {/* Video background */}
             {mux_video_url && (
                 <video
-                    ref={videoRef}
+                    ref={setVideoRef}
                     autoPlay={autoplay}
-                    muted
-                    loop
+                    muted={autoplay}
+                    loop={autoplay}
                     playsInline
                     className="absolute inset-0 w-full h-full object-cover"
                 />
